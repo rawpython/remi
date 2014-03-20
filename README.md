@@ -35,11 +35,13 @@ class App( BaseApp ):
 	#listener function
 	def onButtonPressed( self, x, y ):
 		self.lbl.setText( "Button pressed!" )
-		self.bt.text("testo")
+		self.bt.text("Hi!")
 
 #starts the webserver	
 start( App )
 </code></pre>
 
+In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8080".
+You can change the url address, edit the "configuration.py" file.
 
 Tested on Android, Linux, Windows.
