@@ -1,4 +1,3 @@
-import urllib2
 from configuration import *
 import server
 from server import *
