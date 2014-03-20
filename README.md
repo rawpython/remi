@@ -6,6 +6,19 @@ python gui library based on HTML and so, platform indipendent
 
 It allows to create platform indipendent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
+Why another gui lib?
+Ok, Kivy is the best, Tk is historical, pyQt is also good, but for every platform that appears we have to wait a porting. This lib allows to show a user interface everywhere there is a browser.
+
+Right now it is incomplete. These widgets are available:
+- widget : like an empty panel
+- buttonWidget
+- textareaWidget
+- spinboxWidget
+- labelWidget
+- inputDialog
+- listWidget
+- comboWidget
+
 A basic application appears like this:
 
 <pre><code>
@@ -44,4 +57,4 @@ start( App )
 In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8080".
 You can change the url address, edit the "configuration.py" file.
 
-Tested on Android, Linux, Windows.
+Tested on Android, Linux, Windows with Google Chrome web browser.
