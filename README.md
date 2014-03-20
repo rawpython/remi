@@ -1,5 +1,6 @@
 gui
 ===
+This is an pre-pre-pre-alpha version!!
 
 python gui library based on HTML and so, platform indipendent
 
