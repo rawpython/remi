@@ -116,6 +116,7 @@ class BaseApp(BaseHTTPRequestHandler,object):
 	def processAll(self, function, paramDict):
 		ispath = True
 		snake = None
+		doNotCallMain = False
 		if len(function.split("/"))>1:
 			for attr in function.split("/"):
 				if len(attr)==0:
@@ -134,11 +135,15 @@ class BaseApp(BaseHTTPRequestHandler,object):
 				snake = getMethodBy(self.client,function)
 				ispath = ispath and (None!=snake)
 			else:
+				doNotCallMain = hasattr( self.client, "root" )
 				ispath = True
 				snake = self.main
 			
 		if ispath:
-			ret = snake(**paramDict)
+			ret = None
+			if not doNotCallMain:
+				ret = snake(**paramDict)
+				
 			if ret==None:
 				self.send_response(200)
 				self.send_header('Content-type','text/html')				
