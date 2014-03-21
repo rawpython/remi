@@ -18,6 +18,7 @@ Right now it is incomplete. These widgets are available:
 - inputDialog
 - listWidget
 - comboWidget
+- imageWidget
 
 A basic application appears like this:
 
