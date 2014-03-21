@@ -1,0 +1,29 @@
+<style type="text/css">
+div{
+	border-radius: 5px;
+	border: 1px lightgray;
+	background-color: transparent;
+}
+textarea{
+	border-radius: 5px;
+	border-color: lightgray;
+	background-color: lightyellow;
+}
+button{
+	border-radius: 5px;
+	border-color: 1px white;
+	background-color: lightgray;
+	color: white;
+}
+button:hover{
+	border-radius: 5px;
+	border-color: 1px white;
+	background-color: white;
+	color: lightgray;
+}
+button:active{
+	border-radius: 5px;
+	border-color: 1px white;
+	background-color: white;
+	color: black;
+}
