@@ -313,4 +313,11 @@ class comboItem(widget):
 		self.attributes[ self.EVENT_ONCLICK ]="event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONCLICK + "'+t;return false;"	
 		self.eventManager.registerListener( "onclick",listener,funcname)		
 
-		
+#image widget
+class imageWidget(widget):
+	#filename should be an URL
+	def __init__(self,w,h,filename):
+		super(imageWidget,self).__init__(w,h)
+		self.type = "image"
+		self.attributes['class'] = "imageWidget"
+		self.attributes['src'] = filename
