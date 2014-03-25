@@ -24,7 +24,7 @@ Justo ahora está incompleta. Estos widgets están disponibles:
 - comboWidget
 - imageWidget
 - tableWidget
-- objectWidget : allows to show embedded object like pdf,swf..
+- objectWidget : te permite mostrar un objeto embebido como pdf, swf...
 
 Una aplicación básica aparece como:
 
