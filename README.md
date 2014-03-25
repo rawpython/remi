@@ -19,6 +19,7 @@ Right now it is incomplete. These widgets are available:
 - listWidget
 - comboWidget
 - imageWidget
+- tableWidget
 
 A basic application appears like this:
 
