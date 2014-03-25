@@ -12,7 +12,7 @@ Ok, Kivy is the best, Tk is historical, pyQt is also good, but for every platfor
 Right now it is incomplete. These widgets are available:
 - widget : like an empty panel
 - buttonWidget
-- textareaWidget
+- textareaWidget : for the editable text
 - spinboxWidget
 - labelWidget
 - inputDialog
@@ -20,6 +20,7 @@ Right now it is incomplete. These widgets are available:
 - comboWidget
 - imageWidget
 - tableWidget
+- objectWidget : allows to show embedded object like pdf,swf..
 
 A basic application appears like this:
 
