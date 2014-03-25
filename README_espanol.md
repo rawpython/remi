@@ -1,5 +1,8 @@
 Traducción gracias a: Julio Contreras
 
+gui
+===
+
 Esta es una version pre-pre-pre-alpha, una gui python basada en HTML y de esta manera, una plataforma independiente.
 Esto permite crear una plataforma GUI independiente con python. 
 La gui entera será mostrada en el explorador porque esta es representada en HTML. 
