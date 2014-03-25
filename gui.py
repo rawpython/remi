@@ -355,3 +355,12 @@ class itemTable(widget):
 		super(itemTable,self).__init__(-1,-1)
 		self.type = "td"
 		self.attributes['class'] = "itemTable"
+		
+#object widget - allows to show embedded object like pdf,swf..
+class objectWidget(widget):
+	#filename should be an URL
+	def __init__(self,w,h,filename):
+		super(objectWidget,self).__init__(w,h)
+		self.type = "object"
+		self.attributes['class'] = "objectWidget"
+		self.attributes['data'] = filename
