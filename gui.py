@@ -84,10 +84,11 @@ class widget(object):
 		self.attributes['class']='widget'
 		self.attributes['id']=str(id(self))
 
-		self.style['width'] = toPix(w)
-		self.style['height'] = toPix(h)
+		if w>-1:
+			self.style['width'] = toPix(w)
+		if h>-1:
+			self.style['height'] = toPix(h)
 		self.style['margin'] = "0px auto"
-		self.style['display'] = "block"
 
 		self.eventManager = eventManager()
 
@@ -335,3 +336,22 @@ class imageWidget(widget):
 		self.type = "image"
 		self.attributes['class'] = "imageWidget"
 		self.attributes['src'] = filename
+
+#table widget - it will contains rowTable
+class tableWidget(widget):
+	def __init__(self,w,h):
+		super(tableWidget,self).__init__(w,h)
+		self.type = "table"
+		self.attributes['class'] = "tableWidget"
+#row widget for the tableWidget - it will contains itemTable
+class rowTable(widget):
+	def __init__(self):
+		super(rowTable,self).__init__(-1,-1)
+		self.type = "tr"
+		self.attributes['class'] = "rowTable"
+#item widget for the rowTable
+class itemTable(widget):
+	def __init__(self):
+		super(itemTable,self).__init__(-1,-1)
+		self.type = "td"
+		self.attributes['class'] = "itemTable"
