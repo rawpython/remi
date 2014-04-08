@@ -190,8 +190,11 @@ def start(mainGuiClass):
 		#Create a web server and define the handler to manage the incoming request
 		server = HTTPServer(('', PORT_NUMBER), mainGuiClass)
 		print( 'Started httpserver on port ' , PORT_NUMBER )
-		
-		webbrowser.open(BASE_ADDRESS)
+		try:
+			import android
+			android.webbrowser.open( BASE_ADDRESS )
+		except:
+			webbrowser.open( BASE_ADDRESS )
 		server.serve_forever()
 		
 
