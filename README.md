@@ -1,7 +1,5 @@
 gui
 ===
-This is an pre-pre-pre-alpha version!!
-
 python gui library based on HTML and so, platform indipendent
 
 It allows to create platform indipendent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. When your app starts, it starts a webserver that will be accessible on your network.
