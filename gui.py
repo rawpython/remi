@@ -364,3 +364,59 @@ class objectWidget(widget):
 		self.type = "object"
 		self.attributes['class'] = "objectWidget"
 		self.attributes['data'] = filename
+
+
+try:
+	import PIL
+	from PIL import Image
+	from PIL import ImageFont
+	from PIL import ImageDraw
+	import StringIO
+	
+	#canvas widget - it is usefull to draw arbitrary geom elements
+	#	implements the onredraw event.
+	#	the paint operations are performed by the "painter" member of the class
+	#	the "painter" is a PIL's ImageDraw instance, and so, you can access to all its properties and functions.
+	class canvasWidget(widget):
+		#paramters: 
+		#	w - image width
+		#	h - image height
+		#	baseAppInstance - the instance of the main windows that overloads the BaseApp class
+		#	refreshInterval - the update interval for the canvas.
+		
+		def __init__(self,w,h,baseAppInstance,refreshInterval=500):
+			super(canvasWidget,self).__init__(w,h)
+			baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+" = 0;function newFrame"+str(id(self))+"(){var imgId = '" + str(id(self)) + "';var img = new Image();img.type = 'image/png' ;img.src = '" + BASE_ADDRESS+"'+imgId+ '/update';img.onload = function(){ var can = document.getElementById(imgId); var ctx = can.getContext('2d'); ctx.drawImage(img, 0, 0, img.width, img.height);timerID"+str(id(self))+"=setTimeout(newFrame"+str(id(self))+","+str(refreshInterval)+");};};newFrame"+str(id(self))+"();</script>"
+			self.type = "canvasWidget"
+			self.imgWidth = w
+			self.imgHeight = h
+			self.image = Image.new( 'RGB', ( self.imgWidth, self.imgHeight ), "white" )
+			self.painter = ImageDraw.Draw( self.image )
+			
+		def update(self):
+			#calling redraw propagating the event
+			self.redraw()
+			
+			virtualFile = StringIO.StringIO()
+			self.image.save(virtualFile,format="JPEG",quality=100,optimize=True,progressive=True)
+			virtualFile.seek(0)
+			content = virtualFile.read()
+			virtualFile.close()
+			return (content,'image/jpg')
+			
+		def redraw(self):
+			"""self.counter = self.counter + 1
+			f = ImageFont.load_default()
+			self.painter.rectangle((0,0)+(self.imgWidth,self.imgHeight),fill=128)
+			self.painter.text((0, 0),"updating frame" + str(self.counter),(0,0,0),font=f)
+			"""
+			params = list()
+			return self.eventManager.propagate("onredraw",params)
+			
+		def setOnRedrawListener(self,listener,funcname):
+			self.eventManager.registerListener( "onredraw",listener,funcname)	
+		
+except:
+	print( "Canvas widget not available! PIL library or StringIO not found." )
+	
+
