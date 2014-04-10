@@ -387,7 +387,7 @@ try:
 		def __init__(self,w,h,baseAppInstance,refreshInterval=500):
 			super(canvasWidget,self).__init__(w,h)
 			baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+" = 0;function newFrame"+str(id(self))+"(){var imgId = '" + str(id(self)) + "';var img = new Image();img.type = 'image/png' ;img.src = '" + BASE_ADDRESS+"'+imgId+ '/update';img.onload = function(){ var can = document.getElementById(imgId); var ctx = can.getContext('2d'); ctx.drawImage(img, 0, 0, img.width, img.height);timerID"+str(id(self))+"=setTimeout(newFrame"+str(id(self))+","+str(refreshInterval)+");};};newFrame"+str(id(self))+"();</script>"
-			self.type = "canvasWidget"
+			self.type = "canvas"
 			self.imgWidth = w
 			self.imgHeight = h
 			self.image = Image.new( 'RGB', ( self.imgWidth, self.imgHeight ), "white" )
