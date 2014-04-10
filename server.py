@@ -96,7 +96,9 @@ class BaseApp(BaseHTTPRequestHandler,object):
 		postVars = postVars.split("&")
 		paramDict = {}
 		for s in postVars:
-			paramDict[s.split("=")[0]] = s.split("=")[1]
+			#invalid parameter
+			if len(s)>0:
+				paramDict[s.split("=")[0]] = s.split("=")[1]
 		
 		function = str(urllib2.unquote(self.path).decode('utf8'))
 		self.processAll(function, paramDict)
