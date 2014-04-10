@@ -19,6 +19,7 @@ Right now it is incomplete. These widgets are available:
 - imageWidget
 - tableWidget
 - objectWidget : allows to show embedded object like pdf,swf..
+- canvasWidget : usefull to draw arbitrary geometries. It uses PIL's library.
 
 A basic application appears like this:
 
