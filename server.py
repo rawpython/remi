@@ -160,6 +160,11 @@ class BaseApp(BaseHTTPRequestHandler,object):
 			if not doNotCallMain:
 				ret = snake(**paramDict)
 				
+				#setting up the root widget, if the 'ret' becomes from the main call
+				if snake==self.main:
+					self.client.root=ret
+					ret = None
+				
 			if ret==None:
 				self.send_response(200)
 				self.send_header('Content-type','text/html')				
