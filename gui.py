@@ -124,8 +124,12 @@ class widget(object):
 			self.children[key].style['margin'] = toPix(self.widget_spacing)
 			if self.layout_orizontal:
 				self.children[key].style['float'] = 'left'
-	
 
+	def updated(self):
+		return (self.__repr__(),'text/html')
+	#allows to update the widget content at specified interval	
+	def setUpdateTimer(self,baseAppInstance,millisec):
+		baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+"=0;function updater"+str(id(self))+"(){timerID"+str(id(self))+"=setTimeout(updater"+str(id(self))+","+str(millisec)+");elem=document.getElementById('"+str(id(self))+"');elem2=sendCommand('"+BASE_ADDRESS+str(id(self))+"/updated','');elem.innerHTML=elem2;};updater"+str(id(self))+"();</script>"
 #button widget:
 #	implements the onclick event. reloads the web page because it uses the GET call.
 #requires
