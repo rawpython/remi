@@ -85,7 +85,7 @@ class BaseApp(BaseHTTPRequestHandler,object):
 			runtimeInstances.append(self)
 			
 			clients[k]=self
-			clients[k].attachments = "<script>var sendCommand = function (url,params) { var request = new XMLHttpRequest(); request.open('POST', url, false); request.send(params); };</script>"
+			clients[k].attachments = "<script>var sendCommand = function (url,params) { var request = new XMLHttpRequest(); request.open('POST', url, false); request.send(params); return request.responseText;};</script>"
 		self.client = clients[k]
 
 	def do_POST(self):
