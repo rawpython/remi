@@ -50,8 +50,8 @@ class App( BaseApp ):
 		wid.append( "1", self.lbl )
 		wid.append( "2", self.bt )
 			
-		#setting up the root widget
-		self.client.root = wid
+		#return of the root widget
+		return wid
 	
 	#listener function
 	def onButtonPressed( self, x, y ):
