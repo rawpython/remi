@@ -81,6 +81,8 @@ class widget(object):
 		self.EVENT_ONFOCUS = "onfocus"
 		self.EVENT_ONBLUR = "onblur"
 		
+		self.EVENT_ONUPDATE = "onupdate"
+		
 		self.attributes['class']='widget'
 		self.attributes['id']=str(id(self))
 
@@ -126,10 +128,19 @@ class widget(object):
 				self.children[key].style['float'] = 'left'
 
 	def updated(self):
+		params = list()
+		self.eventManager.propagate(self.EVENT_ONUPDATE,params)
 		return (self.__repr__(),'text/html')
+	
+	def setOnUpdateListener(self,listener,funcname):
+		self.eventManager.registerListener(self.EVENT_ONUPDATE,listener,funcname)
+	
 	#allows to update the widget content at specified interval	
 	def setUpdateTimer(self,baseAppInstance,millisec):
 		baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+"=0;function updater"+str(id(self))+"(){timerID"+str(id(self))+"=setTimeout(updater"+str(id(self))+","+str(millisec)+");elem=document.getElementById('"+str(id(self))+"');elem2=sendCommand('"+BASE_ADDRESS+str(id(self))+"/updated','');elem.innerHTML=elem2;};updater"+str(id(self))+"();</script>"
+		
+	
+	
 #button widget:
 #	implements the onclick event. reloads the web page because it uses the GET call.
 #requires
