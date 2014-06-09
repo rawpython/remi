@@ -63,14 +63,10 @@ Tested on Android, Linux, Windows with Google Chrome web browser.
 
 FAQ
 ===
--Should I know HTML?
-NO, It is not required, you have to code only in python.
--Can I use this library with other browsers?
-Yes you can, but I haven't tested it and probably something couldn't work fine.
--It is open source?
-For sure!
--Where is the documentation?
-I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
+- Should I know HTML? NO, It is not required, you have to code only in python.
+- Can I use this library with other browsers? Yes you can, but I haven't tested it and probably something couldn't work fine.
+- It is open source? For sure!
+- Where is the documentation? I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
 
 Brief tutorial
