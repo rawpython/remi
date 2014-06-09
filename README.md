@@ -63,28 +63,32 @@ Tested on Android, Linux, Windows with Google Chrome web browser.
 
 FAQ
 ===
-Should I know HTML?
+-Should I know HTML?
 NO, It is not required, you have to code only in python.
-Can I use this library with other browsers?
+-Can I use this library with other browsers?
 Yes you can, but I haven't tested it and probably something couldn't work fine.
-It is open source?
+-It is open source?
 For sure!
-Where is the documentation?
+-Where is the documentation?
 I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
 
 Brief tutorial
 ===
 Import gui library and all submodules.
+
 <pre><code>
+
 import gui
 from gui import *
+
 </code></pre>
 
 
 Subclass the <code>BaseApp</code> class and declare a <code>main</code> function that will be the entry point of the application. Inside the main function you have to <code>return</code> the root widget.
 
 <pre><code>
+
 class App( BaseApp ):
 	def __init__( self, *args ):
 		super( App, self ).__init__( *args )
@@ -94,15 +98,18 @@ class App( BaseApp ):
 		
 		#return of the root widget
 		return lbl
+
 </code></pre>
 
 
 Outside the main class start the application calling the function <code>start</code> passing as parameter the name of the class you declared previuosly.
 
-<code>
+<pre><code>
+
 #starts the webserver	
 start( App )
-</code>
+
+</code></pre>
 
 Run the script. If all it's OK the gui will be opened automatically opened in yout browser, otherwise you have to type in the address bar "http://127.0.0.1:8080".
 
