@@ -98,7 +98,7 @@ class App( BaseApp ):
 </code></pre>
 
 
-Outside the main class start the application calling the function <code>start</code> passing as parameter the name of the class you declared previuosly.
+Outside the main class start the application calling the function <code>start</code> passing as parameter the name of the class you declared previously.
 
 <pre><code>
 
@@ -107,15 +107,15 @@ start( App )
 
 </code></pre>
 
-Run the script. If all it's OK the gui will be opened automatically opened in yout browser, otherwise you have to type in the address bar "http://127.0.0.1:8080".
+Run the script. If all it's OK the gui will be opened automatically in your browser, otherwise you have to type in the address bar "http://127.0.0.1:8080".
 
 The configuration.py file contains the IP and PORT values. You can change these values in order to make the gui accessible on other devices on the network.
 
 
 All widgets constructors require three standard parameters that are in sequence:
--width in pixel
--height in pixel
--layout orientation (boolean, where True means orizontal orientation)
+- width in pixel
+- height in pixel
+- layout orientation (boolean, where True means orizontal orientation)
 
 
 Styling
