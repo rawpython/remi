@@ -126,11 +126,26 @@ class widget(object):
 			self.children[key].style['margin'] = toPix(self.widget_spacing)
 			if self.layout_orizontal:
 				self.children[key].style['float'] = 'left'
+	
+	def remove(self,widget):
+		if widget in self.children.values():
+			#runtimeInstances.pop( runtimeInstances.index( self.children[key] ) )
+			self.renderChildrenList.remove(widget)
+			for k in self.children.keys():
+				if str(id(self.children[k]))==str(id(widget)):
+					self.children.pop(k)
+			
 
 	def updated(self):
 		params = list()
 		self.eventManager.propagate(self.EVENT_ONUPDATE,params)
-		return (self.__repr__(),'text/html')
+		innerHTML = ""
+		for s in self.renderChildrenList:
+			if type(s) == type(""):
+				innerHTML = innerHTML + s
+			else:
+				innerHTML = innerHTML + repr(s)
+		return (innerHTML,'text/html')
 	
 	def setOnUpdateListener(self,listener,funcname):
 		self.eventManager.registerListener(self.EVENT_ONUPDATE,listener,funcname)
@@ -138,7 +153,23 @@ class widget(object):
 	#allows to update the widget content at specified interval	
 	def setUpdateTimer(self,baseAppInstance,millisec):
 		baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+"=0;function updater"+str(id(self))+"(){timerID"+str(id(self))+"=setTimeout(updater"+str(id(self))+","+str(millisec)+");elem=document.getElementById('"+str(id(self))+"');elem2=sendCommand('"+BASE_ADDRESS+str(id(self))+"/updated','');elem.innerHTML=elem2;};updater"+str(id(self))+"();</script>"
-		
+	
+	def onfocus(self,id):
+		params = list()
+		params.append(id)
+		return self.eventManager.propagate(self.EVENT_ONFOCUS,params)
+	def setOnFocusListener(self,listener,funcname):
+		self.attributes[ self.EVENT_ONFOCUS ]="event.cancelBubble=true;var id='?id='+'"+str(id(self))+"';window.location='" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONFOCUS + "'+id;return false;"
+		#self.attributes[ self.EVENT_ONFOCUS ]=" var id=\'id=\'+'"+str(id(self))+"' ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONFOCUS + "',id);"
+		self.eventManager.registerListener( self.EVENT_ONFOCUS,listener,funcname)	
+	def onblur(self,id):
+		print("ON BLUR <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------")
+		params = list()
+		params.append(id)
+		return self.eventManager.propagate(self.EVENT_ONBLUR,params)
+	def setOnBlurListener(self,listener,funcname):
+		self.attributes[ self.EVENT_ONBLUR ]=" var id=\'id=\'+'"+str(id(self))+"' ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONBLUR + "',id);"
+		self.eventManager.registerListener( self.EVENT_ONBLUR,listener,funcname)
 	
 	
 #button widget:
@@ -218,6 +249,7 @@ class spinboxWidget(widget):
 	def onchange(self,newValue):
 		params = list()
 		params.append(newValue)
+		self.attributes['value']=newValue
 		return self.eventManager.propagate("onchange",params)
 	def setOnChangeListener(self,listener,funcname):
 		self.eventManager.registerListener( "onchange",listener,funcname)
@@ -227,16 +259,16 @@ class spinboxWidget(widget):
 		self.attributes[ self.EVENT_ONCLICK ] = "event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONCLICK + "'+t;return false;"
 		self.eventManager.registerListener( "onclick",listener,funcname)
 	def value(self):
-		return self.children['text']
+		return self.attributes['value']
 
 class labelWidget(widget):
 	def __init__(self,w,h,text):
 		super(labelWidget,self).__init__(w,h)
 		self.type = "p"
 		self.attributes['class']='labelWidget'
-		self.append( "content", text )
+		self.append( "text", text )
 	def setText(self,t):
-		self.append( "content", t )
+		self.append( "text", t )
 	def getText(self):
 		return self.children["content"]
 	
