@@ -7,7 +7,7 @@ It allows to create platform indipendent GUI with python. The entire gui will be
 Why another gui lib?
 Ok, Kivy is the best, Tk is historical, pyQt is also good, but for every platform that appears we have to wait a porting. This lib allows to show a user interface everywhere there is a browser.
 
-Right now it is incomplete. These widgets are available:
+These widgets are available:
 - widget : like an empty panel
 - buttonWidget
 - textareaWidget : for the editable text
