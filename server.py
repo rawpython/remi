@@ -16,17 +16,12 @@
 import sys
 import urllib2
 from configuration import *
-from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from SocketServer import ThreadingMixIn
+import threading
 import webbrowser
 
 clients = {}
-
-#tarocco to speedup server reply
-def _bare_address_string(self):
-    host, port = self.client_address[:2]
-    return str(host)
-BaseHTTPRequestHandler.address_string = \
-        _bare_address_string
 
 
 def getMethodBy(rootNode,idname):
@@ -190,12 +185,17 @@ class BaseApp(BaseHTTPRequestHandler,object):
 			content = "".join(f.readlines())
 			f.close()
 			self.wfile.write(content)
-			
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """ This class allows to handle requests in separated threads.
+        No further content needed, don't touch this. """
+        
+
 #this method starts the webserver with a specific BaseApp subclass
 def start(mainGuiClass):
 	try:
 		#Create a web server and define the handler to manage the incoming request
-		server = HTTPServer(('', PORT_NUMBER), mainGuiClass)
+		server = ThreadedHTTPServer(('', PORT_NUMBER), mainGuiClass)
 		print( 'Started httpserver on port ' , PORT_NUMBER )
 		try:
 			import android
