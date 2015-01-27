@@ -60,6 +60,7 @@ In order to see the user interface, open your preferred browser (I use Chrome) a
 You can change the url address, edit the "configuration.py" file.
 
 Tested on Android, Linux, Windows with Google Chrome web browser.
+Usefull on raspberry pi for python script development. It allows to interact with your raspberry remotely from your mobile device.
 
 FAQ
 ===
