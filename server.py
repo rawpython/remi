@@ -174,6 +174,10 @@ class BaseApp(BaseHTTPRequestHandler,object):
 				self.send_response(200)
 				self.send_header('Content-type',ret[1])
 				self.end_headers()
+
+				self.wfile.write(self.client.attachments);
+				self.wfile.write("<link href='" + BASE_ADDRESS + "style.css' rel='stylesheet' />");
+
 				self.wfile.write( ret[0] )
 				
 		else:

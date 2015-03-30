@@ -288,7 +288,7 @@ class inputDialog(widget):
 		
 		self.EVENT_ONCONFIRM = "confirmValue"
 		self.EVENT_ONABORT = "abortValue"
-		self.style["font-family"] = "arial,sans-serif"
+		#self.style["font-family"] = "arial,sans-serif"
 		t = labelWidget(w-50, 50, title)
 		m = labelWidget(w-50, 30, message)
 		self.inputText = textareaWidget(w-100, 30)
