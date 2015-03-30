@@ -170,7 +170,13 @@ class widget(object):
 	def setOnBlurListener(self,listener,funcname):
 		self.attributes[ self.EVENT_ONBLUR ]=" var id=\'id=\'+'"+str(id(self))+"' ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONBLUR + "',id);"
 		self.eventManager.registerListener( self.EVENT_ONBLUR,listener,funcname)
-	
+	#This allows to set the parameter "Content type" when you return a widget
+	#you can return a widget in a callback in oreder to show it as main widget, now without specifing the content-type
+	def __getitem__(self, key):
+		if key==0:
+			return self
+		else:
+			return 'text/html'
 	
 #button widget:
 #	implements the onclick event. reloads the web page because it uses the GET call.
