@@ -388,7 +388,7 @@ class imageWidget(widget):
 		super(imageWidget,self).__init__(w,h)
 		self.type = "image"
 		self.attributes['class'] = "imageWidget"
-		self.attributes['src'] = filename
+		self.attributes['src'] = BASE_ADDRESS + filename
 
 #table widget - it will contains rowTable
 class tableWidget(widget):
