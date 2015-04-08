@@ -176,9 +176,9 @@ class BaseApp(BaseHTTPRequestHandler,object):
 				
 				self.end_headers()
 				
-				if( ret[1] == 'text/html' ):
-					self.wfile.write(self.client.attachments);
-					self.wfile.write("<link href='" + BASE_ADDRESS + "style.css' rel='stylesheet' />");
+				#if( ret[1] == 'text/html' ):
+				#	self.wfile.write(self.client.attachments);
+				#	self.wfile.write("<link href='" + BASE_ADDRESS + "style.css' rel='stylesheet' />");
 				
 				self.wfile.write( ret[0] )
 				

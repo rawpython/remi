@@ -156,7 +156,7 @@ class widget(object):
 	
 	#allows to update the widget content at specified interval	
 	def setUpdateTimer(self,baseAppInstance,millisec):
-		baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+"=0;function updater"+str(id(self))+"(){timerID"+str(id(self))+"=setTimeout(updater"+str(id(self))+","+str(millisec)+");elem=document.getElementById('"+str(id(self))+"');elem2=sendCommand('"+BASE_ADDRESS+str(id(self))+"/updated','');elem.innerHTML=elem2;};updater"+str(id(self))+"();</script>"
+		baseAppInstance.client.attachments = baseAppInstance.client.attachments + "<script>var timerID"+str(id(self))+"=0;function updater"+str(id(self))+"(){timerID"+str(id(self))+"=setTimeout(updater"+str(id(self))+","+str(millisec)+");elem"+str(id(self))+"=document.getElementById('"+str(id(self))+"');elem2"+str(id(self))+"=sendCommand('"+BASE_ADDRESS+str(id(self))+"/updated','');if(elem"+str(id(self))+".innerHTML!=elem2"+str(id(self))+")elem"+str(id(self))+".innerHTML=elem2"+str(id(self))+";};updater"+str(id(self))+"();</script>"
 	
 	def onfocus(self,id):
 		params = list()
