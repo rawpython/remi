@@ -96,7 +96,7 @@ class BaseApp(BaseHTTPRequestHandler,object):
 				paramDict[s.split("=")[0]] = s.split("=")[1]
 		
 		function = str(urllib2.unquote(self.path).decode('utf8'))
-		self.processAll(function, paramDict)
+		self.processAll(function, paramDict, True)
 	
 	#Handler for the GET requests
 	def do_GET(self):
@@ -120,11 +120,11 @@ class BaseApp(BaseHTTPRequestHandler,object):
 					paramDict[p.split("=")[0]] = int(paramDict[p.split("=")[0]])
 
 		function=function[1:]
-		self.processAll(function, paramDict)
+		self.processAll(function, paramDict, False)
 
 		return
 	
-	def processAll(self, function, paramDict):
+	def processAll(self, function, paramDict, isPost):
 		ispath = True
 		snake = None
 		doNotCallMain = False
@@ -176,9 +176,10 @@ class BaseApp(BaseHTTPRequestHandler,object):
 				
 				self.end_headers()
 				
-				#if( ret[1] == 'text/html' ):
-				#	self.wfile.write(self.client.attachments);
-				#	self.wfile.write("<link href='" + BASE_ADDRESS + "style.css' rel='stylesheet' />");
+				#if is requested a widget, but not by post, so we suppose is requested to show a new page, we attach javascript and style
+				if( ret[1] == 'text/html' and isPost == False ):
+					self.wfile.write(self.client.attachments);
+					self.wfile.write("<link href='" + BASE_ADDRESS + "style.css' rel='stylesheet' />");
 				
 				self.wfile.write( ret[0] )
 				
