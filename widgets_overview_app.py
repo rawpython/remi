@@ -23,9 +23,9 @@ class App( BaseApp ):
 		mainContainer = gui.widget( 500, 410, True, 10 )
 		
 		subContainerLeft = gui.widget( 200, 370, False, 10 )
-		self.img = gui.imageWidget( 200, 200, "logo.png" )
+		self.img = gui.imageWidget( 100, 100, "logo.png" )
 	
-		self.table = gui.tableWidget( 200, 250 )
+		self.table = gui.tableWidget( 200, 200 )
 		self.tableTitle = gui.labelWidget( 200, 20, "This is a table" )
 		"""for i in range( 0, 3 ):
 			row = gui.rowTable()

@@ -125,7 +125,11 @@ class widget(object):
 		if hasattr(self.children[key],'style'):
 			self.children[key].style['margin'] = toPix(self.widget_spacing)
 			if self.layout_orizontal:
-				self.children[key].style['float'] = 'left'
+				if 'float' in self.children[key].style.keys():
+					if not ( self.children[key].style['float'] == 'none' ):
+						self.children[key].style['float'] = 'left'
+				else:
+					self.children[key].style['float'] = 'left'
 	
 	def remove(self,widget):
 		if widget in self.children.values():
@@ -396,18 +400,21 @@ class tableWidget(widget):
 		super(tableWidget,self).__init__(w,h)
 		self.type = "table"
 		self.attributes['class'] = "tableWidget"
+		self.style['float'] = 'none'
 #row widget for the tableWidget - it will contains itemTable
 class rowTable(widget):
 	def __init__(self):
 		super(rowTable,self).__init__(-1,-1)
 		self.type = "tr"
 		self.attributes['class'] = "rowTable"
+		self.style['float'] = 'none'
 #item widget for the rowTable
 class itemTable(widget):
 	def __init__(self):
 		super(itemTable,self).__init__(-1,-1)
 		self.type = "td"
 		self.attributes['class'] = "itemTable"
+		self.style['float'] = 'none'
 #title widget for the table
 class titleTable(widget):
 	def __init__(self, title=""):
@@ -415,6 +422,7 @@ class titleTable(widget):
 		self.type = "th"
 		self.attributes['class'] = "titleTable"
 		self.append("text",title)
+		self.style['float'] = 'none'
 		
 #object widget - allows to show embedded object like pdf,swf..
 class objectWidget(widget):
