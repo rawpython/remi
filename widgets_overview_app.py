@@ -20,22 +20,13 @@ class App( BaseApp ):
 		super( App, self ).__init__( *args )
 
 	def main( self ):
-		mainContainer = gui.widget( 500, 410, True, 10 )
+		mainContainer = gui.widget( 600, 410, True, 10 )
 		
-		subContainerLeft = gui.widget( 200, 370, False, 10 )
+		subContainerLeft = gui.widget( 300, 370, False, 10 )
 		self.img = gui.imageWidget( 100, 100, "logo.png" )
 	
-		self.table = gui.tableWidget( 200, 200 )
-		self.tableTitle = gui.labelWidget( 200, 20, "This is a table" )
-		"""for i in range( 0, 3 ):
-			row = gui.rowTable()
-			for x in range( 0, 3 ):
-				item = gui.itemTable()
-				item.append( str(x), gui.labelWidget( 50, 20, "Cell" + str(i) + "" + str(x) ) )
-				row.append( str(x), item )
-			self.table.append( str(i), row )
-		"""
-		
+		self.table = gui.tableWidget( 300, 200 )
+		self.tableTitle = gui.labelWidget( 300, 20, "This is a table" )
 		row = gui.rowTable()
 		item = gui.titleTable()
 		item.append( str(id(item)), "ID" )
