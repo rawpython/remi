@@ -1,29 +1,47 @@
-<style type="text/css">
-div{
-	border-radius: 5px;
-	border: 1px lightgray;
-	background-color: transparent;
+
+body {
+	background: linear-gradient( to bottom , rgb(232, 232, 232) , rgb(197, 197, 197) );
+	background-image: url( 'bg.png' );
 }
-textarea{
-	border-radius: 5px;
-	border-color: lightgray;
-	background-color: lightyellow;
+
+body > div {
+	border: 3px solid rgb(  50,50,50 );
+	-webkit-border-radius: 10px;
 }
-button{
-	border-radius: 5px;
-	border-color: 1px white;
-	background-color: lightgray;
+
+div {
+	background-color: rgb(240, 240, 240);
+}
+
+ul {
+	border: 1px solid rgb( 73,73,73 );
+	padding: 0;
+	background-color: white;
+	cursor: default;
+	overflow: scroll;
+}
+
+li {
+	padding: 2px;
+}
+
+li:hover {
+	background-color: red;
+}
+
+button {
+	border: 1px solid rgb( 73,73,73 );
 	color: white;
+	background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
+	-webkit-border-radius: 5px;
+	/*cursor: pointer;*/
 }
-button:hover{
-	border-radius: 5px;
-	border-color: 1px white;
-	background-color: white;
-	color: lightgray;
+
+button:hover {
+	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
 }
-button:active{
-	border-radius: 5px;
-	border-color: 1px white;
-	background-color: white;
-	color: black;
+
+.spinboxWidget, .textareaWidget {
+	border: 1px solid rgb( 73,73,73 );
 }
+
