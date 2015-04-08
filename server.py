@@ -173,17 +173,20 @@ class BaseApp(BaseHTTPRequestHandler,object):
 				#here is the function that should return the content type
 				self.send_response(200)
 				self.send_header('Content-type',ret[1])
+				
 				self.end_headers()
 				
 				if( ret[1] == 'text/html' ):
 					self.wfile.write(self.client.attachments);
 					self.wfile.write("<link href='" + BASE_ADDRESS + "style.css' rel='stylesheet' />");
-
+				
 				self.wfile.write( ret[0] )
 				
 		else:
 			self.send_response(200)
 			self.send_header('Content-type','text/html')
+			if ENABLE_FILE_CACHE:
+				self.send_header("Cache-Control", "public, max-age=86400")
 			self.end_headers()
 			
 			f = open("./"+function,"r+b")
