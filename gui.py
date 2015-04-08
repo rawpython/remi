@@ -408,6 +408,13 @@ class itemTable(widget):
 		super(itemTable,self).__init__(-1,-1)
 		self.type = "td"
 		self.attributes['class'] = "itemTable"
+#title widget for the table
+class titleTable(widget):
+	def __init__(self, title=""):
+		super(titleTable,self).__init__(-1,-1)
+		self.type = "th"
+		self.attributes['class'] = "titleTable"
+		self.append("text",title)
 		
 #object widget - allows to show embedded object like pdf,swf..
 class objectWidget(widget):

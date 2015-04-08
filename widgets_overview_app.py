@@ -27,15 +27,32 @@ class App( BaseApp ):
 	
 		self.table = gui.tableWidget( 200, 250 )
 		self.tableTitle = gui.labelWidget( 200, 20, "This is a table" )
-		for i in range( 0, 3 ):
+		"""for i in range( 0, 3 ):
 			row = gui.rowTable()
 			for x in range( 0, 3 ):
 				item = gui.itemTable()
 				item.append( str(x), gui.labelWidget( 50, 20, "Cell" + str(i) + "" + str(x) ) )
 				row.append( str(x), item )
 			self.table.append( str(i), row )
-	
-	
+		"""
+		
+		row = gui.rowTable()
+		item = gui.titleTable()
+		item.append( str(id(item)), "ID" )
+		row.append( str(id(item)), item )
+		item = gui.titleTable()
+		item.append( str(id(item)), "First Name" )
+		row.append( str(id(item)), item )
+		item = gui.titleTable()
+		item.append( str(id(item)), "Last Name" )
+		row.append( str(id(item)), item )
+		self.table.append( str(id(row)), row )
+		self.addTableRow( self.table, "101", "Danny", "Young" )
+		self.addTableRow( self.table, "102", "Christine", "Holand" )
+		self.addTableRow( self.table, "103", "Lars", "Gordon" )
+		self.addTableRow( self.table, "104", "Roberto", "Robitaille" )
+		self.addTableRow( self.table, "105", "Maria", "Papadopoulos" )
+		
 		#the arguments are	width - height - layoutOrientationOrizontal
 		subContainerRight = gui.widget( 240, 370, False,10 )
 		
@@ -93,6 +110,19 @@ class App( BaseApp ):
 		#returning the root widget
 		return mainContainer
 	
+	def addTableRow( self, table, field1, field2, field3 ):
+		row = gui.rowTable()
+		item = gui.itemTable()
+		item.append( str(id(item)), field1 )
+		row.append( str(id(item)), item )
+		item = gui.itemTable()
+		item.append( str(id(item)), field2 )
+		row.append( str(id(item)), item )
+		item = gui.itemTable()
+		item.append( str(id(item)), field3 )
+		row.append( str(id(item)), item )
+		table.append( str(id(row)), row )
+		
 	#listener function
 	def onButtonPressed( self, x, y ):
 		self.lbl.setText( "Button pressed!" )
