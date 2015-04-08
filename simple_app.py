@@ -21,7 +21,7 @@ class App( BaseApp ):
 
 	def main( self ):
 		#the arguments are	width - height - layoutOrientationOrizontal
-		wid = gui.widget( 100, 60, False )
+		wid = gui.widget( 120, 100, False, 10 )
 		self.lbl = gui.labelWidget( 100, 30, "Hello world!" )
 		self.bt = gui.buttonWidget( 100, 30, "Press me!" )
 			

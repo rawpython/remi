@@ -287,22 +287,22 @@ class labelWidget(widget):
 class inputDialog(widget):
 	def __init__(self,title,message):
 		w = 500
-		h = 200
-		super(inputDialog,self).__init__(w,h,False)
+		h = 150
+		super(inputDialog,self).__init__(w,h,False,10)
 		
 		self.EVENT_ONCONFIRM = "confirmValue"
 		self.EVENT_ONABORT = "abortValue"
 		#self.style["font-family"] = "arial,sans-serif"
-		t = labelWidget(w-50, 50, title)
-		m = labelWidget(w-50, 30, message)
-		self.inputText = textareaWidget(w-100, 30)
+		t = labelWidget(w-70, 50, title)
+		m = labelWidget(w-70, 30, message)
+		self.inputText = textareaWidget(w-120, 30)
 		self.conf = buttonWidget(50,30,"Ok")
 		self.abort = buttonWidget(50,30,"Abort")
 		
 		t.style["font-size"] = "16px"
 		t.style["font-weight"] = "bold"
 		
-		hlay = widget( w,30 )
+		hlay = widget( w-20,30 )
 		hlay.append("1",self.inputText)
 		hlay.append("2",self.conf)
 		hlay.append("3",self.abort)
