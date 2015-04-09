@@ -9,7 +9,6 @@
 }
 
 body {
-	background: linear-gradient( to bottom , rgb(232, 232, 232) , rgb(197, 197, 197) );
 	background-image: url( 'bg.png' );
 	font-family: 'Hind';
 }
@@ -43,19 +42,33 @@ input,button,textarea,select {
 	font-family: 'Hind';
 }
 
-button {
+button,th {
 	border: 1px solid rgb( 73,73,73 );
 	color: white;
 	background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
-	-webkit-border-radius: 5px;
-	/*cursor: pointer;*/
+	font-weight: normal;
+	cursor: default;
 }
 
-button:hover {
+button {
+	-webkit-border-radius: 5px;
+}
+
+button:hover,th:hover {
 	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
 }
 
-.spinboxWidget, .textareaWidget {
+.spinboxWidget, .textareaWidget, table, select {
 	border: 1px solid rgb( 73,73,73 );
 }
 
+table {
+	border-spacing: 0;
+	overflow: scroll;
+	border-collapse: collapse;
+}
+
+td {
+	border: 1px solid rgb(218,218,218);
+	background-color: white;
+}
