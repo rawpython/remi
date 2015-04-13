@@ -20,6 +20,9 @@ These widgets are available:
 - tableWidget
 - objectWidget : allows to show embedded object like pdf,swf..
 - canvasWidget : usefull to draw arbitrary geometries. It uses PIL's library.
+- sliderWidget
+- colorPickerWidget
+- dateWidget
 
 A basic application appears like this:
 

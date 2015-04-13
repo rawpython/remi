@@ -27,6 +27,9 @@ Justo ahora está incompleta. Estos widgets están disponibles:
 - tableWidget
 - objectWidget : te permite mostrar un objeto embebido como pdf, swf...
 - canvasWidget : util para dibujar geometrías arbitrarias. Utiliza la biblioteca de PIL.
+- sliderWidget
+- colorPickerWidget
+- dateWidget
 
 Una aplicación básica aparece como:
 
