@@ -20,7 +20,7 @@ class App( BaseApp ):
 		super( App, self ).__init__( *args )
 
 	def main( self ):
-		mainContainer = gui.widget( 600, 410, True, 10 )
+		mainContainer = gui.widget( 600, 530, True, 10 )
 		
 		subContainerLeft = gui.widget( 300, 370, False, 10 )
 		self.img = gui.imageWidget( 100, 100, "logo.png" )
@@ -45,7 +45,7 @@ class App( BaseApp ):
 		self.addTableRow( self.table, "105", "Maria", "Papadopoulos" )
 		
 		#the arguments are	width - height - layoutOrientationOrizontal
-		subContainerRight = gui.widget( 240, 370, False,10 )
+		subContainerRight = gui.widget( 240, 390, False,10 )
 		
 		self.lbl = gui.labelWidget( 200, 30, "This is a LABEL!" )
 		self.lbl.setUpdateTimer( self, 500 )
@@ -82,6 +82,16 @@ class App( BaseApp ):
 		self.combo.append( "1", c1 )
 		self.combo.setOnChangeListener( self, "comboChanged" )
 		
+		self.slider = gui.sliderWidget(200,20,10,0,100,5)
+		self.slider.setOnChangeListener( self, "sliderChanged" )
+
+		self.colorPicker = gui.colorPickerWidget(200,20,'#ffbb00')
+		self.colorPicker.setOnChangeListener( self, "colorPickerChanged" )
+
+		self.date = gui.dateWidget(200,20,'2015-04-13')
+		self.date.setOnChangeListener( self, "dateChanged" )
+
+		
 		#appending a widget to another, the first argument is a string key
 		subContainerRight.append( "1", self.lbl )
 		subContainerRight.append( "2", self.bt )
@@ -90,6 +100,9 @@ class App( BaseApp ):
 		subContainerRight.append( "5", self.btInputDiag )
 		subContainerRight.append( "6", self.listWidget )
 		subContainerRight.append( "7", self.combo )
+		subContainerRight.append( "8", self.slider )
+		subContainerRight.append( "9", self.colorPicker )
+		subContainerRight.append( "10", self.date )
 		
 		subContainerLeft.append( "0", self.img )
 		subContainerLeft.append( "1", self.tableTitle )
@@ -144,6 +157,15 @@ class App( BaseApp ):
 		
 	def comboChanged( self, value ):
 		self.lbl.setText( "New Combo value: " + value )
+
+	def sliderChanged( self, value ):
+		self.lbl.setText( "New slider value: " + value )
+
+	def colorPickerChanged( self, value ):
+		self.lbl.setText( "New color value: " + value )
+	
+	def dateChanged( self, value ):
+		self.lbl.setText( "New date value: " + value )
 		
 #starts the webserver	
 start( App )

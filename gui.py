@@ -424,6 +424,45 @@ class titleTable(widget):
 		self.append("text",title)
 		self.style['float'] = 'none'
 		
+class inputWidget(widget):
+	def __init__(self,w,h,type='',defaultValue=''):
+		super(inputWidget,self).__init__(w,h)
+		self.type = "input"
+		self.attributes['class']=type
+		
+		_identifier=self.attributes['id']
+
+		self.attributes[ self.EVENT_ONCLICK ] = ""
+		self.attributes[ self.EVENT_ONCHANGE ] = " var v=\'newValue=\'+document.getElementById('"+_identifier+"').value ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONCHANGE + "',v);"
+		self.attributes['value']=str(defaultValue)
+		self.attributes['type']=type
+	def value(self):
+		return self.attributes['value']
+	#returns the new text value
+	def onchange(self,newValue):
+		self.attributes['value']=newValue
+		params = list()
+		params.append(newValue)
+		return self.eventManager.propagate("onchange",params)
+	#register the listener for the onchange event
+	def setOnChangeListener(self,listener,funcname):
+		self.eventManager.registerListener( "onchange",listener,funcname)
+
+class sliderWidget(inputWidget):
+	def __init__(self,w,h,defaultValue='',min=0,max=10000,step=1):
+		super(sliderWidget,self).__init__(w,h,'range',defaultValue)
+		self.attributes['min']=str(min)
+		self.attributes['max']=str(max)
+		self.attributes['step']=str(step)
+
+class colorPickerWidget(inputWidget):
+	def __init__(self,w,h,defaultValue='#995500'):
+		super(colorPickerWidget,self).__init__(w,h,'color',defaultValue)
+
+class dateWidget(inputWidget):
+	def __init__(self,w,h,defaultValue='2015-04-13'):
+		super(dateWidget,self).__init__(w,h,'date',defaultValue)
+		
 #object widget - allows to show embedded object like pdf,swf..
 class objectWidget(widget):
 	#filename should be an URL
