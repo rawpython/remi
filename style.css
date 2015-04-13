@@ -35,7 +35,7 @@ li {
 }
 
 li:hover {
-	background-color: red;
+	background: linear-gradient( rgb(230,230,230) , rgb( 215,215,215 ) );
 }
 
 input,button,textarea,select {
