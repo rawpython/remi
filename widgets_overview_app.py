@@ -26,7 +26,6 @@ class App( BaseApp ):
 		self.img = gui.imageWidget( 100, 100, "logo.png" )
 	
 		self.table = gui.tableWidget( 300, 200 )
-		self.tableTitle = gui.labelWidget( 300, 20, "This is a table" )
 		row = gui.rowTable()
 		item = gui.titleTable()
 		item.append( str(id(item)), "ID" )
@@ -64,16 +63,19 @@ class App( BaseApp ):
 		self.btInputDiag = gui.buttonWidget( 200, 30, "Open InputDialog" )
 		self.btInputDiag.setOnClickListener( self, "openInputDialog" )
 		
-		self.listWidget = gui.listWidget( 200,60 )
-		li0 = gui.listItem( 180,20, "Item 0")
+		self.listWidget = gui.listWidget( 300,120 )
+		li0 = gui.listItem( 180,20, "Danny Young")
 		li0.setOnClickListener( self, "listItem0_selected" )
-		li1 = gui.listItem( 180,20, "Item 1")
+		li1 = gui.listItem( 180,20, "Christine Holand")
 		li1.setOnClickListener( self, "listItem1_selected" )
-		li2 = gui.listItem( 180,20, "Item 2")
+		li2 = gui.listItem( 180,20, "Lars Gordon")
 		li2.setOnClickListener( self, "listItem2_selected" )
+		li3 = gui.listItem( 180,20, "Roberto Robitaille")
+		li3.setOnClickListener( self, "listItem3_selected" )
 		self.listWidget.append( "0", li0 )
 		self.listWidget.append( "1", li1 )
 		self.listWidget.append( "2", li2 )
+		self.listWidget.append( "3", li3 )
 
 		self.combo = gui.comboWidget( 200, 20 )
 		c0 = gui.comboItem( 200, 20, "Combo 0" )
@@ -98,15 +100,14 @@ class App( BaseApp ):
 		subContainerRight.append( "3", self.txt )
 		subContainerRight.append( "4", self.spin )
 		subContainerRight.append( "5", self.btInputDiag )
-		subContainerRight.append( "6", self.listWidget )
-		subContainerRight.append( "7", self.combo )
-		subContainerRight.append( "8", self.slider )
-		subContainerRight.append( "9", self.colorPicker )
-		subContainerRight.append( "10", self.date )
+		subContainerRight.append( "6", self.combo )
+		subContainerRight.append( "7", self.slider )
+		subContainerRight.append( "8", self.colorPicker )
+		subContainerRight.append( "9", self.date )
 		
 		subContainerLeft.append( "0", self.img )
-		subContainerLeft.append( "1", self.tableTitle )
-		subContainerLeft.append( "2", self.table )
+		subContainerLeft.append( "1", self.table )
+		subContainerLeft.append( "2", self.listWidget )
 		
 		
 		mainContainer.append( "0", subContainerLeft )
@@ -149,11 +150,13 @@ class App( BaseApp ):
 		self.lbl.setText( "Hello " + value )
 		
 	def listItem0_selected( self, x, y ):
-		self.lbl.setText( "List Item 0 selected" )
+		self.lbl.setText( "Danny selected" )
 	def listItem1_selected( self, x, y ):
-		self.lbl.setText( "List Item 1 selected" )
+		self.lbl.setText( "Christine selected" )
 	def listItem2_selected( self, x, y ):
-		self.lbl.setText( "List Item 2 selected" )
+		self.lbl.setText( "Lars selected" )
+	def listItem3_selected( self, x, y ):
+		self.lbl.setText( "Roberto selected" )
 		
 	def comboChanged( self, value ):
 		self.lbl.setText( "New Combo value: " + value )
