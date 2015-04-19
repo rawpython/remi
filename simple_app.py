@@ -15,31 +15,33 @@
 import gui
 from gui import *
 
-class App( BaseApp ):
-	def __init__( self, *args ):
-		super( App, self ).__init__( *args )
 
-	def main( self ):
-		#the arguments are	width - height - layoutOrientationOrizontal
-		wid = gui.widget( 120, 100, False, 10 )
-		self.lbl = gui.labelWidget( 100, 30, "Hello world!" )
-		self.bt = gui.buttonWidget( 100, 30, "Press me!" )
-			
-		#setting the listener for the onclick event of the button
-		self.bt.setOnClickListener( self, "onButtonPressed" )
-			
-		#appending a widget to another, the first argument is a string key
-		wid.append( "1", self.lbl )
-		wid.append( "2", self.bt )
-			
-		#returning the root widget
-		return wid
-	
-	#listener function
-	def onButtonPressed( self, x, y ):
-		self.lbl.setText( "Button pressed!" )
-		self.bt.text("Hi!")
+class App(BaseApp):
 
-			
-#starts the webserver	
-start( App )
+    def __init__(self, *args):
+        super(App, self).__init__(*args)
+
+    def main(self):
+        # the arguments are	width - height - layoutOrientationOrizontal
+        wid = gui.widget(120, 100, False, 10)
+        self.lbl = gui.labelWidget(100, 30, 'Hello world!')
+        self.bt = gui.buttonWidget(100, 30, 'Press me!')
+
+        # setting the listener for the onclick event of the button
+        self.bt.setOnClickListener(self, 'onButtonPressed')
+
+        # appending a widget to another, the first argument is a string key
+        wid.append('1', self.lbl)
+        wid.append('2', self.bt)
+
+        # returning the root widget
+        return wid
+
+    # listener function
+    def onButtonPressed(self, x, y):
+        self.lbl.setText('Button pressed!')
+        self.bt.text('Hi!')
+
+
+# starts the webserver
+start(App)
