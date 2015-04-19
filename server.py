@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,13 +14,10 @@
    limitations under the License.
 """
 
-#!/usr/bin/python
-import sys
 import urllib2
-from configuration import *
+from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, PORT_NUMBER
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SocketServer import ThreadingMixIn
-import threading
 import webbrowser
 
 clients = {}
@@ -65,22 +64,25 @@ def getMethodById(rootNode, _id, maxIter=5):
     return None
 
 
-# This class will handles any incoming request from the browser
-# The main application class can subclass this
-#	In the do_POST and do_GET methods it is expected to receive requests such as:
-#		- function calls with parameters
-#		- file requests
-class BaseApp(BaseHTTPRequestHandler, object):
 
-    # this method is used to get the Application instance previously created
-    # managing on this, it is possible to switch to "single instance for
-    # multiple clients" or "multiple instance for multiple clients" execution
-    # way
+class BaseApp(BaseHTTPRequestHandler, object):
+    """
+    This class will handles any incoming request from the browser
+    The main application class can subclass this
+    In the do_POST and do_GET methods it is expected to receive requests such as:
+        - function calls with parameters
+        - file requests
+    """
+
     def instance(self):
+        """
+        This method is used to get the Application instance previously created
+        managing on this, it is possible to switch to "single instance for
+        multiple clients" or "multiple instance for multiple clients" execution way
+        """
         k = self.client_address[0]
         if not MULTIPLE_INSTANCE:
-            # overwrite the key value, so all clients will point the same
-            # instance
+            # overwrite the key value, so all clients will point the same instance
             k = 0
         if not(k in clients.keys()):
             runtimeInstances.append(self)
@@ -105,8 +107,10 @@ class BaseApp(BaseHTTPRequestHandler, object):
         function = str(urllib2.unquote(self.path).decode('utf8'))
         self.processAll(function, paramDict, True)
 
-    # Handler for the GET requests
     def do_GET(self):
+        """
+        Handler for the GET requests
+        """
         self.instance()
         params = str(urllib2.unquote(self.path).decode('utf8'))
 
@@ -209,16 +213,16 @@ class BaseApp(BaseHTTPRequestHandler, object):
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-
-    """This class allows to handle requests in separated threads.
-
+    """
+    This class allows to handle requests in separated threads.
     No further content needed, don't touch this.
-
     """
 
 
-# this method starts the webserver with a specific BaseApp subclass
 def start(mainGuiClass):
+    """
+    This method starts the webserver with a specific BaseApp subclass
+    """
     try:
         # Create a web server and define the handler to manage the incoming
         # request
