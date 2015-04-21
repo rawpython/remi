@@ -41,6 +41,9 @@ class App(BaseApp):
     def onButtonPressed(self, x, y):
         self.lbl.setText('Button pressed!')
         self.bt.text('Hi!')
+		
+    def test(self):
+        return ('test','data')
 
 
 # starts the webserver
