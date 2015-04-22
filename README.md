@@ -2,6 +2,8 @@ gui
 ===
 Platform indipendent python gui library. In just 28 Kbytes of source code, perfect for your diet.
 
+![Alt text](https://raw.githubusercontent.com/dddomodossola/gui/master/screenshot.png "Widgets overview")
+
 It allows to create platform indipendent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. You have to write NO HTML code, because the library itself converts the python code automatically in HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
 Why another gui lib?
