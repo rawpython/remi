@@ -127,7 +127,7 @@ class widget(object):
             else:
                 innerHTML = innerHTML + repr(s)
 
-        return '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + v + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
+        return '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
 
     # it is used for fast access to "self.attributes[]"
     def __setitem__(self, key, value):
