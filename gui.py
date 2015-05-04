@@ -203,7 +203,7 @@ class widget(object):
 
     def setOnBlurListener(self, listener, funcname):
         self.attributes[
-            self.EVENT_ONBLUR] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONFOCUS + "');"
+            self.EVENT_ONBLUR] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONBLUR + "');"
         self.eventManager.registerListener(
             self.EVENT_ONBLUR, listener, funcname)
 
