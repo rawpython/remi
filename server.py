@@ -209,6 +209,9 @@ def update_clients():
 
 
 def gui_updater(client, leaf):
+    if not hasattr(leaf, 'attributes'):
+        return False
+
     # if there is not a copy of widgets, do it
     if not hasattr(client, 'old_runtime_widgets'):
         client.old_runtime_widgets = dict()  # idWidget,reprWidget
@@ -220,30 +223,32 @@ def gui_updater(client, leaf):
         # root window, a new window is shown, clean the old_runtime_widgets
         if client.root == leaf:
             client.old_runtime_widgets = dict()
-            client.old_runtime_widgets[__id] = repr(leaf)  # copy.copy(leaf)
+            client.old_runtime_widgets[__id] = leaf.repr_without_children()  # copy.copy(leaf)
             for ws in client.websockets:
                 ws.send_message('show_window,' + __id + ',' + repr(leaf))
             return True
-        client.old_runtime_widgets[__id] = repr(leaf)  # copy.copy(leaf)
-    # if the widget has changed or its subwidgets
-    if repr(leaf) != client.old_runtime_widgets[__id]:
-        client.old_runtime_widgets[__id] = repr(leaf)
-        subleafs_changed = False
-        try:
-            for subleaf in leaf.children.values():
-                subleafs_changed = subleafs_changed or gui_updater(client, subleaf)
-        except:
-            pass
-        # if no subleafs changed it means that we have to send the updated
-        # widget
-        if not subleafs_changed:
-            #client.old_runtime_widgets[__id] = repr(leaf)
-            for ws in client.websockets:
-                try:
-                    print("update_widget: " + __id + "  type: " + str(type(leaf)))
-                    ws.send_message('update_widget,' + __id + ',' + repr(leaf))
-                except:
-                    pass
+        client.old_runtime_widgets[__id] = leaf.repr_without_children()
+        #we ensure that the clients have an updated version
+        for ws in client.websockets:
+            try:
+                print("update_widget: " + __id + "  type: " + str(type(leaf)))
+                ws.send_message('update_widget,' + __id + ',' + repr(leaf))
+            except:
+                pass
+
+    # checking if subwidgets changed
+    for subleaf in leaf.children.values():
+        gui_updater(client, subleaf)
+
+    if leaf.repr_without_children() != client.old_runtime_widgets[__id]:
+        #client.old_runtime_widgets[__id] = repr(leaf)
+        for ws in client.websockets:
+            try:
+                print("update_widget: " + __id + "  type: " + str(type(leaf)))
+                ws.send_message('update_widget,' + __id + ',' + repr(leaf))
+            except:
+                print("exception here, server.py - gui_updater, id2")
+        client.old_runtime_widgets[__id] = leaf.repr_without_children()
         return True
     # widget NOT changed
     return False
