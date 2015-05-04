@@ -135,6 +135,22 @@ class widget(object):
         return '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
             v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
 
+    def repr_without_children(self):
+        """it is used to automatically represent the widget to HTML format
+        packs all the attributes."""
+        self['style'] = jsonize(self.style)
+        classname = self.__class__.__name__
+
+        # concatenating innerHTML. in case of html object we use repr, in case
+        # of string we use directly the content
+        innerHTML = ''
+        for s in self.renderChildrenList:
+            if isinstance(s, type('')):
+                innerHTML = innerHTML + s
+
+        return '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
+            v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
+
     def __setitem__(self, key, value):
         """it is used for fast access to 'self.attributes[]'."""
         self.attributes[key] = value
