@@ -1,3 +1,9 @@
+
+
+> ##*simple things makes the world simpler*
+
+
+
 gui
 ===
 Platform indipendent python gui library. In just 28 Kbytes of source code, perfect for your diet.
