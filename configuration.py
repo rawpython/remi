@@ -11,11 +11,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
-PORT_NUMBER = 8080
-IP_ADDR = '127.0.0.1'
-BASE_ADDRESS = 'http://' + IP_ADDR + ':' + str(PORT_NUMBER) + '/'
-MULTIPLE_INSTANCE = False
+WEBSOCKET_PORT_NUMBER = 8081
+HTTP_PORT_NUMBER = 8080
+IP_ADDR = '192.168.2.100'
+BASE_ADDRESS = 'http://' + IP_ADDR + ':' + str(HTTP_PORT_NUMBER) + '/'
+MULTIPLE_INSTANCE = True
 # this will enable the caching of images, css, and other local resources.
 ENABLE_FILE_CACHE = True
 runtimeInstances = list()
+UPDATE_INTERVAL = 0.1

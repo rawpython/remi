@@ -53,21 +53,26 @@ class eventManager():
         listener['funcname'] = funcname
         self.listeners[eventname] = listener
 
-# base class for gui widgets. In html, it is a DIV tag
-#	the "self.type" 		attribute specifies the HTML tag representation
-#	the "self.attributes[]"	attribute specifies the HTML attributes like "style" "class" "id"
-# the "self.style[]"              attribute specifies the CSS style
-# content like "font" "color". It will be packet togheter with
-# "self.attributes"
-
 
 class widget(object):
-    # w = numeric with
-    # h = numeric height
-    # layout_orizontal = specifies the "float" css attribute
-    # widget_spacing = specifies the "margin" css attribute for the children
+
+    """base class for gui widgets.
+
+    In html, it is a DIV tag    the "self.type"
+    attribute specifies the HTML tag representation    the
+    "self.attributes[]" attribute specifies the HTML attributes like
+    "style" "class" "id" the "self.style[]"              attribute
+    specifies the CSS style content like "font" "color". It will be
+    packet togheter with "self.attributes"
+
+    """
 
     def __init__(self, w=1, h=1, layout_orizontal=True, widget_spacing=0):
+        """w = numeric with
+        h = numeric height
+        layout_orizontal = specifies the "float" css attribute
+        widget_spacing = specifies the "margin" css attribute for the children"""
+
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
         # we not callable
@@ -112,9 +117,9 @@ class widget(object):
 
         self.eventManager = eventManager()
 
-    # it is used to automatically represent the widget to HTML format
-    #	packs all the attributes, children and so on
     def __repr__(self):
+        """it is used to automatically represent the widget to HTML format
+        packs all the attributes, children and so on."""
         self['style'] = jsonize(self.style)
         classname = self.__class__.__name__
 
@@ -122,21 +127,28 @@ class widget(object):
         # of string we use directly the content
         innerHTML = ''
         for s in self.renderChildrenList:
-            if type(s) == type(''):
+            if isinstance(s, type('')):
                 innerHTML = innerHTML + s
             else:
                 innerHTML = innerHTML + repr(s)
 
-        return '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
+        return '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
+            v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
 
-    # it is used for fast access to "self.attributes[]"
     def __setitem__(self, key, value):
+        """it is used for fast access to 'self.attributes[]'."""
         self.attributes[key] = value
 
-    # it allows to add child widgets to this. The key can be everything you
-    # want, in order to access to the specific child in this way
-    # "widget.children[key]".
     def append(self, key, value):
+        """it allows to add child widgets to this.
+
+        The key can be everything you want, in order to access to the
+        specific child in this way 'widget.children[key]'.
+
+        """
+        if hasattr(value, 'attributes'):
+            value.attributes['parent_widget'] = str(id(self))
+
         if key in self.children.keys():
             self.renderChildrenList.remove(self.children[key])
         self.renderChildrenList.append(value)
@@ -160,104 +172,79 @@ class widget(object):
                 if str(id(self.children[k])) == str(id(widget)):
                     self.children.pop(k)
 
-    def updated(self):
-        params = list()
-        self.eventManager.propagate(self.EVENT_ONUPDATE, params)
-        innerHTML = ''
-        for s in self.renderChildrenList:
-            if type(s) == type(''):
-                innerHTML = innerHTML + s
-            else:
-                innerHTML = innerHTML + repr(s)
-        return (innerHTML, 'text/html')
-
-    def setOnUpdateListener(self, listener, funcname):
-        self.eventManager.registerListener(
-            self.EVENT_ONUPDATE, listener, funcname)
-
-    # allows to update the widget content at specified interval
-    def setUpdateTimer(self, baseAppInstance, millisec):
-        baseAppInstance.client.attachments = baseAppInstance.client.attachments + '<script>var timerID' + str(id(self)) + '=0;function updater' + str(id(self)) + '(){timerID' + str(id(self)) + '=setTimeout(updater' + str(id(self)) + ',' + str(millisec) + ');elem' + str(id(self)) + "=document.getElementById('" + str(
-            id(self)) + "');elem2" + str(id(self)) + "=sendCommand('" + BASE_ADDRESS + str(id(self)) + "/updated','');if(elem" + str(id(self)) + '.innerHTML!=elem2' + str(id(self)) + ')elem' + str(id(self)) + '.innerHTML=elem2' + str(id(self)) + ';};updater' + str(id(self)) + '();</script>'
-
-    def onfocus(self, id):
-        params = list()
-        params.append(id)
-        return self.eventManager.propagate(self.EVENT_ONFOCUS, params)
+    def onfocus(self):
+        return self.eventManager.propagate(self.EVENT_ONFOCUS, list())
 
     def setOnFocusListener(self, listener, funcname):
-        self.attributes[self.EVENT_ONFOCUS] = "event.cancelBubble=true;var id='?id='+'" + str(
-            id(self)) + "';window.location='" + self.BASE_ADDRESS + str(id(self)) + '/' + self.EVENT_ONFOCUS + "'+id;return false;"
+        self.attributes[
+            self.EVENT_ONFOCUS] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONFOCUS + "');"
         #self.attributes[ self.EVENT_ONFOCUS ]=" var id=\'id=\'+'"+str(id(self))+"' ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONFOCUS + "',id);"
         self.eventManager.registerListener(
             self.EVENT_ONFOCUS, listener, funcname)
 
-    def onblur(self, id):
-        print('ON BLUR <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<--------------')
-        params = list()
-        params.append(id)
-        return self.eventManager.propagate(self.EVENT_ONBLUR, params)
+    def onblur(self):
+        return self.eventManager.propagate(self.EVENT_ONBLUR, list())
 
     def setOnBlurListener(self, listener, funcname):
-        self.attributes[self.EVENT_ONBLUR] = " var id=\'id=\'+'" + str(
-            id(self)) + "' ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + '/' + self.EVENT_ONBLUR + "',id);"
+        self.attributes[
+            self.EVENT_ONBLUR] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONFOCUS + "');"
         self.eventManager.registerListener(
             self.EVENT_ONBLUR, listener, funcname)
-    # This allows to set the parameter "Content type" when you return a widget
-    # you can return a widget in a callback in oreder to show it as main
-    # widget, now without specifing the content-type
 
     def __getitem__(self, key):
+        """This allows to set the parameter "Content type" when you return a widget
+        you can return a widget in a callback in oreder to show it as main
+        widget, now without specifing the content-type"""
         if key == 0:
             return self
         else:
             return 'text/html'
 
 
-
-
 class buttonWidget(widget):
+
     """
     button widget:
         implements the onclick event. reloads the web page because it uses the GET call.
         requires
     """
+
     def __init__(self, w, h, text=''):
         super(buttonWidget, self).__init__(w, h)
         self.type = 'button'
         self.attributes['class'] = 'buttonWidget'
-        self.attributes[self.EVENT_ONCLICK] = "event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + \
-            self.BASE_ADDRESS + \
-            str(id(self)) + '/' + self.EVENT_ONCLICK + "'+t;return false;"
+        #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.text(text)
 
     def text(self, t):
         self.append('text', t)
-    # returns mouse "x" and "y" position
 
-    def onclick(self, x, y):
+    def onclick(self):
         print('buttonWidget pressed: ', self.children['text'])
-        return self.eventManager.propagate(self.EVENT_ONCLICK, (x, y))
-
+        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
 
     def setOnClickListener(self, listener, funcname):
-        """
-        Register a listener for the click event.
+        """Register a listener for the click event.
+
         listener = class instance
             funcname = the name of member function that will be called.
         example:
             bt.setOnClickListener( listenerClass, "ontest" )
+
         """
         self.eventManager.registerListener(
             self.EVENT_ONCLICK, listener, funcname)
 
 
 class textareaWidget(widget):
-    """
-    multiline text area widget
-    implements the onclick event. reloads the web page because it uses the GET call.
-    implements the onchange event with POST method, without reloading the
-    web page
+
+    """multiline text area widget implements the onclick event.
+
+    reloads the web page because it uses the GET call. implements the
+    onchange event with POST method, without reloading the web page
+
     """
 
     def __init__(self, w, h):
@@ -265,55 +252,49 @@ class textareaWidget(widget):
         self.type = 'textarea'
         self.attributes['class'] = 'textareaWidget'
 
-        _identifier = self.attributes['id']
-
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = " var v=\'newValue=\'+document.getElementById('" + _identifier + "').value ;sendCommand('" + self.BASE_ADDRESS + str(
-            id(self)) + '/' + self.EVENT_ONCHANGE + "',v);"
+        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
+            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
+
         self.text('')
 
     def text(self, t):
-        """
-        sets the text content
-        """
+        """sets the text content."""
         self.append('text', t)
 
     def value(self):
         return self.children['text']
 
     def onchange(self, newValue):
-        """
-        returns the new text value
-        """
+        """returns the new text value."""
         self.text(newValue)
         params = list()
         params.append(newValue)
         return self.eventManager.propagate('onchange', params)
 
     def setOnChangeListener(self, listener, funcname):
-        """
-        register the listener for the onchange event
-        """
+        """register the listener for the onchange event."""
         self.eventManager.registerListener('onchange', listener, funcname)
 
-    def onclick(self, x, y):
-        return self.eventManager.propagate('onclick', (x, y))
+    def onclick(self):
+        return self.eventManager.propagate('onclick', list())
 
     def setOnClickListener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + \
-            self.BASE_ADDRESS + \
-            str(id(self)) + '/' + self.EVENT_ONCLICK + "'+t;return false;"
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.registerListener('onclick', listener, funcname)
 
 
-
 class spinboxWidget(widget):
+
+    """spin box widget usefull as numeric input field implements the onclick
+    event.
+
+    reloads the web page because it uses the GET call. implements the
+    onchange event with POST method, without reloading the web page
+
     """
-    spin box widget usefull as numeric input field
-        implements the onclick event. reloads the web page because it uses the GET call.
-    implements the onchange event with POST method, without reloading the
-    web page
-    """
+
     def __init__(self, w, h, min=100, max=5000, value=1000, step=1):
         super(spinboxWidget, self).__init__(w, h)
         self.type = 'input'
@@ -325,8 +306,8 @@ class spinboxWidget(widget):
         self.attributes['step'] = str(step)
 
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = " var v=\'newValue=\'+document.getElementById('" + str(
-            id(self)) + "').value ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + '/' + self.EVENT_ONCHANGE + "',v);"
+        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
+            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
 
     def onchange(self, newValue):
         params = list()
@@ -337,13 +318,12 @@ class spinboxWidget(widget):
     def setOnChangeListener(self, listener, funcname):
         self.eventManager.registerListener('onchange', listener, funcname)
 
-    def onclick(self, x, y):
-        return self.eventManager.propagate('onclick', (x, y))
+    def onclick(self):
+        return self.eventManager.propagate('onclick', list())
 
     def setOnClickListener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + \
-                                              self.BASE_ADDRESS + \
-                                              str(id(self)) + '/' + self.EVENT_ONCLICK + "'+t;return false;"
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.registerListener('onclick', listener, funcname)
 
     def value(self):
@@ -366,11 +346,9 @@ class labelWidget(widget):
 
 
 class inputDialog(widget):
-    """
-    input dialog, it opens a new webpage
-    allows the OK/ABORT functionality implementing the "onConfirm" and
-    "onAbort" events
-    """
+
+    """input dialog, it opens a new webpage allows the OK/ABORT functionality
+    implementing the "onConfirm" and "onAbort" events."""
 
     def __init__(self, title, message):
         w = 500
@@ -399,17 +377,22 @@ class inputDialog(widget):
         self.append('3', hlay)
 
         self.inputText.attributes[self.EVENT_ONCHANGE] = ''
-        self.conf.attributes[self.EVENT_ONCLICK] = "var v=\'?value=\'+document.getElementById('" + str(
-            id(self.inputText)) + "').value ;window.location='" + self.BASE_ADDRESS + str(id(self)) + '/' + self.EVENT_ONCONFIRM + "' + v;"
-        self.abort.attributes[self.EVENT_ONCLICK] = "window.location='" + \
-            self.BASE_ADDRESS + str(id(self)) + '/' + self.EVENT_ONABORT + "';"
+        self.conf.attributes[self.EVENT_ONCLICK] = "var params={};params['value']=document.getElementById('" + str(
+            id(self.inputText)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCONFIRM + "',params);"
+        self.abort.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONABORT + "');"
         self.inputText.attributes[self.EVENT_ONCLICK] = ''
 
+        self.baseAppInstance = None
+        self.oldRootWidget = None  # used when hiding the dialog
+
     def confirmValue(self, value):
+        """event called pressing on OK button.
+
+        propagates the string content of the input field
+
         """
-        event called pressing on OK button. propagates the string content of the
-        input field
-        """
+        self.baseAppInstance.client.root = self.oldRootWidget
         params = list()
         params.append(value)
         return self.eventManager.propagate(self.EVENT_ONCONFIRM, params)
@@ -419,6 +402,7 @@ class inputDialog(widget):
             self.EVENT_ONCONFIRM, listener, funcname)
 
     def abortValue(self):
+        self.baseAppInstance.client.root = self.oldRootWidget
         params = list()
         return self.eventManager.propagate(self.EVENT_ONABORT, params)
 
@@ -426,12 +410,17 @@ class inputDialog(widget):
         self.eventManager.registerListener(
             self.EVENT_ONABORT, listener, funcname)
 
+    def show(self, baseAppInstance):
+        self.baseAppInstance = baseAppInstance
+        # here the widget is set up as root, in server.gui_updater is monitored
+        # this change and the new window is send to the browser
+        self.oldRootWidget = self.baseAppInstance.client.root
+        self.baseAppInstance.client.root = self
+
 
 class listWidget(widget):
-    """
-    list widget
-    it can contain listItems
-    """
+
+    """list widget it can contain listItems."""
 
     def __init__(self, w, h):
         super(listWidget, self).__init__(w, h)
@@ -440,10 +429,11 @@ class listWidget(widget):
 
 
 class listItem(widget):
-    """
-    item widget for the listWidget
-    implements the onclick event. reloads the web page because it uses the
-    GET call.
+
+    """item widget for the listWidget implements the onclick event.
+
+    reloads the web page because it uses the GET call.
+
     """
 
     def __init__(self, w, h, text):
@@ -454,34 +444,37 @@ class listItem(widget):
         self.attributes[self.EVENT_ONCLICK] = ''
         self.append('1', text)
 
-    def onclick(self, x, y):
-        return self.eventManager.propagate('onclick', (x, y))
+    def onclick(self):
+        return self.eventManager.propagate('onclick', list())
 
     def setOnClickListener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + \
-            self.BASE_ADDRESS + \
-            str(id(self)) + '/' + self.EVENT_ONCLICK + "'+t;return false;"
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.registerListener('onclick', listener, funcname)
 
 
 class comboWidget(widget):
-    """
-    combo box widget
-    implements the onchange event with POST method, without reloading the
-    web page
-    """
+
+    """combo box widget implements the onchange event with POST method, without
+    reloading the web page."""
 
     def __init__(self, w, h):
         super(comboWidget, self).__init__(w, h)
         self.type = 'select'
         self.attributes['class'] = 'comboWidget'
-        self.attributes[self.EVENT_ONCHANGE] = " var v=\'newValue=\'+document.getElementById('" + str(
-            id(self)) + "').value ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + '/' + self.EVENT_ONCHANGE + "',v);"
+        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
+            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
 
     def onchange(self, newValue):
         params = list()
         params.append(newValue)
         print('combo box. selected', newValue)
+        for item in self.children.values():
+            if item.attributes['value']==newValue:
+                item.attributes['selected'] = 'selected'
+            else:
+                if 'selected' in item.attributes: 
+                    del item.attributes['selected']
         return self.eventManager.propagate('onchange', params)
 
     def setOnChangeListener(self, listener, funcname):
@@ -489,10 +482,11 @@ class comboWidget(widget):
 
 
 class comboItem(widget):
-    """
-    item widget for the comboWidget
-    implements the onclick event. reloads the web page because it uses the
-    GET call.
+
+    """item widget for the comboWidget implements the onclick event.
+
+    reloads the web page because it uses the GET call.
+
     """
 
     def __init__(self, w, h, text):
@@ -503,32 +497,29 @@ class comboItem(widget):
         self.append('1', text)
         self.attributes['value'] = text
 
-    def onclick(self, x, y):
-        return self.eventManager.propagate('onclick', (x, y))
+    def onclick(self):
+        return self.eventManager.propagate('onclick', list())
 
     def setOnClickListener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "event.cancelBubble=true;var t='?x='+event.x+'?y='+event.y ;window.location='" + \
-            self.BASE_ADDRESS + \
-            str(id(self)) + '/' + self.EVENT_ONCLICK + "'+t;return false;"
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.registerListener('onclick', listener, funcname)
 
 
 class imageWidget(widget):
-    """
-    image widget
-    """
+
+    """image widget."""
 
     def __init__(self, w, h, filename):
-        """
-        filename should be an URL
-        """
+        """filename should be an URL."""
         super(imageWidget, self).__init__(w, h)
-        self.type = 'image'
+        self.type = 'img'
         self.attributes['class'] = 'imageWidget'
         self.attributes['src'] = BASE_ADDRESS + filename
 
 
 class tableWidget(widget):
+
     """
     table widget - it will contains rowTable
     """
@@ -541,6 +532,7 @@ class tableWidget(widget):
 
 
 class rowTable(widget):
+
     """
     row widget for the tableWidget - it will contains itemTable
     """
@@ -553,9 +545,8 @@ class rowTable(widget):
 
 
 class itemTable(widget):
-    """
-    item widget for the rowTable
-    """
+
+    """item widget for the rowTable."""
 
     def __init__(self):
         super(itemTable, self).__init__(-1, -1)
@@ -565,9 +556,9 @@ class itemTable(widget):
 
 
 class titleTable(widget):
-    """
-    title widget for the table
-    """
+
+    """title widget for the table."""
+
     def __init__(self, title=''):
         super(titleTable, self).__init__(-1, -1)
         self.type = 'th'
@@ -583,18 +574,14 @@ class inputWidget(widget):
         self.type = 'input'
         self.attributes['class'] = type
 
-        _identifier = self.attributes['id']
-
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = " var v=\'newValue=\'+document.getElementById('" + _identifier + "').value ;sendCommand('" + self.BASE_ADDRESS + str(
-            id(self)) + '/' + self.EVENT_ONCHANGE + "',v);"
+        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
+            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
         self.attributes['value'] = str(defaultValue)
         self.attributes['type'] = type
 
     def value(self):
-        """
-        returns the new text value
-        """
+        """returns the new text value."""
         return self.attributes['value']
 
     def onchange(self, newValue):
@@ -604,9 +591,7 @@ class inputWidget(widget):
         return self.eventManager.propagate('onchange', params)
 
     def setOnChangeListener(self, listener, funcname):
-        """
-        register the listener for the onchange event
-        """
+        """register the listener for the onchange event."""
         self.eventManager.registerListener('onchange', listener, funcname)
 
 
@@ -632,79 +617,14 @@ class dateWidget(inputWidget):
 
 
 class objectWidget(widget):
+
     """
     object widget - allows to show embedded object like pdf,swf..
     """
 
     def __init__(self, w, h, filename):
-        """
-        filename should be an URL
-        """
+        """filename should be an URL."""
         super(objectWidget, self).__init__(w, h)
         self.type = 'object'
         self.attributes['class'] = 'objectWidget'
         self.attributes['data'] = filename
-
-
-try:
-    import StringIO
-
-    import PIL
-    from PIL import Image
-    from PIL import ImageFont
-    from PIL import ImageDraw
-
-    class canvasWidget(widget):
-        """
-        canvas widget - it is usefull to draw arbitrary geom elements
-        implements the onredraw event.
-        the paint operations are performed by the "painter" member of the class
-        the "painter" is a PIL's ImageDraw instance, and so, you can access to
-        all its properties and functions.
-        """
-
-        def __init__(self, w, h, baseAppInstance, refreshInterval=500):
-            """
-
-            :param w: image width
-            :param h: image height
-            :param baseAppInstance: the instance of the main windows that overloads the BaseApp class
-            :param refreshInterval: the update interval for the canvas
-            :return:
-            """
-            super(canvasWidget, self).__init__(w, h)
-            baseAppInstance.client.attachments = baseAppInstance.client.attachments + '<script>var timerID' + str(id(self)) + ' = 0;function newFrame' + str(id(self)) + "(){var imgId = '" + str(
-                id(self)) + "';var img = new Image();img.type = 'image/png' ;img.src = '" + BASE_ADDRESS + "'+imgId+ '/update';img.onload = function(){ var can = document.getElementById(imgId); var ctx = can.getContext('2d'); ctx.drawImage(img, 0, 0, img.width, img.height);timerID" + str(id(self)) + '=setTimeout(newFrame' + str(id(self)) + ',' + str(refreshInterval) + ');};};newFrame' + str(id(self)) + '();</script>'
-            self.type = 'canvas'
-            self.imgWidth = w
-            self.imgHeight = h
-            self.image = Image.new(
-                'RGB', (self.imgWidth, self.imgHeight), 'white')
-            self.painter = ImageDraw.Draw(self.image)
-
-        def update(self):
-            # calling redraw propagating the event
-            self.redraw()
-
-            virtualFile = StringIO.StringIO()
-            self.image.save(
-                virtualFile, format='JPEG', quality=100, optimize=True, progressive=True)
-            virtualFile.seek(0)
-            content = virtualFile.read()
-            virtualFile.close()
-            return (content, 'image/jpg')
-
-        def redraw(self):
-            """self.counter = self.counter + 1
-            f = ImageFont.load_default()
-            self.painter.rectangle((0,0)+(self.imgWidth,self.imgHeight),fill=128)
-            self.painter.text((0, 0),"updating frame" + str(self.counter),(0,0,0),font=f)
-            """
-            params = list()
-            return self.eventManager.propagate('onredraw', params)
-
-        def setOnRedrawListener(self, listener, funcname):
-            self.eventManager.registerListener('onredraw', listener, funcname)
-
-except:
-    print('Canvas widget not available! PIL library or StringIO not found.')

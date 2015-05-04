@@ -38,12 +38,12 @@ class App(BaseApp):
         return wid
 
     # listener function
-    def onButtonPressed(self, x, y):
+    def onButtonPressed(self):
         self.lbl.setText('Button pressed!')
         self.bt.text('Hi!')
-		
+
     def test(self):
-        return ('test','data')
+        return ('test', 'data')
 
 
 # starts the webserver

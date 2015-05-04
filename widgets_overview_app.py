@@ -49,7 +49,6 @@ class App(BaseApp):
         subContainerRight = gui.widget(240, 390, False, 10)
 
         self.lbl = gui.labelWidget(200, 30, 'This is a LABEL!')
-        self.lbl.setUpdateTimer(self, 500)
 
         self.bt = gui.buttonWidget(200, 30, 'Press me!')
         # setting the listener for the onclick event of the button
@@ -129,7 +128,7 @@ class App(BaseApp):
         table.append(str(id(row)), row)
 
     # listener function
-    def onButtonPressed(self, x, y):
+    def onButtonPressed(self):
         self.lbl.setText('Button pressed!')
         self.bt.text('Hi!')
 
@@ -137,36 +136,36 @@ class App(BaseApp):
         self.lbl.setText('Text Area value changed!')
 
     def onSpinChange(self, newValue):
-        self.lbl.setText('SpinBox changed, new value: ' + newValue)
+        self.lbl.setText('SpinBox changed, new value: ' + str(newValue))
 
-    def openInputDialog(self, x, y):
+    def openInputDialog(self):
         self.inputDialog = gui.inputDialog('Input Dialog', 'Your name?')
         self.inputDialog.setOnConfirmValueListener(
             self, 'onInputDialogConfirm')
 
         # here is returned the Input Dialog widget, and it will be shown
-        return self.inputDialog
+        self.inputDialog.show(self)
 
     def onInputDialogConfirm(self, value):
         self.lbl.setText('Hello ' + value)
 
-    def listItem0_selected(self, x, y):
+    def listItem0_selected(self):
         self.lbl.setText('Danny selected')
 
-    def listItem1_selected(self, x, y):
+    def listItem1_selected(self):
         self.lbl.setText('Christine selected')
 
-    def listItem2_selected(self, x, y):
+    def listItem2_selected(self):
         self.lbl.setText('Lars selected')
 
-    def listItem3_selected(self, x, y):
+    def listItem3_selected(self):
         self.lbl.setText('Roberto selected')
 
     def comboChanged(self, value):
         self.lbl.setText('New Combo value: ' + value)
 
     def sliderChanged(self, value):
-        self.lbl.setText('New slider value: ' + value)
+        self.lbl.setText('New slider value: ' + str(value))
 
     def colorPickerChanged(self, value):
         self.lbl.setText('New color value: ' + value)
