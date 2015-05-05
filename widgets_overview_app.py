@@ -131,6 +131,7 @@ class MyApp(App):
     def on_button_pressed(self):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
+        self.bt.show(self)
 
     def on_text_area_change(self, newValue):
         self.lbl.set_text('Text Area value changed!')

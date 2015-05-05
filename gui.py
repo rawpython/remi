@@ -219,6 +219,7 @@ class Widget(object):
             return 'text/html'
 
     def show(self, baseAppInstance):
+        """Allows to show the widget as root window"""
         self.baseAppInstance = baseAppInstance
         # here the widget is set up as root, in server.gui_updater is monitored
         # this change and the new window is send to the browser
@@ -226,7 +227,9 @@ class Widget(object):
         self.baseAppInstance.client.root = self
 
     def hide(self):
-        self.baseAppInstance.client.root = self.oldRootWidget
+        """The root window is restored after a show"""
+        if hasattr(self,'baseAppInstance'):
+            self.baseAppInstance.client.root = self.oldRootWidget
 
 
 class Button(Widget):
@@ -434,8 +437,7 @@ class InputDialog(Widget):
 
     def abort_value(self):
         self.hide()
-        params = list()
-        return self.eventManager.propagate(self.EVENT_ONABORT, params)
+        return self.eventManager.propagate(self.EVENT_ONABORT, list())
 
     def set_on_abort_value_listener(self, listener, funcname):
         self.eventManager.register_listener(

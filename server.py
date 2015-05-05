@@ -203,6 +203,14 @@ def parse_parametrs(p):
 def update_clients():
     global clients
     for client in clients.values():
+        #here we check if the root window has changed
+        if not hasattr(client,'old_root_window') or client.old_root_window != client.root:
+            #a new window is shown, clean the old_runtime_widgets
+            client.old_runtime_widgets = dict()
+            for ws in client.websockets:
+                ws.send_message('show_window,' + str(id(client.root)) + ',' + repr(client.root))
+                
+        client.old_root_window = client.root
         gui_updater(client, client.root)
     Timer(UPDATE_INTERVAL, update_clients, ()).start()
 
@@ -218,15 +226,6 @@ def gui_updater(client, leaf):
     __id = str(id(leaf))
     # if the widget is not contained in the copy
     if not (__id in client.old_runtime_widgets.keys()):
-        # considering that this leaf is not in the old runtimes and it is a
-        # root window, a new window is shown, clean the old_runtime_widgets
-        if client.root == leaf:
-            client.old_runtime_widgets = dict()
-            client.old_runtime_widgets[
-                __id] = leaf.repr_without_children()  # copy.copy(leaf)
-            for ws in client.websockets:
-                ws.send_message('show_window,' + __id + ',' + repr(leaf))
-            return True
         client.old_runtime_widgets[__id] = leaf.repr_without_children()
         # we ensure that the clients have an updated version
         for ws in client.websockets:
