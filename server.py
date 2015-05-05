@@ -26,20 +26,19 @@ from mimetools import Message
 from StringIO import StringIO
 import threading
 from threading import Timer
-import copy
 
 
 clients = {}
 updateTimerStarted = False  # to start the update timer only once
 
 
-def getMethodBy(rootNode, idname):
+def get_method_by(rootNode, idname):
     if idname.isdigit():
-        return getMethodById(rootNode, idname)
-    return getMethodByName(rootNode, idname)
+        return get_method_by_id(rootNode, idname)
+    return get_method_by_name(rootNode, idname)
 
 
-def getMethodByName(rootNode, name, maxIter=5):
+def get_method_by_name(rootNode, name, maxIter=5):
     val = None
     if hasattr(rootNode, name):
         val = getattr(rootNode, name)
@@ -49,7 +48,7 @@ def getMethodByName(rootNode, name, maxIter=5):
     return val
 
 
-def getMethodById(rootNode, _id, maxIter=5):
+def get_method_by_id(rootNode, _id, maxIter=5):
     for i in runtimeInstances:
         if id(i) == _id:
             return i
@@ -66,7 +65,7 @@ def getMethodById(rootNode, _id, maxIter=5):
         if hasattr(rootNode, 'children'):
             for i in rootNode.children.values():
                 # print(str(i))
-                val = getMethodById(i, _id, maxIter)
+                val = get_method_by_id(i, _id, maxIter)
                 if val is not None:
                     return val
     except:
@@ -166,18 +165,18 @@ class WebSocketsHandler(SocketServer.StreamRequestHandler):
                 params = message[
                     len(msgType) + len(widgetID) + len(functionName) + 3:]
 
-                paramDict = parseParametrs(params)
+                paramDict = parse_parametrs(params)
                 print('msgType: ' + msgType + ' widgetId: ' + widgetID +
                       ' function: ' + functionName + ' params: ' + str(params))
 
                 for w in runtimeInstances:
                     if str(id(w)) == widgetID:
-                        callback = getMethodByName(w, functionName)
+                        callback = get_method_by_name(w, functionName)
                         if callback is not None:
                             callback(**paramDict)
 
 
-def parseParametrs(p):
+def parse_parametrs(p):
     """
     Parses the parameters given from POST or websocket reqs
     expecting the parameters as:  "11|par1='asd'|6|par2=1"
@@ -223,15 +222,16 @@ def gui_updater(client, leaf):
         # root window, a new window is shown, clean the old_runtime_widgets
         if client.root == leaf:
             client.old_runtime_widgets = dict()
-            client.old_runtime_widgets[__id] = leaf.repr_without_children()  # copy.copy(leaf)
+            client.old_runtime_widgets[
+                __id] = leaf.repr_without_children()  # copy.copy(leaf)
             for ws in client.websockets:
                 ws.send_message('show_window,' + __id + ',' + repr(leaf))
             return True
         client.old_runtime_widgets[__id] = leaf.repr_without_children()
-        #we ensure that the clients have an updated version
+        # we ensure that the clients have an updated version
         for ws in client.websockets:
             try:
-                print("update_widget: " + __id + "  type: " + str(type(leaf)))
+                print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
                 ws.send_message('update_widget,' + __id + ',' + repr(leaf))
             except:
                 pass
@@ -244,10 +244,10 @@ def gui_updater(client, leaf):
         #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:
             try:
-                print("update_widget: " + __id + "  type: " + str(type(leaf)))
+                print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
                 ws.send_message('update_widget,' + __id + ',' + repr(leaf))
             except:
-                print("exception here, server.py - gui_updater, id2")
+                print('exception here, server.py - gui_updater, id2')
         client.old_runtime_widgets[__id] = leaf.repr_without_children()
         return True
     # widget NOT changed
@@ -367,9 +367,9 @@ ws.onerror = function(evt){ \
         varLen = int(self.headers['Content-Length'])
         postVars = self.rfile.read(varLen)
         postVars = str(urllib2.unquote(postVars).decode('utf8'))
-        paramDict = parseParametrs(postVars)
+        paramDict = parse_parametrs(postVars)
         function = str(urllib2.unquote(self.path).decode('utf8'))
-        self.processAll(function, paramDict, True)
+        self.process_all(function, paramDict, True)
 
     def do_GET(self):
         """Handler for the GET requests."""
@@ -380,11 +380,11 @@ ws.onerror = function(evt){ \
         function = params[0]
 
         function = function[1:]
-        self.processAll(function, dict(), False)
+        self.process_all(function, dict(), False)
 
         return
 
-    def processAll(self, function, paramDict, isPost):
+    def process_all(self, function, paramDict, isPost):
         ispath = True
         snake = None
         doNotCallMain = False
@@ -395,15 +395,15 @@ ws.onerror = function(evt){ \
                 if ispath == False:
                     break
                 if snake is None:
-                    snake = getMethodBy(self.client.root, attr)
+                    snake = get_method_by(self.client.root, attr)
                     ispath = ispath and (None != snake)
                     continue
-                snake = getMethodBy(snake, attr)
+                snake = get_method_by(snake, attr)
                 ispath = ispath and (None != snake)
         else:
             function = function.replace('/', '')
             if len(function) > 0:
-                snake = getMethodBy(self.client, function)
+                snake = get_method_by(self.client, function)
                 ispath = ispath and (None != snake)
             else:
                 doNotCallMain = hasattr(self.client, 'root')

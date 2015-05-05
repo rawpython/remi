@@ -14,22 +14,20 @@ pero por cada plataforma que aparece tenemos que esperar un puerto.
 Esta librería permite mostrar una interfaz de usuario en donde sea que haya un explorador.
 
 Justo ahora está incompleta. Estos widgets están disponibles:
-
-- widget : como un panel vacío
-- buttonWidget
-- textareaWidget : para texto editable.
-- spinboxWidget
-- labelWidget
-- inputDialog
-- listWidget
-- comboWidget
-- imageWidget
-- tableWidget
-- objectWidget : te permite mostrar un objeto embebido como pdf, swf...
-- canvasWidget : util para dibujar geometrías arbitrarias. Utiliza la biblioteca de PIL.
-- sliderWidget
-- colorPickerWidget
-- dateWidget
+- Widget : como un panel vacío
+- Button
+- TextInput : para texto editable.
+- SpinBox
+- Label
+- InputDialog
+- ListView
+- DropDown
+- Image
+- Table
+- GenericObject : te permite mostrar un objeto embebido como pdf, swf...
+- Slider
+- ColorPicker
+- Date
 
 Una aplicación básica aparece como:
 
@@ -37,33 +35,38 @@ Una aplicación básica aparece como:
 import gui
 from gui import *
 
-class App( BaseApp ):
-	def __init__( self, *args ):
-		super( App, self ).__init__( *args )
-		
-	def main( self ):
-		#the arguments are	width - height - layoutOrientationOrizontal
-		wid = gui.widget( 100, 60, False )
-		self.lbl = gui.labelWidget( 100, 30, "Hello world!" )
-		self.bt = gui.buttonWidget( 100, 30, "Press me!" )
-			
-		#setting the listener for the onclick event of the button
-		self.bt.setOnClickListener( self, "onButtonPressed" )
-			
-		#appending a widget to another, the first argument is a string key
-		wid.append( "1", self.lbl )
-		wid.append( "2", self.bt )
-			
-		#return of the root widget
-		return wid
-	
-	#listener function
-	def onButtonPressed( self, x, y ):
-		self.lbl.setText( "Button pressed!" )
-		self.bt.text("Hi!")
 
-#starts the webserver	
-start( App )
+class MyApp(App):
+
+    def __init__(self, *args):
+        super(MyApp, self).__init__(*args)
+
+    def main(self):
+        # the arguments are	width - height - layoutOrientationOrizontal
+        wid = gui.Widget(120, 100, False, 10)
+        self.lbl = gui.Label(100, 30, 'Hello world!')
+        self.bt = gui.Button(100, 30, 'Press me!')
+
+        # setting the listener for the onclick event of the button
+        self.bt.set_on_click_listener(self, 'on_button_pressed')
+
+        # appending a widget to another, the first argument is a string key
+        wid.append('1', self.lbl)
+        wid.append('2', self.bt)
+
+        # returning the root widget
+        return wid
+
+    # listener function
+    def on_button_pressed(self):
+        self.lbl.set_text('Button pressed!')
+        self.bt.set_text('Hi!')
+
+    def test(self):
+        return ('test', 'data')
+
+
+# starts the webserver
 </code></pre>
 
 De forma que para ver la interfaz de usuario, 

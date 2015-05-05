@@ -58,12 +58,12 @@ class Widget(object):
 
     """base class for gui widgets.
 
-    In html, it is a DIV tag    the "self.type"
-    attribute specifies the HTML tag representation    the
-    "self.attributes[]" attribute specifies the HTML attributes like
-    "style" "class" "id" the "self.style[]"              attribute
-    specifies the CSS style content like "font" "color". It will be
-    packet togheter with "self.attributes"
+    In html, it is a DIV tag    the "self.type" attribute specifies the
+    HTML tag representation    the "self.attributes[]" attribute
+    specifies the HTML attributes like "style" "class" "id" the
+    "self.style[]"              attribute specifies the CSS style
+    content like "font" "color". It will be packet togheter with
+    "self.attributes"
 
     """
 
@@ -290,7 +290,7 @@ class TextInput(Widget):
         """sets the text content."""
         self.append('text', t)
 
-    def value(self):
+    def get_text(self):
         return self.children['text']
 
     def onchange(self, newValue):
@@ -302,7 +302,8 @@ class TextInput(Widget):
 
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCHANGE, listener, funcname)
 
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, list())
@@ -310,7 +311,8 @@ class TextInput(Widget):
     def set_on_click_listener(self, listener, funcname):
         self.attributes[
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
 
 
 class SpinBox(Widget):
@@ -344,7 +346,8 @@ class SpinBox(Widget):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
 
     def set_on_change_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCHANGE, listener, funcname)
 
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, list())
@@ -352,7 +355,8 @@ class SpinBox(Widget):
     def set_on_click_listener(self, listener, funcname):
         self.attributes[
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
 
     def value(self):
         return self.attributes['value']
@@ -470,7 +474,8 @@ class ListItem(Widget):
     def set_on_click_listener(self, listener, funcname):
         self.attributes[
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
 
 
 class DropDown(Widget):
@@ -490,15 +495,16 @@ class DropDown(Widget):
         params.append(newValue)
         print('combo box. selected', newValue)
         for item in self.children.values():
-            if item.attributes['value']==newValue:
+            if item.attributes['value'] == newValue:
                 item.attributes['selected'] = 'selected'
             else:
-                if 'selected' in item.attributes: 
+                if 'selected' in item.attributes:
                     del item.attributes['selected']
         return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
 
     def set_on_change_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCHANGE, listener, funcname)
 
 
 class DropDownItem(Widget):
@@ -523,7 +529,8 @@ class DropDownItem(Widget):
     def set_on_click_listener(self, listener, funcname):
         self.attributes[
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
 
 
 class Image(Widget):
@@ -612,7 +619,8 @@ class Input(Widget):
 
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(
+            self.EVENT_ONCHANGE, listener, funcname)
 
 
 class Slider(Input):

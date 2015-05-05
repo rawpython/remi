@@ -16,21 +16,20 @@ Why another gui lib?
 Ok, Kivy is the best, Tk is historical, pyQt is also good, but for every platform that appears we have to wait a porting. This lib allows to show a user interface everywhere there is a browser.
 
 These widgets are available:
-- widget : like an empty panel
-- buttonWidget
-- textareaWidget : for the editable text
-- spinboxWidget
-- labelWidget
-- inputDialog
-- listWidget
-- comboWidget
-- imageWidget
-- tableWidget
-- objectWidget : allows to show embedded object like pdf,swf..
-- canvasWidget : usefull to draw arbitrary geometries. It uses PIL's library.
-- sliderWidget
-- colorPickerWidget
-- dateWidget
+- Widget : like an empty panel
+- Button
+- TextInput : for the editable text
+- SpinBox
+- Label
+- InputDialog
+- ListView
+- DropDown
+- Image
+- Table
+- GenericObject : allows to show embedded object like pdf,swf..
+- Slider
+- ColorPicker
+- Date
 
 A basic application appears like this:
 
@@ -38,33 +37,39 @@ A basic application appears like this:
 import gui
 from gui import *
 
-class App( BaseApp ):
-	def __init__( self, *args ):
-		super( App, self ).__init__( *args )
-		
-	def main( self ):
-		#the arguments are	width - height - layoutOrientationOrizontal
-		wid = gui.widget( 100, 60, False )
-		self.lbl = gui.labelWidget( 100, 30, "Hello world!" )
-		self.bt = gui.buttonWidget( 100, 30, "Press me!" )
-			
-		#setting the listener for the onclick event of the button
-		self.bt.setOnClickListener( self, "onButtonPressed" )
-			
-		#appending a widget to another, the first argument is a string key
-		wid.append( "1", self.lbl )
-		wid.append( "2", self.bt )
-			
-		#return of the root widget
-		return wid
-	
-	#listener function
-	def onButtonPressed( self, x, y ):
-		self.lbl.setText( "Button pressed!" )
-		self.bt.text("Hi!")
 
-#starts the webserver	
-start( App )
+class MyApp(App):
+
+    def __init__(self, *args):
+        super(MyApp, self).__init__(*args)
+
+    def main(self):
+        # the arguments are	width - height - layoutOrientationOrizontal
+        wid = gui.Widget(120, 100, False, 10)
+        self.lbl = gui.Label(100, 30, 'Hello world!')
+        self.bt = gui.Button(100, 30, 'Press me!')
+
+        # setting the listener for the onclick event of the button
+        self.bt.set_on_click_listener(self, 'on_button_pressed')
+
+        # appending a widget to another, the first argument is a string key
+        wid.append('1', self.lbl)
+        wid.append('2', self.bt)
+
+        # returning the root widget
+        return wid
+
+    # listener function
+    def on_button_pressed(self):
+        self.lbl.set_text('Button pressed!')
+        self.bt.set_text('Hi!')
+
+    def test(self):
+        return ('test', 'data')
+
+
+# starts the webserver
+start(MyApp)
 </code></pre>
 
 In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8080".
@@ -93,16 +98,16 @@ from gui import *
 </code></pre>
 
 
-Subclass the <code>BaseApp</code> class and declare a <code>main</code> function that will be the entry point of the application. Inside the main function you have to <code>return</code> the root widget.
+Subclass the <code>App</code> class and declare a <code>main</code> function that will be the entry point of the application. Inside the main function you have to <code>return</code> the root widget.
 
 <pre><code>
 
-class App( BaseApp ):
+class MyApp( App ):
 	def __init__( self, *args ):
-		super( App, self ).__init__( *args )
+		super( MyApp, self ).__init__( *args )
 		
 	def main( self ):
-		lbl = gui.labelWidget( 100, 30, "Hello world!" )
+		lbl = gui.Label( 100, 30, "Hello world!" )
 		
 		#return of the root widget
 		return lbl
@@ -115,7 +120,7 @@ Outside the main class start the application calling the function <code>start</c
 <pre><code>
 
 #starts the webserver	
-start( App )
+start( MyApp )
 
 </code></pre>
 
