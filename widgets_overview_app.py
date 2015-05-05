@@ -16,83 +16,83 @@ import gui
 from gui import *
 
 
-class App(BaseApp):
+class MyApp(App):
 
     def __init__(self, *args):
-        super(App, self).__init__(*args)
+        super(MyApp, self).__init__(*args)
 
     def main(self):
-        mainContainer = gui.widget(600, 530, True, 10)
+        mainContainer = gui.Widget(600, 530, True, 10)
 
-        subContainerLeft = gui.widget(300, 370, False, 10)
-        self.img = gui.imageWidget(100, 100, 'logo.png')
+        subContainerLeft = gui.Widget(300, 370, False, 10)
+        self.img = gui.Image(100, 100, 'logo.png')
 
-        self.table = gui.tableWidget(300, 200)
-        row = gui.rowTable()
-        item = gui.titleTable()
+        self.table = gui.Table(300, 200)
+        row = gui.TableRow()
+        item = gui.TableTitle()
         item.append(str(id(item)), 'ID')
         row.append(str(id(item)), item)
-        item = gui.titleTable()
+        item = gui.TableTitle()
         item.append(str(id(item)), 'First Name')
         row.append(str(id(item)), item)
-        item = gui.titleTable()
+        item = gui.TableTitle()
         item.append(str(id(item)), 'Last Name')
         row.append(str(id(item)), item)
         self.table.append(str(id(row)), row)
-        self.addTableRow(self.table, '101', 'Danny', 'Young')
-        self.addTableRow(self.table, '102', 'Christine', 'Holand')
-        self.addTableRow(self.table, '103', 'Lars', 'Gordon')
-        self.addTableRow(self.table, '104', 'Roberto', 'Robitaille')
-        self.addTableRow(self.table, '105', 'Maria', 'Papadopoulos')
+        self.add_table_row(self.table, '101', 'Danny', 'Young')
+        self.add_table_row(self.table, '102', 'Christine', 'Holand')
+        self.add_table_row(self.table, '103', 'Lars', 'Gordon')
+        self.add_table_row(self.table, '104', 'Roberto', 'Robitaille')
+        self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.widget(240, 390, False, 10)
+        subContainerRight = gui.Widget(240, 390, False, 10)
 
-        self.lbl = gui.labelWidget(200, 30, 'This is a LABEL!')
+        self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
-        self.bt = gui.buttonWidget(200, 30, 'Press me!')
+        self.bt = gui.Button(200, 30, 'Press me!')
         # setting the listener for the onclick event of the button
-        self.bt.setOnClickListener(self, 'onButtonPressed')
+        self.bt.set_on_click_listener(self, 'on_button_pressed')
 
-        self.txt = gui.textareaWidget(200, 30)
-        self.txt.text('This is a TEXTAREA')
-        self.txt.setOnChangeListener(self, 'onTextAreaChange')
+        self.txt = gui.TextInput(200, 30)
+        self.txt.set_text('This is a TEXTAREA')
+        self.txt.set_on_change_listener(self, 'on_text_area_change')
 
-        self.spin = gui.spinboxWidget(200, 30)
-        self.spin.setOnChangeListener(self, 'onSpinChange')
+        self.spin = gui.SpinBox(200, 30)
+        self.spin.set_on_change_listener(self, 'on_spin_change')
 
-        self.btInputDiag = gui.buttonWidget(200, 30, 'Open InputDialog')
-        self.btInputDiag.setOnClickListener(self, 'openInputDialog')
+        self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
+        self.btInputDiag.set_on_click_listener(self, 'open_input_dialog')
 
-        self.listWidget = gui.listWidget(300, 120)
-        li0 = gui.listItem(279, 20, 'Danny Young')
-        li0.setOnClickListener(self, 'listItem0_selected')
-        li1 = gui.listItem(279, 20, 'Christine Holand')
-        li1.setOnClickListener(self, 'listItem1_selected')
-        li2 = gui.listItem(279, 20, 'Lars Gordon')
-        li2.setOnClickListener(self, 'listItem2_selected')
-        li3 = gui.listItem(279, 20, 'Roberto Robitaille')
-        li3.setOnClickListener(self, 'listItem3_selected')
-        self.listWidget.append('0', li0)
-        self.listWidget.append('1', li1)
-        self.listWidget.append('2', li2)
-        self.listWidget.append('3', li3)
+        self.listView = gui.ListView(300, 120)
+        li0 = gui.ListItem(279, 20, 'Danny Young')
+        li0.set_on_click_listener(self, 'list_item0_selected')
+        li1 = gui.ListItem(279, 20, 'Christine Holand')
+        li1.set_on_click_listener(self, 'list_item1_selected')
+        li2 = gui.ListItem(279, 20, 'Lars Gordon')
+        li2.set_on_click_listener(self, 'list_item2_selected')
+        li3 = gui.ListItem(279, 20, 'Roberto Robitaille')
+        li3.set_on_click_listener(self, 'list_item3_selected')
+        self.listView.append('0', li0)
+        self.listView.append('1', li1)
+        self.listView.append('2', li2)
+        self.listView.append('3', li3)
 
-        self.combo = gui.comboWidget(200, 20)
-        c0 = gui.comboItem(200, 20, 'Combo 0')
-        c1 = gui.comboItem(200, 20, 'Combo 1')
-        self.combo.append('0', c0)
-        self.combo.append('1', c1)
-        self.combo.setOnChangeListener(self, 'comboChanged')
+        self.dropDown = gui.DropDown(200, 20)
+        c0 = gui.DropDownItem(200, 20, 'DropDownItem 0')
+        c1 = gui.DropDownItem(200, 20, 'DropDownItem 1')
+        self.dropDown.append('0', c0)
+        self.dropDown.append('1', c1)
+        self.dropDown.set_on_change_listener(self, 'drop_down_changed')
 
-        self.slider = gui.sliderWidget(200, 20, 10, 0, 100, 5)
-        self.slider.setOnChangeListener(self, 'sliderChanged')
+        self.slider = gui.Slider(200, 20, 10, 0, 100, 5)
+        self.slider.set_on_change_listener(self, 'slider_changed')
 
-        self.colorPicker = gui.colorPickerWidget(200, 20, '#ffbb00')
-        self.colorPicker.setOnChangeListener(self, 'colorPickerChanged')
+        self.colorPicker = gui.ColorPicker(200, 20, '#ffbb00')
+        self.colorPicker.set_on_change_listener(self, 'color_picker_changed')
 
-        self.date = gui.dateWidget(200, 20, '2015-04-13')
-        self.date.setOnChangeListener(self, 'dateChanged')
+        self.date = gui.Date(200, 20, '2015-04-13')
+        self.date.set_on_change_listener(self, 'date_changed')
 
         # appending a widget to another, the first argument is a string key
         subContainerRight.append('1', self.lbl)
@@ -100,78 +100,78 @@ class App(BaseApp):
         subContainerRight.append('3', self.txt)
         subContainerRight.append('4', self.spin)
         subContainerRight.append('5', self.btInputDiag)
-        subContainerRight.append('6', self.combo)
+        subContainerRight.append('6', self.dropDown)
         subContainerRight.append('7', self.slider)
         subContainerRight.append('8', self.colorPicker)
         subContainerRight.append('9', self.date)
 
         subContainerLeft.append('0', self.img)
         subContainerLeft.append('1', self.table)
-        subContainerLeft.append('2', self.listWidget)
+        subContainerLeft.append('2', self.listView)
 
         mainContainer.append('0', subContainerLeft)
         mainContainer.append('1', subContainerRight)
         # returning the root widget
         return mainContainer
 
-    def addTableRow(self, table, field1, field2, field3):
-        row = gui.rowTable()
-        item = gui.itemTable()
+    def add_table_row(self, table, field1, field2, field3):
+        row = gui.TableRow()
+        item = gui.TableItem()
         item.append(str(id(item)), field1)
         row.append(str(id(item)), item)
-        item = gui.itemTable()
+        item = gui.TableItem()
         item.append(str(id(item)), field2)
         row.append(str(id(item)), item)
-        item = gui.itemTable()
+        item = gui.TableItem()
         item.append(str(id(item)), field3)
         row.append(str(id(item)), item)
         table.append(str(id(row)), row)
 
     # listener function
-    def onButtonPressed(self):
-        self.lbl.setText('Button pressed!')
-        self.bt.text('Hi!')
+    def on_button_pressed(self):
+        self.lbl.set_text('Button pressed!')
+        self.bt.set_text('Hi!')
 
-    def onTextAreaChange(self, newValue):
-        self.lbl.setText('Text Area value changed!')
+    def on_text_area_change(self, newValue):
+        self.lbl.set_text('Text Area value changed!')
 
-    def onSpinChange(self, newValue):
-        self.lbl.setText('SpinBox changed, new value: ' + str(newValue))
+    def on_spin_change(self, newValue):
+        self.lbl.set_text('SpinBox changed, new value: ' + str(newValue))
 
-    def openInputDialog(self):
-        self.inputDialog = gui.inputDialog('Input Dialog', 'Your name?')
-        self.inputDialog.setOnConfirmValueListener(
-            self, 'onInputDialogConfirm')
+    def open_input_dialog(self):
+        self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?')
+        self.inputDialog.set_on_confirm_value_listener(
+            self, 'on_input_dialog_confirm')
 
         # here is returned the Input Dialog widget, and it will be shown
         self.inputDialog.show(self)
 
-    def onInputDialogConfirm(self, value):
-        self.lbl.setText('Hello ' + value)
+    def on_input_dialog_confirm(self, value):
+        self.lbl.set_text('Hello ' + value)
 
-    def listItem0_selected(self):
-        self.lbl.setText('Danny selected')
+    def list_item0_selected(self):
+        self.lbl.set_text('Danny selected')
 
-    def listItem1_selected(self):
-        self.lbl.setText('Christine selected')
+    def list_item1_selected(self):
+        self.lbl.set_text('Christine selected')
 
-    def listItem2_selected(self):
-        self.lbl.setText('Lars selected')
+    def list_item2_selected(self):
+        self.lbl.set_text('Lars selected')
 
-    def listItem3_selected(self):
-        self.lbl.setText('Roberto selected')
+    def list_item3_selected(self):
+        self.lbl.set_text('Roberto selected')
 
-    def comboChanged(self, value):
-        self.lbl.setText('New Combo value: ' + value)
+    def drop_down_changed(self, value):
+        self.lbl.set_text('New Combo value: ' + value)
 
-    def sliderChanged(self, value):
-        self.lbl.setText('New slider value: ' + str(value))
+    def slider_changed(self, value):
+        self.lbl.set_text('New slider value: ' + str(value))
 
-    def colorPickerChanged(self, value):
-        self.lbl.setText('New color value: ' + value)
+    def color_picker_changed(self, value):
+        self.lbl.set_text('New color value: ' + value)
 
-    def dateChanged(self, value):
-        self.lbl.setText('New date value: ' + value)
+    def date_changed(self, value):
+        self.lbl.set_text('New date value: ' + value)
 
 # starts the webserver
-start(App)
+start(MyApp)

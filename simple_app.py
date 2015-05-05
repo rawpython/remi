@@ -16,19 +16,19 @@ import gui
 from gui import *
 
 
-class App(BaseApp):
+class MyApp(App):
 
     def __init__(self, *args):
-        super(App, self).__init__(*args)
+        super(MyApp, self).__init__(*args)
 
     def main(self):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.widget(120, 100, False, 10)
-        self.lbl = gui.labelWidget(100, 30, 'Hello world!')
-        self.bt = gui.buttonWidget(100, 30, 'Press me!')
+        wid = gui.Widget(120, 100, False, 10)
+        self.lbl = gui.Label(100, 30, 'Hello world!')
+        self.bt = gui.Button(100, 30, 'Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.setOnClickListener(self, 'onButtonPressed')
+        self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
         wid.append('1', self.lbl)
@@ -38,13 +38,13 @@ class App(BaseApp):
         return wid
 
     # listener function
-    def onButtonPressed(self):
-        self.lbl.setText('Button pressed!')
-        self.bt.text('Hi!')
+    def on_button_pressed(self):
+        self.lbl.set_text('Button pressed!')
+        self.bt.set_text('Hi!')
 
     def test(self):
         return ('test', 'data')
 
 
 # starts the webserver
-start(App)
+start(MyApp)

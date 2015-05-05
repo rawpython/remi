@@ -254,7 +254,7 @@ def gui_updater(client, leaf):
     return False
 
 
-class BaseApp(BaseHTTPRequestHandler, WebSocketsHandler, object):
+class App(BaseHTTPRequestHandler, WebSocketsHandler, object):
 
     """
     This class will handles any incoming request from the browser
@@ -474,7 +474,7 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
 
 
 def start(mainGuiClass):
-    """This method starts the webserver with a specific BaseApp subclass."""
+    """This method starts the webserver with a specific App subclass."""
     try:
         # Create a web server and define the handler to manage the incoming
         # request
