@@ -6,7 +6,7 @@
 
 gui
 ===
-Platform indipendent python gui library. In just 28 Kbytes of source code, perfect for your diet.
+Platform indipendent python gui library. In less than 100 Kbytes of source code, perfect for your diet.
 
 ![Alt text](https://raw.githubusercontent.com/dddomodossola/gui/master/screenshot.png "Widgets overview")
 
