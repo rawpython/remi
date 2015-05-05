@@ -2,7 +2,7 @@ Traducción gracias a: Julio Contreras
 
 gui
 ===
-En sólo 28 Kbytes de código, ideal para su dieta.
+En meno de 100 Kbytes de código, ideal para su dieta.
 
 Esta es una version pre-pre-pre-alpha, una gui python basada en HTML y de esta manera, una plataforma independiente.
 Esto permite crear una plataforma GUI independiente con python. 
