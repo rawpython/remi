@@ -62,11 +62,9 @@ class MyApp(App):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
-    def test(self):
-        return ('test', 'data')
-
 
 # starts the webserver
+start(MyApp)
 </code></pre>
 
 De forma que para ver la interfaz de usuario, 
