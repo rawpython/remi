@@ -25,7 +25,7 @@ class MyApp(App):
         mainContainer = gui.Widget(600, 530, True, 10)
 
         subContainerLeft = gui.Widget(300, 370, False, 10)
-        self.img = gui.Image(100, 100, 'logo.png')
+        self.img = gui.Image(100, 100, 'res/logo.png')
 
         self.table = gui.Table(300, 200)
         row = gui.TableRow()
