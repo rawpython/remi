@@ -211,6 +211,7 @@ def update_clients():
                 ws.send_message('show_window,' + str(id(client.root)) + ',' + repr(client.root))
                 
         client.old_root_window = client.root
+        client.idle()
         gui_updater(client, client.root)
     Timer(UPDATE_INTERVAL, update_clients, ()).start()
 
@@ -360,6 +361,11 @@ ws.onerror = function(evt){ \
         if updateTimerStarted == False:
             updateTimerStarted = True
             Timer(UPDATE_INTERVAL, update_clients, ()).start()
+
+    def idle(self):
+        """ Idle function called every UPDATE_INTERVAL before the gui update.
+            Usefull to schedule tasks. """
+        pass
 
     def do_POST(self):
         self.instance()
