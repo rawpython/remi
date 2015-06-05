@@ -84,7 +84,7 @@ class WebSocketsHandler(SocketServer.StreamRequestHandler):
     def setup(self):
         global clients
         SocketServer.StreamRequestHandler.setup(self)
-        print 'websocket connection established', self.client_address
+        print('websocket connection established', self.client_address)
         self.handshake_done = False
 
     def handle(self):
@@ -133,7 +133,7 @@ class WebSocketsHandler(SocketServer.StreamRequestHandler):
         headers = Message(StringIO(data.split('\r\n', 1)[1]))
         # if headers.get("Upgrade", None) != "websocket":
         #    return
-        print 'Handshaking...'
+        print('Handshaking...')
         key = headers['Sec-WebSocket-Key']
         digest = b64encode(sha1(key + self.magic).hexdigest().decode('hex'))
         response = 'HTTP/1.1 101 Switching Protocols\r\n'
@@ -152,7 +152,7 @@ class WebSocketsHandler(SocketServer.StreamRequestHandler):
         if not self in clients[k].websockets:
             clients[k].websockets.append(self)
         print('on_message\n')
-        print 'recv from websocket client: ' + message
+        print('recv from websocket client: ' + message)
 
         # parsing messages
         chunks = message.split('/')
