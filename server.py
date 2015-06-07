@@ -13,17 +13,41 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
-import urllib2
+try:
+    from urllib.parse import unquote
+except:
+    import urllib2
+    unquote = urllib2.unquote
 from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-import SocketServer
+try:
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+except:
+    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+try:
+    import socketserver
+except:
+    import SocketServer as socketserver
 import webbrowser
 import struct
+import binascii
 from base64 import b64encode
+import hashlib
 from hashlib import sha1
-from mimetools import Message
-from StringIO import StringIO
+import sys
+try:
+    import email
+    Message = email.message_from_string
+except:
+    from mimetools import Message
+try:
+    import io
+    def StringIO(v):
+        v=io.BytesIO(v)
+        v=b''.join(v.readlines()).decode("utf-8")
+        return v
+    #StringIO = io.BytesIO
+except:
+    from StringIO import StringIO
 import threading
 from threading import Timer
 
@@ -31,6 +55,7 @@ from threading import Timer
 clients = {}
 updateTimerStarted = False  # to start the update timer only once
 
+pyLessThan3 = sys.version_info < (3,)
 
 def get_method_by(rootNode, idname):
     if idname.isdigit():
@@ -74,16 +99,16 @@ def get_method_by_id(rootNode, _id, maxIter=5):
 
 
 class ThreadedWebsocketServer(
-        SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+        socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
 
 
-class WebSocketsHandler(SocketServer.StreamRequestHandler):
-    magic = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+class WebSocketsHandler(socketserver.StreamRequestHandler):
+    magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
     def setup(self):
         global clients
-        SocketServer.StreamRequestHandler.setup(self)
+        socketserver.StreamRequestHandler.setup(self)
         print('websocket connection established', self.client_address)
         self.handshake_done = False
 
@@ -94,53 +119,61 @@ class WebSocketsHandler(SocketServer.StreamRequestHandler):
                 self.handshake()
             else:
                 if not self.read_next_message():
+                    print('ending websocket service...')
                     break
+            
+    def bytetonum(self,b):
+        if pyLessThan3:
+            b = ord(b)
+        return b
 
     def read_next_message(self):
-        try:
-            print('read_next_message\n')
-            length = ord(self.rfile.read(2)[1]) & 127
-            if length == 126:
-                length = struct.unpack('>H', self.rfile.read(2))[0]
-            elif length == 127:
-                length = struct.unpack('>Q', self.rfile.read(8))[0]
-            masks = [ord(byte) for byte in self.rfile.read(4)]
-            decoded = ''
-            for char in self.rfile.read(length):
-                decoded += chr(ord(char) ^ masks[len(decoded) % 4])
-            self.on_message(decoded)
-            return True
-        except:
-            return False
+        print('read_next_message\n')
+        length = self.rfile.read(2)
+        length = self.bytetonum(length[1]) & 127
+        if length == 126:
+            length = struct.unpack('>H', self.rfile.read(2))[0]
+        elif length == 127:
+            length = struct.unpack('>Q', self.rfile.read(8))[0]
+        masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
+        decoded = ''
+        for char in self.rfile.read(length):
+            decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
+        self.on_message(decoded)
+        return True
 
     def send_message(self, message):
+        out = bytearray()
+        out.append(129)
         print('send_message\n')
-        self.request.send(chr(129))
         length = len(message)
         if length <= 125:
-            self.request.send(chr(length))
+            out.append(length)
         elif length >= 126 and length <= 65535:
-            self.request.send(chr(126))
-            self.request.send(struct.pack('>H', length))
+            out.append(126)
+            out = out + struct.pack('>H', length)
         else:
-            self.request.send(chr(127))
-            self.request.send(struct.pack('>Q', length))
-        self.request.send(message)
+            out.append(127)
+            out = out + struct.pack('>Q', length)
+        out = out + message.encode()
+        self.request.send(out)
 
     def handshake(self):
         print('handshake\n')
         data = self.request.recv(1024).strip()
-        headers = Message(StringIO(data.split('\r\n', 1)[1]))
-        # if headers.get("Upgrade", None) != "websocket":
-        #    return
+        headers = Message(StringIO(data.split(b'\r\n', 1)[1]))
         print('Handshaking...')
         key = headers['Sec-WebSocket-Key']
-        digest = b64encode(sha1(key + self.magic).hexdigest().decode('hex'))
+        key = key
+        digest = hashlib.sha1((key.encode("utf-8")+self.magic))
+        digest = digest.digest()
+        digest = b64encode(digest)
         response = 'HTTP/1.1 101 Switching Protocols\r\n'
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
-        response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest
-        self.handshake_done = self.request.send(response)
+        response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
+        self.request.sendall(response.encode("utf-8"))
+        self.handshake_done = True
 
     def on_message(self, message):
         # saving the websocket in order to update the client
@@ -243,11 +276,11 @@ def gui_updater(client, leaf):
     if leaf.repr_without_children() != client.old_runtime_widgets[__id]:
         #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:
-            try:
-                print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
-                ws.send_message('update_widget,' + __id + ',' + repr(leaf))
-            except:
-                print('exception here, server.py - gui_updater, id2')
+            #try:
+            print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
+            ws.send_message('update_widget,' + __id + ',' + repr(leaf))
+            #except:
+            #    print('exception here, server.py - gui_updater, id2')
         client.old_runtime_widgets[__id] = leaf.repr_without_children()
         return True
     # widget NOT changed
@@ -371,15 +404,15 @@ ws.onerror = function(evt){ \
         self.instance()
         varLen = int(self.headers['Content-Length'])
         postVars = self.rfile.read(varLen)
-        postVars = str(urllib2.unquote(postVars).decode('utf8'))
+        postVars = str(unquote(postVars))
         paramDict = parse_parametrs(postVars)
-        function = str(urllib2.unquote(self.path).decode('utf8'))
+        function = str(unquote(self.path))
         self.process_all(function, paramDict, True)
 
     def do_GET(self):
         """Handler for the GET requests."""
         self.instance()
-        params = str(urllib2.unquote(self.path).decode('utf8'))
+        params = str(unquote(self.path))
 
         params = params.split('?')
         function = params[0]
@@ -431,13 +464,13 @@ ws.onerror = function(evt){ \
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
 
-                self.wfile.write(self.client.attachments)
-                self.wfile.write(
+                self.wfile.write(self.client.attachments.encode('utf-8'))
+                self.wfile.write((
                     "<link href='" +
                     BASE_ADDRESS +
-                    "style.css' rel='stylesheet' />")
+                    "style.css' rel='stylesheet' />").encode('utf-8'))
 
-                self.wfile.write(repr(self.client.root))
+                self.wfile.write(repr(self.client.root).encode('utf-8'))
             else:
                 # here is the function that should return the content type
                 self.send_response(200)
@@ -448,13 +481,13 @@ ws.onerror = function(evt){ \
                 # if is requested a widget, but not by post, so we suppose is
                 # requested to show a new page, we attach javascript and style
                 if(ret[1] == 'text/html' and isPost == False):
-                    self.wfile.write(self.client.attachments)
-                    self.wfile.write(
+                    self.wfile.write(self.client.attachments.encode('utf-8'))
+                    self.wfile.write((
                         "<link href='" +
                         BASE_ADDRESS +
-                        "style.css' rel='stylesheet' />")
+                        "style.css' rel='stylesheet' />").encode('utf-8'))
 
-                self.wfile.write(ret[0])
+                self.wfile.write(ret[0].encode('utf-8'))
 
         else:
             self.send_response(200)
@@ -464,12 +497,12 @@ ws.onerror = function(evt){ \
             self.end_headers()
 
             f = open('./' + function, 'r+b')
-            content = ''.join(f.readlines())
+            content = b''.join(f.readlines())
             f.close()
             self.wfile.write(content)
 
 
-class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     """This class allows to handle requests in separated threads.
 
