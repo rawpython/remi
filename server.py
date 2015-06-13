@@ -250,8 +250,12 @@ def gui_updater(client, leaf):
         # we ensure that the clients have an updated version
         for ws in client.websockets:
             try:
-                print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
-                ws.send_message('update_widget,' + __id + ',' + repr(leaf))
+                print('insert_widget: ' +  leaf.attributes['parent_widget'] + '  type: ' + str(type(leaf)))
+                if 'parent_widget' in leaf.attributes.keys():
+                    parentWidgetId = leaf.attributes['parent_widget']
+                else:
+                    parentWidgetId = 'noparent'
+                ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
             except:
                 pass
 
@@ -339,6 +343,14 @@ ws.onmessage = function (evt) { \
         var index = received_msg.indexOf(',')+1;\
         elem.insertAdjacentHTML('afterend',content);\
         elem.parentElement.removeChild(elem);\
+    }else if( command=='insert_widget'){\
+        if( document.getElementById(s[1])==null ){\
+            /*the content contains an additional field that we have to remove*/\
+            index = content.indexOf(',')+1;\
+            content = content.substr(index,content.length-index);\
+            var elem = document.getElementById(s[2]);\
+            elem.innerHTML = elem.innerHTML + content;\
+        }\
     }\
     console.debug('command:' + command);\
     console.debug('content:' + content);\
