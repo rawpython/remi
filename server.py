@@ -34,20 +34,6 @@ from base64 import b64encode
 import hashlib
 from hashlib import sha1
 import sys
-try:
-    import email
-    Message = email.message_from_string
-except:
-    from mimetools import Message
-try:
-    import io
-    def StringIO(v):
-        v=io.BytesIO(v)
-        v=b''.join(v.readlines()).decode("utf-8")
-        return v
-    #StringIO = io.BytesIO
-except:
-    from StringIO import StringIO
 import threading
 from threading import Timer
 
@@ -161,10 +147,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         print('handshake\n')
         data = self.request.recv(1024).strip()
-        headers = Message(StringIO(data.split(b'\r\n', 1)[1]))
+        #headers = Message(StringIO(data.split(b'\r\n', 1)[1]))
         print('Handshaking...')
-        key = headers['Sec-WebSocket-Key']
-        key = key
+        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0] #headers['Sec-WebSocket-Key']
+        #key = key
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
         digest = b64encode(digest)
