@@ -250,12 +250,15 @@ def gui_updater(client, leaf):
         # we ensure that the clients have an updated version
         for ws in client.websockets:
             try:
-                print('insert_widget: ' +  leaf.attributes['parent_widget'] + '  type: ' + str(type(leaf)))
+                #print('insert_widget: ' +  leaf.attributes['parent_widget'] + '  type: ' + str(type(leaf)))
+                #here a new widget is found, but it must be added updating the parent widget
                 if 'parent_widget' in leaf.attributes.keys():
                     parentWidgetId = leaf.attributes['parent_widget']
+                    ws.send_message('update_widget,' + parentWidgetId + ',' + repr(get_method_by_id(client.root,parentWidgetId)))
                 else:
-                    parentWidgetId = 'noparent'
-                ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
+                    print('the new widget seems to have no parent...')
+                #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
+                #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
             except:
                 pass
 
