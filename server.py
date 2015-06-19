@@ -141,7 +141,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         else:
             out.append(127)
             out = out + struct.pack('>Q', length)
-        out = out + message.encode()
+        if not pyLessThan3:
+            message = message.encode('ascii',errors='replace')
+        out = out + message
         self.request.send(out)
 
     def handshake(self):
