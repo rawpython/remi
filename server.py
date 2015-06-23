@@ -59,6 +59,12 @@ def fromWebsocket(data):
     return unquote(data,encoding='latin-1')
 
 
+def encodeIfPyGT3(data):
+    if not pyLessThan3:
+        data = data.encode('latin-1')
+    return data
+
+
 def get_method_by(rootNode, idname):
     if idname.isdigit():
         return get_method_by_id(rootNode, idname)
@@ -453,6 +459,7 @@ ws.onerror = function(evt){ \
         return
 
     def process_all(self, function, paramDict, isPost):
+        encoding='latin-1'
         ispath = True
         snake = None
         doNotCallMain = False
@@ -493,14 +500,13 @@ ws.onerror = function(evt){ \
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
-
-                self.wfile.write(self.client.attachments.encode('latin-1'))
-                self.wfile.write((
+                
+                self.wfile.write(encodeIfPyGT3(self.client.attachments))
+                self.wfile.write(encodeIfPyGT3(
                     "<link href='" +
                     BASE_ADDRESS +
-                    "style.css' rel='stylesheet' />").encode('latin-1'))
-
-                self.wfile.write(repr(self.client.root).encode('latin-1'))
+                    "style.css' rel='stylesheet' />"))
+                self.wfile.write(encodeIfPyGT3(repr(self.client.root)))
             else:
                 # here is the function that should return the content type
                 self.send_response(200)
@@ -511,13 +517,13 @@ ws.onerror = function(evt){ \
                 # if is requested a widget, but not by post, so we suppose is
                 # requested to show a new page, we attach javascript and style
                 if(ret[1] == 'text/html' and isPost == False):
-                    self.wfile.write(self.client.attachments.encode('latin-1'))
-                    self.wfile.write((
+                    self.wfile.write(encodeIfPyGT3(self.client.attachments))
+                    self.wfile.write(encodeIfPyGT3(
                         "<link href='" +
                         BASE_ADDRESS +
-                        "style.css' rel='stylesheet' />").encode('latin-1'))
+                        "style.css' rel='stylesheet' />"))
 
-                self.wfile.write(ret[0].encode('latin-1'))
+                self.wfile.write(encodeIfPyGT3(ret[0]))
 
         else:
             self.send_response(200)
