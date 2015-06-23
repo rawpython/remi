@@ -13,11 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-try:
-    from urllib.parse import unquote
-except:
-    import urllib2
-    unquote = urllib2.unquote
 from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -36,12 +31,33 @@ from hashlib import sha1
 import sys
 import threading
 from threading import Timer
-
+try:
+    from urllib import unquote
+    from urllib import quote
+except:
+    from urllib.parse import unquote
+    from urllib.parse import quote
+    from urllib.parse import unquote_to_bytes
 
 clients = {}
 updateTimerStarted = False  # to start the update timer only once
 
 pyLessThan3 = sys.version_info < (3,)
+
+
+def toWebsocket(data):
+    #encoding end deconding utility function
+    if pyLessThan3:
+        return quote(data)
+    return quote(data,encoding='latin-1')
+        
+        
+def fromWebsocket(data):
+    #encoding end deconding utility function
+    if pyLessThan3:
+        return unquote(data)
+    return unquote(data,encoding='latin-1')
+
 
 def get_method_by(rootNode, idname):
     if idname.isdigit():
@@ -116,16 +132,21 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def read_next_message(self):
         print('read_next_message\n')
         length = self.rfile.read(2)
-        length = self.bytetonum(length[1]) & 127
-        if length == 126:
-            length = struct.unpack('>H', self.rfile.read(2))[0]
-        elif length == 127:
-            length = struct.unpack('>Q', self.rfile.read(8))[0]
-        masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
-        decoded = ''
-        for char in self.rfile.read(length):
-            decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-        self.on_message(decoded)
+        try:
+            length = self.bytetonum(length[1]) & 127
+            if length == 126:
+                length = struct.unpack('>H', self.rfile.read(2))[0]
+            elif length == 127:
+                length = struct.unpack('>Q', self.rfile.read(8))[0]
+            masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
+            decoded = ''
+            for char in self.rfile.read(length):
+                decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
+            self.on_message(fromWebsocket(decoded))
+        except:
+            print("Exception in server.py-read_next_message.")
+            print("    exception extra data: " + str(length))
+            return False
         return True
 
     def send_message(self, message):
@@ -142,7 +163,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             out.append(127)
             out = out + struct.pack('>Q', length)
         if not pyLessThan3:
-            message = message.encode('ascii',errors='replace')
+            message = message.encode('utf-8')#'ascii',errors='replace')
         out = out + message
         self.request.send(out)
 
@@ -171,9 +192,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             # instance
             k = 0
         if not self in clients[k].websockets:
+            #clients[k].websockets.clear()
             clients[k].websockets.append(self)
         print('on_message\n')
-        print('recv from websocket client: ' + message)
+        #print('recv from websocket client: ' + str(message))
 
         # parsing messages
         chunks = message.split('/')
@@ -187,8 +209,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                     len(msgType) + len(widgetID) + len(functionName) + 3:]
 
                 paramDict = parse_parametrs(params)
-                print('msgType: ' + msgType + ' widgetId: ' + widgetID +
-                      ' function: ' + functionName + ' params: ' + str(params))
+                #print('msgType: ' + msgType + ' widgetId: ' + widgetID +
+                #      ' function: ' + functionName + ' params: ' + str(params))
 
                 for w in runtimeInstances:
                     if str(id(w)) == widgetID:
@@ -213,7 +235,7 @@ def parse_parametrs(p):
             fieldValue = p[len(fieldName) + 1:l]
             p = p[l + 1:]
             if fieldValue.count("'") == 0 and fieldValue.count('"') == 0:
-                if fieldValue.count('.') == 1:
+                if fieldValue.count('.') == 1 and fieldValue.replace('.','').isdigit():
                     fieldValue = float(fieldValue)
                 if fieldValue.isdigit():
                     fieldValue = int(fieldValue)
@@ -229,8 +251,10 @@ def update_clients():
             #a new window is shown, clean the old_runtime_widgets
             client.old_runtime_widgets = dict()
             for ws in client.websockets:
-                ws.send_message('show_window,' + str(id(client.root)) + ',' + repr(client.root))
-                
+                try:
+                    ws.send_message('show_window,' + str(id(client.root)) + ',' + toWebsocket(repr(client.root)))
+                except:
+                    client.websockets.remove(ws)
         client.old_root_window = client.root
         client.idle()
         gui_updater(client, client.root)
@@ -256,13 +280,13 @@ def gui_updater(client, leaf):
                 #here a new widget is found, but it must be added updating the parent widget
                 if 'parent_widget' in leaf.attributes.keys():
                     parentWidgetId = leaf.attributes['parent_widget']
-                    ws.send_message('update_widget,' + parentWidgetId + ',' + repr(get_method_by_id(client.root,parentWidgetId)))
+                    ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(repr(get_method_by_id(client.root,parentWidgetId))))
                 else:
                     print('the new widget seems to have no parent...')
                 #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                 #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
             except:
-                pass
+                client.websockets.remove(ws)
 
     # checking if subwidgets changed
     for subleaf in leaf.children.values():
@@ -273,9 +297,10 @@ def gui_updater(client, leaf):
         for ws in client.websockets:
             #try:
             print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
-            ws.send_message('update_widget,' + __id + ',' + repr(leaf))
-            #except:
-            #    print('exception here, server.py - gui_updater, id2')
+            try:
+                ws.send_message('update_widget,' + __id + ',' + toWebsocket(repr(leaf)))
+            except:
+                client.websockets.remove(ws)
         client.old_runtime_widgets[__id] = leaf.repr_without_children()
         return True
     # widget NOT changed
@@ -342,11 +367,11 @@ ws.onmessage = function (evt) { \
     index = received_msg.indexOf(',')+1;\
     var content = received_msg.substr(index,received_msg.length-index);\
     if( command=='show_window' ){\
-        document.body.innerHTML = content;\
+        document.body.innerHTML = unescape(content);\
     }else if( command=='update_widget'){\
         var elem = document.getElementById(s[1]);\
         var index = received_msg.indexOf(',')+1;\
-        elem.insertAdjacentHTML('afterend',content);\
+        elem.insertAdjacentHTML('afterend',unescape(content));\
         elem.parentElement.removeChild(elem);\
     }else if( command=='insert_widget'){\
         if( document.getElementById(s[1])==null ){\
@@ -354,7 +379,7 @@ ws.onmessage = function (evt) { \
             index = content.indexOf(',')+1;\
             content = content.substr(index,content.length-index);\
             var elem = document.getElementById(s[2]);\
-            elem.innerHTML = elem.innerHTML + content;\
+            elem.innerHTML = elem.innerHTML + unescape(content);\
         }\
     }\
     console.debug('command:' + command);\
@@ -366,7 +391,8 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
         console.debug('socket not opened');\
         openSocket();\
     }\
-    ws.send('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params));\
+    ws.send(escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));\
+    console.debug('to client len:' + escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));\
 };\
 /*this uses websockets*/\
 var sendCallback = function (widgetID,functionName){\
@@ -374,7 +400,8 @@ var sendCallback = function (widgetID,functionName){\
         console.debug('socket not opened');\
         openSocket();\
     }\
-    ws.send('callback' + '/' + widgetID+'/'+functionName+'/');\
+    ws.send(escape('callback' + '/' + widgetID+'/'+functionName+'/'));\
+    console.debug( 'to client len:' + escape('callback' + '/' + widgetID+'/'+functionName+'/'));\
 };\
 ws.onclose = function(evt){ \
     /* websocket is closed. */\
@@ -467,13 +494,13 @@ ws.onerror = function(evt){ \
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
 
-                self.wfile.write(self.client.attachments.encode('utf-8'))
+                self.wfile.write(self.client.attachments.encode('latin-1'))
                 self.wfile.write((
                     "<link href='" +
                     BASE_ADDRESS +
-                    "style.css' rel='stylesheet' />").encode('utf-8'))
+                    "style.css' rel='stylesheet' />").encode('latin-1'))
 
-                self.wfile.write(repr(self.client.root).encode('utf-8'))
+                self.wfile.write(repr(self.client.root).encode('latin-1'))
             else:
                 # here is the function that should return the content type
                 self.send_response(200)
@@ -484,13 +511,13 @@ ws.onerror = function(evt){ \
                 # if is requested a widget, but not by post, so we suppose is
                 # requested to show a new page, we attach javascript and style
                 if(ret[1] == 'text/html' and isPost == False):
-                    self.wfile.write(self.client.attachments.encode('utf-8'))
+                    self.wfile.write(self.client.attachments.encode('latin-1'))
                     self.wfile.write((
                         "<link href='" +
                         BASE_ADDRESS +
-                        "style.css' rel='stylesheet' />").encode('utf-8'))
+                        "style.css' rel='stylesheet' />").encode('latin-1'))
 
-                self.wfile.write(ret[0].encode('utf-8'))
+                self.wfile.write(ret[0].encode('latin-1'))
 
         else:
             self.send_response(200)
