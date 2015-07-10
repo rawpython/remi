@@ -1,16 +1,15 @@
 
 /* latin */
 @font-face {
-  font-family: 'Hind';
+  font-family: 'Open Sans';
   font-style: normal;
   font-weight: 400;
-  src: local('Hind Regular'), local('Hind-Regular'), url(res/font.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+  src: local('Open Sans'), local('OpenSans'), url(res/font.woff) format('woff');
 }
 
 body {
 	background-image: url( 'res/bg.png' );
-	font-family: 'Hind';
+	font-family: 'Open Sans';
 }
 
 body > div {
@@ -39,7 +38,7 @@ li:hover {
 }
 
 input,button,textarea,select {
-	font-family: 'Hind';
+	font-family: 'Open Sans';
 }
 
 button,th {
