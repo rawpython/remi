@@ -1,15 +1,15 @@
 
 /* latin */
 @font-face {
-  font-family: 'Open Sans';
+  font-family: 'Hind';
   font-style: normal;
   font-weight: 400;
-  src: local('Open Sans'), local('OpenSans'), url(res/font.woff) format('woff');
+  src: local('Hind Regular'), local('Hind-Regular'), url(res/font.woff) format('woff');
 }
 
 body {
 	background-image: url( 'res/bg.png' );
-	font-family: 'Open Sans';
+	font-family: 'Hind';
 }
 
 body > div {
@@ -38,7 +38,7 @@ li:hover {
 }
 
 input,button,textarea,select {
-	font-family: 'Open Sans';
+	font-family: 'Hind';
 }
 
 button,th {
