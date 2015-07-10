@@ -501,11 +501,11 @@ ws.onerror = function(evt){ \
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 
-                self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(
                     "<link href='" +
                     BASE_ADDRESS +
-                    "style.css' rel='stylesheet' />"))
+                    "style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+                self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(repr(self.client.root)))
             else:
                 # here is the function that should return the content type
@@ -517,12 +517,11 @@ ws.onerror = function(evt){ \
                 # if is requested a widget, but not by post, so we suppose is
                 # requested to show a new page, we attach javascript and style
                 if(ret[1] == 'text/html' and isPost == False):
-                    self.wfile.write(encodeIfPyGT3(self.client.attachments))
                     self.wfile.write(encodeIfPyGT3(
                         "<link href='" +
                         BASE_ADDRESS +
-                        "style.css' rel='stylesheet' />"))
-
+                        "style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+                    self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(ret[0]))
 
         else:
