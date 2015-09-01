@@ -423,10 +423,7 @@ ws.onerror = function(evt){ \
             clients[k].websockets = list()
 
         self.client = clients[k]
-        # here the websocket is started
-        server = ThreadedWebsocketServer(
-            (IP_ADDR, WEBSOCKET_PORT_NUMBER), WebSocketsHandler)
-        threading.Thread(target=server.serve_forever).start()
+
         if updateTimerStarted == False:
             updateTimerStarted = True
             Timer(UPDATE_INTERVAL, update_clients, ()).start()
@@ -549,6 +546,13 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 def start(mainGuiClass):
     """This method starts the webserver with a specific App subclass."""
     try:
+        # here the websocket is started
+        wsserver = ThreadedWebsocketServer(
+            (IP_ADDR, WEBSOCKET_PORT_NUMBER), WebSocketsHandler)
+        th = threading.Thread(target=wsserver.serve_forever)
+        th.setDaemon(True)
+        th.start()
+        
         # Create a web server and define the handler to manage the incoming
         # request
         server = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), mainGuiClass)
