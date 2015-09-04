@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import traceback
 from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -149,9 +150,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(fromWebsocket(decoded))
-        except:
+        except Exception as e:
             print("Exception in server.py-read_next_message.")
-            print("    exception extra data: " + str(length))
+            print(traceback.format_exc())
             return False
         return True
 
@@ -267,7 +268,7 @@ def update_clients():
     Timer(UPDATE_INTERVAL, update_clients, ()).start()
 
 
-def gui_updater(client, leaf):
+def gui_updater(client, leaf, no_update_because_new_subchild=False):
     if not hasattr(leaf, 'attributes'):
         return False
 
@@ -279,24 +280,27 @@ def gui_updater(client, leaf):
     # if the widget is not contained in the copy
     if not (__id in client.old_runtime_widgets.keys()):
         client.old_runtime_widgets[__id] = leaf.repr_without_children()
-        # we ensure that the clients have an updated version
-        for ws in client.websockets:
-            try:
-                #print('insert_widget: ' +  leaf.attributes['parent_widget'] + '  type: ' + str(type(leaf)))
-                #here a new widget is found, but it must be added updating the parent widget
-                if 'parent_widget' in leaf.attributes.keys():
-                    parentWidgetId = leaf.attributes['parent_widget']
-                    ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(repr(get_method_by_id(client.root,parentWidgetId))))
-                else:
-                    print('the new widget seems to have no parent...')
-                #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
-                #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
-            except:
-                client.websockets.remove(ws)
+        if not no_update_because_new_subchild:
+            no_update_because_new_subchild = True
+            # we ensure that the clients have an updated version
+            for ws in client.websockets:
+                try:
+                    #print('insert_widget: ' +  leaf.attributes['parent_widget'] + '  type: ' + str(type(leaf)))
+                    #here a new widget is found, but it must be added updating the parent widget
+                    if 'parent_widget' in leaf.attributes.keys():
+                        parentWidgetId = leaf.attributes['parent_widget']
+                        print("1" + leaf.attributes['class'] + "\n")
+                        ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(repr(get_method_by_id(client.root,parentWidgetId))))
+                    else:
+                        print('the new widget seems to have no parent...')
+                    #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
+                    #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
+                except:
+                    client.websockets.remove(ws)
 
     # checking if subwidgets changed
     for subleaf in leaf.children.values():
-        gui_updater(client, subleaf)
+        gui_updater(client, subleaf, no_update_because_new_subchild)
 
     if leaf.repr_without_children() != client.old_runtime_widgets[__id]:
         #client.old_runtime_widgets[__id] = repr(leaf)

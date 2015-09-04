@@ -15,6 +15,7 @@
 from configuration import *
 import server
 from server import *
+import os #used for directory browse functionalities
 
 # simple and stupid tricks
 
@@ -377,7 +378,7 @@ class Label(Widget):
         self.append('text', t)
 
     def get_text(self):
-        return self.children['content']
+        return self.children['text']
 
 
 class InputDialog(Widget):
@@ -644,8 +645,8 @@ class Date(Input):
 
     def __init__(self, w, h, defaultValue='2015-04-13'):
         super(Date, self).__init__(w, h, 'date', defaultValue)
-
-
+        
+        
 class GenericObject(Widget):
 
     """
@@ -658,3 +659,196 @@ class GenericObject(Widget):
         self.type = 'object'
         self.attributes['class'] = 'GenericObject'
         self.attributes['data'] = filename
+
+
+class FileFolderNavigator(Widget):
+    
+    """FileFolderNavigator widget implements the onselection event.
+    """
+
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+        super(FileFolderNavigator, self).__init__(w, h, False)
+        self.attributes['class'] = 'FileFolderNavigator'
+        
+        self.EVENT_ONSELECTION = 'onselection'
+        self.selectionlist = list() #here are stored selected files and folders
+        self.controlsContainer = Widget(w,25,True)
+        self.controlBack = Button(45,24,'BACK')
+        self.controlBack.set_on_click_listener(self,'dir_go_back')
+        self.pathEditor = TextInput(w-45,24)
+        self.controlsContainer.append('1',self.controlBack)
+        self.controlsContainer.append('2',self.pathEditor)
+        
+        self.itemContainer = Widget(w,h-25)
+        self.itemContainer.style['overflow-y'] = 'overlay'
+        
+        self.append('controls',self.controlsContainer)
+        self.append('items',self.itemContainer)
+        
+        self.folderItems = list()
+        self.chdir(os.getcwd()) #move to actual working directory
+    
+    def get_selection_list(self):
+        return self.selectionlist
+        
+    def populate_folder_items(self):
+        fpath = self.pathEditor.get_text() + os.sep
+        print("FileFolderNavigator - populate_folder_items")
+        l = os.listdir(self.pathEditor.get_text())
+        for i in l:
+            icon = ''
+            if not os.path.isfile(fpath+i):
+                icon = 'res/folder.png'
+            fi = FileFolderItem(self.w,20,i,icon)
+            fi.set_on_click_listener(self,'on_folder_item_click') 
+            fi.set_on_dblclick_listener(self,'on_folder_item_dblclick')
+            self.folderItems.append(fi)
+            self.itemContainer.append(i,fi)
+    
+    def dir_go_back(self):
+        os.chdir('..')
+        self.chdir(os.getcwd())
+        
+    def chdir(self, directory):
+        print("FileFolderNavigator - chdir:" + directory + "\n")
+        for c in self.folderItems:
+            self.itemContainer.remove(c) #remove the file and folders from the view
+        self.folderItems = list()
+        self.pathEditor.set_text(directory)
+        self.selectionlist = list() #reset selected file list
+        os.chdir(directory)
+        self.populate_folder_items()
+        
+    def on_folder_item_click(self,folderitem):
+        print("FileFolderNavigator - on_folder_item_click")
+        #when an item is clicked it is added to the file selection list
+        f = folderitem.get_text()
+        if f in self.selectionlist:
+            self.selectionlist.remove() 
+            self.selectionlist.append(f)
+    
+    def on_folder_item_dblclick(self,folderitem):
+        print("FileFolderNavigator - on_folder_item_dblclick")
+        #when an item is clicked two time
+        f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
+        if not os.path.isfile(f):
+            self.chdir(f)
+
+    def onselection(self):
+        print("FileFolderNavigator - onselection")
+        self.selectionlist.append(folderitem.get_text())
+        params = list()
+        params.append(self.selectionlist)
+        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
+
+    def set_on_selection_listener(self, listener, funcname):
+        """the listener must be able to receive a parameter that will be 
+            a list of files and folders selected"""
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
+
+
+class FileFolderItem(Widget):
+
+    """FileFolderItem widget for the FileFolderNavigator implements the onclick event.
+    """
+
+    def __init__(self, w, h, text, iconFile = ''):
+        super(FileFolderItem, self).__init__(w, h, True)
+        self.attributes['class'] = 'FileFolderItem'
+        self.icon = Image(w/10, h, iconFile)
+        self.label = Label(w/10*9, h, text)
+        self.append('icon', self.icon)
+        self.append('text', self.label)
+
+    def onclick(self):
+        params = list()
+        params.append(self)
+        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
+
+    def set_on_click_listener(self, listener, funcname):
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
+            
+    def ondblclick(self):
+        params = list()
+        params.append(self)
+        return self.eventManager.propagate(self.EVENT_ONDBLCLICK, params)
+
+    def set_on_dblclick_listener(self, listener, funcname):
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONDBLCLICK + "');"
+        self.eventManager.register_listener(
+            self.EVENT_ONDBLCLICK, listener, funcname)
+            
+    def set_text(self, t):
+        """sets the text content."""
+        self.children['text'].set_text(t)
+
+    def get_text(self):
+        return self.children['text'].get_text()
+
+
+class FileSelectionDialog(Widget):
+
+    """file selection dialog, it opens a new webpage allows the OK/ABORT functionality
+    implementing the "onConfirm" and "onAbort" events."""
+
+    def __init__(self, title, message):
+        w = 500
+        h = 350
+        super(FileSelectionDialog, self).__init__(w, h, False, 10)
+
+        self.EVENT_ONCONFIRM = 'confirm_value'
+        self.EVENT_ONABORT = 'abort_value'
+
+        t = Label(w - 70, 50, title)
+        t.style['font-size'] = '16px'
+        t.style['font-weight'] = 'bold'
+        m = Label(w - 70, 30, message)
+
+        self.conf = Button(50, 30, 'Ok')
+        self.abort = Button(50, 30, 'Abort')
+        
+        self.fileFolderNavigator = FileFolderNavigator(300,200)
+        
+        hlay = Widget(w - 20, 30)
+        hlay.append('1', self.conf)
+        hlay.append('2', self.abort)
+
+        self.append('1', t)
+        self.append('2', m)
+        self.append('3', self.fileFolderNavigator)
+        self.append('4', hlay)
+        
+        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCONFIRM + "');"
+
+        self.abort.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONABORT + "');"
+        
+        self.baseAppInstance = None
+
+    def confirm_value(self):
+        """event called pressing on OK button.
+           propagates the string content of the input field
+        """
+        self.hide()
+        params = list()
+        params.append(self.fileFolderNavigator.get_selection_list())
+        return self.eventManager.propagate(self.EVENT_ONCONFIRM, params)
+
+    def set_on_confirm_value_listener(self, listener, funcname):
+        self.eventManager.register_listener(
+            self.EVENT_ONCONFIRM, listener, funcname)
+
+    def abort_value(self):
+        self.hide()
+        return self.eventManager.propagate(self.EVENT_ONABORT, list())
+
+    def set_on_abort_value_listener(self, listener, funcname):
+        self.eventManager.register_listener(
+            self.EVENT_ONABORT, listener, funcname)

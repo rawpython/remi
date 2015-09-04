@@ -109,13 +109,14 @@ class MyApp(App):
         subContainerRight.append('7', self.slider)
         subContainerRight.append('8', self.colorPicker)
         subContainerRight.append('9', self.date)
-
+        
         subContainerLeft.append('0', self.img)
         subContainerLeft.append('1', self.table)
         subContainerLeft.append('2', self.listView)
 
         mainContainer.append('0', subContainerLeft)
         mainContainer.append('1', subContainerRight)
+        
         # returning the root widget
         return mainContainer
 
@@ -178,5 +179,6 @@ class MyApp(App):
     def date_changed(self, value):
         self.lbl.set_text('New date value: ' + value)
 
+        
 # starts the webserver
 start(MyApp)
