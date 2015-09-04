@@ -379,6 +379,15 @@ class Label(Widget):
 
     def get_text(self):
         return self.children['text']
+        
+    def onclick(self):
+        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+
+    def set_on_click_listener(self, listener, funcname):
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
 
 
 class InputDialog(Widget):
@@ -547,6 +556,15 @@ class Image(Widget):
         self.attributes['class'] = 'Image'
         self.attributes['src'] = BASE_ADDRESS + filename
 
+    def onclick(self):
+        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+
+    def set_on_click_listener(self, listener, funcname):
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
+            
 
 class Table(Widget):
 
@@ -663,7 +681,7 @@ class GenericObject(Widget):
 
 class FileFolderNavigator(Widget):
     
-    """FileFolderNavigator widget implements the onselection event.
+    """FileFolderNavigator widget.
     """
 
     def __init__(self, w, h):
@@ -672,7 +690,6 @@ class FileFolderNavigator(Widget):
         super(FileFolderNavigator, self).__init__(w, h, False)
         self.attributes['class'] = 'FileFolderNavigator'
         
-        self.EVENT_ONSELECTION = 'onselection'
         self.selectionlist = list() #here are stored selected files and folders
         self.controlsContainer = Widget(w,25,True)
         self.controlBack = Button(45,24,'BACK')
@@ -698,12 +715,12 @@ class FileFolderNavigator(Widget):
         print("FileFolderNavigator - populate_folder_items")
         l = os.listdir(self.pathEditor.get_text())
         for i in l:
-            icon = ''
+            icon = 'res/file.png'
             if not os.path.isfile(fpath+i):
                 icon = 'res/folder.png'
             fi = FileFolderItem(self.w,20,i,icon)
-            fi.set_on_click_listener(self,'on_folder_item_click') 
-            fi.set_on_dblclick_listener(self,'on_folder_item_dblclick')
+            fi.set_on_click_listener(self,'on_folder_item_click') #navigation purpose
+            fi.set_on_selection_listener(self,'on_folder_item_selected') #selection purpose
             self.folderItems.append(fi)
             self.itemContainer.append(i,fi)
     
@@ -721,7 +738,7 @@ class FileFolderNavigator(Widget):
         os.chdir(directory)
         self.populate_folder_items()
         
-    def on_folder_item_click(self,folderitem):
+    def on_folder_item_selected(self,folderitem):
         print("FileFolderNavigator - on_folder_item_click")
         #when an item is clicked it is added to the file selection list
         f = folderitem.get_text()
@@ -729,7 +746,7 @@ class FileFolderNavigator(Widget):
             self.selectionlist.remove() 
             self.selectionlist.append(f)
     
-    def on_folder_item_dblclick(self,folderitem):
+    def on_folder_item_click(self,folderitem):
         print("FileFolderNavigator - on_folder_item_dblclick")
         #when an item is clicked two time
         f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
@@ -738,7 +755,6 @@ class FileFolderNavigator(Widget):
 
     def onselection(self):
         print("FileFolderNavigator - onselection")
-        self.selectionlist.append(folderitem.get_text())
         params = list()
         params.append(self.selectionlist)
         return self.eventManager.propagate(self.EVENT_ONCLICK, params)
@@ -748,7 +764,10 @@ class FileFolderNavigator(Widget):
             a list of files and folders selected"""
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
-
+    
+    def get_selected_filefolders(self):
+        return self.selectionlist
+        
 
 class FileFolderItem(Widget):
 
@@ -758,10 +777,16 @@ class FileFolderItem(Widget):
     def __init__(self, w, h, text, iconFile = ''):
         super(FileFolderItem, self).__init__(w, h, True)
         self.attributes['class'] = 'FileFolderItem'
-        self.icon = Image(w/10, h, iconFile)
-        self.label = Label(w/10*9, h, text)
+        self.EVENT_ONSELECTION = 'onselection'
+        self.attributes[self.EVENT_ONCLICK] = ''
+        self.icon = Image(20, h, iconFile)
+        #the icon click activates the onselection event, that is propagates to registered listener
+        self.icon.set_on_click_listener(self,self.EVENT_ONSELECTION) 
+        self.label = Label(w-20, h, text)
+        self.label.set_on_click_listener(self,self.EVENT_ONCLICK)
         self.append('icon', self.icon)
         self.append('text', self.label)
+        self.selected = False
 
     def onclick(self):
         params = list()
@@ -769,21 +794,19 @@ class FileFolderItem(Widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, params)
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
             
-    def ondblclick(self):
+    def onselection(self):
+        self.selected = not self.selected
+        self.style['color'] = 'red'
         params = list()
         params.append(self)
-        return self.eventManager.propagate(self.EVENT_ONDBLCLICK, params)
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
 
-    def set_on_dblclick_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONDBLCLICK + "');"
+    def set_on_selection_listener(self, listener, funcname):
         self.eventManager.register_listener(
-            self.EVENT_ONDBLCLICK, listener, funcname)
+            self.EVENT_ONSELECTION, listener, funcname)
             
     def set_text(self, t):
         """sets the text content."""
@@ -799,8 +822,8 @@ class FileSelectionDialog(Widget):
     implementing the "onConfirm" and "onAbort" events."""
 
     def __init__(self, title, message):
-        w = 500
-        h = 350
+        w = 600
+        h = 370
         super(FileSelectionDialog, self).__init__(w, h, False, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_value'
@@ -814,7 +837,7 @@ class FileSelectionDialog(Widget):
         self.conf = Button(50, 30, 'Ok')
         self.abort = Button(50, 30, 'Abort')
         
-        self.fileFolderNavigator = FileFolderNavigator(300,200)
+        self.fileFolderNavigator = FileFolderNavigator(w-20,200)
         
         hlay = Widget(w - 20, 30)
         hlay.append('1', self.conf)
