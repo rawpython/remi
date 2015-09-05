@@ -190,6 +190,9 @@ class Widget(object):
             for k in self.children.keys():
                 if str(id(self.children[k])) == str(id(widget)):
                     self.children.pop(k)
+                    #when the child is removed we stop the iteration
+                    #this implies that a child replication should not be allowed
+                    break
 
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, list())
@@ -231,6 +234,15 @@ class Widget(object):
         """The root window is restored after a show"""
         if hasattr(self,'baseAppInstance'):
             self.baseAppInstance.client.root = self.oldRootWidget
+
+    def onclick(self):
+        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+
+    def set_on_click_listener(self, listener, funcname):
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
 
 
 class Button(Widget):
@@ -699,7 +711,8 @@ class FileFolderNavigator(Widget):
         self.controlsContainer.append('2',self.pathEditor)
         
         self.itemContainer = Widget(w,h-25)
-        self.itemContainer.style['overflow-y'] = 'overlay'
+        self.itemContainer.style['overflow-y'] = 'scroll'
+        self.itemContainer.style['overflow-x'] = 'hidden'
         
         self.append('controls',self.controlsContainer)
         self.append('items',self.itemContainer)
@@ -715,10 +728,10 @@ class FileFolderNavigator(Widget):
         print("FileFolderNavigator - populate_folder_items")
         l = os.listdir(self.pathEditor.get_text())
         for i in l:
-            icon = 'res/file.png'
+            isFolder = False
             if not os.path.isfile(fpath+i):
-                icon = 'res/folder.png'
-            fi = FileFolderItem(self.w,20,i,icon)
+                isFolder = True
+            fi = FileFolderItem(self.w,33,i,isFolder)
             fi.set_on_click_listener(self,'on_folder_item_click') #navigation purpose
             fi.set_on_selection_listener(self,'on_folder_item_selected') #selection purpose
             self.folderItems.append(fi)
@@ -743,9 +756,10 @@ class FileFolderNavigator(Widget):
         #when an item is clicked it is added to the file selection list
         f = folderitem.get_text()
         if f in self.selectionlist:
-            self.selectionlist.remove() 
+            self.selectionlist.remove(f)
+        else:
             self.selectionlist.append(f)
-    
+
     def on_folder_item_click(self,folderitem):
         print("FileFolderNavigator - on_folder_item_dblclick")
         #when an item is clicked two time
@@ -753,18 +767,6 @@ class FileFolderNavigator(Widget):
         if not os.path.isfile(f):
             self.chdir(f)
 
-    def onselection(self):
-        print("FileFolderNavigator - onselection")
-        params = list()
-        params.append(self.selectionlist)
-        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
-
-    def set_on_selection_listener(self, listener, funcname):
-        """the listener must be able to receive a parameter that will be 
-            a list of files and folders selected"""
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
-    
     def get_selected_filefolders(self):
         return self.selectionlist
         
@@ -774,16 +776,26 @@ class FileFolderItem(Widget):
     """FileFolderItem widget for the FileFolderNavigator implements the onclick event.
     """
 
-    def __init__(self, w, h, text, iconFile = ''):
+    def __init__(self, w, h, text, isFolder = False):
         super(FileFolderItem, self).__init__(w, h, True)
         self.attributes['class'] = 'FileFolderItem'
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.icon = Image(20, h, iconFile)
+        self.icon = Widget(33, h)
         #the icon click activates the onselection event, that is propagates to registered listener
-        self.icon.set_on_click_listener(self,self.EVENT_ONSELECTION) 
-        self.label = Label(w-20, h, text)
-        self.label.set_on_click_listener(self,self.EVENT_ONCLICK)
+        self.icon.set_on_click_listener(self,self.EVENT_ONSELECTION)
+        self.icon.attributes['class'] = 'FileFolderItemIcon'
+
+        iconFile = 'res/file.png'
+        if isFolder:
+            iconFile = 'res/folder.png'
+
+        self.icon.style['background-image'] = "url('" + iconFile + "')"
+        self.label = Label(w-33, h, text)
+        if isFolder:
+            self.label.set_on_click_listener(self,self.EVENT_ONCLICK)
+        else:
+            self.label.set_on_click_listener(self,self.EVENT_ONSELECTION)
         self.append('icon', self.icon)
         self.append('text', self.label)
         self.selected = False
@@ -799,7 +811,10 @@ class FileFolderItem(Widget):
             
     def onselection(self):
         self.selected = not self.selected
-        self.style['color'] = 'red'
+        if self.selected:
+            self.style['color'] = 'red'
+        else:
+            self.style['color'] = 'black'
         params = list()
         params.append(self)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
