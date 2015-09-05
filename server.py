@@ -45,6 +45,7 @@ updateTimerStarted = False  # to start the update timer only once
 
 pyLessThan3 = sys.version_info < (3,)
 
+update_semaphore = threading.Semaphore()
 
 def toWebsocket(data):
     #encoding end deconding utility function
@@ -192,38 +193,44 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.handshake_done = True
 
     def on_message(self, message):
-        # saving the websocket in order to update the client
-        k = self.client_address[0]
-        if not MULTIPLE_INSTANCE:
-            # overwrite the key value, so all clients will point the same
-            # instance
-            k = 0
-        if not self in clients[k].websockets:
-            #clients[k].websockets.clear()
-            clients[k].websockets.append(self)
-        print('on_message\n')
-        #print('recv from websocket client: ' + str(message))
+        global update_semaphore
+        update_semaphore.acquire()
+        try:
+            # saving the websocket in order to update the client
+            k = self.client_address[0]
+            if not MULTIPLE_INSTANCE:
+                # overwrite the key value, so all clients will point the same
+                # instance
+                k = 0
+            if not self in clients[k].websockets:
+                #clients[k].websockets.clear()
+                clients[k].websockets.append(self)
+            print('on_message\n')
+            #print('recv from websocket client: ' + str(message))
 
-        # parsing messages
-        chunks = message.split('/')
-        if len(chunks) > 3:  # msgtype,widget,function,params
-            # if this is a callback
-            msgType = 'callback'
-            if chunks[0] == msgType:
-                widgetID = chunks[1]
-                functionName = chunks[2]
-                params = message[
-                    len(msgType) + len(widgetID) + len(functionName) + 3:]
+            # parsing messages
+            chunks = message.split('/')
+            if len(chunks) > 3:  # msgtype,widget,function,params
+                # if this is a callback
+                msgType = 'callback'
+                if chunks[0] == msgType:
+                    widgetID = chunks[1]
+                    functionName = chunks[2]
+                    params = message[
+                        len(msgType) + len(widgetID) + len(functionName) + 3:]
 
-                paramDict = parse_parametrs(params)
-                #print('msgType: ' + msgType + ' widgetId: ' + widgetID +
-                #      ' function: ' + functionName + ' params: ' + str(params))
+                    paramDict = parse_parametrs(params)
+                    #print('msgType: ' + msgType + ' widgetId: ' + widgetID +
+                    #      ' function: ' + functionName + ' params: ' + str(params))
 
-                for w in runtimeInstances:
-                    if str(id(w)) == widgetID:
-                        callback = get_method_by_name(w, functionName)
-                        if callback is not None:
-                            callback(**paramDict)
+                    for w in runtimeInstances:
+                        if str(id(w)) == widgetID:
+                            callback = get_method_by_name(w, functionName)
+                            if callback is not None:
+                                callback(**paramDict)
+        except Exception as e:
+            print(traceback.format_exc())
+        update_semaphore.release()
 
 
 def parse_parametrs(p):
@@ -252,19 +259,25 @@ def parse_parametrs(p):
 
 def update_clients():
     global clients
-    for client in clients.values():
-        #here we check if the root window has changed
-        if not hasattr(client,'old_root_window') or client.old_root_window != client.root:
-            #a new window is shown, clean the old_runtime_widgets
-            client.old_runtime_widgets = dict()
-            for ws in client.websockets:
-                try:
-                    ws.send_message('show_window,' + str(id(client.root)) + ',' + toWebsocket(repr(client.root)))
-                except:
-                    client.websockets.remove(ws)
-        client.old_root_window = client.root
-        client.idle()
-        gui_updater(client, client.root)
+    global update_semaphore
+    update_semaphore.acquire()
+    try:
+        for client in clients.values():
+            #here we check if the root window has changed
+            if not hasattr(client,'old_root_window') or client.old_root_window != client.root:
+                #a new window is shown, clean the old_runtime_widgets
+                client.old_runtime_widgets = dict()
+                for ws in client.websockets:
+                    try:
+                        ws.send_message('show_window,' + str(id(client.root)) + ',' + toWebsocket(repr(client.root)))
+                    except:
+                        client.websockets.remove(ws)
+            client.old_root_window = client.root
+            client.idle()
+            gui_updater(client, client.root)
+    except Exception as e:
+        print(traceback.format_exc())
+    update_semaphore.release()
     Timer(UPDATE_INTERVAL, update_clients, ()).start()
 
 
