@@ -12,6 +12,7 @@
    limitations under the License.
 """
 
+import traceback
 from configuration import *
 import server
 from server import *
@@ -707,6 +708,7 @@ class FileFolderNavigator(Widget):
         self.controlBack = Button(45,24,'BACK')
         self.controlBack.set_on_click_listener(self,'dir_go_back')
         self.pathEditor = TextInput(w-45,24)
+        self.pathEditor.set_on_change_listener(self,'dir_editor_changed')
         self.controlsContainer.append('1',self.controlBack)
         self.controlsContainer.append('2',self.pathEditor)
         
@@ -723,10 +725,10 @@ class FileFolderNavigator(Widget):
     def get_selection_list(self):
         return self.selectionlist
         
-    def populate_folder_items(self):
-        fpath = self.pathEditor.get_text() + os.sep
+    def populate_folder_items(self,directory):
+        fpath = directory + os.sep
         print("FileFolderNavigator - populate_folder_items")
-        l = os.listdir(self.pathEditor.get_text())
+        l = os.listdir(directory)
         for i in l:
             isFolder = False
             if not os.path.isfile(fpath+i):
@@ -736,25 +738,40 @@ class FileFolderNavigator(Widget):
             fi.set_on_selection_listener(self,'on_folder_item_selected') #selection purpose
             self.folderItems.append(fi)
             self.itemContainer.append(i,fi)
-    
+
+    def dir_editor_changed(self,directory):
+        curpath = os.getcwd() #backup the path
+        try:
+            os.chdir( self.pathEditor.get_text() )
+            self.chdir(os.getcwd())
+        except Exception as e:
+            print(traceback.format_exc())
+        os.chdir( curpath ) #restore the path
+
     def dir_go_back(self):
-        os.chdir('..')
-        self.chdir(os.getcwd())
+        curpath = os.getcwd() #backup the path
+        try:
+            os.chdir( self.pathEditor.get_text() )
+            os.chdir('..')
+            self.chdir(os.getcwd())
+        except Exception as e:
+            print(traceback.format_exc())
+        os.chdir( curpath ) #restore the path
         
     def chdir(self, directory):
         print("FileFolderNavigator - chdir:" + directory + "\n")
         for c in self.folderItems:
             self.itemContainer.remove(c) #remove the file and folders from the view
         self.folderItems = list()
-        self.pathEditor.set_text(directory)
         self.selectionlist = list() #reset selected file list
         os.chdir(directory)
-        self.populate_folder_items()
+        self.populate_folder_items(directory)
+        self.pathEditor.set_text(directory)
         
     def on_folder_item_selected(self,folderitem):
         print("FileFolderNavigator - on_folder_item_click")
         #when an item is clicked it is added to the file selection list
-        f = folderitem.get_text()
+        f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
         if f in self.selectionlist:
             self.selectionlist.remove(f)
         else:
