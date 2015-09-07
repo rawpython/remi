@@ -729,6 +729,15 @@ class FileFolderNavigator(Widget):
         fpath = directory + os.sep
         print("FileFolderNavigator - populate_folder_items")
         l = os.listdir(directory)
+        
+        #we remove the container avoiding graphic update adding items
+        #this speeds up the navigation
+        self.remove(self.itemContainer)
+        #creation of a new instance of a itemContainer
+        self.itemContainer = Widget(self.w,self.h-25) 
+        self.itemContainer.style['overflow-y'] = 'scroll'
+        self.itemContainer.style['overflow-x'] = 'hidden'
+        
         for i in l:
             isFolder = False
             if not os.path.isfile(fpath+i):
@@ -738,6 +747,7 @@ class FileFolderNavigator(Widget):
             fi.set_on_selection_listener(self,'on_folder_item_selected') #selection purpose
             self.folderItems.append(fi)
             self.itemContainer.append(i,fi)
+        self.append('items',self.itemContainer)
 
     def dir_editor_changed(self,directory):
         curpath = os.getcwd() #backup the path
