@@ -330,6 +330,20 @@ class TextInput(Widget):
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
+            
+    def onkeydown(self,newValue):
+        """returns the new text value."""
+        self.set_text(newValue)
+        params = list()
+        params.append(newValue)
+        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, params)
+        
+    def set_on_key_down_listener(self,listener,funcname):
+        self.attributes[
+            self.EVENT_ONKEYDOWN] = "var params={};params['newValue']=document.getElementById('" + str(
+            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONKEYDOWN + "',params);"
+        self.eventManager.register_listener(
+            self.EVENT_ONKEYDOWN, listener, funcname)
 
 
 class SpinBox(Widget):
@@ -705,12 +719,16 @@ class FileFolderNavigator(Widget):
         
         self.selectionlist = list() #here are stored selected files and folders
         self.controlsContainer = Widget(w,25,True)
-        self.controlBack = Button(45,24,'BACK')
+        self.controlBack = Button(45,25,'BACK')
         self.controlBack.set_on_click_listener(self,'dir_go_back')
-        self.pathEditor = TextInput(w-45,24)
-        self.pathEditor.set_on_change_listener(self,'dir_editor_changed')
+        self.controlGo = Button(45,25,'GO >>')
+        self.controlGo.set_on_click_listener(self,'dir_go')
+        self.pathEditor = TextInput(w-90,25)
+        self.pathEditor.style['resize'] = 'none'
+        self.pathEditor.attributes['rows'] = '1'
         self.controlsContainer.append('1',self.controlBack)
         self.controlsContainer.append('2',self.pathEditor)
+        self.controlsContainer.append('3',self.controlGo)
         
         self.itemContainer = Widget(w,h-25)
         self.itemContainer.style['overflow-y'] = 'scroll'
@@ -729,7 +747,8 @@ class FileFolderNavigator(Widget):
         fpath = directory + os.sep
         print("FileFolderNavigator - populate_folder_items")
         l = os.listdir(directory)
-        
+        #used to restore a valid path after a wrong edit in the path editor
+        self.lastValidPath = directory 
         #we remove the container avoiding graphic update adding items
         #this speeds up the navigation
         self.remove(self.itemContainer)
@@ -749,15 +768,6 @@ class FileFolderNavigator(Widget):
             self.itemContainer.append(i,fi)
         self.append('items',self.itemContainer)
 
-    def dir_editor_changed(self,directory):
-        curpath = os.getcwd() #backup the path
-        try:
-            os.chdir( self.pathEditor.get_text() )
-            self.chdir(os.getcwd())
-        except Exception as e:
-            print(traceback.format_exc())
-        os.chdir( curpath ) #restore the path
-
     def dir_go_back(self):
         curpath = os.getcwd() #backup the path
         try:
@@ -765,7 +775,19 @@ class FileFolderNavigator(Widget):
             os.chdir('..')
             self.chdir(os.getcwd())
         except Exception as e:
+            self.pathEditor.set_text(self.lastValidPath)
             print(traceback.format_exc())
+        os.chdir( curpath ) #restore the path
+
+    def dir_go(self):
+        #when the GO button is pressed, it is supposed that the pathEditor is changed
+        curpath = os.getcwd() #backup the path
+        try:
+            os.chdir( self.pathEditor.get_text() )
+            self.chdir(os.getcwd())
+        except Exception as e:
+            print(traceback.format_exc())
+            self.pathEditor.set_text(self.lastValidPath)
         os.chdir( curpath ) #restore the path
         
     def chdir(self, directory):
