@@ -27,9 +27,9 @@ class MyApp(App):
         super(MyApp, self).idle()
         
     def main(self):
-        mainContainer = gui.Widget(600, 530, True, 10)
+        mainContainer = gui.Widget(600, 560, True, 10)
 
-        subContainerLeft = gui.Widget(300, 370, False, 10)
+        subContainerLeft = gui.Widget(300, 400, False, 10)
         self.img = gui.Image(100, 100, 'res/logo.png')
 
         self.table = gui.Table(300, 200)
@@ -51,7 +51,7 @@ class MyApp(App):
         self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(240, 390, False, 10)
+        subContainerRight = gui.Widget(240, 420, False, 10)
 
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
@@ -68,6 +68,9 @@ class MyApp(App):
 
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
         self.btInputDiag.set_on_click_listener(self, 'open_input_dialog')
+
+        self.btFileDiag = gui.Button(200, 30, 'File Selection Dialog')
+        self.btFileDiag.set_on_click_listener(self, 'open_fileselection_dialog')
 
         self.listView = gui.ListView(300, 120)
         li0 = gui.ListItem(279, 20, 'Danny Young')
@@ -105,6 +108,7 @@ class MyApp(App):
         subContainerRight.append('3', self.txt)
         subContainerRight.append('4', self.spin)
         subContainerRight.append('5', self.btInputDiag)
+        subContainerRight.append('5_', self.btFileDiag)
         subContainerRight.append('6', self.dropDown)
         subContainerRight.append('7', self.slider)
         subContainerRight.append('8', self.colorPicker)
@@ -154,6 +158,18 @@ class MyApp(App):
 
     def on_input_dialog_confirm(self, value):
         self.lbl.set_text('Hello ' + value)
+        
+    def open_fileselection_dialog(self):
+        self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select files and folders')
+        self.fileselectionDialog.set_on_confirm_value_listener(
+            self, 'on_fileselection_dialog_confirm')
+
+        # here is returned the Input Dialog widget, and it will be shown
+        self.fileselectionDialog.show(self)
+
+    def on_fileselection_dialog_confirm(self, filelist):
+        #a list() of filenames and folders is returned
+        self.lbl.set_text('Selected files:' + str(filelist))
 
     def list_item0_selected(self):
         self.lbl.set_text('Danny selected')
