@@ -21,7 +21,7 @@ div {
 	background-color: rgb(240, 240, 240);
 }
 
-ul {
+.ListView {
 	border: 1px solid rgb( 73,73,73 );
 	padding: 0;
 	background-color: white;
@@ -29,11 +29,11 @@ ul {
 	overflow: scroll;
 }
 
-li {
+.ListItem {
 	padding: 2px;
 }
 
-li:hover {
+.ListItem:hover {
 	background: linear-gradient( rgb(230,230,230) , rgb( 215,215,215 ) );
 }
 
@@ -72,9 +72,44 @@ td {
 	background-color: white;
 }
 
-.FileFolderItemIcon:hover{
-	background-image: url( 'res/unchecked_checkbox.png' );
+.Menu {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	background: rgb(240, 240, 240);
 }
-.FileFolderItemIcon{
 
+.MenuItem {
+	font-weight: bold;
+}
+
+.MenuItem .MenuItem {
+	display: block;
+	position: relative;
+	float: left;
+	background: rgb(140, 140, 140);
+}
+
+.MenuItem:empty { background: rgb(200, 200, 200); }
+
+/*The CSS to hide the sub menus.*/
+.MenuItem .Menu { display: none; }
+/*Displays the dropdown menu on hover.*/
+.MenuItem:hover > .Menu {
+	display: block;
+	position: absolute;
+}
+
+.MenuItem:hover{
+	background: rgb(180, 180, 180);
+}
+
+.MenuItem[onclick]:not([onclick=""]):hover{
+	color: white;
+	/*font-weight: bold;*/
+}
+
+.Menu .Menu .Menu {
+	left: 100%;
+	top: 0;
 }

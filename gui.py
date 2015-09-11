@@ -250,8 +250,7 @@ class Button(Widget):
 
     """
     button widget:
-        implements the onclick event. reloads the web page because it uses the GET call.
-        requires
+        implements the onclick event.
     """
 
     def __init__(self, w, h, text=''):
@@ -286,10 +285,6 @@ class Button(Widget):
 class TextInput(Widget):
 
     """multiline text area widget implements the onclick event.
-
-    reloads the web page because it uses the GET call. implements the
-    onchange event with POST method, without reloading the web page
-
     """
 
     def __init__(self, w, h):
@@ -350,10 +345,6 @@ class SpinBox(Widget):
 
     """spin box widget usefull as numeric input field implements the onclick
     event.
-
-    reloads the web page because it uses the GET call. implements the
-    onchange event with POST method, without reloading the web page
-
     """
 
     def __init__(self, w, h, min=100, max=5000, value=1000, step=1):
@@ -459,9 +450,7 @@ class InputDialog(Widget):
 
     def confirm_value(self, value):
         """event called pressing on OK button.
-
         propagates the string content of the input field
-
         """
         self.hide()
         params = list()
@@ -485,8 +474,8 @@ class ListView(Widget):
 
     """list widget it can contain ListItems."""
 
-    def __init__(self, w, h):
-        super(ListView, self).__init__(w, h)
+    def __init__(self, w, h, horizontal=False):
+        super(ListView, self).__init__(w, h, horizontal)
         self.type = 'ul'
         self.attributes['class'] = 'ListView'
 
@@ -494,9 +483,6 @@ class ListView(Widget):
 class ListItem(Widget):
 
     """item widget for the ListView implements the onclick event.
-
-    reloads the web page because it uses the GET call.
-
     """
 
     def __init__(self, w, h, text):
@@ -519,8 +505,8 @@ class ListItem(Widget):
 
 class DropDown(Widget):
 
-    """combo box widget implements the onchange event with POST method, without
-    reloading the web page."""
+    """combo box widget implements the onchange event.
+    """
 
     def __init__(self, w, h):
         super(DropDown, self).__init__(w, h)
@@ -549,9 +535,6 @@ class DropDown(Widget):
 class DropDownItem(Widget):
 
     """item widget for the DropDown implements the onclick event.
-
-    reloads the web page because it uses the GET call.
-
     """
 
     def __init__(self, w, h, text):
@@ -939,3 +922,114 @@ class FileSelectionDialog(Widget):
     def set_on_abort_value_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ONABORT, listener, funcname)
+
+
+class Menu(ListView):
+
+    """Menu widget can contain MenuSub and MenuItem."""
+
+    def __init__(self, w, h, horizontal=True):
+        super(Menu, self).__init__(w, h, horizontal)
+        self.attributes['class'] = 'Menu'
+    
+
+class MenuItem(ListItem):
+
+    """MenuItem widget for the Menu implements the onclick event.
+    """
+
+    def __init__(self, w, h, text):
+        super(MenuItem, self).__init__(w, h, text)
+        self.attributes['class'] = 'MenuItem'
+
+
+class MenuSub(MenuItem):
+    
+    """MenuSub widget can contain MenuSub and MenuItem."""
+
+    def __init__(self, w, h, text):
+        self.subcontainer = None
+        super(MenuSub, self).__init__(w, h, text)
+        self.attributes['class'] = 'MenuItem'
+        self.subcontainer = Menu(w, h, False)
+        super(MenuSub, self).append('subcontainer', self.subcontainer)
+    
+    def append(self, key, value):
+        if self.subcontainer == None:
+            super(MenuSub, self).append(key, value)
+        else:
+            self.subcontainer.append(key, value)
+
+
+
+#MAIN NAVIGATION ITEMS MUST BE FLOAT LEFT
+"""<ul class="main-navigation">
+02
+  <li><a href="#">Home</a></li>
+03
+  <li><a href="#">Front End Design</a>
+04
+    <ul>
+05
+      <li><a href="#">HTML</a></li>
+06
+      <li><a href="#">CSS</a>
+07
+        <ul>
+08
+          <li><a href="#">Resets</a></li>
+09
+          <li><a href="#">Grids</a></li>
+10
+          <li><a href="#">Frameworks</a></li>
+11
+        </ul>
+12
+      </li>
+13
+      <li><a href="#">JavaScript</a>
+14
+        <ul>
+15
+          <li><a href="#">Ajax</a></li>
+16
+          <li><a href="#">jQuery</a></li>
+17
+        </ul>
+18
+      </li>
+19
+    </ul>
+20
+  </li>
+21
+  <li><a href="#">WordPress Development</a>
+22
+    <ul>
+23
+      <li><a href="#">Themes</a></li>
+24
+      <li><a href="#">Plugins</a></li>
+25
+      <li><a href="#">Custom Post Types</a>
+26
+        <ul>
+27
+          <li><a href="#">Portfolios</a></li>
+28
+          <li><a href="#">Testimonials</a></li>
+29
+        </ul>
+30
+      </li>
+31
+      <li><a href="#">Options</a></li>
+32
+    </ul>
+33
+  </li>
+34
+  <li><a href="#">About Us</a></li>
+35
+</ul>
+"""
