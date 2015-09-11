@@ -27,7 +27,9 @@ class MyApp(App):
         super(MyApp, self).idle()
         
     def main(self):
-        mainContainer = gui.Widget(600, 560, True, 10)
+        verticalContainer = gui.Widget(640, 620, False, 10)
+
+        horizontalContainer = gui.Widget(600, 560, True, 10)
 
         subContainerLeft = gui.Widget(300, 400, False, 10)
         self.img = gui.Image(100, 100, 'res/logo.png')
@@ -118,11 +120,33 @@ class MyApp(App):
         subContainerLeft.append('1', self.table)
         subContainerLeft.append('2', self.listView)
 
-        mainContainer.append('0', subContainerLeft)
-        mainContainer.append('1', subContainerRight)
-        
+        horizontalContainer.append('0', subContainerLeft)
+        horizontalContainer.append('1', subContainerRight)
+
+        menu = gui.Menu(600, 40)
+        m1 = gui.MenuItem(100, 40, 'File')
+        m2 = gui.MenuItem(100, 40, 'View')
+        m2.set_on_click_listener(self, 'menu_view_clicked')
+        m11 = gui.MenuItem(100, 40, 'Save')
+        m12 = gui.MenuItem(100, 40, 'Open')
+        m12.set_on_click_listener(self, 'menu_open_clicked')
+        m111 = gui.MenuItem(100, 40, 'Save')
+        m111.set_on_click_listener(self, 'menu_save_clicked')
+        m112 = gui.MenuItem(100, 40, 'Save as')
+        m112.set_on_click_listener(self, 'menu_saveas_clicked')
+
+        menu.append('1',m1)
+        menu.append('2',m2)
+        m1.append('11',m11)
+        m1.append('12',m12)
+        m11.append('111',m111)
+        m11.append('112',m112)
+
+        verticalContainer.append('0',menu)
+        verticalContainer.append('1',horizontalContainer)
+
         # returning the root widget
-        return mainContainer
+        return verticalContainer
 
     def add_table_row(self, table, field1, field2, field3):
         row = gui.TableRow()
@@ -195,6 +219,17 @@ class MyApp(App):
     def date_changed(self, value):
         self.lbl.set_text('New date value: ' + value)
 
+    def menu_save_clicked(self):
+        self.lbl.set_text('Menu clicked: Save')
+
+    def menu_saveas_clicked(self):
+        self.lbl.set_text('Menu clicked: Save As')
+
+    def menu_open_clicked(self):
+        self.lbl.set_text('Menu clicked: Open')
+
+    def menu_view_clicked(self):
+        self.lbl.set_text('Menu clicked: View')
         
 # starts the webserver
 start(MyApp)

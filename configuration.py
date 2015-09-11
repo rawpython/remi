@@ -11,8 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-WEBSOCKET_PORT_NUMBER = 8081
-HTTP_PORT_NUMBER = 8080
+WEBSOCKET_PORT_NUMBER = 8082
+HTTP_PORT_NUMBER = 8081
 IP_ADDR = '127.0.0.1'
 BASE_ADDRESS = 'http://' + IP_ADDR + ':' + str(HTTP_PORT_NUMBER) + '/'
 MULTIPLE_INSTANCE = False

@@ -76,11 +76,11 @@ td {
 	list-style: none;
 	padding: 0;
 	margin: 0;
-	background: rgb(240, 240, 240);
+	background: transparent; /*rgb(240, 240, 40);*/
 }
 
 .MenuItem {
-	font-weight: bold;
+	border-bottom: 1px solid gray;
 }
 
 .MenuItem .MenuItem {
@@ -90,10 +90,11 @@ td {
 	background: rgb(140, 140, 140);
 }
 
-.MenuItem:empty { background: rgb(200, 200, 200); }
-
 /*The CSS to hide the sub menus.*/
-.MenuItem .Menu { display: none; }
+.MenuItem .Menu {
+	display: none;
+	/*height: 100%;*/
+}
 /*Displays the dropdown menu on hover.*/
 .MenuItem:hover > .Menu {
 	display: block;
