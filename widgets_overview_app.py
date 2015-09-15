@@ -29,9 +29,9 @@ class MyApp(App):
     def main(self):
         verticalContainer = gui.Widget(640, 620, False, 10)
 
-        horizontalContainer = gui.Widget(600, 560, True, 10)
+        horizontalContainer = gui.Widget(620, 560, True, 10)
 
-        subContainerLeft = gui.Widget(300, 400, False, 10)
+        subContainerLeft = gui.Widget(340, 400, False, 10)
         self.img = gui.Image(100, 100, 'res/logo.png')
 
         self.table = gui.Table(300, 200)
@@ -123,7 +123,7 @@ class MyApp(App):
         horizontalContainer.append('0', subContainerLeft)
         horizontalContainer.append('1', subContainerRight)
 
-        menu = gui.Menu(600, 40)
+        menu = gui.Menu(620, 40)
         m1 = gui.MenuItem(100, 40, 'File')
         m2 = gui.MenuItem(100, 40, 'View')
         m2.set_on_click_listener(self, 'menu_view_clicked')
