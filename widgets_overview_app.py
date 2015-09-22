@@ -31,7 +31,7 @@ class MyApp(App):
 
         horizontalContainer = gui.Widget(620, 560, True, 10)
 
-        subContainerLeft = gui.Widget(340, 400, False, 10)
+        subContainerLeft = gui.Widget(340, 500, False, 10)
         self.img = gui.Image(100, 100, 'res/logo.png')
 
         self.table = gui.Table(300, 200)
@@ -53,7 +53,7 @@ class MyApp(App):
         self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(240, 420, False, 10)
+        subContainerRight = gui.Widget(240, 500, False, 10)
 
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 

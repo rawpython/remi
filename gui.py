@@ -176,8 +176,17 @@ class Widget(object):
         self.children[key] = value
 
         if hasattr(self.children[key], 'style'):
-            self.children[key].style['margin'] = to_pix(self.widget_spacing)
+            spacing = to_pix(self.widget_spacing)
+            selfHeight = 0
+            selfWidth = 0
+            if 'height' in self.style.keys() and 'height' in self.children[key].style.keys():
+                selfHeight = from_pix(self.style['height']) - from_pix(self.children[key].style['height'])
+            if 'width' in self.style.keys() and 'width' in self.children[key].style.keys():
+                selfWidth = from_pix(self.style['width']) - from_pix(self.children[key].style['width'])
+            self.children[key].style['margin'] = spacing + " " + to_pix(selfWidth/2)
+            
             if self.layout_orizontal:
+                self.children[key].style['margin'] = to_pix(selfHeight/2) + " " + spacing
                 if 'float' in self.children[key].style.keys():
                     if not (self.children[key].style['float'] == 'none'):
                         self.children[key].style['float'] = 'left'
