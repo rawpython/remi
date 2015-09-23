@@ -973,16 +973,17 @@ class FileSelectionDialog(Widget):
             self.EVENT_ONABORT, listener, funcname)
 
 
-class Menu(ListView):
+class Menu(Widget):
 
     """Menu widget can contain MenuItem."""
 
     def __init__(self, w, h, horizontal=True):
         super(Menu, self).__init__(w, h, horizontal)
+        self.type = 'ul'
         self.attributes['class'] = 'Menu'
 
 
-class MenuItem(ListItem):
+class MenuItem(Widget):
     
     """MenuItem widget can contain other MenuItem."""
 
@@ -990,8 +991,11 @@ class MenuItem(ListItem):
         self.w = w
         self.h = h
         self.subcontainer = None
-        super(MenuItem, self).__init__(w, h, text)
+        super(MenuItem, self).__init__(w, h)
+        self.type = 'li'
         self.attributes['class'] = 'MenuItem'
+        self.attributes[self.EVENT_ONCLICK] = ''
+        self.set_text(text)
         self.append = self.addSubMenu
     
     def addSubMenu(self, key, value):
@@ -999,3 +1003,21 @@ class MenuItem(ListItem):
             self.subcontainer = Menu(self.w, self.h, False)
             super(MenuItem, self).append('subcontainer', self.subcontainer)
         self.subcontainer.append(key, value)
+
+    def set_text(self, text):
+        self.append('text', text)
+
+    def get_text(self):
+        return self.children['text']
+
+    def onclick(self):
+        params = list()
+        #params.append()
+        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
+
+    def set_on_click_listener(self, listener, funcname):
+        self.attributes[
+            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.eventManager.register_listener(
+            self.EVENT_ONCLICK, listener, funcname)
+
