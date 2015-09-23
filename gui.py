@@ -722,7 +722,7 @@ class FileFolderNavigator(Widget):
         self.controlsContainer.append('2',self.pathEditor)
         self.controlsContainer.append('3',self.controlGo)
         
-        self.itemContainer = Widget(w,h-25)
+        self.itemContainer = Widget(w,h-25,False)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
         
@@ -745,7 +745,7 @@ class FileFolderNavigator(Widget):
         #this speeds up the navigation
         self.remove(self.itemContainer)
         #creation of a new instance of a itemContainer
-        self.itemContainer = Widget(self.w,self.h-25) 
+        self.itemContainer = Widget(self.w,self.h-25,False)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
         
