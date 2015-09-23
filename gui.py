@@ -487,6 +487,31 @@ class ListView(Widget):
         super(ListView, self).__init__(w, h, horizontal)
         self.type = 'ul'
         self.attributes['class'] = 'ListView'
+        self.EVENT_ONSELECTION = 'onselection'
+
+    def append(self, key, item):
+        #if an event listener is already set for the added item, it will not generate a selection event
+        if item.attributes[self.EVENT_ONCLICK] == '':
+            item.set_on_click_listener(self,self.EVENT_ONSELECTION)
+        super(ListView, self).append(key,item)
+
+    def onselection(self,clicked_item):
+        selected_key = None
+        for k in self.children.keys():
+            if self.children[k]==clicked_item:
+                selected_key = k
+                print('ListView - onselection. Selected item key: ',k)
+                break
+        params = list()
+        params.append(selected_key)
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
+
+    def set_on_selection_listener(self, listener, funcname):
+        """The listener will receive the key of the selected item.
+        If you add the element from an array, use a numeric incremental key
+        """
+        self.eventManager.register_listener(
+            self.EVENT_ONSELECTION, listener, funcname)
 
 
 class ListItem(Widget):
@@ -500,12 +525,21 @@ class ListItem(Widget):
         self.attributes['class'] = 'ListItem'
 
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.append('1', text)
+        self.set_text(text)
+
+    def set_text(self, text):
+        self.append('text', text)
+
+    def get_text(self):
+        return self.children['text']
 
     def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+        params = list()
+        params.append(self)
+        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
 
     def set_on_click_listener(self, listener, funcname):
+        """WARNING!!! DO NOT USE. If used disables the set_on_selection_listener of the ListView"""
         self.attributes[
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.register_listener(

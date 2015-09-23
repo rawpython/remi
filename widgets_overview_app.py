@@ -75,14 +75,11 @@ class MyApp(App):
         self.btFileDiag.set_on_click_listener(self, 'open_fileselection_dialog')
 
         self.listView = gui.ListView(300, 120)
+        self.listView.set_on_selection_listener(self,"list_view_on_selected")
         li0 = gui.ListItem(279, 20, 'Danny Young')
-        li0.set_on_click_listener(self, 'list_item0_selected')
         li1 = gui.ListItem(279, 20, 'Christine Holand')
-        li1.set_on_click_listener(self, 'list_item1_selected')
         li2 = gui.ListItem(279, 20, 'Lars Gordon')
-        li2.set_on_click_listener(self, 'list_item2_selected')
         li3 = gui.ListItem(279, 20, 'Roberto Robitaille')
-        li3.set_on_click_listener(self, 'list_item3_selected')
         self.listView.append('0', li0)
         self.listView.append('1', li1)
         self.listView.append('2', li2)
@@ -195,17 +192,11 @@ class MyApp(App):
         #a list() of filenames and folders is returned
         self.lbl.set_text('Selected files:' + str(filelist))
 
-    def list_item0_selected(self):
-        self.lbl.set_text('Danny selected')
-
-    def list_item1_selected(self):
-        self.lbl.set_text('Christine selected')
-
-    def list_item2_selected(self):
-        self.lbl.set_text('Lars selected')
-
-    def list_item3_selected(self):
-        self.lbl.set_text('Roberto selected')
+    def list_view_on_selected(self,selected_item_key):
+        """ The selection event of the listView, returns a key of the clicked event.
+            You can retrieve the item rapidly
+        """
+        self.lbl.set_text('List selection: ' + self.listView.children[selected_item_key].get_text())
 
     def drop_down_changed(self, value):
         self.lbl.set_text('New Combo value: ' + value)
