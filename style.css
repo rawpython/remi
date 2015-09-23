@@ -33,6 +33,10 @@ div {
 	padding: 2px;
 }
 
+.ListItem[item_selected='True'] {
+	background-color: rgb(215,215,215)
+}
+
 .ListItem:hover {
 	background: linear-gradient( rgb(230,230,230) , rgb( 215,215,215 ) );
 }

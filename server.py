@@ -544,11 +544,16 @@ ws.onerror = function(evt){ \
             if ENABLE_FILE_CACHE:
                 self.send_header('Cache-Control', 'public, max-age=86400')
             self.end_headers()
+            filename = './' + function
+            try:
+                f = open(filename, 'r+b')
+                content = b''.join(f.readlines())
+                f.close()
+                self.wfile.write(content)
+            except:
+                print('Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
+                #print(traceback.format_exc())
 
-            f = open('./' + function, 'r+b')
-            content = b''.join(f.readlines())
-            f.close()
-            self.wfile.write(content)
 
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):

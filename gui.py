@@ -488,11 +488,13 @@ class ListView(Widget):
         self.type = 'ul'
         self.attributes['class'] = 'ListView'
         self.EVENT_ONSELECTION = 'onselection'
+        self.selected_item = None
 
     def append(self, key, item):
         #if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
             item.set_on_click_listener(self,self.EVENT_ONSELECTION)
+        item.attributes['item_selected'] = False
         super(ListView, self).append(key,item)
 
     def onselection(self,clicked_item):
@@ -501,6 +503,10 @@ class ListView(Widget):
             if self.children[k]==clicked_item:
                 selected_key = k
                 print('ListView - onselection. Selected item key: ',k)
+                if self.selected_item != None:
+                    self.selected_item['item_selected'] = False
+                self.selected_item = self.children[selected_key]
+                self.selected_item['item_selected'] = True
                 break
         params = list()
         params.append(selected_key)
