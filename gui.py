@@ -747,7 +747,7 @@ class FileFolderNavigator(Widget):
     """FileFolderNavigator widget.
     """
 
-    def __init__(self, w, h, multiple_selection):
+    def __init__(self, w, h, multiple_selection,selection_folder):
         self.w = w
         self.h = h
         self.multiple_selection = multiple_selection
@@ -775,7 +775,7 @@ class FileFolderNavigator(Widget):
         self.append('items',self.itemContainer)
         
         self.folderItems = list()
-        self.chdir(os.getcwd()) #move to actual working directory
+        self.chdir(selection_folder) #move to actual working directory
     
     def get_selection_list(self):
         return self.selectionlist
@@ -828,14 +828,17 @@ class FileFolderNavigator(Widget):
         os.chdir( curpath ) #restore the path
         
     def chdir(self, directory):
+        curpath = os.getcwd() #backup the path
         print_filtered(DEBUG_MESSAGE,"FileFolderNavigator - chdir:" + directory + "\n")
         for c in self.folderItems:
             self.itemContainer.remove(c) #remove the file and folders from the view
         self.folderItems = list()
         self.selectionlist = list() #reset selected file list
         os.chdir(directory)
+        directory = os.getcwd()
         self.populate_folder_items(directory)
         self.pathEditor.set_text(directory)
+        os.chdir( curpath ) #restore the path
         
     def on_folder_item_selected(self,folderitem):
         if not self.multiple_selection:
@@ -930,7 +933,7 @@ class FileSelectionDialog(Widget):
     """file selection dialog, it opens a new webpage allows the OK/ABORT functionality
     implementing the "onConfirm" and "onAbort" events."""
 
-    def __init__(self, title, message, multiple_selection = True):
+    def __init__(self, title, message, multiple_selection = True, selection_folder = '.'):
         w = 600
         h = 370
         super(FileSelectionDialog, self).__init__(w, h, False, 10)
@@ -946,7 +949,7 @@ class FileSelectionDialog(Widget):
         self.conf = Button(50, 30, 'Ok')
         self.abort = Button(50, 30, 'Cancel')
         
-        self.fileFolderNavigator = FileFolderNavigator(w-20,200,multiple_selection)
+        self.fileFolderNavigator = FileFolderNavigator(w-20,200,multiple_selection,selection_folder)
         
         hlay = Widget(w - 20, 30)
         hlay.append('1', self.conf)
