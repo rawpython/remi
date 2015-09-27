@@ -14,7 +14,7 @@
    limitations under the License.
 """
 import traceback
-from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL
+from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:
@@ -579,11 +579,12 @@ def start(mainGuiClass):
         # request
         server = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), mainGuiClass)
         print('Started httpserver on port ', HTTP_PORT_NUMBER)
-        try:
-            import android
-            android.webbrowser.open(BASE_ADDRESS)
-        except:
-            webbrowser.open(BASE_ADDRESS)
+        if AUTOMATIC_START_BROWSER:
+            try:
+                import android
+                android.webbrowser.open(BASE_ADDRESS)
+            except:
+                webbrowser.open(BASE_ADDRESS)
         server.serve_forever()
 
     except KeyboardInterrupt:
