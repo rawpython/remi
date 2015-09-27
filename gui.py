@@ -296,7 +296,7 @@ class TextInput(Widget):
     """multiline text area widget implements the onclick event.
     """
 
-    def __init__(self, w, h):
+    def __init__(self, w, h, single_line = True):
         super(TextInput, self).__init__(w, h)
         self.type = 'textarea'
         self.attributes['class'] = 'TextInput'
@@ -306,6 +306,10 @@ class TextInput(Widget):
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
 
         self.set_text('')
+
+        if single_line:
+            self.style['resize'] = 'none'
+            self.attributes['rows'] = '1'
 
     def set_text(self, t):
         """sets the text content."""
