@@ -14,7 +14,7 @@
    limitations under the License.
 """
 import traceback
-from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER
+from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:
@@ -46,6 +46,14 @@ updateTimerStarted = False  # to start the update timer only once
 pyLessThan3 = sys.version_info < (3,)
 
 update_semaphore = threading.Semaphore()
+
+
+DEBUG_ALERT_ERR = 1
+DEBUG_MESSAGE = 2
+def print_filtered(debug_level, *args):
+    if debug_level <= DEBUG_MODE:
+        print( *args )
+
 
 def toWebsocket(data):
     #encoding end deconding utility function
@@ -79,7 +87,6 @@ def get_method_by_name(rootNode, name, maxIter=5):
         val = getattr(rootNode, name)
     else:
         pass
-        #print("the method '" + name + "' is not part of this instance type:" + str(rootNode))
     return val
 
 
@@ -99,7 +106,6 @@ def get_method_by_id(rootNode, _id, maxIter=5):
     try:
         if hasattr(rootNode, 'children'):
             for i in rootNode.children.values():
-                # print(str(i))
                 val = get_method_by_id(i, _id, maxIter)
                 if val is not None:
                     return val
@@ -119,17 +125,17 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        print('websocket connection established', self.client_address)
+        print_filtered(DEBUG_MESSAGE, 'websocket connection established', self.client_address)
         self.handshake_done = False
 
     def handle(self):
-        print('handle\n')
+        print_filtered(DEBUG_MESSAGE,'handle\n')
         while True:
             if not self.handshake_done:
                 self.handshake()
             else:
                 if not self.read_next_message():
-                    print('ending websocket service...')
+                    print_filtered(DEBUG_MESSAGE,'ending websocket service...')
                     break
             
     def bytetonum(self,b):
@@ -138,7 +144,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        print('read_next_message\n')
+        print_filtered(DEBUG_MESSAGE,'read_next_message\n')
         length = self.rfile.read(2)
         try:
             length = self.bytetonum(length[1]) & 127
@@ -152,15 +158,16 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(fromWebsocket(decoded))
         except Exception as e:
-            print("Exception in server.py-read_next_message.")
-            print(traceback.format_exc())
+            if DEBUG_MODE:
+                print_filtered(DEBUG_ALERT_ERR,"Exception in server.py-read_next_message.")
+                print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
             return False
         return True
 
     def send_message(self, message):
         out = bytearray()
         out.append(129)
-        print('send_message\n')
+        print_filtered(DEBUG_MESSAGE,'send_message\n')
         length = len(message)
         if length <= 125:
             out.append(length)
@@ -176,10 +183,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        print('handshake\n')
+        print_filtered(DEBUG_MESSAGE,'handshake\n')
         data = self.request.recv(1024).strip()
         #headers = Message(StringIO(data.split(b'\r\n', 1)[1]))
-        print('Handshaking...')
+        print_filtered(DEBUG_MESSAGE,'Handshaking...')
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0] #headers['Sec-WebSocket-Key']
         #key = key
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
@@ -205,7 +212,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             if not self in clients[k].websockets:
                 #clients[k].websockets.clear()
                 clients[k].websockets.append(self)
-            print('on_message\n')
+            print_filtered(DEBUG_MESSAGE,'on_message\n')
             #print('recv from websocket client: ' + str(message))
 
             # parsing messages
@@ -229,7 +236,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                             if callback is not None:
                                 callback(**paramDict)
         except Exception as e:
-            print(traceback.format_exc())
+            print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
         update_semaphore.release()
 
 
@@ -276,7 +283,7 @@ def update_clients():
             client.idle()
             gui_updater(client, client.root)
     except Exception as e:
-        print(traceback.format_exc())
+        print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
     update_semaphore.release()
     Timer(UPDATE_INTERVAL, update_clients, ()).start()
 
@@ -302,10 +309,10 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                     #here a new widget is found, but it must be added updating the parent widget
                     if 'parent_widget' in leaf.attributes.keys():
                         parentWidgetId = leaf.attributes['parent_widget']
-                        print("1" + leaf.attributes['class'] + "\n")
+                        print_filtered(DEBUG_MESSAGE,"1" + leaf.attributes['class'] + "\n")
                         ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(repr(get_method_by_id(client.root,parentWidgetId))))
                     else:
-                        print('the new widget seems to have no parent...')
+                        print_filtered(DEBUG_ALERT_ERR,'the new widget seems to have no parent...')
                     #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                     #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
                 except:
@@ -319,7 +326,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
         #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:
             #try:
-            print('update_widget: ' + __id + '  type: ' + str(type(leaf)))
+            print_filtered(DEBUG_MESSAGE,'update_widget: ' + __id + '  type: ' + str(type(leaf)))
             try:
                 ws.send_message('update_widget,' + __id + ',' + toWebsocket(repr(leaf)))
             except:
@@ -551,7 +558,7 @@ ws.onerror = function(evt){ \
                 f.close()
                 self.wfile.write(content)
             except:
-                print('Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
+                print_filtered(DEBUG_ALERT_ERR,'Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
                 #print(traceback.format_exc())
 
 
@@ -578,7 +585,7 @@ def start(mainGuiClass):
         # Create a web server and define the handler to manage the incoming
         # request
         server = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), mainGuiClass)
-        print('Started httpserver on port ', HTTP_PORT_NUMBER)
+        print_filtered(DEBUG_MESSAGE,'Started httpserver on port ', HTTP_PORT_NUMBER)
         if AUTOMATIC_START_BROWSER:
             try:
                 import android
@@ -588,5 +595,5 @@ def start(mainGuiClass):
         server.serve_forever()
 
     except KeyboardInterrupt:
-        print('^C received, shutting down the web server')
+        print_filtered(DEBUG_ALERT_ERR,'^C received, shutting down the web server')
         server.socket.close()

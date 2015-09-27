@@ -21,3 +21,4 @@ ENABLE_FILE_CACHE = True
 runtimeInstances = list()
 UPDATE_INTERVAL = 0.1
 AUTOMATIC_START_BROWSER = True #when true opens automatically the browser
+DEBUG_MODE = 0 #0 - NO DEBUG  1 - ALERTS AND ERRORS  2 - MESSAGES
