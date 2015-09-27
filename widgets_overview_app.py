@@ -181,7 +181,7 @@ class MyApp(App):
         self.lbl.set_text('Hello ' + value)
         
     def open_fileselection_dialog(self):
-        self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select files and folders')
+        self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select files and folders',False)
         self.fileselectionDialog.set_on_confirm_value_listener(
             self, 'on_fileselection_dialog_confirm')
 

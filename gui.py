@@ -743,17 +743,18 @@ class FileFolderNavigator(Widget):
     """FileFolderNavigator widget.
     """
 
-    def __init__(self, w, h):
+    def __init__(self, w, h, multiple_selection):
         self.w = w
         self.h = h
+        self.multiple_selection = multiple_selection
         super(FileFolderNavigator, self).__init__(w, h, False)
         self.attributes['class'] = 'FileFolderNavigator'
         
         self.selectionlist = list() #here are stored selected files and folders
         self.controlsContainer = Widget(w,25,True)
-        self.controlBack = Button(45,25,'BACK')
+        self.controlBack = Button(45,25,'Up')
         self.controlBack.set_on_click_listener(self,'dir_go_back')
-        self.controlGo = Button(45,25,'GO >>')
+        self.controlGo = Button(45,25,'Go >>')
         self.controlGo.set_on_click_listener(self,'dir_go')
         self.pathEditor = TextInput(w-90,25)
         self.pathEditor.style['resize'] = 'none'
@@ -833,6 +834,11 @@ class FileFolderNavigator(Widget):
         self.pathEditor.set_text(directory)
         
     def on_folder_item_selected(self,folderitem):
+        if not self.multiple_selection:
+            self.selectionlist.clear()
+            for c in self.folderItems:
+                c.set_selected(False)
+            folderitem.set_selected(True)
         print_filtered(DEBUG_MESSAGE,"FileFolderNavigator - on_folder_item_click")
         #when an item is clicked it is added to the file selection list
         f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
@@ -889,13 +895,16 @@ class FileFolderItem(Widget):
     def set_on_click_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
-            
-    def onselection(self):
-        self.selected = not self.selected
+
+    def set_selected(self, selected):
+        self.selected = selected
         if self.selected:
             self.style['color'] = 'red'
         else:
             self.style['color'] = 'black'
+
+    def onselection(self):
+        self.set_selected(not self.selected)
         params = list()
         params.append(self)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
@@ -917,7 +926,7 @@ class FileSelectionDialog(Widget):
     """file selection dialog, it opens a new webpage allows the OK/ABORT functionality
     implementing the "onConfirm" and "onAbort" events."""
 
-    def __init__(self, title, message):
+    def __init__(self, title, message, multiple_selection = True):
         w = 600
         h = 370
         super(FileSelectionDialog, self).__init__(w, h, False, 10)
@@ -931,9 +940,9 @@ class FileSelectionDialog(Widget):
         m = Label(w - 70, 30, message)
 
         self.conf = Button(50, 30, 'Ok')
-        self.abort = Button(50, 30, 'Abort')
+        self.abort = Button(50, 30, 'Cancel')
         
-        self.fileFolderNavigator = FileFolderNavigator(w-20,200)
+        self.fileFolderNavigator = FileFolderNavigator(w-20,200,multiple_selection)
         
         hlay = Widget(w - 20, 30)
         hlay.append('1', self.conf)
