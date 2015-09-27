@@ -30,6 +30,9 @@ These widgets are available:
 - Slider
 - ColorPicker
 - Date
+- FileSelectionDialog
+- Menu
+- MenuItem
 
 A basic application appears like this:
 
@@ -69,7 +72,7 @@ class MyApp(App):
 start(MyApp)
 </code></pre>
 
-In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8080".
+In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8081".
 You can change the url address, edit the "configuration.py" file.
 
 Tested on Android, Linux, Windows with Google Chrome web browser.
@@ -121,7 +124,7 @@ start( MyApp )
 
 </code></pre>
 
-Run the script. If all it's OK the gui will be opened automatically in your browser, otherwise you have to type in the address bar "http://127.0.0.1:8080".
+Run the script. If all it's OK the gui will be opened automatically in your browser, otherwise you have to type in the address bar "http://127.0.0.1:8081".
 
 The configuration.py file contains the IP and PORT values. You can change these values in order to make the gui accessible on other devices on the network.
 

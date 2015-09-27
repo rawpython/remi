@@ -68,7 +68,7 @@ start(MyApp)
 </code></pre>
 
 De forma que para ver la interfaz de usuario, 
-abre tu explorador preferido (Yo uso Chrome) and type : "http://127.0.0.1:8080"
+abre tu explorador preferido (Yo uso Chrome) and type : "http://127.0.0.1:8081"
 Tu puedes cambiar la dirección url, editando el archivo "configuration.py"
 
 Probado en Android, Linux, Windows con el explorador web Google Chrome.
