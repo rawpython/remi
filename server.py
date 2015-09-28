@@ -50,9 +50,13 @@ update_semaphore = threading.Semaphore()
 
 DEBUG_ALERT_ERR = 1
 DEBUG_MESSAGE = 2
-def print_filtered(debug_level, *args):
-    if debug_level <= DEBUG_MODE:
-        print( *args )
+def debug_message(*args, **kwargs):
+    if DEBUG_MESSAGE <= DEBUG_MODE:
+        print(args)
+        
+def debug_alert(*args, **kwargs):
+    if DEBUG_ALERT_ERR <= DEBUG_MODE:
+        print( args )
 
 
 def toWebsocket(data):
@@ -125,17 +129,17 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        print_filtered(DEBUG_MESSAGE, 'websocket connection established', self.client_address)
+        debug_message('websocket connection established', self.client_address)
         self.handshake_done = False
 
     def handle(self):
-        print_filtered(DEBUG_MESSAGE,'handle\n')
+        debug_message('handle\n')
         while True:
             if not self.handshake_done:
                 self.handshake()
             else:
                 if not self.read_next_message():
-                    print_filtered(DEBUG_MESSAGE,'ending websocket service...')
+                    debug_message('ending websocket service...')
                     break
             
     def bytetonum(self,b):
@@ -144,7 +148,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        print_filtered(DEBUG_MESSAGE,'read_next_message\n')
+        debug_message('read_next_message\n')
         length = self.rfile.read(2)
         try:
             length = self.bytetonum(length[1]) & 127
@@ -159,15 +163,15 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             self.on_message(fromWebsocket(decoded))
         except Exception as e:
             if DEBUG_MODE:
-                print_filtered(DEBUG_ALERT_ERR,"Exception in server.py-read_next_message.")
-                print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
+                debug_alert("Exception in server.py-read_next_message.")
+                debug_alert(traceback.format_exc())
             return False
         return True
 
     def send_message(self, message):
         out = bytearray()
         out.append(129)
-        print_filtered(DEBUG_MESSAGE,'send_message\n')
+        debug_message('send_message\n')
         length = len(message)
         if length <= 125:
             out.append(length)
@@ -183,10 +187,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        print_filtered(DEBUG_MESSAGE,'handshake\n')
+        debug_message('handshake\n')
         data = self.request.recv(1024).strip()
         #headers = Message(StringIO(data.split(b'\r\n', 1)[1]))
-        print_filtered(DEBUG_MESSAGE,'Handshaking...')
+        debug_message('Handshaking...')
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0] #headers['Sec-WebSocket-Key']
         #key = key
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
@@ -212,7 +216,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             if not self in clients[k].websockets:
                 #clients[k].websockets.clear()
                 clients[k].websockets.append(self)
-            print_filtered(DEBUG_MESSAGE,'on_message\n')
+            debug_message('on_message\n')
             #print('recv from websocket client: ' + str(message))
 
             # parsing messages
@@ -236,7 +240,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                             if callback is not None:
                                 callback(**paramDict)
         except Exception as e:
-            print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
+            debug_alert(traceback.format_exc())
         update_semaphore.release()
 
 
@@ -283,7 +287,7 @@ def update_clients():
             client.idle()
             gui_updater(client, client.root)
     except Exception as e:
-        print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
+        debug_alert(traceback.format_exc())
     update_semaphore.release()
     Timer(UPDATE_INTERVAL, update_clients, ()).start()
 
@@ -309,10 +313,10 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                     #here a new widget is found, but it must be added updating the parent widget
                     if 'parent_widget' in leaf.attributes.keys():
                         parentWidgetId = leaf.attributes['parent_widget']
-                        print_filtered(DEBUG_MESSAGE,"1" + leaf.attributes['class'] + "\n")
+                        debug_message("1" + leaf.attributes['class'] + "\n")
                         ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(repr(get_method_by_id(client.root,parentWidgetId))))
                     else:
-                        print_filtered(DEBUG_ALERT_ERR,'the new widget seems to have no parent...')
+                        debug_alert('the new widget seems to have no parent...')
                     #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                     #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
                 except:
@@ -326,7 +330,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
         #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:
             #try:
-            print_filtered(DEBUG_MESSAGE,'update_widget: ' + __id + '  type: ' + str(type(leaf)))
+            debug_message('update_widget: ' + __id + '  type: ' + str(type(leaf)))
             try:
                 ws.send_message('update_widget,' + __id + ',' + toWebsocket(repr(leaf)))
             except:
@@ -558,7 +562,7 @@ ws.onerror = function(evt){ \
                 f.close()
                 self.wfile.write(content)
             except:
-                print_filtered(DEBUG_ALERT_ERR,'Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
+                debug_alert('Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
                 #print(traceback.format_exc())
 
 
@@ -585,7 +589,7 @@ def start(mainGuiClass):
         # Create a web server and define the handler to manage the incoming
         # request
         server = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), mainGuiClass)
-        print_filtered(DEBUG_MESSAGE,'Started httpserver on port ', HTTP_PORT_NUMBER)
+        debug_message('Started httpserver on port ', HTTP_PORT_NUMBER)
         if AUTOMATIC_START_BROWSER:
             try:
                 import android
@@ -595,5 +599,5 @@ def start(mainGuiClass):
         server.serve_forever()
 
     except KeyboardInterrupt:
-        print_filtered(DEBUG_ALERT_ERR,'^C received, shutting down the web server')
+        debug_alert('^C received, shutting down the web server')
         server.socket.close()

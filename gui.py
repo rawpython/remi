@@ -275,7 +275,7 @@ class Button(Widget):
         self.append('text', t)
 
     def onclick(self):
-        print_filtered(DEBUG_MESSAGE,'Button pressed: ', self.children['text'])
+        debug_message('Button pressed: ', self.children['text'])
         return self.eventManager.propagate(self.EVENT_ONCLICK, list())
 
     def set_on_click_listener(self, listener, funcname):
@@ -506,7 +506,7 @@ class ListView(Widget):
         for k in self.children.keys():
             if self.children[k]==clicked_item:
                 selected_key = k
-                print_filtered(DEBUG_MESSAGE,'ListView - onselection. Selected item key: ',k)
+                debug_message('ListView - onselection. Selected item key: ',k)
                 if self.selected_item != None:
                     self.selected_item['item_selected'] = False
                 self.selected_item = self.children[selected_key]
@@ -571,7 +571,7 @@ class DropDown(Widget):
     def onchange(self, newValue):
         params = list()
         params.append(newValue)
-        print_filtered(DEBUG_MESSAGE,'combo box. selected', newValue)
+        debug_message('combo box. selected', newValue)
         for item in self.children.values():
             if item.attributes['value'] == newValue:
                 item.attributes['selected'] = 'selected'
@@ -782,7 +782,7 @@ class FileFolderNavigator(Widget):
         
     def populate_folder_items(self,directory):
         fpath = directory + os.sep
-        print_filtered(DEBUG_MESSAGE,"FileFolderNavigator - populate_folder_items")
+        debug_message("FileFolderNavigator - populate_folder_items")
         l = os.listdir(directory)
         #used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory 
@@ -813,7 +813,7 @@ class FileFolderNavigator(Widget):
             self.chdir(os.getcwd())
         except Exception as e:
             self.pathEditor.set_text(self.lastValidPath)
-            print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
+            debug_alert(traceback.format_exc())
         os.chdir( curpath ) #restore the path
 
     def dir_go(self):
@@ -823,13 +823,13 @@ class FileFolderNavigator(Widget):
             os.chdir( self.pathEditor.get_text() )
             self.chdir(os.getcwd())
         except Exception as e:
-            print_filtered(DEBUG_ALERT_ERR,traceback.format_exc())
+            debug_alert(traceback.format_exc())
             self.pathEditor.set_text(self.lastValidPath)
         os.chdir( curpath ) #restore the path
         
     def chdir(self, directory):
         curpath = os.getcwd() #backup the path
-        print_filtered(DEBUG_MESSAGE,"FileFolderNavigator - chdir:" + directory + "\n")
+        debug_message("FileFolderNavigator - chdir:" + directory + "\n")
         for c in self.folderItems:
             self.itemContainer.remove(c) #remove the file and folders from the view
         self.folderItems = list()
@@ -842,20 +842,21 @@ class FileFolderNavigator(Widget):
         
     def on_folder_item_selected(self,folderitem):
         if not self.multiple_selection:
-            self.selectionlist.clear()
+            self.selectionlist = list()
             for c in self.folderItems:
                 c.set_selected(False)
             folderitem.set_selected(True)
-        print_filtered(DEBUG_MESSAGE,"FileFolderNavigator - on_folder_item_click")
+        debug_message("FileFolderNavigator - on_folder_item_click")
         #when an item is clicked it is added to the file selection list
         f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
         if f in self.selectionlist:
             self.selectionlist.remove(f)
         else:
+            print("element not in the list, appending\n")
             self.selectionlist.append(f)
 
     def on_folder_item_click(self,folderitem):
-        print_filtered(DEBUG_MESSAGE,"FileFolderNavigator - on_folder_item_dblclick")
+        debug_message("FileFolderNavigator - on_folder_item_dblclick")
         #when an item is clicked two time
         f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
         if not os.path.isfile(f):
