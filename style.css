@@ -27,6 +27,7 @@ div {
 	background-color: white;
 	cursor: default;
 	overflow: scroll;
+	list-style: none;
 }
 
 .ListItem {
