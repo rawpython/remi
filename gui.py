@@ -751,6 +751,7 @@ class FileFolderNavigator(Widget):
         self.w = w
         self.h = h
         self.multiple_selection = multiple_selection
+        self.sep = os.sep #'/' #default separator in path os.sep
         super(FileFolderNavigator, self).__init__(w, h, False)
         self.attributes['class'] = 'FileFolderNavigator'
         
@@ -781,7 +782,7 @@ class FileFolderNavigator(Widget):
         return self.selectionlist
         
     def populate_folder_items(self,directory):
-        fpath = directory + os.sep
+        fpath = directory + self.sep
         debug_message("FileFolderNavigator - populate_folder_items")
         l = os.listdir(directory)
         #used to restore a valid path after a wrong edit in the path editor
@@ -848,7 +849,7 @@ class FileFolderNavigator(Widget):
             folderitem.set_selected(True)
         debug_message("FileFolderNavigator - on_folder_item_click")
         #when an item is clicked it is added to the file selection list
-        f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
+        f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
         if f in self.selectionlist:
             self.selectionlist.remove(f)
         else:
@@ -858,7 +859,7 @@ class FileFolderNavigator(Widget):
     def on_folder_item_click(self,folderitem):
         debug_message("FileFolderNavigator - on_folder_item_dblclick")
         #when an item is clicked two time
-        f = self.pathEditor.get_text() + os.sep + folderitem.get_text()
+        f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
         if not os.path.isfile(f):
             self.chdir(f)
 
@@ -1038,3 +1039,29 @@ class MenuItem(Widget):
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
 
+
+class FileUploader(Widget):
+
+    """
+    button widget:
+        implements the onclick event.
+    """
+
+    def __init__(self, w, h, savepath='./', text=''):
+        super(FileUploader, self).__init__(w, h)
+        self.savepath = savepath
+        self.type = 'input'
+        self.attributes['class'] = 'FileUploader'
+        #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
+        """
+        <input type="file" id="fileinput" multiple="multiple" accept="image/*" />
+        """
+        self.attributes['type']='file'
+        self.attributes['multiple']='multiple'
+        self.attributes['accept']='*.*'
+        self.attributes[self.EVENT_ONCLICK] = ''
+        self.attributes[self.EVENT_ONCHANGE] = "var files = this.files;for(var i=0; i<files.length; i++){uploadFile('" + self.savepath + "',files[i]);}"
+        self.set_text(text)
+
+    def set_text(self, t):
+        self.append('text', t)

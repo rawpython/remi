@@ -445,6 +445,22 @@ ws.onerror = function(evt){ \
     /* websocket is closed. */\
     alert('Websocket error...'); \
 };\
+function uploadFile(savePath,file){\
+    var url = 'http://" + IP_ADDR + ':' + str(HTTP_PORT_NUMBER) + "/fileupload';\
+    var xhr = new XMLHttpRequest();\
+    var fd = new FormData();\
+    xhr.open('POST', url, true);\
+    xhr.setRequestHeader('savepath', savePath);\
+    xhr.setRequestHeader('filename', file.name);\
+    xhr.onreadystatechange = function() {\
+        if (xhr.readyState == 4 && xhr.status == 200) {\
+            /* Every thing ok, file uploaded */\
+            console.log(xhr.responseText); /* handle response.*/\
+        }\
+    };\
+    fd.append('upload_file', file);\
+    xhr.send(fd);\
+}\
 </script>"
 
         if not hasattr(clients[k], 'websockets'):
@@ -463,13 +479,49 @@ ws.onerror = function(evt){ \
 
     def do_POST(self):
         self.instance()
-        varLen = int(self.headers['Content-Length'])
-        postVars = self.rfile.read(varLen)
+        import cgi
+        # Parse the form data posted
+        savepath = self.headers['savepath']
+        filename = self.headers['filename']
+        form = cgi.FieldStorage(
+            fp=self.rfile, 
+            headers=self.headers,
+            environ={'REQUEST_METHOD':'POST',
+                     'CONTENT_TYPE':self.headers['Content-Type'],
+                     })
+        # Echo back information about what was posted in the form
+        for field in form.keys():
+            field_item = form[field]
+            if field_item.filename:
+                # The field contains an uploaded file
+                file_data = field_item.file.read()
+                file_len = len(file_data)
+                #print('FILE DATA: ' + str(file_data))
+                debug_message('\tUploaded %s as "%s" (%d bytes)\n' % \
+                        (field, field_item.filename, file_len))
+            else:
+                # Regular form value
+                debug_message('\t%s=%s\n' % (field, form[field].value))
+
+        if self.path=='/fileupload':
+            #print(data.decode())
+            try:
+                debug_message('GUI - server.py do_POST: fileupload path=' + savepath + '   name=' + filename)
+                with open(savepath+filename,'wb') as f:
+                    f.write(file_data)
+            except Exception as e:
+                debug_alert(traceback.format_exc())
+                
+        self.send_response(200)
+        """
+        fields = urlparse(postVars)
+        debug_message('request: ', self.path)
+        debug_message('request: ', parse_qs(fields.path))
         postVars = str(unquote(postVars))
         paramDict = parse_parametrs(postVars)
         function = str(unquote(self.path))
         self.process_all(function, paramDict, True)
-
+        """
     def do_GET(self):
         """Handler for the GET requests."""
         self.instance()

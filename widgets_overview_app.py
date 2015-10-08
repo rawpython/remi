@@ -74,6 +74,8 @@ class MyApp(App):
         self.btFileDiag = gui.Button(200, 30, 'File Selection Dialog')
         self.btFileDiag.set_on_click_listener(self, 'open_fileselection_dialog')
 
+        #self.btUploadFile = gui.FileUploader(200, 30, './','Upload File')
+
         self.listView = gui.ListView(300, 120)
         self.listView.set_on_selection_listener(self,"list_view_on_selected")
         li0 = gui.ListItem(279, 20, 'Danny Young')
@@ -108,6 +110,7 @@ class MyApp(App):
         subContainerRight.append('4', self.spin)
         subContainerRight.append('5', self.btInputDiag)
         subContainerRight.append('5_', self.btFileDiag)
+        #subContainerRight.append('5__', self.btUploadFile)
         subContainerRight.append('6', self.dropDown)
         subContainerRight.append('7', self.slider)
         subContainerRight.append('8', self.colorPicker)
