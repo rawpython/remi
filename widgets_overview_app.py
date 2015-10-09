@@ -32,7 +32,7 @@ class MyApp(App):
         horizontalContainer = gui.Widget(620, 590, True, 10)
 
         subContainerLeft = gui.Widget(340, 500, False, 10)
-        self.img = gui.Image(100, 100, 'res/logo.png')
+        self.img = gui.Image(100, 100, './res/logo.png')
 
         self.table = gui.Table(300, 200)
         row = gui.TableRow()
@@ -196,6 +196,8 @@ class MyApp(App):
     def on_fileselection_dialog_confirm(self, filelist):
         #a list() of filenames and folders is returned
         self.lbl.set_text('Selected files:' + str(filelist))
+        for f in filelist:
+            self.lbl.append(f, gui.FileDownloader(200, 30, "download", f))
 
     def list_view_on_selected(self,selected_item_key):
         """ The selection event of the listView, returns a key of the clicked event.

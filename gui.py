@@ -1104,3 +1104,20 @@ class FileUploader(Widget):
     def set_on_failed_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ON_FAILED, listener, funcname)
+
+
+class FileDownloader(Widget):
+
+    """FileDownloader widget. Allows to start a file download."""
+
+    def __init__(self, w, h, text, filePathName):
+        super(FileDownloader, self).__init__(w, h, True)
+        self.type = 'a'
+        self.attributes['class'] = 'FileDownloader'
+        self.attributes['download'] = ''
+        self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + '/' + filePathName
+        self.set_text(text)
+
+    def set_text(self, t):
+        self.append('text', t)
+        

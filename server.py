@@ -569,7 +569,7 @@ ws.onerror = function(evt){ \
                 self.wfile.write(encodeIfPyGT3(
                     "<link href='" +
                     BASE_ADDRESS +
-                    "style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+                    "./style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
                 self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(repr(self.client.root)))
             else:
@@ -585,7 +585,7 @@ ws.onerror = function(evt){ \
                     self.wfile.write(encodeIfPyGT3(
                         "<link href='" +
                         BASE_ADDRESS +
-                        "style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+                        "./style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
                     self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(ret[0]))
 
@@ -595,7 +595,7 @@ ws.onerror = function(evt){ \
             if ENABLE_FILE_CACHE:
                 self.send_header('Cache-Control', 'public, max-age=86400')
             self.end_headers()
-            filename = './' + function
+            filename = function #'./' + function
             try:
                 f = open(filename, 'r+b')
                 content = b''.join(f.readlines())
