@@ -1043,11 +1043,12 @@ class MenuItem(Widget):
 class FileUploader(Widget):
 
     """
-    button widget:
-        implements the onclick event.
+    FileUploader widget:
+        allows to upload multiple files to a specified folder.
+        implements the onsuccess and onfailed events.
     """
 
-    def __init__(self, w, h, savepath='./', text=''):
+    def __init__(self, w, h, savepath='./'):
         super(FileUploader, self).__init__(w, h)
         self.savepath = savepath
         self.type = 'input'
@@ -1060,8 +1061,46 @@ class FileUploader(Widget):
         self.attributes['multiple']='multiple'
         self.attributes['accept']='*.*'
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = "var files = this.files;for(var i=0; i<files.length; i++){uploadFile('" + self.savepath + "',files[i]);}"
-        self.set_text(text)
+        self.EVENT_ON_SUCCESS = 'onsuccess'
+        self.EVENT_ON_FAILED = 'onfailed'
+        fileUploadScript = "function uploadFile(savePath,file){\
+            var url = 'http://" + IP_ADDR + ':' + str(HTTP_PORT_NUMBER) + "';\
+            var xhr = new XMLHttpRequest();\
+            var fd = new FormData();\
+            xhr.open('POST', url, true);\
+            xhr.setRequestHeader('savepath', savePath);\
+            xhr.setRequestHeader('filename', file.name);\
+            xhr.onreadystatechange = function() {\
+                if (xhr.readyState == 4 && xhr.status == 200) {\
+                    /* Every thing ok, file uploaded */\
+                    var params={};params['filename']=file.name;\
+                    sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ON_SUCCESS + "',params);\
+                    console.log('upload success: ' + file.name);\
+                }else if(xhr.status == 400){\
+                    var params={};params['filename']=file.name;\
+                    sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ON_FAILED + "',params);\
+                    console.log('upload failed: ' + file.name);\
+                }\
+            };\
+            fd.append('upload_file', file);\
+            xhr.send(fd);\
+        };"
+        self.attributes[self.EVENT_ONCHANGE] = fileUploadScript + "var files = this.files;for(var i=0; i<files.length; i++){uploadFile('" + self.savepath + "',files[i]);}"
+        
+    def onsuccess(self,filename):
+        params = list()
+        params.append(filename)
+        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, params)
 
-    def set_text(self, t):
-        self.append('text', t)
+    def set_on_success_listener(self, listener, funcname):
+        self.eventManager.register_listener(
+            self.EVENT_ON_SUCCESS, listener, funcname)
+
+    def onfailed(self,filename):
+        params = list()
+        params.append(filename)
+        return self.eventManager.propagate(self.EVENT_ON_FAILED, params)
+
+    def set_on_failed_listener(self, listener, funcname):
+        self.eventManager.register_listener(
+            self.EVENT_ON_FAILED, listener, funcname)

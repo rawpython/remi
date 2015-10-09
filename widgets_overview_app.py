@@ -27,9 +27,9 @@ class MyApp(App):
         super(MyApp, self).idle()
         
     def main(self):
-        verticalContainer = gui.Widget(640, 620, False, 10)
+        verticalContainer = gui.Widget(640, 650, False, 10)
 
-        horizontalContainer = gui.Widget(620, 560, True, 10)
+        horizontalContainer = gui.Widget(620, 590, True, 10)
 
         subContainerLeft = gui.Widget(340, 500, False, 10)
         self.img = gui.Image(100, 100, 'res/logo.png')
@@ -53,7 +53,7 @@ class MyApp(App):
         self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(240, 500, False, 10)
+        subContainerRight = gui.Widget(240, 530, False, 10)
 
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
@@ -74,7 +74,9 @@ class MyApp(App):
         self.btFileDiag = gui.Button(200, 30, 'File Selection Dialog')
         self.btFileDiag.set_on_click_listener(self, 'open_fileselection_dialog')
 
-        #self.btUploadFile = gui.FileUploader(200, 30, './','Upload File')
+        self.btUploadFile = gui.FileUploader(200, 30, './')
+        self.btUploadFile.set_on_success_listener( self, 'fileupload_on_success')
+        self.btUploadFile.set_on_failed_listener( self, 'fileupload_on_failed')
 
         self.listView = gui.ListView(300, 120)
         self.listView.set_on_selection_listener(self,"list_view_on_selected")
@@ -110,7 +112,7 @@ class MyApp(App):
         subContainerRight.append('4', self.spin)
         subContainerRight.append('5', self.btInputDiag)
         subContainerRight.append('5_', self.btFileDiag)
-        #subContainerRight.append('5__', self.btUploadFile)
+        subContainerRight.append('5__', self.btUploadFile)
         subContainerRight.append('6', self.dropDown)
         subContainerRight.append('7', self.slider)
         subContainerRight.append('8', self.colorPicker)
@@ -224,6 +226,12 @@ class MyApp(App):
 
     def menu_view_clicked(self):
         self.lbl.set_text('Menu clicked: View')
+        
+    def fileupload_on_success(self, filename):
+        self.lbl.set_text('File upload success: ' + filename)
+
+    def fileupload_on_failed(self, filename):
+        self.lbl.set_text('File upload failed: ' + filename)
         
 # starts the webserver
 start(MyApp)
