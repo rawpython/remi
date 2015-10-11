@@ -27,11 +27,11 @@ class MyApp(App):
         super(MyApp, self).idle()
         
     def main(self):
-        verticalContainer = gui.Widget(640, 650, False, 10)
+        verticalContainer = gui.Widget(640, 680, False, 10)
 
-        horizontalContainer = gui.Widget(620, 590, True, 10)
+        horizontalContainer = gui.Widget(620, 620, True, 10)
 
-        subContainerLeft = gui.Widget(340, 500, False, 10)
+        subContainerLeft = gui.Widget(340, 530, False, 10)
         self.img = gui.Image(100, 100, './res/logo.png')
 
         self.table = gui.Table(300, 200)
@@ -53,7 +53,7 @@ class MyApp(App):
         self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(240, 530, False, 10)
+        subContainerRight = gui.Widget(240, 560, False, 10)
 
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
@@ -112,12 +112,14 @@ class MyApp(App):
         subContainerRight.append('4', self.spin)
         subContainerRight.append('5', self.btInputDiag)
         subContainerRight.append('5_', self.btFileDiag)
-        subContainerRight.append('5__', self.btUploadFile)
+        subContainerRight.append('5__', gui.FileDownloader(200, 30, 'download test', './res/logo.png'))
+        subContainerRight.append('5___', self.btUploadFile)
         subContainerRight.append('6', self.dropDown)
         subContainerRight.append('7', self.slider)
         subContainerRight.append('8', self.colorPicker)
         subContainerRight.append('9', self.date)
-        
+        self.subContainerRight = subContainerRight
+
         subContainerLeft.append('0', self.img)
         subContainerLeft.append('1', self.table)
         subContainerLeft.append('2', self.listView)
@@ -197,7 +199,7 @@ class MyApp(App):
         #a list() of filenames and folders is returned
         self.lbl.set_text('Selected files:' + str(filelist))
         for f in filelist:
-            self.lbl.append(f, gui.FileDownloader(200, 30, "download", f))
+            self.subContainerRight.append('5__', gui.FileDownloader(200, 30, "download selected", f))
 
     def list_view_on_selected(self,selected_item_key):
         """ The selection event of the listView, returns a key of the clicked event.
