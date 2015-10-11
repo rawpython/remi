@@ -2,8 +2,12 @@
 
 > ##*simple things makes the world simpler*
 
+let's start
+===
 Just download it without installation
-#[**_download GUI_**](https://github.com/dddomodossola/gui/archive/master.zip)
+##[**_download GUI_**](https://github.com/dddomodossola/gui/archive/master.zip)
+Then start the test script <pre><code>"widgets_overview_app.py"</code></pre>
+
 
 gui
 ===
