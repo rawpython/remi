@@ -108,7 +108,7 @@ class Widget(object):
 
         self.EVENT_ONUPDATE = 'onupdate'
 
-        self.attributes['class'] = 'Widget'
+        self.attributes['class'] = self.__class__.__name__
         self.attributes['id'] = str(id(self))
 
         if w > -1:
@@ -263,9 +263,8 @@ class Button(Widget):
     """
 
     def __init__(self, w, h, text=''):
-        super(Button, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'button'
-        self.attributes['class'] = 'Button'
         #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
         self.attributes[
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
@@ -297,9 +296,8 @@ class TextInput(Widget):
     """
 
     def __init__(self, w, h, single_line = True):
-        super(TextInput, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'textarea'
-        self.attributes['class'] = 'TextInput'
 
         self.attributes[self.EVENT_ONCLICK] = ''
         self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
@@ -361,9 +359,8 @@ class SpinBox(Widget):
     """
 
     def __init__(self, w, h, min=100, max=5000, value=1000, step=1):
-        super(SpinBox, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'input'
-        self.attributes['class'] = 'SpinBox'
         self.attributes['type'] = 'number'
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
@@ -400,9 +397,8 @@ class SpinBox(Widget):
 class Label(Widget):
 
     def __init__(self, w, h, text):
-        super(Label, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'p'
-        self.attributes['class'] = 'Label'
         self.append('text', text)
 
     def set_text(self, t):
@@ -429,7 +425,7 @@ class InputDialog(Widget):
     def __init__(self, title, message):
         w = 500
         h = 150
-        super(InputDialog, self).__init__(w, h, False, 10)
+        super(self.__class__, self).__init__(w, h, False, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_value'
         self.EVENT_ONABORT = 'abort_value'
@@ -488,9 +484,8 @@ class ListView(Widget):
     """list widget it can contain ListItems."""
 
     def __init__(self, w, h, horizontal=False):
-        super(ListView, self).__init__(w, h, horizontal)
+        super(self.__class__, self).__init__(w, h, horizontal)
         self.type = 'ul'
-        self.attributes['class'] = 'ListView'
         self.EVENT_ONSELECTION = 'onselection'
         self.selected_item = None
 
@@ -499,7 +494,7 @@ class ListView(Widget):
         if item.attributes[self.EVENT_ONCLICK] == '':
             item.set_on_click_listener(self,self.EVENT_ONSELECTION)
         item.attributes['item_selected'] = False
-        super(ListView, self).append(key,item)
+        super(self.__class__, self).append(key,item)
 
     def onselection(self,clicked_item):
         selected_key = None
@@ -530,9 +525,8 @@ class ListItem(Widget):
     """
 
     def __init__(self, w, h, text):
-        super(ListItem, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'li'
-        self.attributes['class'] = 'ListItem'
 
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
@@ -562,9 +556,8 @@ class DropDown(Widget):
     """
 
     def __init__(self, w, h):
-        super(DropDown, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'select'
-        self.attributes['class'] = 'DropDown'
         self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
 
@@ -591,9 +584,8 @@ class DropDownItem(Widget):
     """
 
     def __init__(self, w, h, text):
-        super(DropDownItem, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'option'
-        self.attributes['class'] = 'DropDownItem'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.append('1', text)
         self.attributes['value'] = text
@@ -614,9 +606,8 @@ class Image(Widget):
 
     def __init__(self, w, h, filename):
         """filename should be an URL."""
-        super(Image, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'img'
-        self.attributes['class'] = 'Image'
         self.attributes['src'] = BASE_ADDRESS + filename
 
     def onclick(self):
@@ -636,9 +627,8 @@ class Table(Widget):
     """
 
     def __init__(self, w, h):
-        super(Table, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'table'
-        self.attributes['class'] = 'Table'
         self.style['float'] = 'none'
 
 
@@ -649,9 +639,8 @@ class TableRow(Widget):
     """
 
     def __init__(self):
-        super(TableRow, self).__init__(-1, -1)
+        super(self.__class__, self).__init__(-1, -1)
         self.type = 'tr'
-        self.attributes['class'] = 'TableRow'
         self.style['float'] = 'none'
 
 
@@ -660,9 +649,8 @@ class TableItem(Widget):
     """item widget for the TableRow."""
 
     def __init__(self):
-        super(TableItem, self).__init__(-1, -1)
+        super(self.__class__, self).__init__(-1, -1)
         self.type = 'td'
-        self.attributes['class'] = 'TableItem'
         self.style['float'] = 'none'
 
 
@@ -671,9 +659,8 @@ class TableTitle(Widget):
     """title widget for the table."""
 
     def __init__(self, title=''):
-        super(TableTitle, self).__init__(-1, -1)
+        super(self.__class__, self).__init__(-1, -1)
         self.type = 'th'
-        self.attributes['class'] = 'TableTitle'
         self.append('text', title)
         self.style['float'] = 'none'
 
@@ -710,7 +697,7 @@ class Input(Widget):
 class Slider(Input):
 
     def __init__(self, w, h, defaultValue='', min=0, max=10000, step=1):
-        super(Slider, self).__init__(w, h, 'range', defaultValue)
+        super(self.__class__, self).__init__(w, h, 'range', defaultValue)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
@@ -719,13 +706,13 @@ class Slider(Input):
 class ColorPicker(Input):
 
     def __init__(self, w, h, defaultValue='#995500'):
-        super(ColorPicker, self).__init__(w, h, 'color', defaultValue)
+        super(self.__class__, self).__init__(w, h, 'color', defaultValue)
 
 
 class Date(Input):
 
     def __init__(self, w, h, defaultValue='2015-04-13'):
-        super(Date, self).__init__(w, h, 'date', defaultValue)
+        super(self.__class__, self).__init__(w, h, 'date', defaultValue)
         
         
 class GenericObject(Widget):
@@ -736,9 +723,8 @@ class GenericObject(Widget):
 
     def __init__(self, w, h, filename):
         """filename should be an URL."""
-        super(GenericObject, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'object'
-        self.attributes['class'] = 'GenericObject'
         self.attributes['data'] = filename
 
 
@@ -752,8 +738,7 @@ class FileFolderNavigator(Widget):
         self.h = h
         self.multiple_selection = multiple_selection
         self.sep = os.sep #'/' #default separator in path os.sep
-        super(FileFolderNavigator, self).__init__(w, h, False)
-        self.attributes['class'] = 'FileFolderNavigator'
+        super(self.__class__, self).__init__(w, h, False)
         
         self.selectionlist = list() #here are stored selected files and folders
         self.controlsContainer = Widget(w,25,True)
@@ -873,8 +858,7 @@ class FileFolderItem(Widget):
     """
 
     def __init__(self, w, h, text, isFolder = False):
-        super(FileFolderItem, self).__init__(w, h, True)
-        self.attributes['class'] = 'FileFolderItem'
+        super(self.__class__, self).__init__(w, h, True)
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.icon = Widget(33, h)
@@ -938,7 +922,7 @@ class FileSelectionDialog(Widget):
     def __init__(self, title, message, multiple_selection = True, selection_folder = '.'):
         w = 600
         h = 370
-        super(FileSelectionDialog, self).__init__(w, h, False, 10)
+        super(self.__class__, self).__init__(w, h, False, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_value'
         self.EVENT_ONABORT = 'abort_value'
@@ -996,9 +980,8 @@ class Menu(Widget):
     """Menu widget can contain MenuItem."""
 
     def __init__(self, w, h, horizontal=True):
-        super(Menu, self).__init__(w, h, horizontal)
+        super(self.__class__, self).__init__(w, h, horizontal)
         self.type = 'ul'
-        self.attributes['class'] = 'Menu'
 
 
 class MenuItem(Widget):
@@ -1009,9 +992,8 @@ class MenuItem(Widget):
         self.w = w
         self.h = h
         self.subcontainer = None
-        super(MenuItem, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.type = 'li'
-        self.attributes['class'] = 'MenuItem'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
         self.append = self.addSubMenu
@@ -1019,7 +1001,7 @@ class MenuItem(Widget):
     def addSubMenu(self, key, value):
         if self.subcontainer == None:
             self.subcontainer = Menu(self.w, self.h, False)
-            super(MenuItem, self).append('subcontainer', self.subcontainer)
+            super(self.__class__, self).append('subcontainer', self.subcontainer)
         self.subcontainer.append(key, value)
 
     def set_text(self, text):
@@ -1049,10 +1031,9 @@ class FileUploader(Widget):
     """
 
     def __init__(self, w, h, savepath='./'):
-        super(FileUploader, self).__init__(w, h)
+        super(self.__class__, self).__init__(w, h)
         self.savepath = savepath
         self.type = 'input'
-        self.attributes['class'] = 'FileUploader'
         #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
         """
         <input type="file" id="fileinput" multiple="multiple" accept="image/*" />
@@ -1111,9 +1092,8 @@ class FileDownloader(Widget):
     """FileDownloader widget. Allows to start a file download."""
 
     def __init__(self, w, h, text, filePathName):
-        super(FileDownloader, self).__init__(w, h, True)
+        super(self.__class__, self).__init__(w, h, True)
         self.type = 'a'
-        self.attributes['class'] = 'FileDownloader'
         self.attributes['download'] = ''
         self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + '/' + filePathName
         self.set_text(text)
