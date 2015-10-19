@@ -1030,16 +1030,18 @@ class FileUploader(Widget):
         implements the onsuccess and onfailed events.
     """
 
-    def __init__(self, w, h, savepath='./'):
+    def __init__(self, w, h, savepath='./', multiple_selection_allowed=False):
         super(self.__class__, self).__init__(w, h)
         self.savepath = savepath
+        self.multiple_selection_allowed = multiple_selection_allowed
         self.type = 'input'
         #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
         """
         <input type="file" id="fileinput" multiple="multiple" accept="image/*" />
         """
         self.attributes['type']='file'
-        self.attributes['multiple']='multiple'
+        if multiple_selection_allowed:
+            self.attributes['multiple']='multiple'
         self.attributes['accept']='*.*'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.EVENT_ON_SUCCESS = 'onsuccess'
