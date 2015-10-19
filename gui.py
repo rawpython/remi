@@ -434,7 +434,7 @@ class InputDialog(Widget):
         m = Label(w - 70, 30, message)
         self.inputText = TextInput(w - 120, 30)
         self.conf = Button(50, 30, 'Ok')
-        self.abort = Button(50, 30, 'Abort')
+        self.abort = Button(50, 30, 'Cancel')
 
         t.style['font-size'] = '16px'
         t.style['font-weight'] = 'bold'
