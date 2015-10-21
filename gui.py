@@ -60,12 +60,11 @@ class Widget(object):
 
     """base class for gui widgets.
 
-    In html, it is a DIV tag    the "self.type" attribute specifies the
-    HTML tag representation    the "self.attributes[]" attribute
-    specifies the HTML attributes like "style" "class" "id" the
-    "self.style[]"              attribute specifies the CSS style
-    content like "font" "color". It will be packet togheter with
-    "self.attributes"
+    In html, it is a DIV tag    
+    the "self.type" attribute specifies the HTML tag representation    
+    the "self.attributes[]" attribute specifies the HTML attributes like "style" "class" "id" 
+    the "self.style[]" attribute specifies the CSS style content like "font" "color". 
+    It will be packet togheter with "self.attributes"
 
     """
 
@@ -258,8 +257,7 @@ class Widget(object):
 class Button(Widget):
 
     """
-    button widget:
-        implements the onclick event.
+    button widget: implements the onclick event.
     """
 
     def __init__(self, w, h, text=''):
@@ -281,7 +279,7 @@ class Button(Widget):
         """Register a listener for the click event.
 
         listener = class instance
-            funcname = the name of member function that will be called.
+        funcname = the name of member function that will be called.
         example:
             bt.set_on_click_listener( listenerClass, "ontest" )
 
