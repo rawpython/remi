@@ -263,7 +263,7 @@ class Button(Widget):
     """
 
     def __init__(self, w, h, text=''):
-        super(self.__class__, self).__init__(w, h)
+        super(Button, self).__init__(w, h)
         self.type = 'button'
         #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
         self.attributes[
@@ -296,7 +296,7 @@ class TextInput(Widget):
     """
 
     def __init__(self, w, h, single_line = True):
-        super(self.__class__, self).__init__(w, h)
+        super(TextInput, self).__init__(w, h)
         self.type = 'textarea'
 
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -359,7 +359,7 @@ class SpinBox(Widget):
     """
 
     def __init__(self, w, h, min=100, max=5000, value=1000, step=1):
-        super(self.__class__, self).__init__(w, h)
+        super(SpinBox, self).__init__(w, h)
         self.type = 'input'
         self.attributes['type'] = 'number'
         self.attributes['min'] = str(min)
@@ -397,7 +397,7 @@ class SpinBox(Widget):
 class Label(Widget):
 
     def __init__(self, w, h, text):
-        super(self.__class__, self).__init__(w, h)
+        super(Label, self).__init__(w, h)
         self.type = 'p'
         self.append('text', text)
 
@@ -417,66 +417,113 @@ class Label(Widget):
             self.EVENT_ONCLICK, listener, funcname)
 
 
-class InputDialog(Widget):
+class GenericDialog(Widget):
 
-    """input dialog, it opens a new webpage allows the OK/ABORT functionality
-    implementing the "onConfirm" and "onAbort" events."""
+    """input dialog, it opens a new webpage allows the OK/CANCEL functionality
+    implementing the "onConfirm" and "onCancel" events."""
 
     def __init__(self, title, message):
-        w = 500
-        h = 150
-        super(self.__class__, self).__init__(w, h, False, 10)
+        self.w = 500
+        self.h = 160
+        super(GenericDialog, self).__init__(self.w, self.h, False, 10)
 
-        self.EVENT_ONCONFIRM = 'confirm_value'
-        self.EVENT_ONABORT = 'abort_value'
-        #self.style["font-family"] = "arial,sans-serif"
-        t = Label(w - 70, 50, title)
-        m = Label(w - 70, 30, message)
-        self.inputText = TextInput(w - 120, 30)
+        self.EVENT_ONCONFIRM = 'confirm_dialog'
+        self.EVENT_ONCANCEL = 'cancel_dialog'
+
+        t = Label(self.w - 20, 50, title)
+        m = Label(self.w - 20, 30, message)
+
+        self.container = Widget(self.w - 20,0)
         self.conf = Button(50, 30, 'Ok')
-        self.abort = Button(50, 30, 'Cancel')
+        self.cancel = Button(50, 30, 'Cancel')
 
         t.style['font-size'] = '16px'
         t.style['font-weight'] = 'bold'
 
-        hlay = Widget(w - 20, 30)
-        hlay.append('1', self.inputText)
-        hlay.append('2', self.conf)
-        hlay.append('3', self.abort)
+        hlay = Widget(self.w - 20, 30)
+        hlay.append('1', self.conf)
+        hlay.append('2', self.cancel)
+        self.conf.style['float'] = 'right'
+        self.cancel.style['float'] = 'right'
 
         self.append('1', t)
         self.append('2', m)
-        self.append('3', hlay)
+        self.append('3', self.container)
+        self.append('4', hlay)
 
-        self.inputText.attributes[self.EVENT_ONCHANGE] = ''
-        self.conf.attributes[self.EVENT_ONCLICK] = "var params={};params['value']=document.getElementById('" + str(
-            id(self.inputText)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCONFIRM + "',params);"
-        self.abort.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONABORT + "');"
-        self.inputText.attributes[self.EVENT_ONCLICK] = ''
+        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCONFIRM + "');"
+        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCANCEL + "');"
+
+        self.inputs = {}
 
         self.baseAppInstance = None
 
-    def confirm_value(self, value):
+    def add_field(self,fieldName,field):
+        self.style['height'] = to_pix(self.h + 50 * len(self.inputs))
+        self.container.style['height'] = to_pix(50 * len(self.inputs))
+        self.inputs[fieldName] = field
+        label = Label( (self.w-20)*30/100, 30, fieldName )
+        container = Widget(self.w-20,50,True)
+        container.append('lbl' + fieldName,label)
+        container.append(fieldName,self.inputs[fieldName])
+        self.container.append(fieldName,container)
+        
+
+    def get_field(self,fieldName):
+        return self.inputs[fieldName]
+
+    def confirm_dialog(self):
+        """event called pressing on OK button.
+        """
+        self.hide()
+        params = list()
+        return self.eventManager.propagate(self.EVENT_ONCONFIRM, params)
+
+    def set_on_confirm_dialog_listener(self, listener, funcname):
+        self.eventManager.register_listener(
+            self.EVENT_ONCONFIRM, listener, funcname)
+
+    def cancel_dialog(self):
+        self.hide()
+        return self.eventManager.propagate(self.EVENT_ONCANCEL, list())
+
+    def set_on_cancel_dialog_listener(self, listener, funcname):
+        self.eventManager.register_listener(
+            self.EVENT_ONCANCEL, listener, funcname)
+
+
+class InputDialog(GenericDialog):
+
+    """input dialog, it opens a new webpage allows the OK/CANCEL functionality
+    implementing the "onConfirm" and "onCancel" events."""
+
+    def __init__(self, title, message):
+        super(InputDialog, self).__init__(title, message)
+
+        self.EVENT_ONCONFIRMVALUE = 'confirm_value'
+        self.inputText = TextInput(self.w - 120, 30)
+        self.inputs['textinput'] = self.inputText
+		
+        self.style['height'] = to_pix(self.h + 50 * len(self.inputs))
+        self.container.style['height'] = to_pix(50 * len(self.inputs))        
+        
+        self.container.append('textinput', self.inputText)
+		
+        self.set_on_confirm_dialog_listener(self, 'confirm_value')
+        self.baseAppInstance = None
+
+    def confirm_value(self):
         """event called pressing on OK button.
         propagates the string content of the input field
         """
         self.hide()
         params = list()
-        params.append(value)
-        return self.eventManager.propagate(self.EVENT_ONCONFIRM, params)
+        params.append(self.inputText.get_text())
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
     def set_on_confirm_value_listener(self, listener, funcname):
         self.eventManager.register_listener(
-            self.EVENT_ONCONFIRM, listener, funcname)
-
-    def abort_value(self):
-        self.hide()
-        return self.eventManager.propagate(self.EVENT_ONABORT, list())
-
-    def set_on_abort_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONABORT, listener, funcname)
+            self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
 class ListView(Widget):
@@ -484,7 +531,7 @@ class ListView(Widget):
     """list widget it can contain ListItems."""
 
     def __init__(self, w, h, horizontal=False):
-        super(self.__class__, self).__init__(w, h, horizontal)
+        super(ListView, self).__init__(w, h, horizontal)
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
         self.selected_item = None
@@ -525,7 +572,7 @@ class ListItem(Widget):
     """
 
     def __init__(self, w, h, text):
-        super(self.__class__, self).__init__(w, h)
+        super(ListItem, self).__init__(w, h)
         self.type = 'li'
 
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -556,7 +603,7 @@ class DropDown(Widget):
     """
 
     def __init__(self, w, h):
-        super(self.__class__, self).__init__(w, h)
+        super(DropDown, self).__init__(w, h)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
@@ -584,7 +631,7 @@ class DropDownItem(Widget):
     """
 
     def __init__(self, w, h, text):
-        super(self.__class__, self).__init__(w, h)
+        super(DropDownItem, self).__init__(w, h)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.append('1', text)
@@ -606,7 +653,7 @@ class Image(Widget):
 
     def __init__(self, w, h, filename):
         """filename should be an URL."""
-        super(self.__class__, self).__init__(w, h)
+        super(Image, self).__init__(w, h)
         self.type = 'img'
         self.attributes['src'] = BASE_ADDRESS + filename
 
@@ -627,7 +674,7 @@ class Table(Widget):
     """
 
     def __init__(self, w, h):
-        super(self.__class__, self).__init__(w, h)
+        super(Table, self).__init__(w, h)
         self.type = 'table'
         self.style['float'] = 'none'
 
@@ -639,7 +686,7 @@ class TableRow(Widget):
     """
 
     def __init__(self):
-        super(self.__class__, self).__init__(-1, -1)
+        super(TableRow, self).__init__(-1, -1)
         self.type = 'tr'
         self.style['float'] = 'none'
 
@@ -649,7 +696,7 @@ class TableItem(Widget):
     """item widget for the TableRow."""
 
     def __init__(self):
-        super(self.__class__, self).__init__(-1, -1)
+        super(TableItem, self).__init__(-1, -1)
         self.type = 'td'
         self.style['float'] = 'none'
 
@@ -659,7 +706,7 @@ class TableTitle(Widget):
     """title widget for the table."""
 
     def __init__(self, title=''):
-        super(self.__class__, self).__init__(-1, -1)
+        super(TableTitle, self).__init__(-1, -1)
         self.type = 'th'
         self.append('text', title)
         self.style['float'] = 'none'
@@ -697,7 +744,7 @@ class Input(Widget):
 class Slider(Input):
 
     def __init__(self, w, h, defaultValue='', min=0, max=10000, step=1):
-        super(self.__class__, self).__init__(w, h, 'range', defaultValue)
+        super(Slider, self).__init__(w, h, 'range', defaultValue)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
@@ -706,13 +753,13 @@ class Slider(Input):
 class ColorPicker(Input):
 
     def __init__(self, w, h, defaultValue='#995500'):
-        super(self.__class__, self).__init__(w, h, 'color', defaultValue)
+        super(ColorPicker, self).__init__(w, h, 'color', defaultValue)
 
 
 class Date(Input):
 
     def __init__(self, w, h, defaultValue='2015-04-13'):
-        super(self.__class__, self).__init__(w, h, 'date', defaultValue)
+        super(Date, self).__init__(w, h, 'date', defaultValue)
         
         
 class GenericObject(Widget):
@@ -723,7 +770,7 @@ class GenericObject(Widget):
 
     def __init__(self, w, h, filename):
         """filename should be an URL."""
-        super(self.__class__, self).__init__(w, h)
+        super(GenericObject, self).__init__(w, h)
         self.type = 'object'
         self.attributes['data'] = filename
 
@@ -738,7 +785,7 @@ class FileFolderNavigator(Widget):
         self.h = h
         self.multiple_selection = multiple_selection
         self.sep = os.sep #'/' #default separator in path os.sep
-        super(self.__class__, self).__init__(w, h, False)
+        super(FileFolderNavigator, self).__init__(w, h, False)
         
         self.selectionlist = list() #here are stored selected files and folders
         self.controlsContainer = Widget(w,25,True)
@@ -858,7 +905,7 @@ class FileFolderItem(Widget):
     """
 
     def __init__(self, w, h, text, isFolder = False):
-        super(self.__class__, self).__init__(w, h, True)
+        super(FileFolderItem, self).__init__(w, h, True)
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.icon = Widget(33, h)
@@ -922,7 +969,7 @@ class FileSelectionDialog(Widget):
     def __init__(self, title, message, multiple_selection = True, selection_folder = '.'):
         w = 600
         h = 370
-        super(self.__class__, self).__init__(w, h, False, 10)
+        super(FileSelectionDialog, self).__init__(w, h, False, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_value'
         self.EVENT_ONABORT = 'abort_value'
@@ -940,6 +987,8 @@ class FileSelectionDialog(Widget):
         hlay = Widget(w - 20, 30)
         hlay.append('1', self.conf)
         hlay.append('2', self.abort)
+        self.conf.style['float'] = 'right'
+        self.abort.style['float'] = 'right'
 
         self.append('1', t)
         self.append('2', m)
@@ -980,7 +1029,7 @@ class Menu(Widget):
     """Menu widget can contain MenuItem."""
 
     def __init__(self, w, h, horizontal=True):
-        super(self.__class__, self).__init__(w, h, horizontal)
+        super(Menu, self).__init__(w, h, horizontal)
         self.type = 'ul'
 
 
@@ -992,7 +1041,7 @@ class MenuItem(Widget):
         self.w = w
         self.h = h
         self.subcontainer = None
-        super(self.__class__, self).__init__(w, h)
+        super(MenuItem, self).__init__(w, h)
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
@@ -1031,7 +1080,7 @@ class FileUploader(Widget):
     """
 
     def __init__(self, w, h, savepath='./', multiple_selection_allowed=False):
-        super(self.__class__, self).__init__(w, h)
+        super(FileUploader, self).__init__(w, h)
         self.savepath = savepath
         self.multiple_selection_allowed = multiple_selection_allowed
         self.type = 'input'
@@ -1094,7 +1143,7 @@ class FileDownloader(Widget):
     """FileDownloader widget. Allows to start a file download."""
 
     def __init__(self, w, h, text, filePathName):
-        super(self.__class__, self).__init__(w, h, True)
+        super(FileDownloader, self).__init__(w, h, True)
         self.type = 'a'
         self.attributes['download'] = ''
         self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + '/' + filePathName
