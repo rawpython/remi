@@ -15,6 +15,7 @@ body {
 body > div {
 	border: 3px solid rgb(  50,50,50 );
 	-webkit-border-radius: 10px;
+	border-radius: 10px;
 }
 
 div {
@@ -54,10 +55,6 @@ button,th {
 	cursor: default;
 }
 
-button {
-	-webkit-border-radius: 5px;
-}
-
 button:hover,th:hover {
 	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
 }
@@ -72,50 +69,76 @@ table {
 	border-collapse: collapse;
 }
 
+.TableItem {
+	padding-left: 5px;
+}
+
 td {
 	border: 1px solid rgb(218,218,218);
 	background-color: white;
 }
 
-.Menu {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	background: transparent; /*rgb(240, 240, 40);*/
+
+div > ul.Menu {
+       background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
+       border: 1px solid rgb( 73,73,73 );
+       color: white;
 }
 
-.MenuItem {
-	border-bottom: 1px solid gray;
-}
+ul.Menu {
+       list-style-type: none;
+        padding: 0;
 
-.MenuItem .MenuItem {
-	display: block;
-	position: relative;
-	float: left;
-	background: rgb(140, 140, 140);
-}
+       position: relative;
+ }
 
-/*The CSS to hide the sub menus.*/
-.MenuItem .Menu {
-	display: none;
-	/*height: 100%;*/
-}
-/*Displays the dropdown menu on hover.*/
-.MenuItem:hover > .Menu {
-	display: block;
-	position: absolute;
-}
+ .MenuItem {
 
-.MenuItem:hover{
-	background: rgb(180, 180, 180);
-}
+       cursor: default;
+       text-align: center;
+ }
 
-.MenuItem[onclick]:not([onclick=""]):hover{
-	color: white;
-	/*font-weight: bold;*/
+
+.Menu .Menu {
+       position: absolute;
 }
 
 .Menu .Menu .Menu {
-	left: 100%;
-	top: 0;
+       top: 5px;
+       left: 100px;
+       position: absolute;
+ }
+
+
+ .MenuItem .Menu {
+        display: none;
+
+       background-color: white;
+       border: 1px solid #9C9B9B;
+       color: black;
+       height: auto !important;
+        position: absolute;
+       top: 30px;
+ }
+
+
+.Menu > .MenuItem:hover {
+       background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
+ }
+
+
+.MenuItem .MenuItem:hover {
+       background: -webkit-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+       background: -o-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+       background: linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+ }
+
+
+.Menu::after {
+	content: "";
+	clear: both;
+}
+
+.MenuItem:hover > .Menu {
+	display: block;
 }
