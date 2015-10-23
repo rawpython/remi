@@ -420,9 +420,9 @@ class GenericDialog(Widget):
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "onConfirm" and "onCancel" events."""
 
-    def __init__(self, title, message):
-        self.w = 500
-        self.h = 160
+    def __init__(self, width=500, height=160, title='Title', message='Message'):
+        self.w = width
+        self.h = height
         super(GenericDialog, self).__init__(self.w, self.h, False, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_dialog'
@@ -457,11 +457,12 @@ class GenericDialog(Widget):
         self.baseAppInstance = None
 
     def add_field(self,fieldName,field):
-        self.style['height'] = to_pix(self.h + 50 * len(self.inputs))
-        self.container.style['height'] = to_pix(50 * len(self.inputs))
+        field_height = from_pix(field.style['height']) + field.widget_spacing
+        self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
+        self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[fieldName] = field
         label = Label( (self.w-20)*30/100, 30, fieldName )
-        container = Widget(self.w-20,50,True)
+        container = Widget(self.w-20, field_height ,True)
         container.append('lbl' + fieldName,label)
         container.append(fieldName,self.inputs[fieldName])
         self.container.append(fieldName,container)
@@ -495,11 +496,11 @@ class InputDialog(GenericDialog):
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "onConfirm" and "onCancel" events."""
 
-    def __init__(self, title, message):
-        super(InputDialog, self).__init__(title, message)
+    def __init__(self, width=500, height=160, title='Title', message='Message'):
+        super(InputDialog, self).__init__(width, height, title, message)
 
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
-        self.inputText = TextInput(self.w - 120, 30)
+        self.inputText = TextInput(self.w - 20, 30)
         self.inputs['textinput'] = self.inputText
 		
         self.style['height'] = to_pix(self.h + 50 * len(self.inputs))

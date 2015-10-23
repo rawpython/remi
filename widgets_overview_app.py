@@ -177,7 +177,7 @@ class MyApp(App):
         self.lbl.set_text('SpinBox changed, new value: ' + str(newValue))
 
     def open_input_dialog(self):
-        self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?')
+        self.inputDialog = gui.InputDialog(500, 160, 'Input Dialog', 'Your name?')
         self.inputDialog.set_on_confirm_value_listener(
             self, 'on_input_dialog_confirm')
 

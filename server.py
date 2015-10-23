@@ -53,11 +53,12 @@ DEBUG_ALERT_ERR = 1
 DEBUG_MESSAGE = 2
 def debug_message(*args, **kwargs):
     if DEBUG_MESSAGE <= DEBUG_MODE:
-        print(args)
+        print( ''.join(map(lambda v: str(v),args)) )
+        
         
 def debug_alert(*args, **kwargs):
     if DEBUG_ALERT_ERR <= DEBUG_MODE:
-        print( args )
+        print( ''.join(map(lambda v: str(v),args)) )
 
 
 def toWebsocket(data):
