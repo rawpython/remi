@@ -26,7 +26,7 @@ def to_pix(x):
 
 
 def from_pix(x):
-    return int(x.replace('px', ''))
+    return int(float(x.replace('px', '')))
 
 
 def jsonize(d):
@@ -431,7 +431,7 @@ class GenericDialog(Widget):
         t = Label(self.w - 20, 50, title)
         m = Label(self.w - 20, 30, message)
 
-        self.container = Widget(self.w - 20,0)
+        self.container = Widget(self.w - 20,0, False, 0)
         self.conf = Button(50, 30, 'Ok')
         self.cancel = Button(50, 30, 'Cancel')
 
@@ -457,16 +457,17 @@ class GenericDialog(Widget):
         self.baseAppInstance = None
 
     def add_field(self,fieldName,field):
-        field_height = from_pix(field.style['height']) + field.widget_spacing
+        fields_spacing = 5
+        field_height = from_pix(field.style['height']) + fields_spacing*2
+        field_width = from_pix(field.style['width']) + fields_spacing*4
         self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[fieldName] = field
-        label = Label( (self.w-20)*30/100, 30, fieldName )
-        container = Widget(self.w-20, field_height ,True)
+        label = Label( (self.w-20)-field_width-1, 30, fieldName )
+        container = Widget(self.w-20, field_height , True, fields_spacing)
         container.append('lbl' + fieldName,label)
         container.append(fieldName,self.inputs[fieldName])
         self.container.append(fieldName,container)
-        
 
     def get_field(self,fieldName):
         return self.inputs[fieldName]
@@ -507,7 +508,7 @@ class InputDialog(GenericDialog):
         self.container.style['height'] = to_pix(50 * len(self.inputs))        
         
         self.container.append('textinput', self.inputText)
-		
+        
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
         self.baseAppInstance = None
 
