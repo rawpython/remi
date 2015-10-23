@@ -391,6 +391,9 @@ class SpinBox(Widget):
     def value(self):
         return self.attributes['value']
 
+    def set_value(self,value):
+        self.attributes['value'] = str(value)
+
 
 class Label(Widget):
 

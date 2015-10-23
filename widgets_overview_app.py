@@ -67,6 +67,7 @@ class MyApp(App):
 
         self.spin = gui.SpinBox(200, 30)
         self.spin.set_on_change_listener(self, 'on_spin_change')
+        self.spin.set_value(110)
 
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
         self.btInputDiag.set_on_click_listener(self, 'open_input_dialog')
