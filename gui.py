@@ -616,16 +616,31 @@ class DropDown(Widget):
         self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
 
-    def onchange(self, newValue):
-        params = list()
-        params.append(newValue)
-        debug_message('combo box. selected', newValue)
+    def select_by_key(self, itemKey):
+        """
+        selects the item by its key
+        """
+        for item in self.children.values():
+            if 'selected' in item.attributes:
+                del item.attributes['selected']
+        self.children[itemKey].attributes['selected'] = 'selected'
+
+    def set_value(self, newValue):
+        """
+        selects the item by the contained text
+        """
         for item in self.children.values():
             if item.attributes['value'] == newValue:
                 item.attributes['selected'] = 'selected'
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
+
+    def onchange(self, newValue):
+        params = list()
+        params.append(newValue)
+        debug_message('combo box. selected', newValue)
+        self.set_value(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
 
     def set_on_change_listener(self, listener, funcname):
