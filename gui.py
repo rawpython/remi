@@ -421,24 +421,24 @@ class GenericDialog(Widget):
     implementing the "onConfirm" and "onCancel" events."""
 
     def __init__(self, width=500, height=160, title='Title', message='Message'):
-        self.w = width
-        self.h = height
-        super(GenericDialog, self).__init__(self.w, self.h, False, 10)
+        self.width = width
+        self.height = height
+        super(GenericDialog, self).__init__(self.width, self.height, False, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_dialog'
         self.EVENT_ONCANCEL = 'cancel_dialog'
 
-        t = Label(self.w - 20, 50, title)
-        m = Label(self.w - 20, 30, message)
+        t = Label(self.width - 20, 50, title)
+        m = Label(self.width - 20, 30, message)
 
-        self.container = Widget(self.w - 20,0, False, 0)
+        self.container = Widget(self.width - 20,0, False, 0)
         self.conf = Button(50, 30, 'Ok')
         self.cancel = Button(50, 30, 'Cancel')
 
         t.style['font-size'] = '16px'
         t.style['font-weight'] = 'bold'
 
-        hlay = Widget(self.w - 20, 30)
+        hlay = Widget(self.width - 20, 30)
         hlay.append('1', self.conf)
         hlay.append('2', self.cancel)
         self.conf.style['float'] = 'right'
@@ -456,6 +456,19 @@ class GenericDialog(Widget):
 
         self.baseAppInstance = None
 
+    def add_field_with_label(self,fieldName,field):
+        fields_spacing = 5
+        field_height = from_pix(field.style['height']) + fields_spacing*2
+        field_width = from_pix(field.style['width']) + fields_spacing*4
+        self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
+        self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
+        self.inputs[fieldName] = field
+        label = Label( (self.width-20)-field_width-1, 30, fieldName )
+        container = Widget(self.width-20, field_height , True, fields_spacing)
+        container.append('lbl' + fieldName,label)
+        container.append(fieldName,self.inputs[fieldName])
+        self.container.append(fieldName,container)
+        
     def add_field(self,fieldName,field):
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
@@ -463,9 +476,7 @@ class GenericDialog(Widget):
         self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[fieldName] = field
-        label = Label( (self.w-20)-field_width-1, 30, fieldName )
-        container = Widget(self.w-20, field_height , True, fields_spacing)
-        container.append('lbl' + fieldName,label)
+        container = Widget(self.width-20, field_height , True, fields_spacing)
         container.append(fieldName,self.inputs[fieldName])
         self.container.append(fieldName,container)
 
@@ -500,17 +511,11 @@ class InputDialog(GenericDialog):
     def __init__(self, width=500, height=160, title='Title', message='Message'):
         super(InputDialog, self).__init__(width, height, title, message)
 
-        self.EVENT_ONCONFIRMVALUE = 'confirm_value'
-        self.inputText = TextInput(self.w - 20, 30)
-        self.inputs['textinput'] = self.inputText
-		
-        self.style['height'] = to_pix(self.h + 50 * len(self.inputs))
-        self.container.style['height'] = to_pix(50 * len(self.inputs))        
-        
-        self.container.append('textinput', self.inputText)
-        
+        self.inputText = TextInput(width - 20, 30)
+        self.add_field('textinput',self.inputText)
+
+        self.EVENT_ONCONFIRMVALUE = 'confirm_value'        
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
-        self.baseAppInstance = None
 
     def confirm_value(self):
         """event called pressing on OK button.
@@ -961,46 +966,20 @@ class FileFolderItem(Widget):
         return self.children['text'].get_text()
 
 
-class FileSelectionDialog(Widget):
+class FileSelectionDialog(GenericDialog):
 
     """file selection dialog, it opens a new webpage allows the OK/ABORT functionality
     implementing the "onConfirm" and "onAbort" events."""
 
-    def __init__(self, title, message, multiple_selection = True, selection_folder = '.'):
-        w = 600
-        h = 370
-        super(FileSelectionDialog, self).__init__(w, h, False, 10)
-
-        self.EVENT_ONCONFIRM = 'confirm_value'
-        self.EVENT_ONABORT = 'abort_value'
-
-        t = Label(w - 70, 50, title)
-        t.style['font-size'] = '16px'
-        t.style['font-weight'] = 'bold'
-        m = Label(w - 70, 30, message)
-
-        self.conf = Button(50, 30, 'Ok')
-        self.abort = Button(50, 30, 'Cancel')
+    def __init__(self, width = 600, fileFolderNavigatorHeight = 210, title = 'File dialog', message = 'Select files and folders', multiple_selection = True, selection_folder = '.'):
+        super(FileSelectionDialog, self).__init__(width, 160, title, message)
         
-        self.fileFolderNavigator = FileFolderNavigator(w-20,200,multiple_selection,selection_folder)
-        
-        hlay = Widget(w - 20, 30)
-        hlay.append('1', self.conf)
-        hlay.append('2', self.abort)
-        self.conf.style['float'] = 'right'
-        self.abort.style['float'] = 'right'
+        self.fileFolderNavigator = FileFolderNavigator(width-20,fileFolderNavigatorHeight,multiple_selection,selection_folder)
 
-        self.append('1', t)
-        self.append('2', m)
-        self.append('3', self.fileFolderNavigator)
-        self.append('4', hlay)
-        
-        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCONFIRM + "');"
+        self.add_field('fileFolderNavigator',self.fileFolderNavigator)
 
-        self.abort.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONABORT + "');"
-        
-        self.baseAppInstance = None
+        self.EVENT_ONCONFIRMVALUE = 'confirm_value'        
+        self.set_on_confirm_dialog_listener(self, 'confirm_value')
 
     def confirm_value(self):
         """event called pressing on OK button.
@@ -1009,19 +988,11 @@ class FileSelectionDialog(Widget):
         self.hide()
         params = list()
         params.append(self.fileFolderNavigator.get_selection_list())
-        return self.eventManager.propagate(self.EVENT_ONCONFIRM, params)
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
     def set_on_confirm_value_listener(self, listener, funcname):
         self.eventManager.register_listener(
-            self.EVENT_ONCONFIRM, listener, funcname)
-
-    def abort_value(self):
-        self.hide()
-        return self.eventManager.propagate(self.EVENT_ONABORT, list())
-
-    def set_on_abort_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONABORT, listener, funcname)
+            self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
 class Menu(Widget):
