@@ -83,6 +83,7 @@ You can change the url address, edit the "configuration.py" file.
 Tested on Android, Linux, Windows with Google Chrome web browser.
 Usefull on raspberry pi for python script development. It allows to interact with your raspberry remotely from your mobile device.
 
+
 FAQ
 ===
 - Should I know HTML? NO, It is not required, you have to code only in python.
@@ -138,6 +139,58 @@ All widgets constructors require three standard parameters that are in sequence:
 - width in pixel
 - height in pixel
 - layout orientation (boolean, where True means orizontal orientation)
+
+
+Events and callbacks
+===
+Widgets exposes a set of events that happens during user iteraction. 
+Such events are a convenient way to define the application behavior.
+Each widget has its own callbacks, depending on the type of input it allows.
+The specific callbacks for the widgets will be illustrated later.
+
+In order to register a function as an event listener you have to call a function like set_on_xxx_listener passing as parameters the instance of widget that will manage the event and the literal string name of the listener function.
+Follows an example:
+<pre><code>
+
+import gui
+from gui import *
+
+
+class MyApp(App):
+
+    def __init__(self, *args):
+        super(MyApp, self).__init__(*args)
+
+    def main(self):
+        # the arguments are	width - height - layoutOrientationOrizontal
+        wid = gui.Widget(120, 100, False, 10)
+        self.lbl = gui.Label(100, 30, 'Hello world!')
+        self.bt = gui.Button(100, 30, 'Press me!')
+
+        # setting the listener for the onclick event of the button
+        
+        self.bt.set_on_click_listener(self, 'on_button_pressed')
+
+        # appending a widget to another, the first argument is a string key
+        wid.append('1', self.lbl)
+        wid.append('2', self.bt)
+
+        # returning the root widget
+        return wid
+
+    # listener function
+    def on_button_pressed(self):
+        self.lbl.set_text('Button pressed!')
+        self.bt.set_text('Hi!')
+
+
+# starts the webserver
+start(MyApp)
+
+</code></pre>
+
+In the shown example *self.bt.set_on_click_listener(self, 'on_button_pressed')* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
+Simple, easy.
 
 
 Styling
