@@ -730,6 +730,9 @@ class Input(Widget):
         self.attributes['value'] = str(defaultValue)
         self.attributes['type'] = _type
 
+    def set_value(self,value):
+        self.attributes['value'] = str(value)
+
     def value(self):
         """returns the new text value."""
         return self.attributes['value']
