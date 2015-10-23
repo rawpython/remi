@@ -80,57 +80,54 @@ td {
 
 
 div > ul.Menu {
-       background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
-       border: 1px solid rgb( 73,73,73 );
-       color: white;
+	background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
+	border: 1px solid rgb( 73,73,73 );
+	color: white;
 }
 
 ul.Menu {
-       list-style-type: none;
-        padding: 0;
-
-       position: relative;
- }
+	list-style-type: none;
+	padding: 0;
+	position: relative;
+}
 
  .MenuItem {
-
-       cursor: default;
-       text-align: center;
- }
+	cursor: default;
+	text-align: center;
+}
 
 
 .Menu .Menu {
-       position: absolute;
+	position: absolute;
 }
 
 .Menu .Menu .Menu {
-       top: 5px;
-       left: 100px;
-       position: absolute;
- }
+	top: 5px;
+	left: 100px;
+	position: absolute;
+}
 
 
  .MenuItem .Menu {
-        display: none;
-
-       background-color: white;
-       border: 1px solid #9C9B9B;
-       color: black;
-       height: auto !important;
-        position: absolute;
-       top: 30px;
- }
+	display: none;
+	background-color: white;
+	border: 1px solid #9C9B9B;
+	color: black;
+	height: auto !important;
+	position: absolute;
+	top: 30px;
+}
 
 
 .Menu > .MenuItem:hover {
-       background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
- }
+	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
+}
 
 
 .MenuItem .MenuItem:hover {
-       background: -webkit-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
-       background: -o-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
-       background: linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+	background: -webkit-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+	background: -o-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+	background: linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
  }
 
 
