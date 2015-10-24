@@ -94,6 +94,7 @@ ul.Menu {
  .MenuItem {
 	cursor: default;
 	text-align: center;
+	position: relative;
 }
 
 
@@ -102,8 +103,8 @@ ul.Menu {
 }
 
 .Menu .Menu .Menu {
-	top: 5px;
-	left: 100px;
+	top: 5%;
+	left: 95%;
 	position: absolute;
 }
 
@@ -115,7 +116,7 @@ ul.Menu {
 	color: black;
 	height: auto !important;
 	position: absolute;
-	top: 30px;
+	top: 100%;
 }
 
 
