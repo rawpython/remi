@@ -421,7 +421,7 @@ class Label(Widget):
 class GenericDialog(Widget):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
-    implementing the "onConfirm" and "onCancel" events."""
+    implementing the "confirm_value" and "cancel_dialog" events."""
 
     def __init__(self, width=500, height=160, title='Title', message='Message'):
         self.width = width
@@ -509,7 +509,7 @@ class GenericDialog(Widget):
 class InputDialog(GenericDialog):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
-    implementing the "onConfirm" and "onCancel" events."""
+    implementing the "confirm_value" and "cancel_dialog" events."""
 
     def __init__(self, width=500, height=160, title='Title', message='Message'):
         super(InputDialog, self).__init__(width, height, title, message)
@@ -989,8 +989,8 @@ class FileFolderItem(Widget):
 
 class FileSelectionDialog(GenericDialog):
 
-    """file selection dialog, it opens a new webpage allows the OK/ABORT functionality
-    implementing the "onConfirm" and "onAbort" events."""
+    """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
+    implementing the "confirm_value" and "cancel_dialog" events."""
 
     def __init__(self, width = 600, fileFolderNavigatorHeight = 210, title = 'File dialog', message = 'Select files and folders', multiple_selection = True, selection_folder = '.'):
         super(FileSelectionDialog, self).__init__(width, 160, title, message)
