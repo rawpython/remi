@@ -343,7 +343,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
     return False
 
 
-class App(BaseHTTPRequestHandler, WebSocketsHandler, object):
+class App(BaseHTTPRequestHandler, object):
 
     """
     This class will handles any incoming request from the browser
