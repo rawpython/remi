@@ -31,6 +31,7 @@ import hashlib
 from hashlib import sha1
 import sys
 import threading
+import signal
 from threading import Timer
 try:
     from urllib import unquote
@@ -368,7 +369,6 @@ class App(BaseHTTPRequestHandler, object):
             k = 0
         if not(k in clients.keys()):
             runtimeInstances.append(self)
-
             clients[k] = self
             clients[
                 k].attachments = "<script>\
@@ -618,19 +618,25 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     daemon_threads = True
 
 
-def start(mainGuiClass):
-    """This method starts the webserver with a specific App subclass."""
-    try:
+class Server(object):
+    def __init__(self, gui_class, start=True):
+        self._gui = gui_class
+        self._wsserver = self._sserver = None
+        self._wsth = self._sth = None
+        if start:
+            self.start()
+
+    def start(self):
         # here the websocket is started
-        wsserver = ThreadedWebsocketServer(
-            (IP_ADDR, WEBSOCKET_PORT_NUMBER), WebSocketsHandler)
-        th = threading.Thread(target=wsserver.serve_forever)
-        th.setDaemon(True)
-        th.start()
+        self._wsserver = ThreadedWebsocketServer(
+                            (IP_ADDR, WEBSOCKET_PORT_NUMBER), WebSocketsHandler)
+        self._wsth = threading.Thread(target=self._wsserver.serve_forever)
+        self._wsth.daemon = True
+        self._wsth.start()
         
         # Create a web server and define the handler to manage the incoming
         # request
-        server = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), mainGuiClass)
+        self._sserver = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), self._gui)
         debug_message('Started httpserver on port ', HTTP_PORT_NUMBER)
         if AUTOMATIC_START_BROWSER:
             try:
@@ -638,8 +644,25 @@ def start(mainGuiClass):
                 android.webbrowser.open(BASE_ADDRESS)
             except:
                 webbrowser.open(BASE_ADDRESS)
-        server.serve_forever()
+        self._sth = threading.Thread(target=self._sserver.serve_forever)
+        self._sth.daemon = True
+        self._sth.start()
 
-    except KeyboardInterrupt:
-        debug_alert('^C received, shutting down the web server')
-        server.socket.close()
+    def serve_forever(self):
+        # we could join on the threads, but join blocks all interupts (including
+        # ctrl+c, so just spin here
+        while True:
+            signal.pause()
+
+    def stop(self):
+        self._wsserver.shutdown()
+        self._wsth.join()
+        self._sserver.shutdown()
+        self._sth.join()
+
+
+def start(mainGuiClass):
+    """This method starts the webserver with a specific App subclass."""
+    s = Server(mainGuiClass, start=True)
+    s.server_forever()
+
