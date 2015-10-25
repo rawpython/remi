@@ -120,9 +120,9 @@ def get_method_by_id(rootNode, _id, maxIter=5):
     return None
 
 
-class ThreadedWebsocketServer(
-        socketserver.ThreadingMixIn, socketserver.TCPServer):
+class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
 
 class WebSocketsHandler(socketserver.StreamRequestHandler):
@@ -615,6 +615,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     No further content needed, don't touch this.
 
     """
+    daemon_threads = True
 
 
 def start(mainGuiClass):
