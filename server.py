@@ -14,7 +14,7 @@
    limitations under the License.
 """
 import traceback
-from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
+from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:
@@ -369,6 +369,7 @@ class App(BaseHTTPRequestHandler, object):
             # instance
             k = 0
         if not(k in clients.keys()):
+            wshost, wsport = self.server.websocket_address
             runtimeInstances.append(self)
             clients[k] = self
             clients[k].attachments = """
@@ -448,7 +449,7 @@ ws.onerror = function(evt){
     /* websocket is closed. */
     alert('Websocket error...');
 };
-</script>""" % (IP_ADDR, WEBSOCKET_PORT_NUMBER)
+</script>""" % (wshost, wsport)
 
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = list()
@@ -618,6 +619,10 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """
     daemon_threads = True
 
+    def __init__(self, server_address, RequestHandlerClass, websocket_address):
+        HTTPServer.__init__(self, server_address, RequestHandlerClass)
+        self.websocket_address = websocket_address
+
 
 class Server(object):
     def __init__(self, gui_class, start=True):
@@ -628,17 +633,19 @@ class Server(object):
             self.start()
 
     def start(self):
-        # here the websocket is started
-        self._wsserver = ThreadedWebsocketServer(
-                            (IP_ADDR, WEBSOCKET_PORT_NUMBER), WebSocketsHandler)
+        # here the websocket is started on an ephemereal port
+        self._wsserver = ThreadedWebsocketServer((IP_ADDR, 0), WebSocketsHandler)
+        wshost, wsport = self._wsserver.socket.getsockname()[:2]
+        debug_message('Started websocket server %s:%s', wshost, wsport)
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
         self._wsth.daemon = True
         self._wsth.start()
         
         # Create a web server and define the handler to manage the incoming
         # request
-        self._sserver = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), self._gui)
-        debug_message('Started httpserver on port ', HTTP_PORT_NUMBER)
+        self._sserver = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), self._gui, (wshost, wsport))
+        shost, sport = self._sserver.socket.getsockname()[:2]
+        debug_message('Started httpserver %s:%s' % (shost, sport))
         if AUTOMATIC_START_BROWSER:
             try:
                 import android
