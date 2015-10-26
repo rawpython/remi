@@ -33,6 +33,8 @@ import sys
 import threading
 import signal
 import time
+import os.path
+import re
 from threading import Timer
 try:
     from urllib import unquote
@@ -572,7 +574,7 @@ ws.onerror = function(evt){
                 self.wfile.write(encodeIfPyGT3(
                     "<link href='" +
                     BASE_ADDRESS +
-                    "./style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+                    "/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
                 self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(repr(self.client.root)))
             else:
@@ -588,7 +590,7 @@ ws.onerror = function(evt){
                     self.wfile.write(encodeIfPyGT3(
                         "<link href='" +
                         BASE_ADDRESS +
-                        "./style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+                        "/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
                     self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(ret[0]))
 
@@ -598,13 +600,20 @@ ws.onerror = function(evt){
             if ENABLE_FILE_CACHE:
                 self.send_header('Cache-Control', 'public, max-age=86400')
             self.end_headers()
-            filename = function #'./' + function
+
+            static_file = re.match(r"^/*res\/(.*)$", function)
+            if static_file:
+                filename = os.path.join(os.path.dirname(__file__), 'res', static_file.groups()[0])
+            else:
+                # very very unsafe! opens any file on the filesystem
+                filename = function
             try:
                 f = open(filename, 'r+b')
                 content = b''.join(f.readlines())
                 f.close()
                 self.wfile.write(content)
             except:
+                raise
                 debug_alert('Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
                 #print(traceback.format_exc())
 
