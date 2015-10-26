@@ -32,7 +32,7 @@ class MyApp(App):
         horizontalContainer = gui.Widget(620, 620, gui.Widget.LAYOUT_HORIZONTAL, 10)
 
         subContainerLeft = gui.Widget(340, 530, gui.Widget.LAYOUT_VERTICAL, 10)
-        self.img = gui.Image(100, 100, './res/logo.png')
+        self.img = gui.Image(100, 100, '/res/logo.png')
 
         self.table = gui.Table(300, 200)
         row = gui.TableRow()
