@@ -5,15 +5,15 @@
 let's start
 ===
 Just download it without installation
-##[**download GUI**](https://github.com/dddomodossola/gui/archive/master.zip)
+##[**download RemI**](https://github.com/dddomodossola/remi/archive/master.zip)
 Then start the test script <pre><code>python widgets_overview_app.py</code></pre>
 
 
-gui
+RemI
 ===
 Platform indipendent python gui library. In less than 100 Kbytes of source code, perfect for your diet.
 
-![Alt text](https://raw.githubusercontent.com/dddomodossola/gui/master/res/screenshot.png "Widgets overview")
+![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/res/screenshot.png "Widgets overview")
 
 It allows to create platform indipendent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. You have to write NO HTML code, because the library itself converts the python code automatically in HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
@@ -94,7 +94,7 @@ FAQ
 
 Brief tutorial
 ===
-Import gui library and all submodules.
+Import remi library and all submodules.
 
 <pre><code>
 
