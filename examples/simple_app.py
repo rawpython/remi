@@ -12,8 +12,8 @@
    limitations under the License.
 """
 
-import gui
-from gui import *
+import remi.gui as gui
+from remi import start, App
 
 
 class MyApp(App):

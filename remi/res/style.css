@@ -4,11 +4,11 @@
   font-family: 'Hind';
   font-style: normal;
   font-weight: 400;
-  src: local('Hind Regular'), local('Hind-Regular'), url(./res/font.woff) format('woff');
+  src: local('Hind Regular'), local('Hind-Regular'), url(/res/font.woff) format('woff');
 }
 
 body {
-	background-image: url( './res/bg.png' );
+	background-image: url( '/res/bg.png' );
 	font-family: 'Hind';
 }
 
