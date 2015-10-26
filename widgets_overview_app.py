@@ -95,6 +95,7 @@ class MyApp(App):
         self.dropDown.append('0', c0)
         self.dropDown.append('1', c1)
         self.dropDown.set_on_change_listener(self, 'drop_down_changed')
+        self.dropDown.set_value('DropDownItem 0')
 
         self.slider = gui.Slider(200, 20, 10, 0, 100, 5)
         self.slider.set_on_change_listener(self, 'slider_changed')

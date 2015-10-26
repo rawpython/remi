@@ -391,6 +391,9 @@ class SpinBox(Widget):
     def value(self):
         return self.attributes['value']
 
+    def set_value(self,value):
+        self.attributes['value'] = str(value)
+
 
 class Label(Widget):
 
@@ -418,7 +421,7 @@ class Label(Widget):
 class GenericDialog(Widget):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
-    implementing the "onConfirm" and "onCancel" events."""
+    implementing the "confirm_value" and "cancel_dialog" events."""
 
     def __init__(self, width=500, height=160, title='Title', message='Message'):
         self.width = width
@@ -506,7 +509,7 @@ class GenericDialog(Widget):
 class InputDialog(GenericDialog):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
-    implementing the "onConfirm" and "onCancel" events."""
+    implementing the "confirm_value" and "cancel_dialog" events."""
 
     def __init__(self, width=500, height=160, title='Title', message='Message'):
         super(InputDialog, self).__init__(width, height, title, message)
@@ -613,16 +616,31 @@ class DropDown(Widget):
         self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
 
-    def onchange(self, newValue):
-        params = list()
-        params.append(newValue)
-        debug_message('combo box. selected', newValue)
+    def select_by_key(self, itemKey):
+        """
+        selects the item by its key
+        """
+        for item in self.children.values():
+            if 'selected' in item.attributes:
+                del item.attributes['selected']
+        self.children[itemKey].attributes['selected'] = 'selected'
+
+    def set_value(self, newValue):
+        """
+        selects the item by the contained text
+        """
         for item in self.children.values():
             if item.attributes['value'] == newValue:
                 item.attributes['selected'] = 'selected'
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
+
+    def onchange(self, newValue):
+        params = list()
+        params.append(newValue)
+        debug_message('combo box. selected', newValue)
+        self.set_value(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
 
     def set_on_change_listener(self, listener, funcname):
@@ -729,6 +747,9 @@ class Input(Widget):
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
         self.attributes['value'] = str(defaultValue)
         self.attributes['type'] = _type
+
+    def set_value(self,value):
+        self.attributes['value'] = str(value)
 
     def value(self):
         """returns the new text value."""
@@ -968,8 +989,8 @@ class FileFolderItem(Widget):
 
 class FileSelectionDialog(GenericDialog):
 
-    """file selection dialog, it opens a new webpage allows the OK/ABORT functionality
-    implementing the "onConfirm" and "onAbort" events."""
+    """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
+    implementing the "confirm_value" and "cancel_dialog" events."""
 
     def __init__(self, width = 600, fileFolderNavigatorHeight = 210, title = 'File dialog', message = 'Select files and folders', multiple_selection = True, selection_folder = '.'):
         super(FileSelectionDialog, self).__init__(width, 160, title, message)
