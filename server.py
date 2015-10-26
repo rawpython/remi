@@ -32,6 +32,7 @@ from hashlib import sha1
 import sys
 import threading
 import signal
+import time
 from threading import Timer
 try:
     from urllib import unquote
@@ -651,8 +652,14 @@ class Server(object):
     def serve_forever(self):
         # we could join on the threads, but join blocks all interupts (including
         # ctrl+c, so just spin here
-        while True:
-            signal.pause()
+        try:
+            while True:
+                signal.pause()
+        except Exception:
+            # signal.pause() is missing for Windows; wait 1ms and loop instead
+            while True:
+                time.sleep(1)
+			
 
     def stop(self):
         self._wsserver.shutdown()
@@ -664,5 +671,5 @@ class Server(object):
 def start(mainGuiClass):
     """This method starts the webserver with a specific App subclass."""
     s = Server(mainGuiClass, start=True)
-    s.server_forever()
+    s.serve_forever()
 
