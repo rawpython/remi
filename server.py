@@ -14,7 +14,7 @@
    limitations under the License.
 """
 import traceback
-from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, WEBSOCKET_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
+from configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:
@@ -369,86 +369,87 @@ class App(BaseHTTPRequestHandler, object):
             # instance
             k = 0
         if not(k in clients.keys()):
+            wshost, wsport = self.server.websocket_address
             runtimeInstances.append(self)
             clients[k] = self
-            clients[
-                k].attachments = "<script>\
-var paramPacketize = function (ps){\
-    var ret = '';\
-    for (var pkey in ps) {\
-        if( ret.length>0 )ret = ret + '|';\
-        var pstring = pkey+'='+ps[pkey];\
-        pstring = pstring.length+'|'+pstring;\
-        ret = ret + pstring;\
-    }\
-    return ret;\
-};\
-var ws;\
-function openSocket(){\
-    try{\
-        ws = new WebSocket('ws://" + IP_ADDR + ':' + str(WEBSOCKET_PORT_NUMBER) + "/'); \
-        console.debug('opening websocket');\
-        ws.onopen = function(evt) { \
-            ws.send('Hello from the client!'); \
-        }; \
-    }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}\
-}\
-openSocket();\
-ws.onmessage = function (evt) { \
-    var received_msg = evt.data; \
-    console.debug('Message is received:' + received_msg); \
-    var s = received_msg.split(',');\
-    var command = s[0];\
-    var index = received_msg.indexOf(',')+1;\
-    received_msg = received_msg.substr(index,received_msg.length-index);/*removing the command from the message*/\
-    index = received_msg.indexOf(',')+1;\
-    var content = received_msg.substr(index,received_msg.length-index);\
-    if( command=='show_window' ){\
-        document.body.innerHTML = unescape(content);\
-    }else if( command=='update_widget'){\
-        var elem = document.getElementById(s[1]);\
-        var index = received_msg.indexOf(',')+1;\
-        elem.insertAdjacentHTML('afterend',unescape(content));\
-        elem.parentElement.removeChild(elem);\
-    }else if( command=='insert_widget'){\
-        if( document.getElementById(s[1])==null ){\
-            /*the content contains an additional field that we have to remove*/\
-            index = content.indexOf(',')+1;\
-            content = content.substr(index,content.length-index);\
-            var elem = document.getElementById(s[2]);\
-            elem.innerHTML = elem.innerHTML + unescape(content);\
-        }\
-    }\
-    console.debug('command:' + command);\
-    console.debug('content:' + content);\
-}; \
-/*this uses websockets*/\
-var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){\
-    if (ws.readyState != WebSocket.OPEN){\
-        console.debug('socket not opened');\
-        openSocket();\
-    }\
-    ws.send(escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));\
-    console.debug('to client len:' + escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));\
-};\
-/*this uses websockets*/\
-var sendCallback = function (widgetID,functionName){\
-    if (ws.readyState != WebSocket.OPEN){\
-        console.debug('socket not opened');\
-        openSocket();\
-    }\
-    ws.send(escape('callback' + '/' + widgetID+'/'+functionName+'/'));\
-    console.debug( 'to client len:' + escape('callback' + '/' + widgetID+'/'+functionName+'/'));\
-};\
-ws.onclose = function(evt){ \
-    /* websocket is closed. */\
-    alert('Connection is closed...'); \
-};\
-ws.onerror = function(evt){ \
-    /* websocket is closed. */\
-    alert('Websocket error...'); \
-};\
-</script>"
+            clients[k].attachments = """
+<script>
+var paramPacketize = function (ps){
+    var ret = '';
+    for (var pkey in ps) {
+        if( ret.length>0 )ret = ret + '|';
+        var pstring = pkey+'='+ps[pkey];
+        pstring = pstring.length+'|'+pstring;
+        ret = ret + pstring;
+    }
+    return ret;
+};
+var ws;
+function openSocket(){
+    try{
+        ws = new WebSocket('ws://%s:%s/');
+        console.debug('opening websocket');
+        ws.onopen = function(evt) {
+            ws.send('Hello from the client!');
+        };
+    }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
+}
+openSocket();
+ws.onmessage = function (evt) {
+    var received_msg = evt.data;
+    console.debug('Message is received:' + received_msg);
+    var s = received_msg.split(',');
+    var command = s[0];
+    var index = received_msg.indexOf(',')+1;
+    received_msg = received_msg.substr(index,received_msg.length-index);/*removing the command from the message*/
+    index = received_msg.indexOf(',')+1;
+    var content = received_msg.substr(index,received_msg.length-index);
+    if( command=='show_window' ){
+        document.body.innerHTML = unescape(content);
+    }else if( command=='update_widget'){
+        var elem = document.getElementById(s[1]);
+        var index = received_msg.indexOf(',')+1;
+        elem.insertAdjacentHTML('afterend',unescape(content));
+        elem.parentElement.removeChild(elem);
+    }else if( command=='insert_widget'){
+        if( document.getElementById(s[1])==null ){
+            /*the content contains an additional field that we have to remove*/
+            index = content.indexOf(',')+1;
+            content = content.substr(index,content.length-index);
+            var elem = document.getElementById(s[2]);
+            elem.innerHTML = elem.innerHTML + unescape(content);
+        }
+    }
+    console.debug('command:' + command);
+    console.debug('content:' + content);
+};
+/*this uses websockets*/
+var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
+    if (ws.readyState != WebSocket.OPEN){
+        console.debug('socket not opened');
+        openSocket();
+    }
+    ws.send(escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
+    console.debug('to client len:' + escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
+};
+/*this uses websockets*/
+var sendCallback = function (widgetID,functionName){
+    if (ws.readyState != WebSocket.OPEN){
+        console.debug('socket not opened');
+        openSocket();
+    }
+    ws.send(escape('callback' + '/' + widgetID+'/'+functionName+'/'));
+    console.debug( 'to client len:' + escape('callback' + '/' + widgetID+'/'+functionName+'/'));
+};
+ws.onclose = function(evt){
+    /* websocket is closed. */
+    alert('Connection is closed...');
+};
+ws.onerror = function(evt){
+    /* websocket is closed. */
+    alert('Websocket error...');
+};
+</script>""" % (wshost, wsport)
 
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = list()
@@ -618,6 +619,10 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """
     daemon_threads = True
 
+    def __init__(self, server_address, RequestHandlerClass, websocket_address):
+        HTTPServer.__init__(self, server_address, RequestHandlerClass)
+        self.websocket_address = websocket_address
+
 
 class Server(object):
     def __init__(self, gui_class, start=True):
@@ -628,17 +633,19 @@ class Server(object):
             self.start()
 
     def start(self):
-        # here the websocket is started
-        self._wsserver = ThreadedWebsocketServer(
-                            (IP_ADDR, WEBSOCKET_PORT_NUMBER), WebSocketsHandler)
+        # here the websocket is started on an ephemereal port
+        self._wsserver = ThreadedWebsocketServer((IP_ADDR, 0), WebSocketsHandler)
+        wshost, wsport = self._wsserver.socket.getsockname()[:2]
+        debug_message('Started websocket server %s:%s', wshost, wsport)
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
         self._wsth.daemon = True
         self._wsth.start()
         
         # Create a web server and define the handler to manage the incoming
         # request
-        self._sserver = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), self._gui)
-        debug_message('Started httpserver on port ', HTTP_PORT_NUMBER)
+        self._sserver = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), self._gui, (wshost, wsport))
+        shost, sport = self._sserver.socket.getsockname()[:2]
+        debug_message('Started httpserver %s:%s' % (shost, sport))
         if AUTOMATIC_START_BROWSER:
             try:
                 import android
