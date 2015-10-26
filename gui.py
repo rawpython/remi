@@ -67,11 +67,14 @@ class Widget(object):
     It will be packet togheter with "self.attributes"
 
     """
+    #constants
+    LAYOUT_HORIZONTAL = True
+    LAYOUT_VERTICAL = False
 
-    def __init__(self, w=1, h=1, layout_orizontal=True, widget_spacing=0):
+    def __init__(self, w=1, h=1, layout_orientation=LAYOUT_HORIZONTAL, widget_spacing=0):
         """w = numeric with
         h = numeric height
-        layout_orizontal = specifies the "float" css attribute
+        layout_orientation = specifies the "float" css attribute
         widget_spacing = specifies the "margin" css attribute for the children"""
 
         # the runtime instances are processed every time a requests arrives, searching for the called method
@@ -86,7 +89,7 @@ class Widget(object):
 
         self.type = 'div'
 
-        self.layout_orizontal = layout_orizontal
+        self.layout_orientation = layout_orientation
         self.widget_spacing = widget_spacing
 
         # some constants for the events
@@ -184,7 +187,7 @@ class Widget(object):
                 selfWidth = from_pix(self.style['width']) - from_pix(self.children[key].style['width'])
             self.children[key].style['margin'] = spacing + " " + to_pix(selfWidth/2)
             
-            if self.layout_orizontal:
+            if self.layout_orientation:
                 self.children[key].style['margin'] = to_pix(selfHeight/2) + " " + spacing
                 if 'float' in self.children[key].style.keys():
                     if not (self.children[key].style['float'] == 'none'):
@@ -430,7 +433,7 @@ class GenericDialog(Widget):
     def __init__(self, width=500, height=160, title='Title', message='Message'):
         self.width = width
         self.height = height
-        super(GenericDialog, self).__init__(self.width, self.height, False, 10)
+        super(GenericDialog, self).__init__(self.width, self.height, Widget.LAYOUT_VERTICAL, 10)
 
         self.EVENT_ONCONFIRM = 'confirm_dialog'
         self.EVENT_ONCANCEL = 'cancel_dialog'
@@ -438,7 +441,7 @@ class GenericDialog(Widget):
         t = Label(self.width - 20, 50, title)
         m = Label(self.width - 20, 30, message)
 
-        self.container = Widget(self.width - 20,0, False, 0)
+        self.container = Widget(self.width - 20,0, Widget.LAYOUT_VERTICAL, 0)
         self.conf = Button(50, 30, 'Ok')
         self.cancel = Button(50, 30, 'Cancel')
 
@@ -471,7 +474,7 @@ class GenericDialog(Widget):
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
         label = Label( (self.width-20)-field_width-1, 30, labelDescription )
-        container = Widget(self.width-20, field_height , True, fields_spacing)
+        container = Widget(self.width-20, field_height , Widget.LAYOUT_HORIZONTAL, fields_spacing)
         container.append('lbl' + key,label)
         container.append(key,self.inputs[key])
         self.container.append(key,container)
@@ -483,7 +486,7 @@ class GenericDialog(Widget):
         self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
-        container = Widget(self.width-20, field_height , True, fields_spacing)
+        container = Widget(self.width-20, field_height , Widget.LAYOUT_HORIZONTAL, fields_spacing)
         container.append(key,self.inputs[key])
         self.container.append(key,container)
 
@@ -542,8 +545,8 @@ class ListView(Widget):
 
     """list widget it can contain ListItems."""
 
-    def __init__(self, w, h, horizontal=False):
-        super(ListView, self).__init__(w, h, horizontal)
+    def __init__(self, w, h, orientation=Widget.LAYOUT_VERTICAL):
+        super(ListView, self).__init__(w, h, orientation)
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
         self.selected_item = None
@@ -815,10 +818,10 @@ class FileFolderNavigator(Widget):
         self.h = h
         self.multiple_selection = multiple_selection
         self.sep = os.sep #'/' #default separator in path os.sep
-        super(FileFolderNavigator, self).__init__(w, h, False)
+        super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
         
         self.selectionlist = list() #here are stored selected files and folders
-        self.controlsContainer = Widget(w,25,True)
+        self.controlsContainer = Widget(w,25,Widget.LAYOUT_HORIZONTAL)
         self.controlBack = Button(45,25,'Up')
         self.controlBack.set_on_click_listener(self,'dir_go_back')
         self.controlGo = Button(45,25,'Go >>')
@@ -830,7 +833,7 @@ class FileFolderNavigator(Widget):
         self.controlsContainer.append('2',self.pathEditor)
         self.controlsContainer.append('3',self.controlGo)
         
-        self.itemContainer = Widget(w,h-25,False)
+        self.itemContainer = Widget(w,h-25,Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
         
@@ -853,7 +856,7 @@ class FileFolderNavigator(Widget):
         #this speeds up the navigation
         self.remove(self.itemContainer)
         #creation of a new instance of a itemContainer
-        self.itemContainer = Widget(self.w,self.h-25,False)
+        self.itemContainer = Widget(self.w,self.h-25,Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
         
@@ -935,7 +938,7 @@ class FileFolderItem(Widget):
     """
 
     def __init__(self, w, h, text, isFolder = False):
-        super(FileFolderItem, self).__init__(w, h, True)
+        super(FileFolderItem, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.icon = Widget(33, h)
@@ -1024,8 +1027,8 @@ class Menu(Widget):
 
     """Menu widget can contain MenuItem."""
 
-    def __init__(self, w, h, horizontal=True):
-        super(Menu, self).__init__(w, h, horizontal)
+    def __init__(self, w, h, orientation=Widget.LAYOUT_HORIZONTAL):
+        super(Menu, self).__init__(w, h, orientation)
         self.type = 'ul'
 
 
@@ -1045,7 +1048,7 @@ class MenuItem(Widget):
     
     def addSubMenu(self, key, value):
         if self.subcontainer == None:
-            self.subcontainer = Menu(self.w, self.h, False)
+            self.subcontainer = Menu(self.w, self.h, Widget.LAYOUT_VERTICAL)
             super(self.__class__, self).append('subcontainer', self.subcontainer)
         self.subcontainer.append(key, value)
 
@@ -1139,7 +1142,7 @@ class FileDownloader(Widget):
     """FileDownloader widget. Allows to start a file download."""
 
     def __init__(self, w, h, text, filePathName):
-        super(FileDownloader, self).__init__(w, h, True)
+        super(FileDownloader, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.type = 'a'
         self.attributes['download'] = ''
         self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + '/' + filePathName
