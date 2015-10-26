@@ -314,6 +314,10 @@ class TextInput(Widget):
     def get_text(self):
         return self.children['text']
 
+    def get_value(self):
+        #facility, same as get_text
+        return self.get_text()
+
     def onchange(self, newValue):
         """returns the new text value."""
         self.set_text(newValue)
@@ -459,32 +463,32 @@ class GenericDialog(Widget):
 
         self.baseAppInstance = None
 
-    def add_field_with_label(self,fieldName,field):
+    def add_field_with_label(self,key,labelDescription,field):
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
         field_width = from_pix(field.style['width']) + fields_spacing*4
         self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
-        self.inputs[fieldName] = field
-        label = Label( (self.width-20)-field_width-1, 30, fieldName )
+        self.inputs[key] = field
+        label = Label( (self.width-20)-field_width-1, 30, labelDescription )
         container = Widget(self.width-20, field_height , True, fields_spacing)
-        container.append('lbl' + fieldName,label)
-        container.append(fieldName,self.inputs[fieldName])
-        self.container.append(fieldName,container)
+        container.append('lbl' + key,label)
+        container.append(key,self.inputs[key])
+        self.container.append(key,container)
         
-    def add_field(self,fieldName,field):
+    def add_field(self,key,field):
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
         field_width = from_pix(field.style['width']) + fields_spacing*4
         self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
-        self.inputs[fieldName] = field
+        self.inputs[key] = field
         container = Widget(self.width-20, field_height , True, fields_spacing)
-        container.append(fieldName,self.inputs[fieldName])
-        self.container.append(fieldName,container)
+        container.append(key,self.inputs[key])
+        self.container.append(key,container)
 
-    def get_field(self,fieldName):
-        return self.inputs[fieldName]
+    def get_field(self,key):
+        return self.inputs[key]
 
     def confirm_dialog(self):
         """event called pressing on OK button.
