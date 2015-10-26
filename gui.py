@@ -943,7 +943,8 @@ class FileFolderItem(Widget):
         self.attributes[self.EVENT_ONCLICK] = ''
         self.icon = Widget(33, h)
         #the icon click activates the onselection event, that is propagates to registered listener
-        self.icon.set_on_click_listener(self,self.EVENT_ONSELECTION)
+        if isFolder:
+            self.icon.set_on_click_listener(self,self.EVENT_ONCLICK)
         self.icon.attributes['class'] = 'FileFolderItemIcon'
 
         iconFile = 'res/file.png'
@@ -952,10 +953,7 @@ class FileFolderItem(Widget):
 
         self.icon.style['background-image'] = "url('" + iconFile + "')"
         self.label = Label(w-33, h, text)
-        if isFolder:
-            self.label.set_on_click_listener(self,self.EVENT_ONCLICK)
-        else:
-            self.label.set_on_click_listener(self,self.EVENT_ONSELECTION)
+        self.label.set_on_click_listener(self,self.EVENT_ONSELECTION)
         self.append('icon', self.icon)
         self.append('text', self.label)
         self.selected = False
