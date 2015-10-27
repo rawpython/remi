@@ -21,10 +21,10 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
-    def main(self):
+    def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
         wid = gui.Widget(120, 100, False, 10)
-        self.lbl = gui.Label(100, 30, 'Hello world!')
+        self.lbl = gui.Label(100, 30, 'Hello %s!' % name)
         self.bt = gui.Button(100, 30, 'Press me!')
 
         # setting the listener for the onclick event of the button
@@ -42,13 +42,13 @@ class MyApp(App):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
+if __name__ == "__main__":
+	# setting up remi debug level 
+	#       2=all debug messages   1=error messages   0=no messages
+	#import remi.server
+	#remi.server.DEBUG_MODE = 2 
 
-# setting up remi debug level 
-#       2=all debug messages   1=error messages   0=no messages
-#import remi.server
-#remi.server.DEBUG_MODE = 2 
-
-# starts the webserver
-# optional parameters   
-#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-
+	# starts the webserver
+	# optional parameters   
+	#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
+    start(MyApp)

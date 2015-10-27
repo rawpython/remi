@@ -548,7 +548,7 @@ ws.onerror = function(evt){
             # build the root page once if necessary
             should_call_main = not hasattr(self.client, 'root')
             if should_call_main:
-                self.client.root = self.main()
+                self.client.root = self.main(*self.server.userdata)
 
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -597,17 +597,18 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """
     daemon_threads = True
 
-    def __init__(self, server_address, RequestHandlerClass, websocket_address, multiple_instance, enable_file_cache, update_interval):
+    def __init__(self, server_address, RequestHandlerClass, websocket_address, multiple_instance, enable_file_cache, update_interval, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
         self.multiple_instance = multiple_instance
         self.enable_file_cache = enable_file_cache
         self.update_interval = update_interval
+        self.userdata = userdata
 
 
 class Server(object):
     def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, multiple_instance=False,
-                 enable_file_cache=True, update_interval=0.1, start_browser=True):
+                 enable_file_cache=True, update_interval=0.1, start_browser=True, userdata=()):
         self._gui = gui_class
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
@@ -617,10 +618,14 @@ class Server(object):
         self._enable_file_cache = enable_file_cache
         self._update_interval = update_interval
         self._start_browser = start_browser
-        if start:
-            self.start()
 
-    def start(self):
+        if not isinstance(userdata, tuple):
+            raise ValueError('userdata must be a tuple')
+
+        if start:
+            self.start(*userdata)
+
+    def start(self, *userdata):
         # here the websocket is started on an ephemereal port
         self._wsserver = ThreadedWebsocketServer((self._address, 0), WebSocketsHandler, self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
@@ -633,7 +638,7 @@ class Server(object):
         # request
         self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui,
                                            (wshost, wsport), self._multiple_instance, self._enable_file_cache,
-                                           self._update_interval)
+                                           self._update_interval, *userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         #when listening on multiple net interfaces the browsers connects to localhost
         if shost=='0.0.0.0':
