@@ -1169,10 +1169,9 @@ class FileDownloader(Widget):
         self.append('text', t)
 
     def download(self):
-        f = open(self.filePathName, 'r+b')
-        content = b''.join(f.readlines())
-        f.close()
-        headerFieldsToSend=dict()
-        headerFieldsToSend['Content-type'] = 'application/octet-stream'
-        headerFieldsToSend['Content-Disposition'] = 'attachment; filename=' + os.path.basename(self.filePathName)
-        return [content,headerFieldsToSend]
+        with open(self.filePathName, 'r+b') as f:
+            content = f.read()
+        headers = {'Content-type':'application/octet-stream',
+                   'Content-Disposition':'attachment; filename=%s' % os.path.basename(self.filePathName)}
+        return [content,headers]
+
