@@ -304,7 +304,8 @@ def update_clients(update_interval):
                 client.old_runtime_widgets = dict()
                 for ws in client.websockets:
                     try:
-                        ws.send_message('show_window,' + str(id(client.root)) + ',' + toWebsocket(repr(client.root)))
+                        html = client.root.repr(client)
+                        ws.send_message('show_window,' + str(id(client.root)) + ',' + toWebsocket(html))
                     except:
                         client.websockets.remove(ws)
             client.old_root_window = client.root
@@ -327,7 +328,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
     __id = str(id(leaf))
     # if the widget is not contained in the copy
     if not (__id in client.old_runtime_widgets.keys()):
-        client.old_runtime_widgets[__id] = leaf.repr_without_children()
+        client.old_runtime_widgets[__id] = leaf.repr_without_children(client)
         if not no_update_because_new_subchild:
             no_update_because_new_subchild = True
             # we ensure that the clients have an updated version
@@ -338,7 +339,8 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                     if 'parent_widget' in leaf.attributes.keys():
                         parentWidgetId = leaf.attributes['parent_widget']
                         debug_message("1" + leaf.attributes['class'] + "\n")
-                        ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(repr(get_method_by_id(client.root,parentWidgetId))))
+                        html = get_method_by_id(client.root,parentWidgetId).repr(client)
+                        ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(html))
                     else:
                         debug_alert('the new widget seems to have no parent...')
                     #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
@@ -350,16 +352,18 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
     for subleaf in leaf.children.values():
         gui_updater(client, subleaf, no_update_because_new_subchild)
 
-    if leaf.repr_without_children() != client.old_runtime_widgets[__id]:
+    newhtml = leaf.repr_without_children(client)
+    if newhtml != client.old_runtime_widgets[__id]:
         #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:
             #try:
             debug_message('update_widget: ' + __id + '  type: ' + str(type(leaf)))
             try:
-                ws.send_message('update_widget,' + __id + ',' + toWebsocket(repr(leaf)))
+                html = leaf.repr(client)
+                ws.send_message('update_widget,' + __id + ',' + toWebsocket(html))
             except:
                 client.websockets.remove(ws)
-        client.old_runtime_widgets[__id] = leaf.repr_without_children()
+        client.old_runtime_widgets[__id] = newhtml
         return True
     # widget NOT changed
     return False
@@ -552,8 +556,8 @@ ws.onerror = function(evt){
             self.wfile.write(encodeIfPyGT3(
                 "<link href='/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
             self.wfile.write(encodeIfPyGT3(self.client.attachments))
-            # render the HTML
-            html = repr(self.client.root)
+            # render the HTML replacing any local absolute references to the correct IP of this instance
+            html = self.client.root.repr(self.client)
             self.wfile.write(encodeIfPyGT3(html))
         elif static_file:
             filename = os.path.join(os.path.dirname(__file__), 'res', static_file.groups()[0])
