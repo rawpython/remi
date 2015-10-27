@@ -30,28 +30,23 @@ def from_pix(x):
 def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
-# Manages the event propagation to the listeners functions
 
-
-class EventManager():
+class EventManager(object):
+    """Manages the event propagation to the listeners functions"""
 
     def __init__(self):
         self.listeners = {}
-    # if for an event there is a listener, it calls the listener passing the
-    # parameters
 
     def propagate(self, eventname, params):
-        if not eventname in self.listeners.keys():
+        # if for an event there is a listener, it calls the listener passing the parameters
+        if eventname not in self.listeners:
             return
         listener = self.listeners[eventname]
         return getattr(listener['instance'], listener['funcname'])(*params)
-    # register a listener for a specific event
 
     def register_listener(self, eventname, instance, funcname):
-        listener = {}
-        listener['instance'] = instance
-        listener['funcname'] = funcname
-        self.listeners[eventname] = listener
+        """register a listener for a specific event"""
+        self.listeners[eventname] = {'instance':instance, 'funcname':funcname}
 
 
 class Widget(object):
