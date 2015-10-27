@@ -559,6 +559,8 @@ ws.onerror = function(evt){
                 self.send_response(200)
             except IOError:
                 self.send_response(404)
+                return
+
             for k,v in headers.iteritems():
                 self.send_header(k, v)
             self.end_headers()
