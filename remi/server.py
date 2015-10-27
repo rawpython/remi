@@ -23,6 +23,7 @@ try:
     import socketserver
 except:
     import SocketServer as socketserver
+import mimetypes
 import webbrowser
 import struct
 import binascii
@@ -519,90 +520,48 @@ ws.onerror = function(evt){
         return
 
     def process_all(self, function):
-        ispath = True
-        snake = None
-        doNotCallMain = False
+        static_file = re.match(r"^/*res\/(.*)$", function)
+        attr_call = re.match(r"^\/*(\w+)\/(\w+)$", function)
+        if (function == '/') or (not function):
+            # build the root page once if necessary
+            should_call_main = not hasattr(self.client, 'root')
+            if should_call_main:
+                self.client.root = self.main()
 
-        if len(function.split('/')) > 1:
-            for attr in function.split('/'):
-                if len(attr) == 0:
-                    continue
-                if ispath == False:
-                    break
-                if snake is None:
-                    snake = get_method_by(self.client.root, attr)
-                    ispath = ispath and (None != snake)
-                    continue
-                snake = get_method_by(snake, attr)
-                ispath = ispath and (None != snake)
-        else:
-            function = function.replace('/', '')
-            if len(function) > 0:
-                snake = get_method_by(self.client, function)
-                ispath = ispath and (None != snake)
-            else:
-                doNotCallMain = hasattr(self.client, 'root')
-                ispath = True
-                snake = self.main
-
-        if ispath:
-            ret = None
-            if not doNotCallMain:
-                ret = snake()
-
-                # setting up the root widget, if the 'ret' becomes from the
-                # main call
-                if snake == self.main:
-                    self.client.root = ret
-                    ret = None
-
-            if ret is None:
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                
-                self.wfile.write(encodeIfPyGT3(
-                    "<link href='" +
-                    BASE_ADDRESS +
-                    "/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
-                self.wfile.write(encodeIfPyGT3(self.client.attachments))
-                self.wfile.write(encodeIfPyGT3(repr(self.client.root)))
-            else:
-                # here is the function that should return the content type
-                self.send_response(200)
-
-                headerFields = ret[1] #dict
-                for k in headerFields:
-                    v = headerFields[k]
-                    self.send_header(k, v)
-
-                self.end_headers()
-
-                self.wfile.write(encodeIfPyGT3(ret[0]))
-        else:
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(encodeIfPyGT3(
+                "<link href='/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
+            self.wfile.write(encodeIfPyGT3(self.client.attachments))
+            # render the HTML
+            html = repr(self.client.root)
+            self.wfile.write(encodeIfPyGT3(html))
+        elif static_file:
+            filename = os.path.join(os.path.dirname(__file__), 'res', static_file.groups()[0])
+            if not os.path.exists(filename):
+                self.send_response(404)
+                return
+
+            mimetype,encoding = mimetypes.guess_type(filename)
+            self.send_response(200)
+            self.send_header('Content-type', mimetype if mimetype else 'application/octet-stream')
             if ENABLE_FILE_CACHE:
                 self.send_header('Cache-Control', 'public, max-age=86400')
             self.end_headers()
-
-            static_file = re.match(r"^/*res\/(.*)$", function)
-            if static_file:
-                filename = os.path.join(os.path.dirname(__file__), 'res', static_file.groups()[0])
-            else:
-                # very very unsafe! opens any file on the filesystem
-                filename = function
-            try:
-                f = open(filename, 'r+b')
-                content = b''.join(f.readlines())
-                f.close()
+            with open(filename, 'r+b') as f:
+                content = f.read()
                 self.wfile.write(content)
-            except:
-                raise
-                debug_alert('Managed exception in server.py - App.process_all. The requested file was not found or cannot be opened ',filename)
-                #print(traceback.format_exc())
-
-
+        elif attr_call:
+            widget,function = attr_call.groups()
+            try:
+                content,headers = get_method_by(get_method_by(self.client.root, widget), function)()
+            except IOError:
+                self.send_response(404)
+            for k,v in headers.iteritems():
+                self.send_header(k, v)
+            self.end_headers()
+            self.wfile.write(encodeIfPyGT3(content))
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
