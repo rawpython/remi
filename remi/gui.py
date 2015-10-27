@@ -12,12 +12,11 @@
    limitations under the License.
 """
 
+import os
 import traceback
-from .configuration import *
-from .server import *
-import os #used for directory browse functionalities
 
-# simple and stupid tricks
+from .configuration import runtimeInstances, BASE_ADDRESS, IP_ADDR, HTTP_PORT_NUMBER
+from .server import debug_message, debug_alert
 
 
 def to_pix(x):
