@@ -42,8 +42,8 @@ These widgets are available:
 A basic application appears like this:
 
 <pre><code>
-import gui
-from gui import *
+import remi.gui as gui
+from remi import start, App
 
 
 class MyApp(App):
@@ -98,8 +98,8 @@ Import remi library and all submodules.
 
 <pre><code>
 
-import gui
-from gui import *
+import remi.gui as gui
+from remi import start, App
 
 </code></pre>
 
@@ -152,8 +152,8 @@ In order to register a function as an event listener you have to call a function
 Follows an example:
 <pre><code>
 
-import gui
-from gui import *
+import remi.gui as gui
+from remi import start, App
 
 
 class MyApp(App):

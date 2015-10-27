@@ -504,17 +504,7 @@ ws.onerror = function(evt){
             self.send_response(400)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
-        
-        """
-        fields = urlparse(postVars)
-        debug_message('request: ', self.path)
-        debug_message('request: ', parse_qs(fields.path))
-        postVars = str(unquote(postVars))
-        paramDict = parse_parametrs(postVars)
-        function = str(unquote(self.path))
-        self.process_all(function, paramDict, True)
-        """
-        
+
     def do_GET(self):
         """Handler for the GET requests."""
         self.instance()
@@ -524,15 +514,15 @@ ws.onerror = function(evt){
         function = params[0]
 
         function = function[1:]
-        self.process_all(function, dict(), False)
+        self.process_all(function)
 
         return
 
-    def process_all(self, function, paramDict, isPost):
-        encoding='latin-1'
+    def process_all(self, function):
         ispath = True
         snake = None
         doNotCallMain = False
+
         if len(function.split('/')) > 1:
             for attr in function.split('/'):
                 if len(attr) == 0:
@@ -558,7 +548,7 @@ ws.onerror = function(evt){
         if ispath:
             ret = None
             if not doNotCallMain:
-                ret = snake(**paramDict)
+                ret = snake()
 
                 # setting up the root widget, if the 'ret' becomes from the
                 # main call
@@ -586,7 +576,7 @@ ws.onerror = function(evt){
 
                 # if is requested a widget, but not by post, so we suppose is
                 # requested to show a new page, we attach javascript and style
-                if(ret[1] == 'text/html' and isPost == False):
+                if ret[1] == 'text/html':
                     self.wfile.write(encodeIfPyGT3(
                         "<link href='" +
                         BASE_ADDRESS +
