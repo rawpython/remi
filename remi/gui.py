@@ -13,9 +13,10 @@
 """
 
 import traceback
-from configuration import *
-import server
-from server import *
+import remi.configuration
+from remi.configuration import *
+import remi.server
+from remi.server import *
 import os #used for directory browse functionalities
 
 # simple and stupid tricks
