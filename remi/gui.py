@@ -1156,22 +1156,22 @@ class FileDownloader(Widget):
 
     """FileDownloader widget. Allows to start a file download."""
 
-    def __init__(self, w, h, text, filePathName, pathSeparator='/'):
+    def __init__(self, w, h, text, filename, path_separator='/'):
         super(FileDownloader, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.type = 'a'
-        self.pathSeparator = pathSeparator
-        self.filePathName = filePathName
-        self.attributes['download'] = os.path.basename(filePathName)
-        self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + "/" + str(id(self)) + "/download"
+        self.attributes['download'] = os.path.basename(filename)
+        self.attributes['href'] = "/%s/download" % id(self)
         self.set_text(text)
+        self._filename = filename
+        self._path_separator = path_separator
 
     def set_text(self, t):
         self.append('text', t)
 
     def download(self):
-        with open(self.filePathName, 'r+b') as f:
+        with open(self._filename, 'r+b') as f:
             content = f.read()
         headers = {'Content-type':'application/octet-stream',
-                   'Content-Disposition':'attachment; filename=%s' % os.path.basename(self.filePathName)}
+                   'Content-Disposition':'attachment; filename=%s' % os.path.basename(self._filename)}
         return [content,headers]
 
