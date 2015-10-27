@@ -113,7 +113,7 @@ class MyApp(App):
         subContainerRight.append('4', self.spin)
         subContainerRight.append('5', self.btInputDiag)
         subContainerRight.append('5_', self.btFileDiag)
-        subContainerRight.append('5__', gui.FileDownloader(200, 30, 'download test', './res/logo.png'))
+        subContainerRight.append('5__', gui.FileDownloader(200, 30, 'download test', '../remi/res/logo.png'))
         subContainerRight.append('5___', self.btUploadFile)
         subContainerRight.append('6', self.dropDown)
         subContainerRight.append('7', self.slider)

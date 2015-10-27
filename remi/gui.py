@@ -1150,19 +1150,29 @@ class FileUploader(Widget):
     def set_on_failed_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ON_FAILED, listener, funcname)
-
+        
 
 class FileDownloader(Widget):
 
     """FileDownloader widget. Allows to start a file download."""
 
-    def __init__(self, w, h, text, filePathName):
+    def __init__(self, w, h, text, filePathName, pathSeparator='/'):
         super(FileDownloader, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.type = 'a'
-        self.attributes['download'] = ''
-        self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + '/' + filePathName
+        self.pathSeparator = pathSeparator
+        self.filePathName = filePathName
+        self.attributes['download'] = os.path.basename(filePathName)
+        self.attributes['href'] = "http://" + IP_ADDR + ":" + str(HTTP_PORT_NUMBER) + "/" + str(id(self)) + "/download"
         self.set_text(text)
 
     def set_text(self, t):
         self.append('text', t)
-        
+
+    def download(self):
+        f = open(self.filePathName, 'r+b')
+        content = b''.join(f.readlines())
+        f.close()
+        headerFieldsToSend=dict()
+        headerFieldsToSend['Content-type'] = 'application/octet-stream'
+        headerFieldsToSend['Content-Disposition'] = 'attachment; filename=' + os.path.basename(self.filePathName)
+        return [content,headerFieldsToSend]

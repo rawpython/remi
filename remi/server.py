@@ -570,20 +570,15 @@ ws.onerror = function(evt){
             else:
                 # here is the function that should return the content type
                 self.send_response(200)
-                self.send_header('Content-type', ret[1])
+
+                headerFields = ret[1] #dict
+                for k in headerFields:
+                    v = headerFields[k]
+                    self.send_header(k, v)
 
                 self.end_headers()
 
-                # if is requested a widget, but not by post, so we suppose is
-                # requested to show a new page, we attach javascript and style
-                if ret[1] == 'text/html':
-                    self.wfile.write(encodeIfPyGT3(
-                        "<link href='" +
-                        BASE_ADDRESS +
-                        "/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
-                    self.wfile.write(encodeIfPyGT3(self.client.attachments))
                 self.wfile.write(encodeIfPyGT3(ret[0]))
-
         else:
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
