@@ -14,7 +14,7 @@
    limitations under the License.
 """
 import traceback
-from remi.configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
+from .configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:

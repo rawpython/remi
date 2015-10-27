@@ -65,7 +65,7 @@ class MyApp(App):
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self, 'on_text_area_change')
 
-        self.spin = gui.SpinBox(200, 30)
+        self.spin = gui.SpinBox(200, 30, 100)
         self.spin.set_on_change_listener(self, 'on_spin_change')
 
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')

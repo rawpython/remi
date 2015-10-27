@@ -13,10 +13,8 @@
 """
 
 import traceback
-import remi.configuration
-from remi.configuration import *
-import remi.server
-from remi.server import *
+from .configuration import *
+from .server import *
 import os #used for directory browse functionalities
 
 # simple and stupid tricks
@@ -358,51 +356,6 @@ class TextInput(Widget):
             self.EVENT_ONKEYDOWN, listener, funcname)
 
 
-class SpinBox(Widget):
-
-    """spin box widget usefull as numeric input field implements the onclick
-    event.
-    """
-
-    def __init__(self, w, h, min=100, max=5000, value=1000, step=1):
-        super(SpinBox, self).__init__(w, h)
-        self.type = 'input'
-        self.attributes['type'] = 'number'
-        self.attributes['min'] = str(min)
-        self.attributes['max'] = str(max)
-        self.attributes['value'] = str(value)
-        self.attributes['step'] = str(step)
-
-        self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
-            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
-
-    def onchange(self, newValue):
-        params = list()
-        params.append(newValue)
-        self.attributes['value'] = newValue
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
-
-    def set_on_change_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCHANGE, listener, funcname)
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
-
-    def value(self):
-        return self.attributes['value']
-
-    def set_value(self,value):
-        self.attributes['value'] = str(value)
-
-
 class Label(Widget):
 
     def __init__(self, w, h, text):
@@ -551,27 +504,28 @@ class ListView(Widget):
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
         self.selected_item = None
+        self.selected_key = None
 
     def append(self, key, item):
         #if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
             item.set_on_click_listener(self,self.EVENT_ONSELECTION)
-        item.attributes['item_selected'] = False
+        item.attributes['selected'] = False
         super(self.__class__, self).append(key,item)
 
     def onselection(self,clicked_item):
-        selected_key = None
+        self.selected_key = None
         for k in self.children.keys():
             if self.children[k]==clicked_item:
-                selected_key = k
+                self.selected_key = k
                 debug_message('ListView - onselection. Selected item key: ',k)
                 if self.selected_item != None:
-                    self.selected_item['item_selected'] = False
-                self.selected_item = self.children[selected_key]
-                self.selected_item['item_selected'] = True
+                    self.selected_item['selected'] = False
+                self.selected_item = self.children[self.selected_key]
+                self.selected_item['selected'] = True
                 break
         params = list()
-        params.append(selected_key)
+        params.append(self.selected_key)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
 
     def set_on_selection_listener(self, listener, funcname):
@@ -580,6 +534,18 @@ class ListView(Widget):
         """
         self.eventManager.register_listener(
             self.EVENT_ONSELECTION, listener, funcname)
+            
+    def get_value(self):
+        """Returns the value of the selected item or None
+        """
+        if self.selected_item==None:
+            return None
+        return self.selected_item.get_value()
+
+    def get_key(self):
+        """Returns the key of the selected item or None
+        """
+        return self.selected_key
 
 
 class ListItem(Widget):
@@ -599,6 +565,9 @@ class ListItem(Widget):
 
     def get_text(self):
         return self.children['text']
+        
+    def get_value(self):
+        return self.get_text()
 
     def onclick(self):
         params = list()
@@ -623,7 +592,9 @@ class DropDown(Widget):
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
             id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
-
+        self.selected_item = None
+        self.selected_key = None
+        
     def select_by_key(self, itemKey):
         """
         selects the item by its key
@@ -632,17 +603,36 @@ class DropDown(Widget):
             if 'selected' in item.attributes:
                 del item.attributes['selected']
         self.children[itemKey].attributes['selected'] = 'selected'
+        self.selected_key = itemKey
+        self.selected_item = self.children[itemKey]
 
     def set_value(self, newValue):
         """
         selects the item by the contained text
         """
-        for item in self.children.values():
+        self.selected_key = None
+        self.selected_item = None
+        for k in self.children.keys():
+            item = self.children[k]
             if item.attributes['value'] == newValue:
                 item.attributes['selected'] = 'selected'
+                self.selected_key = k
+                self.selected_item = item
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
+                    
+    def get_value(self):
+        """Returns the value of the selected item or None
+        """
+        if self.selected_item==None:
+            return None
+        return self.selected_item.get_value()
+
+    def get_key(self):
+        """Returns the key of the selected item or None
+        """
+        return self.selected_key
 
     def onchange(self, newValue):
         params = list()
@@ -665,8 +655,7 @@ class DropDownItem(Widget):
         super(DropDownItem, self).__init__(w, h)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.append('1', text)
-        self.attributes['value'] = text
+        self.set_text(text)
 
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, list())
@@ -676,6 +665,20 @@ class DropDownItem(Widget):
             self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
+            
+    def set_text(self, text):
+        self.attributes['value'] = text
+        self.append('text', text)
+
+    def get_text(self):
+        return self.attributes['value']
+
+    def set_value(self, text):
+        return self.set_text(text)
+        
+    def get_value(self):
+        return self.get_text()
+
 
 
 class Image(Widget):
@@ -759,7 +762,7 @@ class Input(Widget):
     def set_value(self,value):
         self.attributes['value'] = str(value)
 
-    def value(self):
+    def get_value(self):
         """returns the new text value."""
         return self.attributes['value']
 
@@ -773,6 +776,19 @@ class Input(Widget):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(
             self.EVENT_ONCHANGE, listener, funcname)
+
+
+class SpinBox(Input):
+
+    """spin box widget usefull as numeric input field implements the onclick
+    event.
+    """
+
+    def __init__(self, w, h, defaultValue='100', min=100, max=5000, step=1):
+        super(SpinBox, self).__init__(w, h, 'number', defaultValue)
+        self.attributes['min'] = str(min)
+        self.attributes['max'] = str(max)
+        self.attributes['step'] = str(step)
 
 
 class Slider(Input):
