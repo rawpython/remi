@@ -556,6 +556,7 @@ ws.onerror = function(evt){
             widget,function = attr_call.groups()
             try:
                 content,headers = get_method_by(get_method_by(self.client.root, widget), function)()
+                self.send_response(200)
             except IOError:
                 self.send_response(404)
             for k,v in headers.iteritems():
