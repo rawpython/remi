@@ -310,6 +310,9 @@ class TextInput(Widget):
     def get_text(self):
         return self.children['text']
 
+    def set_value(self, t):
+        self.set_text(t)
+
     def get_value(self):
         #facility, same as get_text
         return self.get_text()
@@ -541,6 +544,34 @@ class ListView(Widget):
         """
         return self.selected_key
 
+    def select_by_key(self, itemKey):
+        """
+        selects an item by its key
+        """
+        self.selected_key = None
+        self.selected_item = None
+        for item in self.children.values():
+            item.attributes['selected'] = False
+
+        if itemKey in self.children.keys():
+            self.children[itemKey].attributes['selected'] = True
+            self.selected_key = itemKey
+            self.selected_item = self.children[itemKey]
+
+    def set_value(self, value):
+        """
+        selects an item by the value of a child
+        """
+        self.selected_key = None
+        self.selected_item = None
+        for k in self.children.keys():
+            item = self.children[k]
+            item.attributes['selected'] = False
+            if value==item.get_value():
+                self.selected_key = k
+                self.selected_item = item
+                self.selected_item.attributes['selected'] = True
+
 
 class ListItem(Widget):
 
@@ -591,7 +622,7 @@ class DropDown(Widget):
         
     def select_by_key(self, itemKey):
         """
-        selects the item by its key
+        selects an item by its key
         """
         for item in self.children.values():
             if 'selected' in item.attributes:

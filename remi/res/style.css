@@ -35,7 +35,7 @@ div {
 	padding: 2px;
 }
 
-.ListItem[item_selected='True'] {
+.ListItem[selected='True'] {
 	background-color: rgb(215,215,215)
 }
 
