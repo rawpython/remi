@@ -561,10 +561,10 @@ ws.onerror = function(evt){
                 self.send_response(404)
                 return
 
-            for k,v in headers.iteritems():
-                self.send_header(k, v)
+            for k in headers.keys():
+                self.send_header(k, headers[k])
             self.end_headers()
-            self.wfile.write(encodeIfPyGT3(content))
+            self.wfile.write(content)
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
