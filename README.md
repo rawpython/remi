@@ -6,7 +6,10 @@ let's start
 ===
 Just download it without installation
 ##[**download RemI**](https://github.com/dddomodossola/remi/archive/master.zip)
-Then start the test script <pre><code>python widgets_overview_app.py</code></pre>
+Run the installation:
+<pre><code>python setup.py install</code></pre>
+Then start the test script:
+<pre><code>python widgets_overview_app.py</code></pre>
 
 
 RemI
@@ -132,7 +135,19 @@ start( MyApp )
 
 Run the script. If all it's OK the gui will be opened automatically in your browser, otherwise you have to type in the address bar "http://127.0.0.1:8081".
 
-The configuration.py file contains the IP and PORT values. You can change these values in order to make the gui accessible on other devices on the network.
+
+You can customize optional parameters in the <pre><code>start</code></pre> like.
+<pre><code>
+start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True) 
+</code></pre>
+Parameters:
+- address = network interface ip
+- port: listen port
+- multiple_instance: boolean, if True multiple clients that connects to your script has different App instances
+- enable_file_cache: boolean, if True enable resource caching
+- update_interval: gui update interval in seconds
+- start_browser: boolean that defines if the browser should be opened automatically at startup
+You can change these values in order to make the gui accessible on other devices on the network.
 
 
 All widgets constructors require three standard parameters that are in sequence:
