@@ -136,7 +136,7 @@ start( MyApp )
 Run the script. If all it's OK the gui will be opened automatically in your browser, otherwise you have to type in the address bar "http://127.0.0.1:8081".
 
 
-You can customize optional parameters in the <pre><code>start</code></pre> like.
+You can customize optional parameters in the <code>start</code> call like.
 <pre><code>
 start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True) 
 </code></pre>
