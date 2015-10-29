@@ -43,5 +43,12 @@ class MyApp(App):
         self.bt.set_text('Hi!')
 
 
+# setting up remi debug level 
+#       2=all debug messages   1=error messages   0=no messages
+#import remi.server
+#remi.server.DEBUG_MODE = 2 
+
 # starts the webserver
-start(MyApp)
+# optional parameters   
+#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
+
