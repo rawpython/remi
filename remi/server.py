@@ -14,7 +14,6 @@
    limitations under the License.
 """
 import traceback
-from .configuration import runtimeInstances, MULTIPLE_INSTANCE, ENABLE_FILE_CACHE, BASE_ADDRESS, HTTP_PORT_NUMBER, IP_ADDR, UPDATE_INTERVAL, AUTOMATIC_START_BROWSER, DEBUG_MODE
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:
@@ -26,6 +25,8 @@ except:
 import mimetypes
 import webbrowser
 import struct
+import string
+import urlparse
 import binascii
 from base64 import b64encode
 import hashlib
@@ -47,15 +48,19 @@ except:
 import cgi
 
 clients = {}
+runtimeInstances = []
+
 updateTimerStarted = False  # to start the update timer only once
 
 pyLessThan3 = sys.version_info < (3,)
 
 update_semaphore = threading.Semaphore()
 
-
+DEBUG_MODE = 0 #0 - NO DEBUG  1 - ALERTS AND ERRORS  2 - MESSAGES
 DEBUG_ALERT_ERR = 1
 DEBUG_MESSAGE = 2
+
+
 def debug_message(*args, **kwargs):
     if DEBUG_MESSAGE <= DEBUG_MODE:
         print( ''.join(map(lambda v: str(v),args)) )
@@ -102,6 +107,7 @@ def get_method_by_name(rootNode, name, maxIter=5):
 
 
 def get_method_by_id(rootNode, _id, maxIter=5):
+    global runtimeInstances
     for i in runtimeInstances:
         if id(i) == _id:
             return i
@@ -125,9 +131,23 @@ def get_method_by_id(rootNode, _id, maxIter=5):
     return None
 
 
+def get_instance_key(handler):
+    if not handler.server.multiple_instance:
+        # overwrite the key value, so all clients will point the same
+        # instance
+        return 0
+    ip = handler.client_address[0]
+    unique_port = getattr(handler.server,'websocket_address', handler.server.server_address)[1]
+    return ip, unique_port
+
+
 class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
     daemon_threads = True
+
+    def __init__(self, server_address, RequestHandlerClass, multiple_instance):
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
+        self.multiple_instance = multiple_instance
 
 
 class WebSocketsHandler(socketserver.StreamRequestHandler):
@@ -212,14 +232,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def on_message(self, message):
         global update_semaphore
+        global runtimeInstances
         update_semaphore.acquire()
+
         try:
             # saving the websocket in order to update the client
-            k = self.client_address[0]
-            if not MULTIPLE_INSTANCE:
-                # overwrite the key value, so all clients will point the same
-                # instance
-                k = 0
+            k = get_instance_key(self)
             if not self in clients[k].websockets:
                 #clients[k].websockets.clear()
                 clients[k].websockets.append(self)
@@ -275,7 +293,7 @@ def parse_parametrs(p):
     return ret
 
 
-def update_clients():
+def update_clients(update_interval):
     global clients
     global update_semaphore
     update_semaphore.acquire()
@@ -296,7 +314,7 @@ def update_clients():
     except Exception as e:
         debug_alert(traceback.format_exc())
     update_semaphore.release()
-    Timer(UPDATE_INTERVAL, update_clients, ()).start()
+    Timer(update_interval, update_clients, (update_interval,)).start()
 
 
 def gui_updater(client, leaf, no_update_because_new_subchild=False):
@@ -361,16 +379,13 @@ class App(BaseHTTPRequestHandler, object):
     def instance(self):
         global clients
         global updateTimerStarted
+        global runtimeInstances
         """
         This method is used to get the Application instance previously created
         managing on this, it is possible to switch to "single instance for
         multiple clients" or "multiple instance for multiple clients" execution way
         """
-        k = self.client_address[0]
-        if not MULTIPLE_INSTANCE:
-            # overwrite the key value, so all clients will point the same
-            # instance
-            k = 0
+        k = get_instance_key(self)
         if not(k in clients.keys()):
             wshost, wsport = self.server.websocket_address
             runtimeInstances.append(self)
@@ -461,7 +476,7 @@ ws.onerror = function(evt){
 
         if updateTimerStarted == False:
             updateTimerStarted = True
-            Timer(UPDATE_INTERVAL, update_clients, ()).start()
+            Timer(self.server.update_interval, update_clients, (self.server.update_interval,)).start()
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
@@ -546,7 +561,7 @@ ws.onerror = function(evt){
             mimetype,encoding = mimetypes.guess_type(filename)
             self.send_response(200)
             self.send_header('Content-type', mimetype if mimetype else 'application/octet-stream')
-            if ENABLE_FILE_CACHE:
+            if self.server.enable_file_cache:
                 self.send_header('Cache-Control', 'public, max-age=86400')
             self.end_headers()
             with open(filename, 'r+b') as f:
@@ -575,39 +590,52 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """
     daemon_threads = True
 
-    def __init__(self, server_address, RequestHandlerClass, websocket_address):
+    def __init__(self, server_address, RequestHandlerClass, websocket_address, multiple_instance, enable_file_cache, update_interval):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
+        self.multiple_instance = multiple_instance
+        self.enable_file_cache = enable_file_cache
+        self.update_interval = update_interval
 
 
 class Server(object):
-    def __init__(self, gui_class, start=True):
+    def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, multiple_instance=False,
+                 enable_file_cache=True, update_interval=0.1, start_browser=True):
         self._gui = gui_class
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
+        self._address = address
+        self._sport = port
+        self._multiple_instance = multiple_instance
+        self._enable_file_cache = enable_file_cache
+        self._update_interval = update_interval
+        self._start_browser = start_browser
         if start:
             self.start()
 
     def start(self):
         # here the websocket is started on an ephemereal port
-        self._wsserver = ThreadedWebsocketServer((IP_ADDR, 0), WebSocketsHandler)
+        self._wsserver = ThreadedWebsocketServer((self._address, 0), WebSocketsHandler, self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
-        debug_message('Started websocket server %s:%s', wshost, wsport)
+        debug_message('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
         self._wsth.daemon = True
         self._wsth.start()
         
         # Create a web server and define the handler to manage the incoming
         # request
-        self._sserver = ThreadedHTTPServer(('', HTTP_PORT_NUMBER), self._gui, (wshost, wsport))
+        self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui,
+                                           (wshost, wsport), self._multiple_instance, self._enable_file_cache,
+                                           self._update_interval)
         shost, sport = self._sserver.socket.getsockname()[:2]
-        debug_message('Started httpserver %s:%s' % (shost, sport))
-        if AUTOMATIC_START_BROWSER:
+        base_address = 'http://%s:%s/' % (shost, sport)
+        debug_message('Started httpserver %s' % base_address)
+        if self._start_browser:
             try:
                 import android
-                android.webbrowser.open(BASE_ADDRESS)
+                android.webbrowser.open(base_address)
             except:
-                webbrowser.open(BASE_ADDRESS)
+                webbrowser.open(base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
         self._sth.daemon = True
         self._sth.start()
@@ -631,8 +659,8 @@ class Server(object):
         self._sth.join()
 
 
-def start(mainGuiClass):
+def start(mainGuiClass, **kwargs):
     """This method starts the webserver with a specific App subclass."""
-    s = Server(mainGuiClass, start=True)
+    s = Server(mainGuiClass, start=True, **kwargs)
     s.serve_forever()
 
