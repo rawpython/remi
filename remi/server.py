@@ -26,7 +26,6 @@ import mimetypes
 import webbrowser
 import struct
 import string
-import urlparse
 import binascii
 from base64 import b64encode
 import hashlib
