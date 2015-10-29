@@ -242,7 +242,7 @@ class MyApp(App):
 # setting up remi debug level 
 #       2=all debug messages   1=error messages   0=no messages
 #import remi.server
-#remi.server.DEBUG_MODE = 2 
+#remi.server.DEBUG_MODE = 2
 
 # starts the webserver
 # optional parameters   

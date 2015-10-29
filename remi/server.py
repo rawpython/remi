@@ -386,10 +386,14 @@ class App(BaseHTTPRequestHandler, object):
         """
         k = get_instance_key(self)
         if not(k in clients.keys()):
-            wshost, wsport = self.server.websocket_address
             runtimeInstances.append(self)
             clients[k] = self
-            clients[k].attachments = """
+        wshost, wsport = self.server.websocket_address
+        net_interface_ip = self.connection.getsockname()[0]
+
+        #refreshing the script every instance() call, beacuse of different net_interface_ip connections
+        #can happens for the same 'k'
+        clients[k].attachments = """
 <script>
 var paramPacketize = function (ps){
     var ret = '';
@@ -466,7 +470,7 @@ ws.onerror = function(evt){
     /* websocket is closed. */
     alert('Websocket error...');
 };
-</script>""" % (wshost, wsport)
+</script>""" % (net_interface_ip, wsport)
 
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = list()
@@ -627,7 +631,10 @@ class Server(object):
                                            (wshost, wsport), self._multiple_instance, self._enable_file_cache,
                                            self._update_interval)
         shost, sport = self._sserver.socket.getsockname()[:2]
-        base_address = 'http://%s:%s/' % (shost, sport)
+        #when listening on multiple net interfaces the browsers connects to localhost
+        if shost=='0.0.0.0':
+            shost = '127.0.0.1'
+        base_address = 'http://%s:%s/' % (shost,sport)
         debug_message('Started httpserver %s' % base_address)
         if self._start_browser:
             try:
