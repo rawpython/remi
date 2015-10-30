@@ -976,14 +976,13 @@ class FileFolderNavigator(Widget):
 
     def get_selected_filefolders(self):
         return self.selectionlist
-        
+
 
 class FileFolderItem(Widget):
 
-    """FileFolderItem widget for the FileFolderNavigator implements the onclick event.
-    """
+    """FileFolderItem widget for the FileFolderNavigator implements the onclick event."""
 
-    def __init__(self, w, h, text, isFolder = False):
+    def __init__(self, w, h, text, isFolder=False):
         super(FileFolderItem, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -992,12 +991,8 @@ class FileFolderItem(Widget):
         if isFolder:
             self.icon.set_on_click_listener(self,self.EVENT_ONCLICK)
         self.icon.attributes['class'] = 'FileFolderItemIcon'
-
-        iconFile = 'res/file.png'
-        if isFolder:
-            iconFile = 'res/folder.png'
-
-        self.icon.style['background-image'] = "url('" + iconFile + "')"
+        icon_file = 'res/folder.png' if isFolder else 'res/file.png'
+        self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(w-33, h, text)
         self.label.set_on_click_listener(self,self.EVENT_ONSELECTION)
         self.append('icon', self.icon)
@@ -1005,31 +1000,22 @@ class FileFolderItem(Widget):
         self.selected = False
 
     def onclick(self):
-        params = list()
-        params.append(self)
-        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
     def set_on_click_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def set_selected(self, selected):
         self.selected = selected
-        if self.selected:
-            self.style['color'] = 'red'
-        else:
-            self.style['color'] = 'black'
+        self.style['color'] = 'red' if self.selected else 'black'
 
     def onselection(self):
         self.set_selected(not self.selected)
-        params = list()
-        params.append(self)
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self])
 
     def set_on_selection_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONSELECTION, listener, funcname)
-            
+        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
+
     def set_text(self, t):
         """sets the text content."""
         self.children['text'].set_text(t)
@@ -1043,14 +1029,13 @@ class FileSelectionDialog(GenericDialog):
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
 
-    def __init__(self, width = 600, fileFolderNavigatorHeight = 210, title = 'File dialog', message = 'Select files and folders', multiple_selection = True, selection_folder = '.'):
+    def __init__(self, width = 600, fileFolderNavigatorHeight=210, title='File dialog',
+                 message='Select files and folders', multiple_selection=True, selection_folder='.'):
         super(FileSelectionDialog, self).__init__(width, 160, title, message)
-        
-        self.fileFolderNavigator = FileFolderNavigator(width-20,fileFolderNavigatorHeight,multiple_selection,selection_folder)
-
+        self.fileFolderNavigator = FileFolderNavigator(width-20, fileFolderNavigatorHeight,
+                                                       multiple_selection, selection_folder)
         self.add_field('fileFolderNavigator',self.fileFolderNavigator)
-
-        self.EVENT_ONCONFIRMVALUE = 'confirm_value'        
+        self.EVENT_ONCONFIRMVALUE = 'confirm_value'
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
 
     def confirm_value(self):
@@ -1058,13 +1043,11 @@ class FileSelectionDialog(GenericDialog):
            propagates the string content of the input field
         """
         self.hide()
-        params = list()
-        params.append(self.fileFolderNavigator.get_selection_list())
+        params = [self.fileFolderNavigator.get_selection_list()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
     def set_on_confirm_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCONFIRMVALUE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
 class Menu(Widget):
