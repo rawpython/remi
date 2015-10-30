@@ -1081,19 +1081,19 @@ class MenuItem(Widget):
     """MenuItem widget can contain other MenuItem."""
 
     def __init__(self, w, h, text):
+        super(MenuItem, self).__init__(w, h)
         self.w = w
         self.h = h
         self.subcontainer = None
-        super(MenuItem, self).__init__(w, h)
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
         self.append = self.addSubMenu
     
     def addSubMenu(self, key, value):
-        if self.subcontainer == None:
+        if self.subcontainer is None:
             self.subcontainer = Menu(self.w, self.h, Widget.LAYOUT_VERTICAL)
-            super(self.__class__, self).append('subcontainer', self.subcontainer)
+            super(MenuItem, self).append('subcontainer', self.subcontainer)
         self.subcontainer.append(key, value)
 
     def set_text(self, text):
@@ -1103,13 +1103,10 @@ class MenuItem(Widget):
         return self.children['text']
 
     def onclick(self):
-        params = list()
-        #params.append()
-        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(
             self.EVENT_ONCLICK, listener, funcname)
 
