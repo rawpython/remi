@@ -1124,61 +1124,61 @@ class FileUploader(Widget):
 
     def __init__(self, w, h, savepath='./', multiple_selection_allowed=False):
         super(FileUploader, self).__init__(w, h)
-        self.savepath = savepath
-        self.multiple_selection_allowed = multiple_selection_allowed
+        self._savepath = savepath
+        self._multiple_selection_allowed = multiple_selection_allowed
         self.type = 'input'
-        #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
-        """
-        <input type="file" id="fileinput" multiple="multiple" accept="image/*" />
-        """
-        self.attributes['type']='file'
+        self.attributes['type'] = 'file'
         if multiple_selection_allowed:
-            self.attributes['multiple']='multiple'
-        self.attributes['accept']='*.*'
+            self.attributes['multiple'] = 'multiple'
+        self.attributes['accept'] = '*.*'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.EVENT_ON_SUCCESS = 'onsuccess'
         self.EVENT_ON_FAILED = 'onfailed'
-        fileUploadScript = "function uploadFile(savePath,file){\
-            var url = '/';\
-            var xhr = new XMLHttpRequest();\
-            var fd = new FormData();\
-            xhr.open('POST', url, true);\
-            xhr.setRequestHeader('savepath', savePath);\
-            xhr.setRequestHeader('filename', file.name);\
-            xhr.onreadystatechange = function() {\
-                if (xhr.readyState == 4 && xhr.status == 200) {\
-                    /* Every thing ok, file uploaded */\
-                    var params={};params['filename']=file.name;\
-                    sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ON_SUCCESS + "',params);\
-                    console.log('upload success: ' + file.name);\
-                }else if(xhr.status == 400){\
-                    var params={};params['filename']=file.name;\
-                    sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ON_FAILED + "',params);\
-                    console.log('upload failed: ' + file.name);\
-                }\
-            };\
-            fd.append('upload_file', file);\
-            xhr.send(fd);\
-        };"
-        self.attributes[self.EVENT_ONCHANGE] = fileUploadScript + "var files = this.files;for(var i=0; i<files.length; i++){uploadFile('" + self.savepath + "',files[i]);}"
+
+        fileUploadScript = """
+        function uploadFile(savePath,file){
+            var url = '/';
+            var xhr = new XMLHttpRequest();
+            var fd = new FormData();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('savepath', savePath);
+            xhr.setRequestHeader('filename', file.name);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    /* Every thing ok, file uploaded */
+                    var params={};params['filename']=file.name;
+                    sendCallbackParam('%(id)s','%(evt_success)s',params);
+                    console.log('upload success: ' + file.name);
+                }else if(xhr.status == 400){
+                    var params={};params['filename']=file.name;
+                    sendCallbackParam('%(id)s','%(evt_failed)s',params);
+                    console.log('upload failed: ' + file.name);
+                }
+            };
+            fd.append('upload_file', file);
+            xhr.send(fd);
+        };
+        var files = this.files;for(var i=0; i<files.length; i++){uploadFile('%(savepath)s',files[i]);}
+        """ % {'id':id(self),
+               'evt_success':self.EVENT_ON_SUCCESS, 'evt_failed':self.EVENT_ON_FAILED,
+               'savepath':self._savepath}
+
+        fileUploadScript += "var files = this.files;for(var i=0; i<files.length; i++){uploadFile('%s',files[i]);}"
+
+        self.attributes[self.EVENT_ONCHANGE] = fileUploadScript
         
     def onsuccess(self,filename):
-        params = list()
-        params.append(filename)
-        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, params)
+        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
 
     def set_on_success_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ON_SUCCESS, listener, funcname)
 
     def onfailed(self,filename):
-        params = list()
-        params.append(filename)
-        return self.eventManager.propagate(self.EVENT_ON_FAILED, params)
+        return self.eventManager.propagate(self.EVENT_ON_FAILED, [filename])
 
     def set_on_failed_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ON_FAILED, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, funcname)
         
 
 class FileDownloader(Widget):
