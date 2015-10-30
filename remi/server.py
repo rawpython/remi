@@ -588,13 +588,9 @@ ws.onerror = function(evt){
             self.end_headers()
             self.wfile.write(content)
 
+
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
-    """This class allows to handle requests in separated threads.
-
-    No further content needed, don't touch this.
-
-    """
     daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass, websocket_address, multiple_instance, enable_file_cache, update_interval, *userdata):
@@ -665,7 +661,6 @@ class Server(object):
             # signal.pause() is missing for Windows; wait 1ms and loop instead
             while True:
                 time.sleep(1)
-			
 
     def stop(self):
         self._wsserver.shutdown()
