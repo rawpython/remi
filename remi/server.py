@@ -328,7 +328,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
     __id = str(id(leaf))
     # if the widget is not contained in the copy
     if not (__id in client.old_runtime_widgets.keys()):
-        client.old_runtime_widgets[__id] = leaf.repr_without_children(client)
+        client.old_runtime_widgets[__id] = leaf.repr(client,False)
         if not no_update_because_new_subchild:
             no_update_because_new_subchild = True
             # we ensure that the clients have an updated version
@@ -352,7 +352,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
     for subleaf in leaf.children.values():
         gui_updater(client, subleaf, no_update_because_new_subchild)
 
-    newhtml = leaf.repr_without_children(client)
+    newhtml = leaf.repr(client,False)
     if newhtml != client.old_runtime_widgets[__id]:
         #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:

@@ -48,7 +48,76 @@ class EventManager(object):
         self.listeners[eventname] = {'instance':instance, 'funcname':funcname}
 
 
-class Widget(object):
+class Meta(object):
+    def __init__(self):
+        # the runtime instances are processed every time a requests arrives, searching for the called method
+        # if a class instance is not present in the runtimeInstances, it will
+        # we not callable
+        runtimeInstances.append(self)
+
+        self.renderChildrenList = list()
+        self.children = {}
+        self.attributes = {}  # properties as class id style
+
+        self.type = 'meta'
+        self.attributes['id'] = str(id(self))
+        self.attributes['class'] = 'Meta'
+
+    def __setitem__(self, key, value):
+        """it is used for fast access to 'self.attributes[]'."""
+        self.attributes[key] = value
+
+    @staticmethod
+    def _replace_client_specific_values(html, client):
+        return html
+
+    def repr(self, client, include_children = True):
+        """it is used to automatically represent the object to HTML format
+        packs all the attributes, children and so on."""
+        classname = self.__class__.__name__
+
+        # concatenating innerHTML. in case of html object we use repr, in case
+        # of string we use directly the content
+        innerHTML = ''
+        for s in self.renderChildrenList:
+            if isinstance(s, type('')):
+                innerHTML = innerHTML + s
+            elif include_children:
+                innerHTML = innerHTML + s.repr(client)
+
+        html = '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
+            v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
+        return self._replace_client_specific_values(html, client)
+
+    def append(self, key, value):
+        """it allows to add child to this.
+
+        The key can be everything you want, in order to access to the
+        specific child in this way 'widget.children[key]'.
+
+        """
+        if hasattr(value, 'attributes'):
+            value.attributes['parent_widget'] = str(id(self))
+
+        if key in self.children.keys():
+            self.renderChildrenList.remove(self.children[key])
+        self.renderChildrenList.append(value)
+
+        self.children[key] = value
+
+    def remove(self, child):
+        if child in self.children.values():
+            #runtimeInstances.pop( runtimeInstances.index( self.children[key] ) )
+            self.renderChildrenList.remove(child)
+            for k in self.children.keys():
+                if str(id(self.children[k])) == str(id(child)):
+                    self.children.pop(k)
+                    #when the child is removed we stop the iteration
+                    #this implies that a child replication should not be allowed
+                    break
+
+
+class Widget(Meta):
 
     """base class for gui widgets.
 
@@ -68,15 +137,8 @@ class Widget(object):
         h = numeric height
         layout_orientation = specifies the "float" css attribute
         widget_spacing = specifies the "margin" css attribute for the children"""
+        super(Widget,self).__init__()
 
-        # the runtime instances are processed every time a requests arrives, searching for the called method
-        # if a class instance is not present in the runtimeInstances, it will
-        # we not callable
-        runtimeInstances.append(self)
-
-        self.renderChildrenList = list()
-        self.children = {}
-        self.attributes = {}  # properties as class id style
         self.style = {}
 
         self.type = 'div'
@@ -102,7 +164,6 @@ class Widget(object):
         self.EVENT_ONUPDATE = 'onupdate'
 
         self.attributes['class'] = self.__class__.__name__
-        self.attributes['id'] = str(id(self))
 
         if w > -1:
             self.style['width'] = to_pix(w)
@@ -114,49 +175,12 @@ class Widget(object):
 
         self.eventManager = EventManager()
 
-    @staticmethod
-    def _replace_client_specific_values(html, client):
-        return html
-
-    def repr(self, client):
+    def repr(self, client, include_children = True):
         """it is used to automatically represent the widget to HTML format
         packs all the attributes, children and so on."""
         self['style'] = jsonize(self.style)
-        classname = self.__class__.__name__
 
-        # concatenating innerHTML. in case of html object we use repr, in case
-        # of string we use directly the content
-        innerHTML = ''
-        for s in self.renderChildrenList:
-            if isinstance(s, type('')):
-                innerHTML = innerHTML + s
-            else:
-                innerHTML = innerHTML + s.repr(client)
-
-        html = '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
-            v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
-        return self._replace_client_specific_values(html, client)
-
-    def repr_without_children(self, client):
-        """it is used to automatically represent the widget to HTML format
-        packs all the attributes."""
-        self['style'] = jsonize(self.style)
-        classname = self.__class__.__name__
-
-        # concatenating innerHTML. in case of html object we use repr, in case
-        # of string we use directly the content
-        innerHTML = ''
-        for s in self.renderChildrenList:
-            if isinstance(s, type('')):
-                innerHTML = innerHTML + s
-
-        html = '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
-            v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
-        return self._replace_client_specific_values(html, client)
-
-    def __setitem__(self, key, value):
-        """it is used for fast access to 'self.attributes[]'."""
-        self.attributes[key] = value
+        return super(Widget,self).repr(client, include_children)
 
     def append(self, key, value):
         """it allows to add child widgets to this.
@@ -165,14 +189,7 @@ class Widget(object):
         specific child in this way 'widget.children[key]'.
 
         """
-        if hasattr(value, 'attributes'):
-            value.attributes['parent_widget'] = str(id(self))
-
-        if key in self.children.keys():
-            self.renderChildrenList.remove(self.children[key])
-        self.renderChildrenList.append(value)
-
-        self.children[key] = value
+        super(Widget,self).append(key, value)
 
         if hasattr(self.children[key], 'style'):
             spacing = to_pix(self.widget_spacing)
@@ -192,17 +209,6 @@ class Widget(object):
                 else:
                     self.children[key].style['float'] = 'left'
 
-    def remove(self, widget):
-        if widget in self.children.values():
-            #runtimeInstances.pop( runtimeInstances.index( self.children[key] ) )
-            self.renderChildrenList.remove(widget)
-            for k in self.children.keys():
-                if str(id(self.children[k])) == str(id(widget)):
-                    self.children.pop(k)
-                    #when the child is removed we stop the iteration
-                    #this implies that a child replication should not be allowed
-                    break
-
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, list())
 
@@ -221,15 +227,6 @@ class Widget(object):
             self.EVENT_ONBLUR] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONBLUR + "');"
         self.eventManager.register_listener(
             self.EVENT_ONBLUR, listener, funcname)
-
-    def __getitem__(self, key):
-        """This allows to set the parameter "Content type" when you return a widget
-        you can return a widget in a callback in oreder to show it as main
-        widget, now without specifing the content-type"""
-        if key == 0:
-            return self
-        else:
-            return 'text/html'
 
     def show(self, baseAppInstance):
         """Allows to show the widget as root window"""
@@ -964,7 +961,6 @@ class FileFolderNavigator(Widget):
         if f in self.selectionlist:
             self.selectionlist.remove(f)
         else:
-            print("element not in the list, appending\n")
             self.selectionlist.append(f)
 
     def on_folder_item_click(self,folderitem):
@@ -1142,8 +1138,6 @@ class FileUploader(Widget):
         """ % {'id':id(self),
                'evt_success':self.EVENT_ON_SUCCESS, 'evt_failed':self.EVENT_ON_FAILED,
                'savepath':self._savepath}
-
-        fileUploadScript += "var files = this.files;for(var i=0; i<files.length; i++){uploadFile('%s',files[i]);}"
 
         self.attributes[self.EVENT_ONCHANGE] = fileUploadScript
         
