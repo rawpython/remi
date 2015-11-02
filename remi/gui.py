@@ -48,7 +48,7 @@ class EventManager(object):
         self.listeners[eventname] = {'instance':instance, 'funcname':funcname}
 
 
-class Meta(object):
+class Tag(object):
     def __init__(self):
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
@@ -59,9 +59,9 @@ class Meta(object):
         self.children = {}
         self.attributes = {}  # properties as class id style
 
-        self.type = 'meta'
+        self.type = 'tag'
         self.attributes['id'] = str(id(self))
-        self.attributes['class'] = 'Meta'
+        self.attributes['class'] = self.__class__.__name__
 
     def __setitem__(self, key, value):
         """it is used for fast access to 'self.attributes[]'."""
@@ -117,7 +117,7 @@ class Meta(object):
                     break
 
 
-class Widget(Meta):
+class Widget(Tag):
 
     """base class for gui widgets.
 
@@ -162,8 +162,6 @@ class Widget(Meta):
         self.EVENT_ONBLUR = 'onblur'
 
         self.EVENT_ONUPDATE = 'onupdate'
-
-        self.attributes['class'] = self.__class__.__name__
 
         if w > -1:
             self.style['width'] = to_pix(w)
