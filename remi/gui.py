@@ -409,8 +409,8 @@ class GenericDialog(Widget):
         self.append('3', self.container)
         self.append('4', hlay)
 
-        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCONFIRM + "');"
-        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCANCEL + "');"
+        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCONFIRM)
+        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCANCEL)
 
         self.inputs = {}
 
@@ -420,47 +420,44 @@ class GenericDialog(Widget):
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
         field_width = from_pix(field.style['width']) + fields_spacing*4
-        self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
+        self.style['height'] = to_pix(from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
-        label = Label( (self.width-20)-field_width-1, 30, labelDescription )
-        container = Widget(self.width-20, field_height , Widget.LAYOUT_HORIZONTAL, fields_spacing)
+        label = Label(self.width-20-field_width-1, 30, labelDescription )
+        container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
         container.append('lbl' + key,label)
-        container.append(key,self.inputs[key])
-        self.container.append(key,container)
+        container.append(key, self.inputs[key])
+        self.container.append(key, container)
         
     def add_field(self,key,field):
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
         field_width = from_pix(field.style['width']) + fields_spacing*4
-        self.style['height'] = to_pix( from_pix(self.style['height']) + field_height)
+        self.style['height'] = to_pix(from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
-        container = Widget(self.width-20, field_height , Widget.LAYOUT_HORIZONTAL, fields_spacing)
-        container.append(key,self.inputs[key])
-        self.container.append(key,container)
+        container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
+        container.append(key, self.inputs[key])
+        self.container.append(key, container)
 
-    def get_field(self,key):
+    def get_field(self, key):
         return self.inputs[key]
 
     def confirm_dialog(self):
         """event called pressing on OK button.
         """
         self.hide()
-        params = list()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRM, params)
+        return self.eventManager.propagate(self.EVENT_ONCONFIRM, [])
 
     def set_on_confirm_dialog_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCONFIRM, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCONFIRM, listener, funcname)
 
     def cancel_dialog(self):
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCANCEL, list())
+        return self.eventManager.propagate(self.EVENT_ONCANCEL, [])
 
     def set_on_cancel_dialog_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCANCEL, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, funcname)
 
 
 class InputDialog(GenericDialog):
@@ -474,7 +471,7 @@ class InputDialog(GenericDialog):
         self.inputText = TextInput(width - 20, 30)
         self.add_field('textinput',self.inputText)
 
-        self.EVENT_ONCONFIRMVALUE = 'confirm_value'        
+        self.EVENT_ONCONFIRMVALUE = 'confirm_value'
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
 
     def confirm_value(self):
