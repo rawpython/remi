@@ -614,8 +614,10 @@ class DropDown(Widget):
     def __init__(self, w, h):
         super(DropDown, self).__init__(w, h)
         self.type = 'select'
-        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
-            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
+        self.attributes[self.EVENT_ONCHANGE] = \
+            "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
+                                                               'evt':self.EVENT_ONCHANGE}
         self.selected_item = None
         self.selected_key = None
         
@@ -636,7 +638,7 @@ class DropDown(Widget):
         """
         self.selected_key = None
         self.selected_item = None
-        for k in self.children.keys():
+        for k in self.children:
             item = self.children[k]
             if item.attributes['value'] == newValue:
                 item.attributes['selected'] = 'selected'
@@ -645,11 +647,11 @@ class DropDown(Widget):
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
-                    
+
     def get_value(self):
         """Returns the value of the selected item or None
         """
-        if self.selected_item==None:
+        if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
@@ -659,15 +661,12 @@ class DropDown(Widget):
         return self.selected_key
 
     def onchange(self, newValue):
-        params = list()
-        params.append(newValue)
         debug_message('combo box. selected', newValue)
         self.set_value(newValue)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
     def set_on_change_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
 class DropDownItem(Widget):
@@ -682,7 +681,7 @@ class DropDownItem(Widget):
         self.set_text(text)
 
     def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%(id)s','%(evt)s');" % {'id':id(self),
