@@ -594,16 +594,7 @@ class ListItem(Widget):
         return self.get_text()
 
     def onclick(self):
-        params = list()
-        params.append(self)
-        return self.eventManager.propagate(self.EVENT_ONCLICK, params)
-
-    def set_on_click_listener(self, listener, funcname):
-        """WARNING!!! DO NOT USE. If used disables the set_on_selection_listener of the ListView"""
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
 
 class DropDown(Widget):
