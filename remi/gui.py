@@ -482,13 +482,10 @@ class InputDialog(GenericDialog):
         propagates the string content of the input field
         """
         self.hide()
-        params = list()
-        params.append(self.inputText.get_text())
-        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [self.inputText.get_text()])
 
     def set_on_confirm_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(
-            self.EVENT_ONCONFIRMVALUE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
 class ListView(Widget):
