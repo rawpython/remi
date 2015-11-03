@@ -14,11 +14,11 @@ Then start the test script:
 
 RemI
 ===
-Platform indipendent python gui library. In less than 100 Kbytes of source code, perfect for your diet.
+Platform independent python gui library. In less than 100 Kbytes of source code, perfect for your diet.
 
 ![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/screenshot.png "Widgets overview")
 
-It allows to create platform indipendent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. You have to write NO HTML code, because the library itself converts the python code automatically in HTML. When your app starts, it starts a webserver that will be accessible on your network.
+It allows to create platform independent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. You have to write NO HTML code, because the library itself converts the python code automatically in HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
 Why another gui lib?
 Ok, Kivy is the best, Tk is historical, pyQt is also good, but for every platform that appears we have to wait a porting. This lib allows to show a user interface everywhere there is a browser.
@@ -84,14 +84,14 @@ In order to see the user interface, open your preferred browser (I use Chrome) a
 You can change the url address, edit the "configuration.py" file.
 
 Tested on Android, Linux, Windows with Google Chrome web browser.
-Usefull on raspberry pi for python script development. It allows to interact with your raspberry remotely from your mobile device.
+Useful on raspberry pi for python script development. It allows to interact with your raspberry remotely from your mobile device.
 
 
 FAQ
 ===
 - Should I know HTML? NO, It is not required, you have to code only in python.
 - Can I use this library with other browsers? Yes you can, but I haven't tested it and probably something couldn't work fine.
-- It is open source? For sure!
+- Is it open source? For sure!
 - Where is the documentation? I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
 
@@ -153,12 +153,12 @@ You can change these values in order to make the gui accessible on other devices
 All widgets constructors require three standard parameters that are in sequence:
 - width in pixel
 - height in pixel
-- layout orientation (boolean, where True means orizontal orientation)
+- layout orientation (boolean, where True means horizontal orientation)
 
 
 Events and callbacks
 ===
-Widgets exposes a set of events that happens during user iteraction. 
+Widgets exposes a set of events that happens during user interaction. 
 Such events are a convenient way to define the application behavior.
 Each widget has its own callbacks, depending on the type of input it allows.
 The specific callbacks for the widgets will be illustrated later.
