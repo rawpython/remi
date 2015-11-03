@@ -699,7 +699,7 @@ class DropDownItem(Widget):
 
     def set_value(self, text):
         return self.set_text(text)
-        
+
     def get_value(self):
         return self.get_text()
 
@@ -1061,7 +1061,7 @@ class MenuItem(Widget):
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
         self.append = self.addSubMenu
-    
+
     def addSubMenu(self, key, value):
         if self.subcontainer is None:
             self.subcontainer = Menu(self.w, self.h, Widget.LAYOUT_VERTICAL)
@@ -1079,8 +1079,7 @@ class MenuItem(Widget):
 
     def set_on_click_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class FileUploader(Widget):
