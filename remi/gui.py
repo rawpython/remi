@@ -855,65 +855,63 @@ class FileFolderNavigator(Widget):
     """
 
     def __init__(self, w, h, multiple_selection,selection_folder):
+        super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
         self.w = w
         self.h = h
         self.multiple_selection = multiple_selection
         self.sep = os.sep #'/' #default separator in path os.sep
-        super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
-        
-        self.selectionlist = list() #here are stored selected files and folders
-        self.controlsContainer = Widget(w,25,Widget.LAYOUT_HORIZONTAL)
-        self.controlBack = Button(45,25,'Up')
-        self.controlBack.set_on_click_listener(self,'dir_go_back')
-        self.controlGo = Button(45,25,'Go >>')
-        self.controlGo.set_on_click_listener(self,'dir_go')
-        self.pathEditor = TextInput(w-90,25)
+
+        self.selectionlist = list()  # here are stored selected files and folders
+        self.controlsContainer = Widget(w, 25, Widget.LAYOUT_HORIZONTAL)
+        self.controlBack = Button(45, 25, 'Up')
+        self.controlBack.set_on_click_listener(self, 'dir_go_back')
+        self.controlGo = Button(45, 25, 'Go >>')
+        self.controlGo.set_on_click_listener(self, 'dir_go')
+        self.pathEditor = TextInput(w-90, 25)
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
-        self.controlsContainer.append('1',self.controlBack)
-        self.controlsContainer.append('2',self.pathEditor)
-        self.controlsContainer.append('3',self.controlGo)
-        
-        self.itemContainer = Widget(w,h-25,Widget.LAYOUT_VERTICAL)
+        self.controlsContainer.append('1', self.controlBack)
+        self.controlsContainer.append('2', self.pathEditor)
+        self.controlsContainer.append('3', self.controlGo)
+
+        self.itemContainer = Widget(w, h-25, Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
-        
-        self.append('controls',self.controlsContainer)
-        self.append('items',self.itemContainer)
-        
+
+        self.append('controls', self.controlsContainer)
+        self.append('items', self.itemContainer)
+
         self.folderItems = list()
-        self.chdir(selection_folder) #move to actual working directory
-    
+        self.chdir(selection_folder)  # move to actual working directory
+
     def get_selection_list(self):
         return self.selectionlist
-        
+
     def populate_folder_items(self,directory):
         fpath = directory + self.sep
         debug_message("FileFolderNavigator - populate_folder_items")
         l = os.listdir(directory)
-        #used to restore a valid path after a wrong edit in the path editor
+        # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory 
-        #we remove the container avoiding graphic update adding items
-        #this speeds up the navigation
+        # we remove the container avoiding graphic update adding items
+        # this speeds up the navigation
         self.remove(self.itemContainer)
-        #creation of a new instance of a itemContainer
+        # creation of a new instance of a itemContainer
         self.itemContainer = Widget(self.w,self.h-25,Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
-        
+
         for i in l:
-            isFolder = False
-            if not os.path.isfile(fpath+i):
-                isFolder = True
-            fi = FileFolderItem(self.w,33,i,isFolder)
-            fi.set_on_click_listener(self,'on_folder_item_click') #navigation purpose
-            fi.set_on_selection_listener(self,'on_folder_item_selected') #selection purpose
+            isFolder = not os.path.isfile(fpath+i)
+            fi = FileFolderItem(self.w, 33, i, isFolder)
+            fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
+            fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
             self.folderItems.append(fi)
-            self.itemContainer.append(i,fi)
-        self.append('items',self.itemContainer)
+            self.itemContainer.append(i, fi)
+        self.append('items', self.itemContainer)
 
     def dir_go_back(self):
-        curpath = os.getcwd() #backup the path
+        curpath = os.getcwd()  # backup the path
         try:
             os.chdir( self.pathEditor.get_text() )
             os.chdir('..')
@@ -921,40 +919,40 @@ class FileFolderNavigator(Widget):
         except Exception as e:
             self.pathEditor.set_text(self.lastValidPath)
             debug_alert(traceback.format_exc())
-        os.chdir( curpath ) #restore the path
+        os.chdir(curpath)  # restore the path
 
     def dir_go(self):
-        #when the GO button is pressed, it is supposed that the pathEditor is changed
-        curpath = os.getcwd() #backup the path
+        # when the GO button is pressed, it is supposed that the pathEditor is changed
+        curpath = os.getcwd()  # backup the path
         try:
-            os.chdir( self.pathEditor.get_text() )
+            os.chdir(self.pathEditor.get_text())
             self.chdir(os.getcwd())
         except Exception as e:
             debug_alert(traceback.format_exc())
             self.pathEditor.set_text(self.lastValidPath)
-        os.chdir( curpath ) #restore the path
-        
+        os.chdir(curpath)  # restore the path
+
     def chdir(self, directory):
-        curpath = os.getcwd() #backup the path
+        curpath = os.getcwd()  # backup the path
         debug_message("FileFolderNavigator - chdir:" + directory + "\n")
         for c in self.folderItems:
-            self.itemContainer.remove(c) #remove the file and folders from the view
-        self.folderItems = list()
-        self.selectionlist = list() #reset selected file list
+            self.itemContainer.remove(c)  # remove the file and folders from the view
+        self.folderItems = []
+        self.selectionlist = []  # reset selected file list
         os.chdir(directory)
         directory = os.getcwd()
         self.populate_folder_items(directory)
         self.pathEditor.set_text(directory)
-        os.chdir( curpath ) #restore the path
-        
+        os.chdir(curpath)  # restore the path
+
     def on_folder_item_selected(self,folderitem):
         if not self.multiple_selection:
-            self.selectionlist = list()
+            self.selectionlist = []
             for c in self.folderItems:
                 c.set_selected(False)
             folderitem.set_selected(True)
         debug_message("FileFolderNavigator - on_folder_item_click")
-        #when an item is clicked it is added to the file selection list
+        # when an item is clicked it is added to the file selection list
         f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
         if f in self.selectionlist:
             self.selectionlist.remove(f)
@@ -963,7 +961,7 @@ class FileFolderNavigator(Widget):
 
     def on_folder_item_click(self,folderitem):
         debug_message("FileFolderNavigator - on_folder_item_dblclick")
-        #when an item is clicked two time
+        # when an item is clicked two time
         f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
         if not os.path.isfile(f):
             self.chdir(f)
@@ -981,14 +979,14 @@ class FileFolderItem(Widget):
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.icon = Widget(33, h)
-        #the icon click activates the onselection event, that is propagates to registered listener
+        # the icon click activates the onselection event, that is propagates to registered listener
         if isFolder:
-            self.icon.set_on_click_listener(self,self.EVENT_ONCLICK)
+            self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
         self.icon.attributes['class'] = 'FileFolderItemIcon'
         icon_file = 'res/folder.png' if isFolder else 'res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(w-33, h, text)
-        self.label.set_on_click_listener(self,self.EVENT_ONSELECTION)
+        self.label.set_on_click_listener(self, self.EVENT_ONSELECTION)
         self.append('icon', self.icon)
         self.append('text', self.label)
         self.selected = False
