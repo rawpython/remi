@@ -35,6 +35,7 @@ import threading
 import signal
 import time
 import os.path
+import os
 import re
 from threading import Timer
 try:
@@ -646,7 +647,12 @@ class Server(object):
                 import android
                 android.webbrowser.open(base_address)
             except:
-                webbrowser.open(base_address)
+                # prevent webbrowser from opening automatically in IE on Windows
+                if os.name == 'nt':
+                    chrome_path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe %s'
+                    webbrowser.get(chrome_path).open(base_address)
+                else:
+                    webbrowser.open(base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
         self._sth.daemon = True
         self._sth.start()
