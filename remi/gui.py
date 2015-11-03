@@ -270,14 +270,14 @@ class TextInput(Widget):
     """multiline text area widget implements the onclick event.
     """
 
-    def __init__(self, w, h, single_line = True):
+    def __init__(self, w, h, single_line=True):
         super(TextInput, self).__init__(w, h)
         self.type = 'textarea'
 
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
-            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
-
+        self.attributes[self.EVENT_ONCHANGE] = \
+            "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONCHANGE}
         self.set_text('')
 
         if single_line:
@@ -301,14 +301,11 @@ class TextInput(Widget):
     def onchange(self, newValue):
         """returns the new text value."""
         self.set_text(newValue)
-        params = list()
-        params.append(newValue)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
-        self.eventManager.register_listener(
-            self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
@@ -320,16 +317,13 @@ class TextInput(Widget):
     def onkeydown(self,newValue):
         """returns the new text value."""
         self.set_text(newValue)
-        params = list()
-        params.append(newValue)
-        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, params)
+        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, [newValue])
         
     def set_on_key_down_listener(self,listener,funcname):
-        self.attributes[
-            self.EVENT_ONKEYDOWN] = "var params={};params['newValue']=document.getElementById('" + str(
-            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONKEYDOWN + "',params);"
-        self.eventManager.register_listener(
-            self.EVENT_ONKEYDOWN, listener, funcname)
+        self.attributes[self.EVENT_ONKEYDOWN] = \
+            "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONKEYDOWN}
+        self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, funcname)
 
 
 class Label(Widget):
