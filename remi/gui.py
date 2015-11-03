@@ -240,13 +240,11 @@ class Widget(Tag):
             self.baseAppInstance.client.root = self.oldRootWidget
 
     def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class Button(Widget):
@@ -258,29 +256,18 @@ class Button(Widget):
     def __init__(self, w, h, text=''):
         super(Button, self).__init__(w, h)
         self.type = 'button'
-        #self.attributes[self.EVENT_ONCLICK] = "var params={};params['x']=1;params['y']=3;sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "',params);"
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.set_text(text)
 
     def set_text(self, t):
         self.append('text', t)
 
     def onclick(self):
-        debug_message('Button pressed: ', self.children['text'])
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        """Register a listener for the click event.
-
-        listener = class instance
-        funcname = the name of member function that will be called.
-        example:
-            bt.set_on_click_listener( listenerClass, "ontest" )
-
-        """
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class TextInput(Widget):
@@ -329,14 +316,12 @@ class TextInput(Widget):
             self.EVENT_ONCHANGE, listener, funcname)
 
     def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
-            
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+
     def onkeydown(self,newValue):
         """returns the new text value."""
         self.set_text(newValue)
@@ -369,8 +354,7 @@ class Label(Widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%(id)s','%(evt)s');" % {'id':id(self),
-                                                                                     'evt':self.EVENT_ONCLICK}
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
@@ -665,8 +649,7 @@ class DropDownItem(Widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%(id)s','%(evt)s');" % {'id':id(self),
-                                                                                     'evt':self.EVENT_ONCLICK}
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def set_text(self, text):
@@ -697,8 +680,7 @@ class Image(Widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%(id)s','%(evt)s');" % {'id':id(self),
-                                                                                     'evt':self.EVENT_ONCLICK}
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
