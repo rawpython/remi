@@ -208,23 +208,18 @@ class Widget(Tag):
                     self.children[key].style['float'] = 'left'
 
     def onfocus(self):
-        return self.eventManager.propagate(self.EVENT_ONFOCUS, list())
+        return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
     def set_on_focus_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONFOCUS] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONFOCUS + "');"
-        #self.attributes[ self.EVENT_ONFOCUS ]=" var id=\'id=\'+'"+str(id(self))+"' ;sendCommand('" + self.BASE_ADDRESS + str(id(self)) + "/" + self.EVENT_ONFOCUS + "',id);"
-        self.eventManager.register_listener(
-            self.EVENT_ONFOCUS, listener, funcname)
+        self.attributes[self.EVENT_ONFOCUS] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONFOCUS)
+        self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
-        return self.eventManager.propagate(self.EVENT_ONBLUR, list())
+        return self.eventManager.propagate(self.EVENT_ONBLUR, [])
 
     def set_on_blur_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONBLUR] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONBLUR + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONBLUR, listener, funcname)
+        self.attributes[self.EVENT_ONBLUR] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONBLUR)
+        self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
 
     def show(self, baseAppInstance):
         """Allows to show the widget as root window"""
