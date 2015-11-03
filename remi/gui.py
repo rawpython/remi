@@ -685,11 +685,10 @@ class DropDownItem(Widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, list())
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
-            
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%(id)s','%(evt)s');" % {'id':id(self),
+                                                                                     'evt':self.EVENT_ONCLICK}
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+
     def set_text(self, text):
         self.attributes['value'] = text
         self.append('text', text)
