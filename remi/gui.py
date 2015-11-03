@@ -503,38 +503,35 @@ class ListView(Widget):
         self.selected_key = None
 
     def append(self, key, item):
-        #if an event listener is already set for the added item, it will not generate a selection event
+        # if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
-            item.set_on_click_listener(self,self.EVENT_ONSELECTION)
+            item.set_on_click_listener(self, self.EVENT_ONSELECTION)
         item.attributes['selected'] = False
-        super(self.__class__, self).append(key,item)
+        super(ListView, self).append(key, item)
 
-    def onselection(self,clicked_item):
+    def onselection(self, clicked_item):
         self.selected_key = None
-        for k in self.children.keys():
-            if self.children[k]==clicked_item:
+        for k in self.children:
+            if self.children[k] == clicked_item:
                 self.selected_key = k
                 debug_message('ListView - onselection. Selected item key: ',k)
-                if self.selected_item != None:
+                if self.selected_item is not None:
                     self.selected_item['selected'] = False
                 self.selected_item = self.children[self.selected_key]
                 self.selected_item['selected'] = True
                 break
-        params = list()
-        params.append(self.selected_key)
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, params)
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
     def set_on_selection_listener(self, listener, funcname):
         """The listener will receive the key of the selected item.
         If you add the element from an array, use a numeric incremental key
         """
-        self.eventManager.register_listener(
-            self.EVENT_ONSELECTION, listener, funcname)
-            
+        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
+
     def get_value(self):
         """Returns the value of the selected item or None
         """
-        if self.selected_item==None:
+        if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
@@ -552,7 +549,7 @@ class ListView(Widget):
         for item in self.children.values():
             item.attributes['selected'] = False
 
-        if itemKey in self.children.keys():
+        if itemKey in self.children:
             self.children[itemKey].attributes['selected'] = True
             self.selected_key = itemKey
             self.selected_item = self.children[itemKey]
@@ -563,10 +560,10 @@ class ListView(Widget):
         """
         self.selected_key = None
         self.selected_item = None
-        for k in self.children.keys():
+        for k in self.children:
             item = self.children[k]
             item.attributes['selected'] = False
-            if value==item.get_value():
+            if value == item.get_value():
                 self.selected_key = k
                 self.selected_item = item
                 self.selected_item.attributes['selected'] = True
