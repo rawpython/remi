@@ -33,6 +33,7 @@ class MyApp(App):
 
         subContainerLeft = gui.Widget(340, 530, gui.Widget.LAYOUT_VERTICAL, 10)
         self.img = gui.Image(100, 100, '/res/logo.png')
+        self.img.set_on_click_listener(self, 'on_img_clicked')
 
         self.table = gui.Table(300, 200)
         row = gui.TableRow()
@@ -167,6 +168,9 @@ class MyApp(App):
         table.append(str(id(row)), row)
 
     # listener function
+    def on_img_clicked(self):
+        self.lbl.set_text('Image clicked!')
+
     def on_button_pressed(self):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
