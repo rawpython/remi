@@ -778,8 +778,10 @@ class Input(Widget):
         self.attributes['class'] = _type
 
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.attributes[self.EVENT_ONCHANGE] = "var params={};params['newValue']=document.getElementById('" + str(
-            id(self)) + "').value;sendCallbackParam('" + str(id(self)) + "','" + self.EVENT_ONCHANGE + "',params);"
+        self.attributes[self.EVENT_ONCHANGE] = \
+            "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
+                                                               'evt':self.EVENT_ONCHANGE}
         self.attributes['value'] = str(defaultValue)
         self.attributes['type'] = _type
 
@@ -792,14 +794,11 @@ class Input(Widget):
 
     def onchange(self, newValue):
         self.attributes['value'] = newValue
-        params = list()
-        params.append(newValue)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
-        self.eventManager.register_listener(
-            self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
 class SpinBox(Input):
