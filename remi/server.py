@@ -571,7 +571,7 @@ ws.onerror = function(evt){
             if self.server.enable_file_cache:
                 self.send_header('Cache-Control', 'public, max-age=86400')
             self.end_headers()
-            with open(filename, 'r+b') as f:
+            with open(filename, 'rb') as f:
                 content = f.read()
                 self.wfile.write(content)
         elif attr_call:
