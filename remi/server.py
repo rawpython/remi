@@ -647,10 +647,9 @@ class Server(object):
                 import android
                 android.webbrowser.open(base_address)
             except:
-                # prevent webbrowser from opening automatically in IE on Windows
+                # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
-                    chrome_path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe %s'
-                    webbrowser.get(chrome_path).open(base_address)
+                    webbrowser.get('windows-default').open('file://' + os.path.realpath(base_address))
                 else:
                     webbrowser.open(base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
