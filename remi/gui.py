@@ -704,7 +704,6 @@ class DropDownItem(Widget):
         return self.get_text()
 
 
-
 class Image(Widget):
 
     """image widget."""
@@ -716,14 +715,13 @@ class Image(Widget):
         self.attributes['src'] = filename
 
     def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, list())
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[
-            self.EVENT_ONCLICK] = "sendCallback('" + str(id(self)) + "','" + self.EVENT_ONCLICK + "');"
-        self.eventManager.register_listener(
-            self.EVENT_ONCLICK, listener, funcname)
-            
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%(id)s','%(evt)s');" % {'id':id(self),
+                                                                                     'evt':self.EVENT_ONCLICK}
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+
 
 class Table(Widget):
 
