@@ -35,6 +35,7 @@ import threading
 import signal
 import time
 import os.path
+import os
 import re
 from threading import Timer
 try:
@@ -646,7 +647,11 @@ class Server(object):
                 import android
                 android.webbrowser.open(base_address)
             except:
-                webbrowser.open(base_address)
+                # use default browser instead of always forcing IE on Windows
+                if os.name == 'nt':
+                    webbrowser.get('windows-default').open('file://' + os.path.realpath(base_address))
+                else:
+                    webbrowser.open(base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
         self._sth.daemon = True
         self._sth.start()
