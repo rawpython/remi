@@ -1,6 +1,6 @@
 
 
-> ##*simple things makes the world simpler*
+> ##*simple things make the world simpler*
 
 let's start
 ===
