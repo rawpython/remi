@@ -25,16 +25,12 @@ except:
 import mimetypes
 import webbrowser
 import struct
-import string
-import binascii
 from base64 import b64encode
 import hashlib
-from hashlib import sha1
 import sys
 import threading
 import signal
 import time
-import os.path
 import os
 import re
 from threading import Timer
