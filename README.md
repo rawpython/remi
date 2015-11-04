@@ -1,16 +1,21 @@
 
-
 > ##*simple things make the world simpler*
 
 let's start
 ===
 Just download it without installation
-##[**download RemI**](https://github.com/dddomodossola/remi/archive/master.zip)
-Run the installation:
-<pre><code>python setup.py install</code></pre>
-Then start the test script:
-<pre><code>python widgets_overview_app.py</code></pre>
 
+##[**download RemI**](https://github.com/dddomodossola/remi/archive/master.zip)
+
+Run the installation:
+```
+python setup.py install
+```
+
+Then start the test script:
+```
+python widgets_overview_app.py
+```
 
 RemI
 ===
@@ -44,13 +49,11 @@ These widgets are available:
 
 A basic application appears like this:
 
-<pre><code>
+```py
 import remi.gui as gui
 from remi import start, App
 
-
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -75,10 +78,9 @@ class MyApp(App):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
-
 # starts the webserver
 start(MyApp)
-</code></pre>
+```
 
 In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8081".
 You can change the url address, edit the "configuration.py" file.
@@ -99,18 +101,14 @@ Brief tutorial
 ===
 Import remi library and all submodules.
 
-<pre><code>
-
+```py
 import remi.gui as gui
 from remi import start, App
+```
 
-</code></pre>
+Subclass the `App` class and declare a `main` function that will be the entry point of the application. Inside the main function you have to <code>return</code> the root widget.
 
-
-Subclass the <code>App</code> class and declare a <code>main</code> function that will be the entry point of the application. Inside the main function you have to <code>return</code> the root widget.
-
-<pre><code>
-
+```py
 class MyApp( App ):
 	def __init__( self, *args ):
 		super( MyApp, self ).__init__( *args )
@@ -120,26 +118,23 @@ class MyApp( App ):
 		
 		#return of the root widget
 		return lbl
+```
 
-</code></pre>
+Outside the main class start the application calling the function `start` passing as parameter the name of the class you declared previously.
 
-
-Outside the main class start the application calling the function <code>start</code> passing as parameter the name of the class you declared previously.
-
-<pre><code>
-
+```py
 #starts the webserver	
 start( MyApp )
-
-</code></pre>
+```
 
 Run the script. If all it's OK the gui will be opened automatically in your browser, otherwise you have to type in the address bar "http://127.0.0.1:8081".
 
+You can customize optional parameters in the `start` call like.
 
-You can customize optional parameters in the <code>start</code> call like.
-<pre><code>
+```py
 start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True) 
-</code></pre>
+```
+
 Parameters:
 - address = network interface ip
 - port: listen port
@@ -165,14 +160,12 @@ The specific callbacks for the widgets will be illustrated later.
 
 In order to register a function as an event listener you have to call a function like set_on_xxx_listener passing as parameters the instance of widget that will manage the event and the literal string name of the listener function.
 Follows an example:
-<pre><code>
 
+```py
 import remi.gui as gui
 from remi import start, App
 
-
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -198,15 +191,12 @@ class MyApp(App):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
-
 # starts the webserver
 start(MyApp)
-
-</code></pre>
+```
 
 In the shown example *self.bt.set_on_click_listener(self, 'on_button_pressed')* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
 Simple, easy.
-
 
 Styling
 ===
