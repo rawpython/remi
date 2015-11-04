@@ -478,7 +478,7 @@ ws.onerror = function(evt){
 
         self.client = clients[k]
 
-        if updateTimerStarted == False:
+        if not updateTimerStarted:
             updateTimerStarted = True
             Timer(self.server.update_interval, update_clients, (self.server.update_interval,)).start()
 
@@ -507,14 +507,12 @@ ws.onerror = function(evt){
                     # The field contains an uploaded file
                     file_data = field_item.file.read()
                     file_len = len(file_data)
-                    #print('FILE DATA: ' + str(file_data))
-                    debug_message('\tUploaded %s as "%s" (%d bytes)\n' % \
-                            (field, field_item.filename, file_len))
+                    debug_message('\tUploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
                 else:
                     # Regular form value
                     debug_message('\t%s=%s\n' % (field, form[field].value))
 
-            if file_data!=None: #self.path=='/fileupload':
+            if file_data is not None:
                 debug_message('GUI - server.py do_POST: fileupload path=' + savepath + '   name=' + filename)
                 with open(savepath+filename,'wb') as f:
                     f.write(file_data)
@@ -627,8 +625,8 @@ class Server(object):
                                            (wshost, wsport), self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, *userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
-        #when listening on multiple net interfaces the browsers connects to localhost
-        if shost=='0.0.0.0':
+        # when listening on multiple net interfaces the browsers connects to localhost
+        if shost == '0.0.0.0':
             shost = '127.0.0.1'
         base_address = 'http://%s:%s/' % (shost,sport)
         debug_message('Started httpserver %s' % base_address)
