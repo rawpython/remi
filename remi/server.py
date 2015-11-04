@@ -528,14 +528,8 @@ ws.onerror = function(evt){
     def do_GET(self):
         """Handler for the GET requests."""
         self.instance()
-        params = str(unquote(self.path))
-
-        params = params.split('?')
-        function = params[0]
-
-        function = function[1:]
-        self.process_all(function)
-
+        path = str(unquote(self.path))
+        self.process_all(path)
         return
 
     def process_all(self, function):
