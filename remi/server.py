@@ -637,7 +637,7 @@ class Server(object):
             except:
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
-                    webbrowser.get('windows-default').open('file://' + os.path.realpath(base_address))
+                    webbrowser.get('windows-default').open(base_address)
                 else:
                     webbrowser.open(base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
