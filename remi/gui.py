@@ -23,7 +23,12 @@ def to_pix(x):
 
 
 def from_pix(x):
-    return int(float(x.replace('px', '')))
+    v = 0
+    try:
+        v = int(float(x.replace('px', '')))
+    except Exception as e:
+        debug_alert(traceback.format_exc())
+    return v
 
 
 def jsonize(d):
@@ -765,6 +770,23 @@ class Input(Widget):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
+class CheckBoxLabel(Widget):
+    def __init__(self, w, h, label='', checked=False, user_data=''):
+        super(CheckBoxLabel, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
+        inner_checkbox_width = 30
+        inner_label_padding_left = 10
+        self._checkbox = CheckBox(inner_checkbox_width, h, checked, user_data)
+        self._label = Label(w-inner_checkbox_width-inner_label_padding_left, h, label)
+        self.append('checkbox', self._checkbox)
+        self.append('label', self._label)
+        self._label.style['padding-left'] = to_pix(inner_label_padding_left)
+
+        self.set_value = self._checkbox.set_value
+        self.get_value = self._checkbox.get_value
+        self.set_on_change_listener = self._checkbox.set_on_change_listener
+        self.onchange = self._checkbox.onchange
+
+
 class CheckBox(Input):
 
     """check box widget usefull as numeric input field implements the onchange
@@ -789,6 +811,10 @@ class CheckBox(Input):
         else:
             if 'checked' in self.attributes:
                 del self.attributes['checked']
+
+    def get_value(self):
+        """returns the boolean value."""
+        return 'checked' in self.attributes
 
 
 class SpinBox(Input):

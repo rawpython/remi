@@ -69,7 +69,7 @@ class MyApp(App):
         self.spin = gui.SpinBox(200, 30, 100)
         self.spin.set_on_change_listener(self, 'on_spin_change')
 
-        self.check = gui.CheckBox(30, 30, True)
+        self.check = gui.CheckBoxLabel(200, 30, 'Label checkbox', True)
         self.check.set_on_change_listener(self, 'on_check_change')
 
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
@@ -144,19 +144,88 @@ class MyApp(App):
         m111.set_on_click_listener(self, 'menu_save_clicked')
         m112 = gui.MenuItem(100, 30, 'Save as')
         m112.set_on_click_listener(self, 'menu_saveas_clicked')
+        m3 = gui.MenuItem(100,30,'Dialog')
+        m3.set_on_click_listener(self, 'menu_dialog_clicked')
 
         menu.append('1',m1)
         menu.append('2',m2)
+        menu.append('3',m3)
         m1.append('11',m11)
         m1.append('12',m12)
         m11.append('111',m111)
         m11.append('112',m112)
+
 
         verticalContainer.append('0',menu)
         verticalContainer.append('1',horizontalContainer)
 
         # returning the root widget
         return verticalContainer
+
+    def menu_dialog_clicked(self):
+        self.dialog=gui.GenericDialog(400,400,'Dialog Box','Click Ok to transfer content to main page')
+
+        self.dtextinput= gui.TextInput(200, 30)
+        self.dtextinput.set_value('Initial Text')
+        self.dialog.add_field_with_label('dtextinput','Text Input',self.dtextinput)
+
+        values=( 'Danny Young','Christine Holand','Lars Gordon','Roberto Robitaille')
+        self.dlistView = gui.ListView(200, 120)
+        key=0
+        for value in values:
+            obj = gui.ListItem(170, 20,value)
+            self.dlistView.append(str(key), obj)
+            key+=1
+        self.dialog.add_field_with_label('dlistView','Listview',self.dlistView)
+
+        self.ddropdown = gui.DropDown(200, 20)
+        c0 = gui.DropDownItem(200, 20, 'DropDownItem 0')
+        c1 = gui.DropDownItem(200, 20, 'DropDownItem 1')
+        self.ddropdown.append('0', c0)
+        self.ddropdown.append('1', c1)
+        self.ddropdown.set_value('Value1')
+        self.dialog.add_field_with_label('ddropdown','Dropdown',self.ddropdown)
+
+        self.dspinbox= gui.SpinBox(200, 20,min=0, max=5000)
+        self.dspinbox.set_value(50)
+        self.dialog.add_field_with_label('dspinbox','Spinbox',self.dspinbox)
+
+        self.dslider= gui.Slider(200, 20, 10, 0, 100, 5)
+        self.dspinbox.set_value(50)
+        self.dialog.add_field_with_label('dslider','Slider',self.dslider)
+
+        self.dcolor= gui.ColorPicker(200, 20)
+        self.dcolor.set_value('#ffff00')
+        self.dialog.add_field_with_label('dcolor','Colour Picker',self.dcolor)
+
+        self.ddate = gui.Date(200, 20,)
+        self.ddate.set_value( '2000-01-01')
+        self.dialog.add_field_with_label('ddate','Date',self.ddate)
+
+        self.dialog.set_on_confirm_dialog_listener(self,'dialog_confirm')
+        self.dialog.show(self)
+
+    def dialog_confirm(self):
+        result=self.dialog.get_field('dtextinput').get_value()
+        self.txt.set_value(result)
+
+        result=self.dialog.get_field('ddropdown').get_value()
+        self.dropDown.set_value(result)
+
+        result=self.dialog.get_field('dspinbox').get_value()
+        self.spin.set_value(result)
+
+        result=self.dialog.get_field('dslider').get_value()
+        self.slider.set_value(result)
+
+        result=self.dialog.get_field('dcolor').get_value()
+        self.colorPicker.set_value(result)
+
+        result=self.dialog.get_field('ddate').get_value()
+        self.date.set_value(result)
+
+        result=self.dialog.get_field('dlistView').get_key()
+        self.listView.select_by_key(result)
 
     def add_table_row(self, table, field1, field2, field3):
         row = gui.TableRow()
