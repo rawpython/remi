@@ -163,19 +163,66 @@ class Widget(Tag):
 
         self.EVENT_ONUPDATE = 'onupdate'
 
-        if w > -1:
-            self.style['width'] = to_pix(w)
-        if h > -1:
-            self.style['height'] = to_pix(h)
+        self.style['width'] = to_pix(w)
+        self.style['height'] = to_pix(h)
+
         self.style['margin'] = '0px auto'
+
+        self.auto_resize_width = False
+        self.auto_resize_height = False
 
         self.oldRootWidget = None  # used when hiding the widget
 
         self.eventManager = EventManager()
 
+    def adjust_children_margin(self):
+        for key in self.children.keys():
+            if hasattr(self.children[key], 'style'):
+                spacing = to_pix(self.widget_spacing)
+                selfHeight = 0
+                selfWidth = 0
+                if 'height' in self.style.keys() and 'height' in self.children[key].style.keys():
+                    selfHeight = from_pix(self.style['height']) - from_pix(self.children[key].style['height'])
+                if 'width' in self.style.keys() and 'width' in self.children[key].style.keys():
+                    selfWidth = from_pix(self.style['width']) - from_pix(self.children[key].style['width'])
+                self.children[key].style['margin'] = spacing + " " + to_pix(selfWidth/2)
+
+                if self.layout_orientation:
+                    self.children[key].style['margin'] = to_pix(selfHeight/2) + " " + spacing
+                    if 'float' in self.children[key].style.keys():
+                        if not (self.children[key].style['float'] == 'none'):
+                            self.children[key].style['float'] = 'left'
+                    else:
+                        self.children[key].style['float'] = 'left'
+
+    def calculate_min_size(self,size_attribute_tag):
+        """
+        Calculates the minimum width or height in order to contain children
+        It takes care about the self.widget_spacing
+        size_attribute_tag can be 'width' or 'height'
+        return value
+        """
+        value = 0
+        ori = Widget.LAYOUT_VERTICAL if size_attribute_tag is 'width' else Widget.LAYOUT_HORIZONTAL
+        for child in self.children.values():
+            if hasattr(child,'style'):
+                print("w: " + str(type(child)) + "  size: " + str(from_pix(child.style[size_attribute_tag])) + "  " + size_attribute_tag)
+                v = from_pix(child.style[size_attribute_tag])
+                value = max(value,v) if (self.layout_orientation is ori) else value + v
+                print("value:" + str(value))
+        value = value + (self.widget_spacing*2 if (self.layout_orientation is ori) else self.widget_spacing*2*len(self.children))
+        return value
+
     def repr(self, client, include_children = True):
         """it is used to automatically represent the widget to HTML format
         packs all the attributes, children and so on."""
+        self.auto_resize_width = (from_pix(self.style['width']) is -1) or self.auto_resize_width
+        self.auto_resize_height = (from_pix(self.style['height']) is -1) or self.auto_resize_height
+        if self.auto_resize_width:
+            self.style['width'] = to_pix(self.calculate_min_size('width'))
+        if self.auto_resize_height:
+            self.style['height'] = to_pix(self.calculate_min_size('height'))
+        self.adjust_children_margin()
         self['style'] = jsonize(self.style)
 
         return super(Widget,self).repr(client, include_children)
@@ -188,24 +235,7 @@ class Widget(Tag):
 
         """
         super(Widget,self).append(key, value)
-
-        if hasattr(self.children[key], 'style'):
-            spacing = to_pix(self.widget_spacing)
-            selfHeight = 0
-            selfWidth = 0
-            if 'height' in self.style.keys() and 'height' in self.children[key].style.keys():
-                selfHeight = from_pix(self.style['height']) - from_pix(self.children[key].style['height'])
-            if 'width' in self.style.keys() and 'width' in self.children[key].style.keys():
-                selfWidth = from_pix(self.style['width']) - from_pix(self.children[key].style['width'])
-            self.children[key].style['margin'] = spacing + " " + to_pix(selfWidth/2)
-            
-            if self.layout_orientation:
-                self.children[key].style['margin'] = to_pix(selfHeight/2) + " " + spacing
-                if 'float' in self.children[key].style.keys():
-                    if not (self.children[key].style['float'] == 'none'):
-                        self.children[key].style['float'] = 'left'
-                else:
-                    self.children[key].style['float'] = 'left'
+        self.adjust_children_margin()
 
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])

@@ -23,7 +23,7 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(120, 100, False, 10)
+        wid = gui.Widget(-1, -1, False, 10)
         self.lbl = gui.Label(100, 30, 'Hello %s!' % name)
         self.bt = gui.Button(100, 30, 'Press me!')
 
@@ -45,8 +45,8 @@ class MyApp(App):
 if __name__ == "__main__":
 	# setting up remi debug level 
 	#       2=all debug messages   1=error messages   0=no messages
-	#import remi.server
-	#remi.server.DEBUG_MODE = 2 
+    # import remi.server
+    # remi.server.DEBUG_MODE = 2
 
 	# starts the webserver
 	# optional parameters   

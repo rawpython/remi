@@ -27,11 +27,11 @@ class MyApp(App):
         super(MyApp, self).idle()
         
     def main(self):
-        verticalContainer = gui.Widget(640, 680, gui.Widget.LAYOUT_VERTICAL, 10)
+        verticalContainer = gui.Widget(-1, -1, gui.Widget.LAYOUT_VERTICAL, 10)
 
-        horizontalContainer = gui.Widget(620, 620, gui.Widget.LAYOUT_HORIZONTAL, 10)
+        horizontalContainer = gui.Widget(-1, -1, gui.Widget.LAYOUT_HORIZONTAL, 10)
 
-        subContainerLeft = gui.Widget(340, 530, gui.Widget.LAYOUT_VERTICAL, 10)
+        subContainerLeft = gui.Widget(-1, -1, gui.Widget.LAYOUT_VERTICAL, 10)
         self.img = gui.Image(100, 100, '/res/logo.png')
         self.img.set_on_click_listener(self, 'on_img_clicked')
 
@@ -54,7 +54,7 @@ class MyApp(App):
         self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(240, 560, gui.Widget.LAYOUT_VERTICAL, 10)
+        subContainerRight = gui.Widget(-1, -1, gui.Widget.LAYOUT_VERTICAL, 10)
 
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
