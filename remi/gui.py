@@ -749,9 +749,30 @@ class Input(Widget):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
+class CheckBox(Input):
+
+    """check box widget usefull as numeric input field implements the onchange
+    event.
+    """
+
+    def __init__(self, w, h, checked=False, user_data=''):
+        super(CheckBox, self).__init__(w, h, 'checkbox', user_data)
+        self.attributes[self.EVENT_ONCHANGE] = \
+            "var params={};params['newValue']=document.getElementById('%(id)s').checked;"\
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
+                                                               'evt':self.EVENT_ONCHANGE}
+
+    def onchange(self, newValue):
+        if newValue in ('True', 'true'):
+            self.attributes['checked']='checked'
+        elif 'checked' in self.attributes:
+            del self.attributes['checked']
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
+
+
 class SpinBox(Input):
 
-    """spin box widget usefull as numeric input field implements the onclick
+    """spin box widget usefull as numeric input field implements the onchange
     event.
     """
 

@@ -69,6 +69,9 @@ class MyApp(App):
         self.spin = gui.SpinBox(200, 30, 100)
         self.spin.set_on_change_listener(self, 'on_spin_change')
 
+        self.check = gui.CheckBox(30, 30)
+        self.check.set_on_change_listener(self, 'on_check_change')
+
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
         self.btInputDiag.set_on_click_listener(self, 'open_input_dialog')
 
@@ -112,6 +115,7 @@ class MyApp(App):
         subContainerRight.append('2', self.bt)
         subContainerRight.append('3', self.txt)
         subContainerRight.append('4', self.spin)
+        subContainerRight.append('checkbox', self.check)
         subContainerRight.append('5', self.btInputDiag)
         subContainerRight.append('5_', self.btFileDiag)
         subContainerRight.append('5__', gui.FileDownloader(200, 30, 'download test', '../remi/res/logo.png'))
@@ -180,6 +184,9 @@ class MyApp(App):
 
     def on_spin_change(self, newValue):
         self.lbl.set_text('SpinBox changed, new value: ' + str(newValue))
+
+    def on_check_change(self, newValue):
+        self.lbl.set_text('CheckBox changed, new value: ' + str(newValue))
 
     def open_input_dialog(self):
         self.inputDialog = gui.InputDialog(500, 160, 'Input Dialog', 'Your name?')
