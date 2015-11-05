@@ -761,13 +761,18 @@ class CheckBox(Input):
             "var params={};params['newValue']=document.getElementById('%(id)s').checked;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
                                                                'evt':self.EVENT_ONCHANGE}
+        self.set_value(checked)
 
     def onchange(self, newValue):
-        if newValue in ('True', 'true'):
-            self.attributes['checked']='checked'
-        elif 'checked' in self.attributes:
-            del self.attributes['checked']
+        self.set_value( newValue in ('True', 'true') )
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
+
+    def set_value(self, checked):
+        if checked:
+            self.attributes['checked']='checked'
+        else:
+            if 'checked' in self.attributes:
+                del self.attributes['checked']
 
 
 class SpinBox(Input):

@@ -69,7 +69,7 @@ class MyApp(App):
         self.spin = gui.SpinBox(200, 30, 100)
         self.spin.set_on_change_listener(self, 'on_spin_change')
 
-        self.check = gui.CheckBox(30, 30)
+        self.check = gui.CheckBox(30, 30, True)
         self.check.set_on_change_listener(self, 'on_check_change')
 
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
