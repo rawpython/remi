@@ -202,7 +202,7 @@ Simple, easy.
 HTML Attribute accessibility
 ===
 Sometimes could be required to access Widget's HTML representation in order to manipulate html attributes.
-The library allows to access these information easly.
+The library allows to access these information easily.
 
 A simple example: It is the case where you would like to add an hover text to a widget. This can be achieved by the *title* attribute of an html tag.
 In order to do this:
