@@ -274,6 +274,7 @@ class TextInput(Widget):
         super(TextInput, self).__init__(w, h)
         self.type = 'textarea'
 
+        self.EVENT_ONENTER = 'onenter'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
@@ -324,6 +325,21 @@ class TextInput(Widget):
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONKEYDOWN}
         self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, funcname)
+
+    def onenter(self,newValue):
+        """returns the new text value."""
+        self.set_text(newValue)
+        return self.eventManager.propagate(self.EVENT_ONENTER, [newValue])
+
+    def set_on_enter_listener(self,listener,funcname):
+        self.attributes[self.EVENT_ONKEYDOWN] = """
+            if (event.keyCode == 13) {
+                var params={};
+                params['newValue']=document.getElementById('%(id)s').value;
+                sendCallbackParam('%(id)s','%(evt)s',params);
+                return false;
+            }""" % {'id':id(self), 'evt':self.EVENT_ONENTER}
+        self.eventManager.register_listener(self.EVENT_ONENTER, listener, funcname)
 
 
 class Label(Widget):
