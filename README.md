@@ -201,7 +201,7 @@ Simple, easy.
 
 HTML Attribute accessibility
 ===
-Somethimes could be required to access Widget's HTML representation in order to manipulate html attrbutes.
+Sometimes could be required to access Widget's HTML representation in order to manipulate html attributes.
 The library allows to access these information easly.
 
 A simple example: It is the case where you would like to add an hover text to a widget. This can be achieved by the *title* attribute of an html tag.
@@ -212,7 +212,7 @@ In order to do this:
 ```
 
 A special case of html attribute is the *style*.
-The styles attributes can be altered in this way:
+The style attributes can be altered in this way:
 
 ```py
     widget_instance.style['color'] = 'red'
