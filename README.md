@@ -198,6 +198,32 @@ start(MyApp)
 In the shown example *self.bt.set_on_click_listener(self, 'on_button_pressed')* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
 Simple, easy.
 
+
+HTML Attribute accessibility
+===
+Somethimes could be required to access Widget's HTML representation in order to manipulate html attrbutes.
+The library allows to access these information easly.
+
+A simple example: It is the case where you would like to add an hover text to a widget. This can be achieved by the *title* attribute of an html tag.
+In order to do this:
+
+```py
+    widget_instance.attributes['title'] = 'Your title content'
+```
+
+A special case of html attribute is the *style*.
+The styles attributes can be altered in this way:
+
+```py
+    widget_instance.style['color'] = 'red'
+```
+
+The assignment of a new attribute automatically creates it.
+
+Take care about internally used attributes. These are:
+- **class**: It is used to store the Widget class name for styling purpose
+- **id**: It is used to store the instance id of the widget for callback management
+
 Styling
 ===
 It's possible to change the style of the gui editing the style.css file. Here you can define the css properties of each gui widget.
