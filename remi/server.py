@@ -427,11 +427,11 @@ ws.onmessage = function (evt) {
     index = received_msg.indexOf(',')+1;
     var content = received_msg.substr(index,received_msg.length-index);
     if( command=='show_window' ){
-        document.body.innerHTML = unescape(content);
+        document.body.innerHTML = decodeURIComponent(content);
     }else if( command=='update_widget'){
         var elem = document.getElementById(s[1]);
         var index = received_msg.indexOf(',')+1;
-        elem.insertAdjacentHTML('afterend',unescape(content));
+        elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
         elem.parentElement.removeChild(elem);
     }else if( command=='insert_widget'){
         if( document.getElementById(s[1])==null ){
@@ -439,7 +439,7 @@ ws.onmessage = function (evt) {
             index = content.indexOf(',')+1;
             content = content.substr(index,content.length-index);
             var elem = document.getElementById(s[2]);
-            elem.innerHTML = elem.innerHTML + unescape(content);
+            elem.innerHTML = elem.innerHTML + decodeURIComponent(content);
         }
     }
     console.debug('command:' + command);
