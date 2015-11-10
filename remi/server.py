@@ -286,6 +286,7 @@ def parse_parametrs(p):
                 elif fieldValue.isdigit():
                     fieldValue = int(fieldValue)
             ret[fieldName] = fieldValue
+
     return ret
 
 
@@ -396,12 +397,29 @@ class App(BaseHTTPRequestHandler, object):
         #can happens for the same 'k'
         clients[k].attachments = """
 <script>
+// from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
+// using UTF8 strings I noticed that the javascript .length of a string returned less 
+// characters than they actually were
+function byteLength(str) {
+  // returns the byte length of an utf8 string
+  var s = str.length;
+  for (var i=str.length-1; i>=0; i--) {
+    var code = str.charCodeAt(i);
+    if (code > 0x7f && code <= 0x7ff) s++;
+    else if (code > 0x7ff && code <= 0xffff) s+=2;
+    if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+  }
+  return s;
+}
+
+
 var paramPacketize = function (ps){
     var ret = '';
     for (var pkey in ps) {
         if( ret.length>0 )ret = ret + '|';
         var pstring = pkey+'='+ps[pkey];
-        pstring = pstring.length+'|'+pstring;
+        var pstring_length = byteLength(pstring);
+        pstring = pstring_length+'|'+pstring;
         ret = ret + pstring;
     }
     return ret;
@@ -451,8 +469,8 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
         console.debug('socket not opened');
         openSocket();
     }
-    ws.send(encodeURIComponent('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
-    console.debug('to client len:' + encodeURIComponent('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
+    ws.send(encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params))));
+    console.debug('to client len:' + encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params))));
 };
 /*this uses websockets*/
 var sendCallback = function (widgetID,functionName){
@@ -460,8 +478,8 @@ var sendCallback = function (widgetID,functionName){
         console.debug('socket not opened');
         openSocket();
     }
-    ws.send(encodeURIComponent('callback' + '/' + widgetID+'/'+functionName+'/'));
-    console.debug( 'to client len:' + encodeURIComponent('callback' + '/' + widgetID+'/'+functionName+'/'));
+    ws.send(encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName+'/')));
+    console.debug( 'to client len:' + encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName+'/')));
 };
 ws.onclose = function(evt){
     /* websocket is closed. */
