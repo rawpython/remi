@@ -1188,3 +1188,22 @@ class FileDownloader(Widget):
                    'Content-Disposition':'attachment; filename=%s' % os.path.basename(self._filename)}
         return [content,headers]
 
+
+class Link(Widget):
+
+    def __init__(self, w, h, url, text, open_new_window=True):
+        super(Link, self).__init__(w, h)
+        self.type = 'a'
+        self.attributes['href'] = url
+        if open_new_window:
+            self.attributes['target'] = "_blank"
+        self.set_text(text)
+
+    def set_text(self, t):
+        self.append('text', t)
+
+    def get_text(self):
+        return self.children['text']
+
+    def get_url(self):
+        return self.children['href']

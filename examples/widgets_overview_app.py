@@ -93,6 +93,8 @@ class MyApp(App):
         self.listView.append('2', li2)
         self.listView.append('3', li3)
 
+        self.link = gui.Link(200, 20, "http://localhost:8081", "A link to here")
+
         self.dropDown = gui.DropDown(200, 20)
         c0 = gui.DropDownItem(200, 20, 'DropDownItem 0')
         c1 = gui.DropDownItem(200, 20, 'DropDownItem 1')
@@ -129,6 +131,7 @@ class MyApp(App):
         subContainerLeft.append('0', self.img)
         subContainerLeft.append('1', self.table)
         subContainerLeft.append('2', self.listView)
+        subContainerLeft.append('3', self.link)
 
         horizontalContainer.append('0', subContainerLeft)
         horizontalContainer.append('1', subContainerRight)
