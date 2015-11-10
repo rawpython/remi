@@ -451,8 +451,8 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
         console.debug('socket not opened');
         openSocket();
     }
-    ws.send(escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
-    console.debug('to client len:' + escape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
+    ws.send(encodeURIComponent('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
+    console.debug('to client len:' + encodeURIComponent('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params)));
 };
 /*this uses websockets*/
 var sendCallback = function (widgetID,functionName){
@@ -460,8 +460,8 @@ var sendCallback = function (widgetID,functionName){
         console.debug('socket not opened');
         openSocket();
     }
-    ws.send(escape('callback' + '/' + widgetID+'/'+functionName+'/'));
-    console.debug( 'to client len:' + escape('callback' + '/' + widgetID+'/'+functionName+'/'));
+    ws.send(encodeURIComponent('callback' + '/' + widgetID+'/'+functionName+'/'));
+    console.debug( 'to client len:' + encodeURIComponent('callback' + '/' + widgetID+'/'+functionName+'/'));
 };
 ws.onclose = function(evt){
     /* websocket is closed. */
