@@ -837,6 +837,16 @@ class Slider(Input):
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
+        self.EVENT_ONINPUT = 'oninput'
+
+    def oninput(self, newValue):
+        return self.eventManager.propagate(self.EVENT_ONINPUT, [newValue])
+
+    def set_oninput_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONINPUT] = \
+            "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONINPUT}
+        self.eventManager.register_listener(self.EVENT_ONINPUT, listener, funcname)
 
 
 class ColorPicker(Input):
