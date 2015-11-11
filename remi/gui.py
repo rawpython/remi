@@ -1211,7 +1211,7 @@ class Link(Widget):
 
 class VideoPlayer(Widget):
 
-    def __init__(self, w, h, video, poster):
+    def __init__(self, w, h, video, poster=None):
         super(VideoPlayer, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.type = 'video'
         self.attributes['src'] = video
