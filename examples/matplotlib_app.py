@@ -16,12 +16,12 @@
 This simple example shows how to display a matplotlib plot image
 """
 
+import io
 
 import remi.gui as gui
 from remi import start, App
-import io
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
 
 class MatplotImageProvider(gui.Widget):
 
@@ -30,23 +30,31 @@ class MatplotImageProvider(gui.Widget):
        We inherit Widget class in order to receive events
     """
 
-    def __init__(self):
-        super(MatplotImageProvider, self).__init__(0, 0)
-        self.buf = None
+    ax = None
 
-    def set_plot(self, plt):
-        if self.buf is not None:
-            self.buf.close()
-        self.buf = io.BytesIO()
-        plt.savefig(self.buf, format='png')
+    def __init__(self, fig=None, ax=None):
+        super(MatplotImageProvider, self).__init__(0, 0)
+        self._buf = None
+        if fig is None:
+            fig,ax = plt.subplots()
+        self._fig = fig
+        self.ax = ax
+
+    def redraw(self):
+        if self._buf is not None:
+            self._buf.close()
+        self._buf = io.BytesIO()
+        self._fig.savefig(self._buf, format='png')
         
     def get_address(self):
         return "/%s/serve_image" % id(self)
 
     def serve_image(self):
-        self.buf.seek(0)
+        if self._buf is None:
+            self.redraw()
+        self._buf.seek(0)
         headers = {'Content-type':'image/png'}
-        return [self.buf.read(),headers]
+        return [self._buf.read(),headers]
         
 
 class MyApp(App):
@@ -55,16 +63,14 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        # the arguments are	width - height - layoutOrientationOrizontal
+
         wid = gui.Widget(320, 320, False, 10)
+
+        mpl = MatplotImageProvider()
+        mpl.ax.plot([1, 2])
+        mpl.ax.set_title("test")
         
-        matplot = MatplotImageProvider()
-        plt.figure()
-        plt.plot([1, 2])
-        plt.title("test")
-        matplot.set_plot(plt)
-        
-        self.image = gui.Image(300, 300, matplot.get_address())
+        self.image = gui.Image(300, 300, mpl.get_address())
 
         # appending a widget to another, the first argument is a string key
         wid.append('1', self.image)
@@ -74,12 +80,5 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-	# setting up remi debug level 
-	#       2=all debug messages   1=error messages   0=no messages
-	#import remi.server
-	#remi.server.DEBUG_MODE = 2 
-
-	# starts the webserver
-	# optional parameters   
-	#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
     start(MyApp)
+
