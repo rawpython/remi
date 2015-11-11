@@ -1207,3 +1207,14 @@ class Link(Widget):
 
     def get_url(self):
         return self.children['href']
+
+
+class VideoPlayer(Widget):
+
+    def __init__(self, w, h, video, poster):
+        super(VideoPlayer, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
+        self.type = 'video'
+        self.attributes['src'] = video
+        self.attributes['preload'] = 'auto'
+        self.attributes['controls'] = None
+        self.attributes['poster'] = poster
