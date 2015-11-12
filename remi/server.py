@@ -22,6 +22,7 @@ try:
     import socketserver
 except:
     import SocketServer as socketserver
+from socket import timeout
 import mimetypes
 import webbrowser
 import struct
@@ -162,9 +163,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 self.handshake()
             else:
                 if not self.read_next_message():
-                    debug_message('ending websocket service...')
-                    break
-            
+                    debug_message('read timed out, trying again...')
+                    continue
+
     def bytetonum(self,b):
         if pyLessThan3:
             b = ord(b)
@@ -172,7 +173,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def read_next_message(self):
         debug_message('read_next_message\n')
-        length = self.rfile.read(2)
+        try:
+            length = self.rfile.read(2)
+        except timeout:
+            return False
         try:
             length = self.bytetonum(length[1]) & 127
             if length == 126:
