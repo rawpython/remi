@@ -1,21 +1,25 @@
 
-> ##*simple things make the world simpler*
+> ##*Platform independent Python GUI in your browser*
 
 let's start
 ===
-Just download it without installation
+[Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out remi from git and install
 
-##[**download RemI**](https://github.com/dddomodossola/remi/archive/master.zip)
-
-Run the installation:
 ```
 python setup.py install
+```
+or install directly using pip
+
+```
+pip install git+https://github.com/dddomodossola/remi.git
 ```
 
 Then start the test script:
 ```
 python widgets_overview_app.py
 ```
+
+we recommend installing remi into a virtualenv. Remi is not yet API stable.
 
 RemI
 ===
@@ -26,7 +30,7 @@ Platform independent python gui library. In less than 100 Kbytes of source code,
 It allows to create platform independent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. You have to write NO HTML code, because the library itself converts the python code automatically in HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
 Why another gui lib?
-Ok, Kivy is the best, Tk is historical, pyQt is also good, but for every platform that appears we have to wait a porting. This lib allows to show a user interface everywhere there is a browser.
+Kivy, PyQT and PyGObject all require native code for the host operating system, which means installing or compiling large dependencies. Remi needs only a web browser to show your GUI.
 
 These widgets are available:
 - Widget : like an empty panel
