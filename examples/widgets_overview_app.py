@@ -27,7 +27,7 @@ class MyApp(App):
         super(MyApp, self).idle()
         
     def main(self):
-        verticalContainer = gui.Widget(640, 680, gui.Widget.LAYOUT_VERTICAL, 10)
+        verticalContainer = gui.Widget(640, 900, gui.Widget.LAYOUT_VERTICAL, 10)
 
         horizontalContainer = gui.Widget(620, 620, gui.Widget.LAYOUT_HORIZONTAL, 10)
 
@@ -112,6 +112,8 @@ class MyApp(App):
         self.date = gui.Date(200, 20, '2015-04-13')
         self.date.set_on_change_listener(self, 'date_changed')
 
+        self.video = gui.VideoPlayer(480, 270, 'http://www.w3schools.com/tags/movie.mp4', 'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg')
+
         # appending a widget to another, the first argument is a string key
         subContainerRight.append('1', self.lbl)
         subContainerRight.append('2', self.bt)
@@ -132,6 +134,7 @@ class MyApp(App):
         subContainerLeft.append('1', self.table)
         subContainerLeft.append('2', self.listView)
         subContainerLeft.append('3', self.link)
+        subContainerLeft.append('4', self.video)
 
         horizontalContainer.append('0', subContainerLeft)
         horizontalContainer.append('1', subContainerRight)
