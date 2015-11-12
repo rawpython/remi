@@ -46,6 +46,7 @@ These widgets are available:
 - FileSelectionDialog
 - Menu
 - MenuItem
+- VideoPlayer
 
 A basic application appears like this:
 
