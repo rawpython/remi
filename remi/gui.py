@@ -132,7 +132,7 @@ class Widget(Tag):
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
 
-    def __init__(self, w=1, h=1, layout_orientation=LAYOUT_HORIZONTAL, widget_spacing=0):
+    def __init__(self, w=-1, h=-1, layout_orientation=LAYOUT_HORIZONTAL, widget_spacing=0):
         """w = numeric with
         h = numeric height
         layout_orientation = specifies the "float" css attribute
@@ -204,18 +204,22 @@ class Widget(Tag):
         """
         value = 0
         ori = Widget.LAYOUT_VERTICAL if size_attribute_tag is 'width' else Widget.LAYOUT_HORIZONTAL
+        
+        can_determine_size = False
         for child in self.children.values():
             if hasattr(child,'style'):
-                print("w: " + str(type(child)) + "  size: " + str(from_pix(child.style[size_attribute_tag])) + "  " + size_attribute_tag)
+                can_determine_size = True
                 v = from_pix(child.style[size_attribute_tag])
                 value = max(value,v) if (self.layout_orientation is ori) else value + v
-                print("value:" + str(value))
+        if not can_determine_size:
+            return -1 #without children it's not possible to adjust size
         value = value + (self.widget_spacing*2 if (self.layout_orientation is ori) else self.widget_spacing*2*len(self.children))
         return value
 
-    def repr(self, client, include_children = True):
-        """it is used to automatically represent the widget to HTML format
-        packs all the attributes, children and so on."""
+    def recursive_adjust_size(self):
+        for child in self.children.values():
+            if hasattr(child,'style'):
+                child.recursive_adjust_size()
         self.auto_resize_width = (from_pix(self.style['width']) is -1) or self.auto_resize_width
         self.auto_resize_height = (from_pix(self.style['height']) is -1) or self.auto_resize_height
         if self.auto_resize_width:
@@ -223,6 +227,10 @@ class Widget(Tag):
         if self.auto_resize_height:
             self.style['height'] = to_pix(self.calculate_min_size('height'))
         self.adjust_children_margin()
+
+    def repr(self, client, include_children = True):
+        """it is used to automatically represent the widget to HTML format
+        packs all the attributes, children and so on."""
         self['style'] = jsonize(self.style)
 
         return super(Widget,self).repr(client, include_children)
@@ -235,7 +243,8 @@ class Widget(Tag):
 
         """
         super(Widget,self).append(key, value)
-        self.adjust_children_margin()
+        #self.adjust_children_margin()
+        self.recursive_adjust_size()
 
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
