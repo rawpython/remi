@@ -98,6 +98,7 @@ class Tag(object):
         """
         if hasattr(value, 'attributes'):
             value.attributes['parent_widget'] = str(id(self))
+            value.parent_widget_instance = self
 
         if key in self.children.keys():
             self.renderChildrenList.remove(self.children[key])
@@ -115,6 +116,11 @@ class Tag(object):
                     #when the child is removed we stop the iteration
                     #this implies that a child replication should not be allowed
                     break
+                    
+        if hasattr(child, 'attributes'):
+            if 'parent_widget' in child.attributes:
+                del child.attributes['parent_widget']
+                child.parent_widget_instance = None
 
 
 class Widget(Tag):
@@ -227,6 +233,17 @@ class Widget(Tag):
         if self.auto_resize_height:
             self.style['height'] = to_pix(self.calculate_min_size('height'))
         self.adjust_children_margin()
+        
+    def adjust_size(self):
+        if hasattr(self,'parent_widget_instance'):
+            rootWidget = self
+            while not (rootWidget.parent_widget_instance is None):
+                rootWidget = rootWidget.parent_widget_instance
+                if not hasattr(rootWidget,'parent_widget_instance'):
+                    break
+            rootWidget.recursive_adjust_size()
+        else:
+            self.recursive_adjust_size()
 
     def repr(self, client, include_children = True):
         """it is used to automatically represent the widget to HTML format
@@ -244,7 +261,11 @@ class Widget(Tag):
         """
         super(Widget,self).append(key, value)
         #self.adjust_children_margin()
-        self.recursive_adjust_size()
+        self.adjust_size()
+    
+    def remove(self, child):
+        super(Widget,self).remove(child)
+        self.adjust_size()
 
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
