@@ -37,10 +37,14 @@ from threading import Timer
 try:
     from urllib import unquote
     from urllib import quote
+    from urlparse import urlparse
+    from urlparse import parse_qs
 except:
     from urllib.parse import unquote
     from urllib.parse import quote
     from urllib.parse import unquote_to_bytes
+    from urllib.parse import urlparse
+    from urllib.parse import parse_qs
 import cgi
 
 clients = {}
@@ -550,7 +554,7 @@ ws.onerror = function(evt){
 
     def process_all(self, function):
         static_file = re.match(r"^/*res\/(.*)$", function)
-        attr_call = re.match(r"^\/*(\w+)\/(\w+)$", function)
+        attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)#re.match(r"^\/*(\w+)\/(\w+)\?*(\w*)$", function)
         if (function == '/') or (not function):
             # build the root page once if necessary
             should_call_main = not hasattr(self.client, 'root')
@@ -582,12 +586,18 @@ ws.onerror = function(evt){
                 content = f.read()
                 self.wfile.write(content)
         elif attr_call:
-            widget,function = attr_call.groups()
+            params = list()
+            param_dict = parse_qs(urlparse(function).query)
+            for k in param_dict:
+                params.append(param_dict[k])
+            
+            widget,function = attr_call.group(1,2)
             try:
-                content,headers = get_method_by(get_method_by(self.client.root, widget), function)()
+                content,headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
                 self.send_response(200)
             except IOError:
                 self.send_response(404)
+                debug_alert(traceback.format_exc())
                 return
 
             for k in headers.keys():
