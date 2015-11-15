@@ -1,9 +1,10 @@
 
-> ##*Platform independent Python GUI in your browser*
+## *A Platform independent Python GUI library for your applications*
+RemI is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
-let's start
+Getting Started
 ===
-[Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out remi from git and install
+[Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out RemI from git and install
 
 ```
 python setup.py install
@@ -19,18 +20,15 @@ Then start the test script:
 python widgets_overview_app.py
 ```
 
-we recommend installing remi into a virtualenv. Remi is not yet API stable.
+we recommend installing RemI into a virtualenv. Remi is not yet API stable.
 
 RemI
 ===
-Platform independent python gui library. In less than 100 Kbytes of source code, perfect for your diet.
+Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
 
 ![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/screenshot.png "Widgets overview")
 
-It allows to create platform independent GUI with python. The entire gui will be shown in the browser because it is represented in HTML. You have to write NO HTML code, because the library itself converts the python code automatically in HTML. When your app starts, it starts a webserver that will be accessible on your network.
-
-Why another gui lib?
-Kivy, PyQT and PyGObject all require native code for the host operating system, which means installing or compiling large dependencies. Remi needs only a web browser to show your GUI.
+RemI enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, RemI automatically translates your Python code into HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
 These widgets are available:
 - Widget : like an empty panel
@@ -90,21 +88,31 @@ start(MyApp)
 In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8081".
 You can change the url address, edit the "configuration.py" file.
 
-Tested on Android, Linux, Windows with Google Chrome web browser.
-Useful on raspberry pi for python script development. It allows to interact with your raspberry remotely from your mobile device.
+Tested on Android, Linux, Windows with Google Chrome.
+Useful on Raspberry Pi for Python script development. It allows to interact with your Raspberry Pi remotely from your mobile device.
 
 
 FAQ
 ===
-- Should I know HTML? NO, It is not required, you have to code only in python.
-- Can I use this library with other browsers? Yes you can, but I haven't tested it and probably something couldn't work fine.
-- Is it open source? For sure!
-- Where is the documentation? I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
+- **Why another GUI lib?**  
+Kivy, PyQT and PyGObject all require native code for the host operating system, which means installing or compiling large dependencies. Remi needs only a web browser to show your GUI.
+
+- **Do I need to know HTML?**  
+NO, It is not required, you have to code only in Python.
+
+- **Which browsers can I use this with?**  
+I have developed this using Chrome (on Windows, Linux and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
+
+- **Is it open source?**  
+For sure! RemI is released under the Apache License. See the ``LICENSE`` file for more details.
+
+- **Where is the documentation?**  
+I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
 
 Brief tutorial
 ===
-Import remi library and all submodules.
+Import RemI library and all submodules.
 
 ```py
 import remi.gui as gui
