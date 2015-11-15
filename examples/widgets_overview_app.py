@@ -14,6 +14,7 @@
 
 import remi.gui as gui
 from remi import start, App
+from threading import Timer
 
 
 class MyApp(App):
@@ -21,10 +22,6 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
         
-    def idle(self):
-        """ Usefull function to schedule tasks. 
-        Called every configuration.UPDATE_ITERVAL """
-        super(MyApp, self).idle()
         
     def main(self):
         verticalContainer = gui.Widget(640, 900, gui.Widget.LAYOUT_VERTICAL, 10)
@@ -56,11 +53,16 @@ class MyApp(App):
         # the arguments are	width - height - layoutOrientationOrizontal
         subContainerRight = gui.Widget(240, 560, gui.Widget.LAYOUT_VERTICAL, 10)
 
+        self.count=0
+        self.counter=gui.Label(200, 30, '')
+        
+        
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
         self.bt = gui.Button(200, 30, 'Press me!')
         # setting the listener for the onclick event of the button
         self.bt.set_on_click_listener(self, 'on_button_pressed')
+
 
         self.txt = gui.TextInput(200, 30)
         self.txt.set_text('This is a TEXTAREA')
@@ -115,6 +117,7 @@ class MyApp(App):
         self.video = gui.VideoPlayer(480, 270, 'http://www.w3schools.com/tags/movie.mp4', 'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg')
 
         # appending a widget to another, the first argument is a string key
+        subContainerRight.append('0', self.counter)        
         subContainerRight.append('1', self.lbl)
         subContainerRight.append('2', self.bt)
         subContainerRight.append('3', self.txt)
@@ -165,9 +168,18 @@ class MyApp(App):
         verticalContainer.append('0',menu)
         verticalContainer.append('1',horizontalContainer)
 
+        # kick of regular display of counter
+        self.display_counter()
+        
         # returning the root widget
         return verticalContainer
 
+    def display_counter(self):
+        self.counter.set_text('Running Time: ' + str(self.count))
+        self.count+=1
+        Timer(1,self.display_counter).start()         
+        
+        
     def menu_dialog_clicked(self):
         self.dialog=gui.GenericDialog(400,400,'Dialog Box','Click Ok to transfer content to main page')
 
@@ -175,6 +187,8 @@ class MyApp(App):
         self.dtextinput.set_value('Initial Text')
         self.dialog.add_field_with_label('dtextinput','Text Input',self.dtextinput)
 
+        self.dcheck = gui.CheckBox(200, 30, False)
+        self.dialog.add_field_with_label('dcheck','Label Checkbox',self.dcheck)        
         values=( 'Danny Young','Christine Holand','Lars Gordon','Roberto Robitaille')
         self.dlistView = gui.ListView(200, 120)
         key=0
@@ -215,6 +229,9 @@ class MyApp(App):
         result=self.dialog.get_field('dtextinput').get_value()
         self.txt.set_value(result)
 
+        result=self.dialog.get_field('dcheck').get_value()
+        self.check.set_value(result)
+        
         result=self.dialog.get_field('ddropdown').get_value()
         self.dropDown.set_value(result)
 
