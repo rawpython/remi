@@ -458,11 +458,13 @@ class InputDialog(GenericDialog):
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
 
-    def __init__(self, width=500, height=160, title='Title', message='Message'):
+    def __init__(self, width=500, height=160, title='Title', message='Message',
+                    initial_value=''):
         super(InputDialog, self).__init__(width, height, title, message)
 
         self.inputText = TextInput(width - 20, 30)
         self.add_field('textinput',self.inputText)
+        self.inputText.set_text(initial_value)
 
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
         self.set_on_confirm_dialog_listener(self, 'confirm_value')

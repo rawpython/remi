@@ -281,7 +281,8 @@ class MyApp(App):
         self.lbl.set_text('CheckBox changed, new value: ' + str(newValue))
 
     def open_input_dialog(self):
-        self.inputDialog = gui.InputDialog(500, 160, 'Input Dialog', 'Your name?')
+        self.inputDialog = gui.InputDialog(500, 160, 'Input Dialog', 'Your name?',
+        initial_value='type here')
         self.inputDialog.set_on_confirm_value_listener(
             self, 'on_input_dialog_confirm')
 
