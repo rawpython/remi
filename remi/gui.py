@@ -845,18 +845,16 @@ class GenericObject(Widget):
 
 
 class FileFolderNavigator(Widget):
-    
-    """FileFolderNavigator widget.
-    """
+
+    """FileFolderNavigator widget."""
 
     def __init__(self, w, h, multiple_selection,selection_folder):
         super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
         self.w = w
         self.h = h
         self.multiple_selection = multiple_selection
-        self.sep = os.sep #'/' #default separator in path os.sep
 
-        self.selectionlist = list()  # here are stored selected files and folders
+        self.selectionlist = []
         self.controlsContainer = Widget(w, 25, Widget.LAYOUT_HORIZONTAL)
         self.controlBack = Button(45, 25, 'Up')
         self.controlBack.set_on_click_listener(self, 'dir_go_back')
@@ -877,6 +875,8 @@ class FileFolderNavigator(Widget):
         self.append('items', self.itemContainer)
 
         self.folderItems = list()
+
+        # fixme: we should use full paths and not all this chdir stuff
         self.chdir(selection_folder)  # move to actual working directory
 
     def get_selection_list(self):
@@ -894,7 +894,6 @@ class FileFolderNavigator(Widget):
                 except (IndexError,ValueError):
                     return cmp(a,b)
 
-        fpath = directory + self.sep
         debug_message("FileFolderNavigator - populate_folder_items")
 
         l = os.listdir(directory)
@@ -911,8 +910,9 @@ class FileFolderNavigator(Widget):
         self.itemContainer.style['overflow-x'] = 'hidden'
 
         for i in l:
-            isFolder = not os.path.isfile(fpath+i)
-            fi = FileFolderItem(self.w, 33, i, isFolder)
+            full_path = os.path.join(directory, i)
+            is_folder = not os.path.isfile(full_path)
+            fi = FileFolderItem(self.w, 33, i, is_folder)
             fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
             fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
             self.folderItems.append(fi)
@@ -962,7 +962,7 @@ class FileFolderNavigator(Widget):
             folderitem.set_selected(True)
         debug_message("FileFolderNavigator - on_folder_item_click")
         # when an item is clicked it is added to the file selection list
-        f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
+        f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if f in self.selectionlist:
             self.selectionlist.remove(f)
         else:
@@ -971,7 +971,7 @@ class FileFolderNavigator(Widget):
     def on_folder_item_click(self,folderitem):
         debug_message("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
-        f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
+        f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if not os.path.isfile(f):
             self.chdir(f)
 
