@@ -675,6 +675,25 @@ class Table(Widget):
         super(Table, self).__init__(w, h)
         self.type = 'table'
         self.style['float'] = 'none'
+        
+    def from_2d_matrix(self, _matrix):
+        """
+        Fills the table with the data contained in the provided 2d _matrix
+        The first row of the matrix is set as table title
+        """
+        for child_keys in list(self.children):
+            self.remove(self.children[child_keys])
+        first_row = True
+        for row in _matrix:
+            tr = TableRow()
+            for item in row:
+                if first_row:
+                    ti = TableTitle(item)
+                else:
+                    ti = TableItem(item)
+                tr.append( str(id(ti)), ti )
+            self.append( str(id(tr)), tr )
+            first_row = False
 
 
 class TableRow(Widget):
@@ -693,9 +712,10 @@ class TableItem(Widget):
 
     """item widget for the TableRow."""
 
-    def __init__(self):
+    def __init__(self, text=''):
         super(TableItem, self).__init__(-1, -1)
         self.type = 'td'
+        self.append('text', text)
         self.style['float'] = 'none'
 
 
