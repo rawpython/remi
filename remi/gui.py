@@ -463,11 +463,19 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(width, height, title, message)
 
         self.inputText = TextInput(width - 20, 30)
+        self.inputText.set_on_enter_listener(self,'on_text_enter_listener')
         self.add_field('textinput',self.inputText)
         self.inputText.set_text(initial_value)
 
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
+
+    def on_text_enter_listener(self,value):
+        """event called pressing on ENTER key.
+        propagates the string content of the input field
+        """
+        self.hide()
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [value])
 
     def confirm_value(self):
         """event called pressing on OK button.
