@@ -251,10 +251,6 @@ class Widget(Tag):
 
 class Button(Widget):
 
-    """
-    button widget: implements the onclick event.
-    """
-
     def __init__(self, w, h, text=''):
         super(Button, self).__init__(w, h)
         self.type = 'button'
@@ -264,18 +260,10 @@ class Button(Widget):
     def set_text(self, t):
         self.append('text', t)
 
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
-
 
 class TextInput(Widget):
 
-    """multiline text area widget implements the onclick event.
-    """
+    """multiline text area widget"""
 
     def __init__(self, w, h, single_line=True):
         super(TextInput, self).__init__(w, h)
@@ -314,13 +302,6 @@ class TextInput(Widget):
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def onkeydown(self,newValue):
         """returns the new text value."""
@@ -361,13 +342,6 @@ class Label(Widget):
 
     def get_text(self):
         return self.children['text']
-        
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class GenericDialog(Widget):
@@ -570,8 +544,7 @@ class ListView(Widget):
 
 class ListItem(Widget):
 
-    """item widget for the ListView implements the onclick event.
-    """
+    """item widget for the ListView"""
 
     def __init__(self, w, h, text):
         super(ListItem, self).__init__(w, h)
@@ -585,7 +558,7 @@ class ListItem(Widget):
 
     def get_text(self):
         return self.children['text']
-        
+
     def get_value(self):
         return self.get_text()
 
@@ -607,7 +580,7 @@ class DropDown(Widget):
                                                                'evt':self.EVENT_ONCHANGE}
         self.selected_item = None
         self.selected_key = None
-        
+
     def select_by_key(self, itemKey):
         """
         selects an item by its key
@@ -658,21 +631,13 @@ class DropDown(Widget):
 
 class DropDownItem(Widget):
 
-    """item widget for the DropDown implements the onclick event.
-    """
+    """item widget for the DropDown"""
 
     def __init__(self, w, h, text):
         super(DropDownItem, self).__init__(w, h)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def set_text(self, text):
         self.attributes['value'] = text
@@ -697,13 +662,6 @@ class Image(Widget):
         super(Image, self).__init__(w, h)
         self.type = 'img'
         self.attributes['src'] = filename
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class Table(Widget):
@@ -1009,7 +967,7 @@ class FileFolderNavigator(Widget):
 
 class FileFolderItem(Widget):
 
-    """FileFolderItem widget for the FileFolderNavigator implements the onclick event."""
+    """FileFolderItem widget for the FileFolderNavigator"""
 
     def __init__(self, w, h, text, isFolder=False):
         super(FileFolderItem, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
@@ -1113,13 +1071,6 @@ class MenuItem(Widget):
 
     def get_text(self):
         return self.children['text']
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class FileUploader(Widget):
