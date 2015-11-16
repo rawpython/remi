@@ -82,6 +82,9 @@ class Tag(object):
         packs all the attributes, children and so on."""
         classname = self.__class__.__name__
 
+        self.attributes['children_list'] = ','.join(map(lambda k, v: str(
+            id(v)), self.children.keys(), self.children.values())) 
+        
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
@@ -112,6 +115,10 @@ class Tag(object):
         self.renderChildrenList.append(value)
 
         self.children[key] = value
+
+    def empty(self):
+        for k in list(self.children.keys()):
+            self.remove(self.children[k])
 
     def remove(self, child):
         if child in self.children.values():
@@ -482,6 +489,11 @@ class ListView(Widget):
             item.set_on_click_listener(self, self.EVENT_ONSELECTION)
         item.attributes['selected'] = False
         super(ListView, self).append(key, item)
+    
+    def empty(self):
+        self.selected_item = None
+        self.selected_key = None
+        super(ListView,self).empty()
 
     def onselection(self, clicked_item):
         self.selected_key = None

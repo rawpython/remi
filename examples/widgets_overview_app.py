@@ -50,13 +50,11 @@ class MyApp(App):
         self.count=0
         self.counter=gui.Label(200, 30, '')
         
-        
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
         self.bt = gui.Button(200, 30, 'Press me!')
         # setting the listener for the onclick event of the button
         self.bt.set_on_click_listener(self, 'on_button_pressed')
-
 
         self.txt = gui.TextInput(200, 30)
         self.txt.set_text('This is a TEXTAREA')
