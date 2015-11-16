@@ -883,9 +883,23 @@ class FileFolderNavigator(Widget):
         return self.selectionlist
 
     def populate_folder_items(self,directory):
+        def _sort_files(a,b):
+            if os.path.isfile(a) and os.path.isdir(b):
+                return 1
+            elif os.path.isfile(b) and os.path.isdir(a):
+                return -1
+            else:
+                try:
+                    return cmp(a[1:].lower(),b[1:].lower())
+                except (IndexError,ValueError):
+                    return cmp(a,b)
+
         fpath = directory + self.sep
         debug_message("FileFolderNavigator - populate_folder_items")
+
         l = os.listdir(directory)
+        l.sort(_sort_files)
+
         # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory 
         # we remove the container avoiding graphic update adding items
