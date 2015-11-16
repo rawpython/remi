@@ -87,6 +87,8 @@ class Tag(object):
         for s in self.renderChildrenList:
             if isinstance(s, type('')):
                 innerHTML = innerHTML + s
+            elif isinstance(s, type(u'')):
+                innerHTML = innerHTML + s.encode('utf-8')
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
