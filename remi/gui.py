@@ -890,9 +890,11 @@ class FileFolderNavigator(Widget):
                 return -1
             else:
                 try:
-                    return cmp(a[1:].lower(),b[1:].lower())
-                except (IndexError,ValueError):
-                    return cmp(a,b)
+                    if a[0] == '.': a = a[1:]
+                    if b[0] == '.': b = b[1:]
+                    return cmp(a.lower(), b.lower())
+                except (IndexError, ValueError):
+                    return cmp(a, b)
 
         debug_message("FileFolderNavigator - populate_folder_items")
 
