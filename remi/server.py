@@ -75,19 +75,19 @@ def toWebsocket(data):
     #encoding end deconding utility function
     if pyLessThan3:
         return quote(data)
-    return quote(data,encoding='latin-1')
+    return quote(data,encoding='utf-8')
         
         
 def fromWebsocket(data):
     #encoding end deconding utility function
     if pyLessThan3:
         return unquote(data)
-    return unquote(data,encoding='latin-1')
+    return unquote(data,encoding='utf-8')
 
 
 def encodeIfPyGT3(data):
     if not pyLessThan3:
-        data = data.encode('latin-1')
+        return data.encode('utf-8')
     return data
 
 

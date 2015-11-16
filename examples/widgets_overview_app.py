@@ -21,7 +21,11 @@ class MyApp(App):
 
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
-        
+
+    def idle(self):
+        """ Usefull function to schedule tasks. 
+        Called every configuration.UPDATE_ITERVAL """
+        super(MyApp, self).idle()
         
     def main(self):
         verticalContainer = gui.Widget(640, 900, gui.Widget.LAYOUT_VERTICAL, 10)
@@ -114,7 +118,8 @@ class MyApp(App):
         self.date = gui.Date(200, 20, '2015-04-13')
         self.date.set_on_change_listener(self, 'date_changed')
 
-        self.video = gui.VideoPlayer(480, 270, 'http://www.w3schools.com/tags/movie.mp4', 'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg')
+        self.video = gui.VideoPlayer(480, 270, 'http://www.w3schools.com/tags/movie.mp4', 
+                    'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg')
 
         # appending a widget to another, the first argument is a string key
         subContainerRight.append('0', self.counter)        
@@ -164,7 +169,6 @@ class MyApp(App):
         m11.append('111',m111)
         m11.append('112',m112)
 
-
         verticalContainer.append('0',menu)
         verticalContainer.append('1',horizontalContainer)
 
@@ -178,7 +182,6 @@ class MyApp(App):
         self.counter.set_text('Running Time: ' + str(self.count))
         self.count+=1
         Timer(1,self.display_counter).start()         
-        
         
     def menu_dialog_clicked(self):
         self.dialog=gui.GenericDialog(400,400,'Dialog Box','Click Ok to transfer content to main page')
@@ -345,8 +348,8 @@ class MyApp(App):
         
 # setting up remi debug level 
 #       2=all debug messages   1=error messages   0=no messages
-#import remi.server
-#remi.server.DEBUG_MODE = 2
+# import remi.server
+# remi.server.DEBUG_MODE = 2
 
 # starts the webserver
 # optional parameters   

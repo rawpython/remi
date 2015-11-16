@@ -12,36 +12,36 @@
    limitations under the License.
 """
 
+import time
+import io
+
+import PIL.Image
+
 import remi.gui as gui
 from remi import start, App
-import PIL
-from PIL import Image
-import io
 
 
 class PILImageViewverWidget(gui.Image):
     def __init__(self, width, height, pil_image=None):
         super(PILImageViewverWidget, self).__init__(width, height, "/res/logo.png")
-        self._pil_image = None
-        self.update_index = 0 #when changed forces image refresh
+        self._buf = None
     
     def load(self, file_path_name):
-        self._pil_image = PIL.Image.open(file_path_name)
+        pil_image = PIL.Image.open(file_path_name)
+        self._buf = io.BytesIO()
+        pil_image.save(self._buf, format='png')
         self.refresh()
     
     def refresh(self):
-        self.update_index = self.update_index + 1
-        self.attributes['src'] = "/%s/get_image_data?update_index=%s" % (id(self),self.update_index)
+        i = int(time.time()*1e6)
+        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self),i)
         
     def get_image_data(self,update_index):
-        if self._pil_image is None:
+        if self._buf is None:
             return None
-        self.buf = io.BytesIO()
-        self._pil_image.save(self.buf, format='png')
-        
-        self.buf.seek(0)
+        self._buf.seek(0)
         headers = {'Content-type':'image/png'}
-        return [self.buf.read(),headers]
+        return [self._buf.read(),headers]
 
 
 class MyApp(App):

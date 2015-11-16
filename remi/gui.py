@@ -87,6 +87,8 @@ class Tag(object):
         for s in self.renderChildrenList:
             if isinstance(s, type('')):
                 innerHTML = innerHTML + s
+            elif isinstance(s, type(u'')):
+                innerHTML = innerHTML + s.encode('utf-8')
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
@@ -249,10 +251,6 @@ class Widget(Tag):
 
 class Button(Widget):
 
-    """
-    button widget: implements the onclick event.
-    """
-
     def __init__(self, w, h, text=''):
         super(Button, self).__init__(w, h)
         self.type = 'button'
@@ -262,18 +260,10 @@ class Button(Widget):
     def set_text(self, t):
         self.append('text', t)
 
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
-
 
 class TextInput(Widget):
 
-    """multiline text area widget implements the onclick event.
-    """
+    """multiline text area widget"""
 
     def __init__(self, w, h, single_line=True):
         super(TextInput, self).__init__(w, h)
@@ -312,13 +302,6 @@ class TextInput(Widget):
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def onkeydown(self,newValue):
         """returns the new text value."""
@@ -359,13 +342,6 @@ class Label(Widget):
 
     def get_text(self):
         return self.children['text']
-        
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class GenericDialog(Widget):
@@ -463,11 +439,19 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(width, height, title, message)
 
         self.inputText = TextInput(width - 20, 30)
+        self.inputText.set_on_enter_listener(self,'on_text_enter_listener')
         self.add_field('textinput',self.inputText)
         self.inputText.set_text(initial_value)
 
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
+
+    def on_text_enter_listener(self,value):
+        """event called pressing on ENTER key.
+        propagates the string content of the input field
+        """
+        self.hide()
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [value])
 
     def confirm_value(self):
         """event called pressing on OK button.
@@ -560,8 +544,7 @@ class ListView(Widget):
 
 class ListItem(Widget):
 
-    """item widget for the ListView implements the onclick event.
-    """
+    """item widget for the ListView"""
 
     def __init__(self, w, h, text):
         super(ListItem, self).__init__(w, h)
@@ -575,7 +558,7 @@ class ListItem(Widget):
 
     def get_text(self):
         return self.children['text']
-        
+
     def get_value(self):
         return self.get_text()
 
@@ -597,7 +580,7 @@ class DropDown(Widget):
                                                                'evt':self.EVENT_ONCHANGE}
         self.selected_item = None
         self.selected_key = None
-        
+
     def select_by_key(self, itemKey):
         """
         selects an item by its key
@@ -648,21 +631,13 @@ class DropDown(Widget):
 
 class DropDownItem(Widget):
 
-    """item widget for the DropDown implements the onclick event.
-    """
+    """item widget for the DropDown"""
 
     def __init__(self, w, h, text):
         super(DropDownItem, self).__init__(w, h)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def set_text(self, text):
         self.attributes['value'] = text
@@ -687,13 +662,6 @@ class Image(Widget):
         super(Image, self).__init__(w, h)
         self.type = 'img'
         self.attributes['src'] = filename
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class Table(Widget):
@@ -877,18 +845,16 @@ class GenericObject(Widget):
 
 
 class FileFolderNavigator(Widget):
-    
-    """FileFolderNavigator widget.
-    """
+
+    """FileFolderNavigator widget."""
 
     def __init__(self, w, h, multiple_selection,selection_folder):
         super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
         self.w = w
         self.h = h
         self.multiple_selection = multiple_selection
-        self.sep = os.sep #'/' #default separator in path os.sep
 
-        self.selectionlist = list()  # here are stored selected files and folders
+        self.selectionlist = []
         self.controlsContainer = Widget(w, 25, Widget.LAYOUT_HORIZONTAL)
         self.controlBack = Button(45, 25, 'Up')
         self.controlBack.set_on_click_listener(self, 'dir_go_back')
@@ -909,15 +875,32 @@ class FileFolderNavigator(Widget):
         self.append('items', self.itemContainer)
 
         self.folderItems = list()
+
+        # fixme: we should use full paths and not all this chdir stuff
         self.chdir(selection_folder)  # move to actual working directory
 
     def get_selection_list(self):
         return self.selectionlist
 
     def populate_folder_items(self,directory):
-        fpath = directory + self.sep
+        def _sort_files(a,b):
+            if os.path.isfile(a) and os.path.isdir(b):
+                return 1
+            elif os.path.isfile(b) and os.path.isdir(a):
+                return -1
+            else:
+                try:
+                    if a[0] == '.': a = a[1:]
+                    if b[0] == '.': b = b[1:]
+                    return cmp(a.lower(), b.lower())
+                except (IndexError, ValueError):
+                    return cmp(a, b)
+
         debug_message("FileFolderNavigator - populate_folder_items")
+
         l = os.listdir(directory)
+        l.sort(_sort_files)
+
         # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory 
         # we remove the container avoiding graphic update adding items
@@ -929,8 +912,9 @@ class FileFolderNavigator(Widget):
         self.itemContainer.style['overflow-x'] = 'hidden'
 
         for i in l:
-            isFolder = not os.path.isfile(fpath+i)
-            fi = FileFolderItem(self.w, 33, i, isFolder)
+            full_path = os.path.join(directory, i)
+            is_folder = not os.path.isfile(full_path)
+            fi = FileFolderItem(self.w, 33, i, is_folder)
             fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
             fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
             self.folderItems.append(fi)
@@ -980,7 +964,7 @@ class FileFolderNavigator(Widget):
             folderitem.set_selected(True)
         debug_message("FileFolderNavigator - on_folder_item_click")
         # when an item is clicked it is added to the file selection list
-        f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
+        f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if f in self.selectionlist:
             self.selectionlist.remove(f)
         else:
@@ -989,7 +973,7 @@ class FileFolderNavigator(Widget):
     def on_folder_item_click(self,folderitem):
         debug_message("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
-        f = self.pathEditor.get_text() + self.sep + folderitem.get_text()
+        f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if not os.path.isfile(f):
             self.chdir(f)
 
@@ -999,7 +983,7 @@ class FileFolderNavigator(Widget):
 
 class FileFolderItem(Widget):
 
-    """FileFolderItem widget for the FileFolderNavigator implements the onclick event."""
+    """FileFolderItem widget for the FileFolderNavigator"""
 
     def __init__(self, w, h, text, isFolder=False):
         super(FileFolderItem, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
@@ -1103,13 +1087,6 @@ class MenuItem(Widget):
 
     def get_text(self):
         return self.children['text']
-
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
-
-    def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
 
 class FileUploader(Widget):
