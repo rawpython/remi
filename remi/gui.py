@@ -14,6 +14,7 @@
 
 import os
 import traceback
+from functools import cmp_to_key
 
 from .server import runtimeInstances, debug_message, debug_alert
 
@@ -892,14 +893,14 @@ class FileFolderNavigator(Widget):
                 try:
                     if a[0] == '.': a = a[1:]
                     if b[0] == '.': b = b[1:]
-                    return cmp(a.lower(), b.lower())
+                    return (a.lower() > b.lower())
                 except (IndexError, ValueError):
-                    return cmp(a, b)
+                    return (a > b)
 
         debug_message("FileFolderNavigator - populate_folder_items")
 
         l = os.listdir(directory)
-        l.sort(_sort_files)
+        l.sort(key=cmp_to_key(_sort_files))
 
         # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory 
