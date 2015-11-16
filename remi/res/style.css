@@ -23,7 +23,7 @@ div {
 }
 
 .ListView {
-	border: 1px solid rgb( 73,73,73 );
+	border: 0px solid rgb( 73,73,73 );
 	padding: 0;
 	background-color: white;
 	cursor: default;
