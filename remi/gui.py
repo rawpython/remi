@@ -14,6 +14,7 @@
 
 import os
 import traceback
+from functools import cmp_to_key
 
 from .server import runtimeInstances, debug_message, debug_alert
 
@@ -81,6 +82,9 @@ class Tag(object):
         packs all the attributes, children and so on."""
         classname = self.__class__.__name__
 
+        self.attributes['children_list'] = ','.join(map(lambda k, v: str(
+            id(v)), self.children.keys(), self.children.values())) 
+        
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
@@ -111,6 +115,10 @@ class Tag(object):
         self.renderChildrenList.append(value)
 
         self.children[key] = value
+
+    def empty(self):
+        for k in list(self.children.keys()):
+            self.remove(self.children[k])
 
     def remove(self, child):
         if child in self.children.values():
@@ -481,6 +489,11 @@ class ListView(Widget):
             item.set_on_click_listener(self, self.EVENT_ONSELECTION)
         item.attributes['selected'] = False
         super(ListView, self).append(key, item)
+    
+    def empty(self):
+        self.selected_item = None
+        self.selected_key = None
+        super(ListView,self).empty()
 
     def onselection(self, clicked_item):
         self.selected_key = None
@@ -674,6 +687,25 @@ class Table(Widget):
         super(Table, self).__init__(w, h)
         self.type = 'table'
         self.style['float'] = 'none'
+        
+    def from_2d_matrix(self, _matrix):
+        """
+        Fills the table with the data contained in the provided 2d _matrix
+        The first row of the matrix is set as table title
+        """
+        for child_keys in list(self.children):
+            self.remove(self.children[child_keys])
+        first_row = True
+        for row in _matrix:
+            tr = TableRow()
+            for item in row:
+                if first_row:
+                    ti = TableTitle(item)
+                else:
+                    ti = TableItem(item)
+                tr.append( str(id(ti)), ti )
+            self.append( str(id(tr)), tr )
+            first_row = False
 
 
 class TableRow(Widget):
@@ -692,9 +724,10 @@ class TableItem(Widget):
 
     """item widget for the TableRow."""
 
-    def __init__(self):
+    def __init__(self, text=''):
         super(TableItem, self).__init__(-1, -1)
         self.type = 'td'
+        self.append('text', text)
         self.style['float'] = 'none'
 
 
@@ -892,14 +925,14 @@ class FileFolderNavigator(Widget):
                 try:
                     if a[0] == '.': a = a[1:]
                     if b[0] == '.': b = b[1:]
-                    return cmp(a.lower(), b.lower())
+                    return (a.lower() > b.lower())
                 except (IndexError, ValueError):
-                    return cmp(a, b)
+                    return (a > b)
 
         debug_message("FileFolderNavigator - populate_folder_items")
 
         l = os.listdir(directory)
-        l.sort(_sort_files)
+        l.sort(key=cmp_to_key(_sort_files))
 
         # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory 

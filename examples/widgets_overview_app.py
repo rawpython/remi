@@ -37,22 +37,12 @@ class MyApp(App):
         self.img.set_on_click_listener(self, 'on_img_clicked')
 
         self.table = gui.Table(300, 200)
-        row = gui.TableRow()
-        item = gui.TableTitle()
-        item.append(str(id(item)), 'ID')
-        row.append(str(id(item)), item)
-        item = gui.TableTitle()
-        item.append(str(id(item)), 'First Name')
-        row.append(str(id(item)), item)
-        item = gui.TableTitle()
-        item.append(str(id(item)), 'Last Name')
-        row.append(str(id(item)), item)
-        self.table.append(str(id(row)), row)
-        self.add_table_row(self.table, '101', 'Danny', 'Young')
-        self.add_table_row(self.table, '102', 'Christine', 'Holand')
-        self.add_table_row(self.table, '103', 'Lars', 'Gordon')
-        self.add_table_row(self.table, '104', 'Roberto', 'Robitaille')
-        self.add_table_row(self.table, '105', 'Maria', 'Papadopoulos')
+        self.table.from_2d_matrix([['ID', 'First Name', 'Last Name']
+                                  ,['101', 'Danny', 'Young']
+                                  ,['102', 'Christine', 'Holand']
+                                  ,['103', 'Lars', 'Gordon']
+                                  ,['104', 'Roberto', 'Robitaille']
+                                  ,['105', 'Maria', 'Papadopoulos']])
 
         # the arguments are	width - height - layoutOrientationOrizontal
         subContainerRight = gui.Widget(240, 560, gui.Widget.LAYOUT_VERTICAL, 10)
@@ -60,13 +50,11 @@ class MyApp(App):
         self.count=0
         self.counter=gui.Label(200, 30, '')
         
-        
         self.lbl = gui.Label(200, 30, 'This is a LABEL!')
 
         self.bt = gui.Button(200, 30, 'Press me!')
         # setting the listener for the onclick event of the button
         self.bt.set_on_click_listener(self, 'on_button_pressed')
-
 
         self.txt = gui.TextInput(200, 30)
         self.txt.set_text('This is a TEXTAREA')
@@ -252,19 +240,6 @@ class MyApp(App):
 
         result=self.dialog.get_field('dlistView').get_key()
         self.listView.select_by_key(result)
-
-    def add_table_row(self, table, field1, field2, field3):
-        row = gui.TableRow()
-        item = gui.TableItem()
-        item.append(str(id(item)), field1)
-        row.append(str(id(item)), item)
-        item = gui.TableItem()
-        item.append(str(id(item)), field2)
-        row.append(str(id(item)), item)
-        item = gui.TableItem()
-        item.append(str(id(item)), field3)
-        row.append(str(id(item)), item)
-        table.append(str(id(row)), row)
 
     # listener function
     def on_img_clicked(self):
