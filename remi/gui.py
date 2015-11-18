@@ -16,7 +16,7 @@ import os
 import traceback
 from functools import cmp_to_key
 
-from .server import runtimeInstances, debug_message, debug_alert
+from .server import runtimeInstances, debug_message, debug_alert, update_event
 
 
 def to_pix(x):
@@ -187,6 +187,9 @@ class Widget(Tag):
         self.oldRootWidget = None  # used when hiding the widget
 
         self.eventManager = EventManager()
+
+    def redraw(self):
+        update_event.set()
 
     def repr(self, client, include_children = True):
         """it is used to automatically represent the widget to HTML format
