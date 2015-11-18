@@ -157,7 +157,10 @@ class MyApp(App):
         m11.append('111',m111)
         m11.append('112',m112)
 
-        verticalContainer.append('0',menu)
+        menubar = gui.MenuBar(620, 30)
+        menubar.append('1', menu)
+
+        verticalContainer.append('0',menubar)
         verticalContainer.append('1',horizontalContainer)
 
         # kick of regular display of counter

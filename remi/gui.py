@@ -1085,6 +1085,12 @@ class FileSelectionDialog(GenericDialog):
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
+class MenuBar(Widget):
+    def __init__(self, w, h, orientation=Widget.LAYOUT_HORIZONTAL):
+        super(MenuBar, self).__init__(w, h, orientation)
+        self.type = 'nav'
+
+
 class Menu(Widget):
 
     """Menu widget can contain MenuItem."""
@@ -1095,7 +1101,7 @@ class Menu(Widget):
 
 
 class MenuItem(Widget):
-    
+
     """MenuItem widget can contain other MenuItem."""
 
     def __init__(self, w, h, text):

@@ -82,7 +82,7 @@ td {
 }
 
 
-div > ul.Menu {
+nav > ul.Menu {
 	background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
 	border: 1px solid rgb( 73,73,73 );
 	color: white;
