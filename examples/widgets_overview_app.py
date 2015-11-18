@@ -59,7 +59,7 @@ class MyApp(App):
         self.txt = gui.TextInput(200, 30)
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self, 'on_text_area_change')
-        
+
         self.spin = gui.SpinBox(200, 30, 100)
         self.spin.set_on_change_listener(self, 'on_spin_change')
 
