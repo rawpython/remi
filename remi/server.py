@@ -581,12 +581,16 @@ ws.onerror = function(evt){
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
+            self.wfile.write(encodeIfPyGT3("<!DOCTYPE html>\n"))
+            self.wfile.write(encodeIfPyGT3("<html>\n<head>\n"))
             self.wfile.write(encodeIfPyGT3(
                 "<link href='/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
             self.wfile.write(encodeIfPyGT3(self.client.attachments))
+            self.wfile.write(encodeIfPyGT3("\n</head>\n<body>\n"))
             # render the HTML replacing any local absolute references to the correct IP of this instance
             html = self.client.root.repr(self.client)
             self.wfile.write(encodeIfPyGT3(html))
+            self.wfile.write(encodeIfPyGT3("</body>\n</html>"))
         elif static_file:
             filename = os.path.join(os.path.dirname(__file__), 'res', static_file.groups()[0])
             if not os.path.exists(filename):
