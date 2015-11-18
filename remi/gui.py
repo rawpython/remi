@@ -408,7 +408,7 @@ class GenericDialog(Widget):
     def add_field(self,key,field):
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
-        field_width = from_pix(field.style['width']) + fields_spacing*4
+        field_width = from_pix(field.style['width']) + fields_spacing*2
         self.style['height'] = to_pix(from_pix(self.style['height']) + field_height)
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
@@ -1067,7 +1067,7 @@ class FileSelectionDialog(GenericDialog):
     def __init__(self, width = 600, fileFolderNavigatorHeight=210, title='File dialog',
                  message='Select files and folders', multiple_selection=True, selection_folder='.'):
         super(FileSelectionDialog, self).__init__(width, 160, title, message)
-        self.fileFolderNavigator = FileFolderNavigator(width-20, fileFolderNavigatorHeight,
+        self.fileFolderNavigator = FileFolderNavigator(width-30, fileFolderNavigatorHeight,
                                                        multiple_selection, selection_folder)
         self.add_field('fileFolderNavigator',self.fileFolderNavigator)
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
