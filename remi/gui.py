@@ -69,10 +69,6 @@ class Tag(object):
         self.attributes['id'] = str(id(self))
         self.attributes['class'] = self.__class__.__name__
 
-    def __setitem__(self, key, value):
-        """it is used for fast access to 'self.attributes[]'."""
-        self.attributes[key] = value
-
     @staticmethod
     def _replace_client_specific_values(html, client):
         return html
@@ -194,8 +190,7 @@ class Widget(Tag):
     def repr(self, client, include_children = True):
         """it is used to automatically represent the widget to HTML format
         packs all the attributes, children and so on."""
-        self['style'] = jsonize(self.style)
-
+        self.attributes['style'] = jsonize(self.style)
         return super(Widget,self).repr(client, include_children)
 
     def append(self, key, value):
@@ -505,9 +500,9 @@ class ListView(Widget):
                 self.selected_key = k
                 debug_message('ListView - onselection. Selected item key: ',k)
                 if self.selected_item is not None:
-                    self.selected_item['selected'] = False
+                    self.selected_item.attributes['selected'] = False
                 self.selected_item = self.children[self.selected_key]
-                self.selected_item['selected'] = True
+                self.selected_item.attributes['selected'] = True
                 break
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
