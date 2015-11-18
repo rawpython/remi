@@ -61,11 +61,12 @@ class Tag(object):
         # we not callable
         runtimeInstances.append(self)
 
-        self.renderChildrenList = list()
+        self._render_children_list = []
+
         self.children = {}
         self.attributes = {}  # properties as class id style
 
-        self.type = 'tag'
+        self.type = ''
         self.attributes['id'] = str(id(self))
         self.attributes['class'] = self.__class__.__name__
 
@@ -84,7 +85,7 @@ class Tag(object):
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
-        for s in self.renderChildrenList:
+        for s in self._render_children_list:
             if isinstance(s, type('')):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
@@ -107,8 +108,8 @@ class Tag(object):
             value.attributes['parent_widget'] = str(id(self))
 
         if key in self.children.keys():
-            self.renderChildrenList.remove(self.children[key])
-        self.renderChildrenList.append(value)
+            self._render_children_list.remove(self.children[key])
+        self._render_children_list.append(value)
 
         self.children[key] = value
 
@@ -119,7 +120,7 @@ class Tag(object):
     def remove(self, child):
         if child in self.children.values():
             #runtimeInstances.pop( runtimeInstances.index( self.children[key] ) )
-            self.renderChildrenList.remove(child)
+            self._render_children_list.remove(child)
             for k in self.children.keys():
                 if str(id(self.children[k])) == str(id(child)):
                     self.children.pop(k)
