@@ -88,15 +88,7 @@ class MyApp(App):
         if len(file_list)<1:
             return
         self.image_widget.load(file_list[0])
-        
+
 
 if __name__ == "__main__":
-	# setting up remi debug level 
-	#       2=all debug messages   1=error messages   0=no messages
-    import remi.server
-    remi.server.DEBUG_MODE = 2
-
-	# starts the webserver
-	# optional parameters   
-	#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
     start(MyApp)

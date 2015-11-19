@@ -96,5 +96,5 @@ class MyApp(App):
         self.mpl.redraw()
 
 if __name__ == "__main__":
-    start(MyApp)
+    start(MyApp, debug=True)
 

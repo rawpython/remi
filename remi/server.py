@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import traceback
+import logging
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 except:
@@ -56,19 +56,7 @@ update_lock = threading.Lock()
 update_event = threading.Event()
 update_thread = None
 
-DEBUG_MODE = 0 #0 - NO DEBUG  1 - ALERTS AND ERRORS  2 - MESSAGES
-DEBUG_ALERT_ERR = 1
-DEBUG_MESSAGE = 2
-
-
-def debug_message(*args, **kwargs):
-    if DEBUG_MESSAGE <= DEBUG_MODE:
-        print( ''.join(map(lambda v: str(v),args)) )
-        
-        
-def debug_alert(*args, **kwargs):
-    if DEBUG_ALERT_ERR <= DEBUG_MODE:
-        print( ''.join(map(lambda v: str(v),args)) )
+log = logging.getLogger('remi.server')
 
 
 def toWebsocket(data):
@@ -156,17 +144,17 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        debug_message('websocket connection established', self.client_address)
+        log.debug('ws connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
-        debug_message('handle\n')
+        log.debug('ws handle')
         while True:
             if not self.handshake_done:
                 self.handshake()
             else:
                 if not self.read_next_message():
-                    debug_message('ending websocket service...')
+                    log.debug('ws ending websocket service')
                     break
             
     def bytetonum(self,b):
@@ -175,7 +163,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        debug_message('read_next_message\n')
+        log.debug('ws read_next_message')
         length = self.rfile.read(2)
         try:
             length = self.bytetonum(length[1]) & 127
@@ -189,16 +177,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(fromWebsocket(decoded))
         except Exception as e:
-            if DEBUG_MODE:
-                debug_alert("Exception in server.py-read_next_message.")
-                debug_alert(traceback.format_exc())
+            log.error("Exception parsing websocket", exc_info=True)
             return False
         return True
 
     def send_message(self, message):
         out = bytearray()
         out.append(129)
-        debug_message('send_message\n')
+        log.debug('send_message')
         length = len(message)
         if length <= 125:
             out.append(length)
@@ -214,10 +200,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        debug_message('handshake\n')
+        log.debug('handshake')
         data = self.request.recv(1024).strip()
         #headers = Message(StringIO(data.split(b'\r\n', 1)[1]))
-        debug_message('Handshaking...')
+        log.debug('Handshaking...')
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0] #headers['Sec-WebSocket-Key']
         #key = key
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
@@ -241,8 +227,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 if not self in clients[k].websockets:
                     #clients[k].websockets.clear()
                     clients[k].websockets.append(self)
-                debug_message('on_message\n')
-                #print('recv from websocket client: ' + str(message))
+                log.debug('on_message')
 
                 # parsing messages
                 chunks = message.split('/')
@@ -265,7 +250,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                                 if callback is not None:
                                     callback(**paramDict)
             except Exception as e:
-                debug_alert(traceback.format_exc())
+                log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
 
@@ -313,16 +298,14 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             # we ensure that the clients have an updated version
             for ws in client.websockets:
                 try:
-                    #print('insert_widget: ' +  leaf.attributes['parent_widget'] + '  type: ' + str(type(leaf)))
-                    #here a new widget is found, but it must be added updating the parent widget
+                    # here a new widget is found, but it must be added updating the parent widget
                     if 'parent_widget' in leaf.attributes.keys():
                         parentWidgetId = leaf.attributes['parent_widget']
-                        debug_message("1" + leaf.attributes['class'] + "\n")
                         html = get_method_by_id(client.root,parentWidgetId).repr(client)
                         ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(html))
                     else:
-                        debug_alert('the new widget seems to have no parent...')
-                    #adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
+                        log.error('the new widget seems to have no parent...')
+                    # adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                     #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
                 except:
                     client.websockets.remove(ws)
@@ -333,10 +316,8 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
 
     newhtml = leaf.repr(client,False)
     if newhtml != client.old_runtime_widgets[__id]:
-        #client.old_runtime_widgets[__id] = repr(leaf)
         for ws in client.websockets:
-            #try:
-            debug_message('update_widget: ' + __id + '  type: ' + str(type(leaf)))
+            log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
             try:
                 html = leaf.repr(client)
                 ws.send_message('update_widget,' + __id + ',' + toWebsocket(html))
@@ -370,9 +351,9 @@ class _UpdateThread(threading.Thread):
             with update_lock:
                 try:
                     for client in clients.values():
-                        #here we check if the root window has changed
+                        # here we check if the root window has changed
                         if not hasattr(client,'old_root_window') or client.old_root_window != client.root:
-                            #a new window is shown, clean the old_runtime_widgets
+                            # a new window is shown, clean the old_runtime_widgets
                             client.old_runtime_widgets = dict()
                             for ws in client.websockets:
                                 try:
@@ -384,7 +365,7 @@ class _UpdateThread(threading.Thread):
                         client.idle()
                         gui_updater(client, client.root)
                 except Exception as e:
-                    debug_alert(traceback.format_exc())
+                    log.error('error updating gui', exc_info=True)
 
             update_event.clear()
 
@@ -555,18 +536,18 @@ ws.onerror = function(evt){
                     # The field contains an uploaded file
                     file_data = field_item.file.read()
                     file_len = len(file_data)
-                    debug_message('\tUploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
+                    log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
                 else:
                     # Regular form value
-                    debug_message('\t%s=%s\n' % (field, form[field].value))
+                    log.debug('post: %s=%s\n' % (field, form[field].value))
 
             if file_data is not None:
-                debug_message('GUI - server.py do_POST: fileupload path=' + savepath + '   name=' + filename)
+                log.debug('GUI - server.py do_POST: fileupload path= %s name= %s' + (savepath, filename))
                 with open(savepath+filename,'wb') as f:
                     f.write(file_data)
                     self.send_response(200)
         except Exception as e:
-            debug_alert(traceback.format_exc())
+            log.error('post error', exc_info=True)
             self.send_response(400)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
@@ -638,8 +619,8 @@ ws.onerror = function(evt){
                 content,headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
                 self.send_response(200)
             except IOError:
+                log.error('attr call error', exc_info=True)
                 self.send_response(404)
-                debug_alert(traceback.format_exc())
                 return
 
             for k in headers.keys():
@@ -684,7 +665,7 @@ class Server(object):
         # here the websocket is started on an ephemereal port
         self._wsserver = ThreadedWebsocketServer((self._address, 0), WebSocketsHandler, self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
-        debug_message('Started websocket server %s:%s' % (wshost, wsport))
+        log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
         self._wsth.daemon = True
         self._wsth.start()
@@ -699,7 +680,7 @@ class Server(object):
         if shost == '0.0.0.0':
             shost = '127.0.0.1'
         base_address = 'http://%s:%s/' % (shost,sport)
-        debug_message('Started httpserver %s' % base_address)
+        log.info('Started httpserver %s' % base_address)
         if self._start_browser:
             try:
                 import android
@@ -734,6 +715,11 @@ class Server(object):
 
 def start(mainGuiClass, **kwargs):
     """This method starts the webserver with a specific App subclass."""
+    try:
+        debug = kwargs.pop('debug')
+    except KeyError:
+        debug = False
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     s = Server(mainGuiClass, start=True, **kwargs)
     s.serve_forever()
 

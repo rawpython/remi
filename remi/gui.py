@@ -13,10 +13,12 @@
 """
 
 import os
-import traceback
+import logging
 from functools import cmp_to_key
 
-from .server import runtimeInstances, debug_message, debug_alert, update_event
+from .server import runtimeInstances, update_event
+
+log = logging.getLogger('remi.gui')
 
 
 def to_pix(x):
@@ -28,7 +30,7 @@ def from_pix(x):
     try:
         v = int(float(x.replace('px', '')))
     except Exception as e:
-        debug_alert(traceback.format_exc())
+        log.error('error parsing px', exc_info=True)
     return v
 
 
@@ -499,7 +501,7 @@ class ListView(Widget):
         for k in self.children:
             if self.children[k] == clicked_item:
                 self.selected_key = k
-                debug_message('ListView - onselection. Selected item key: ',k)
+                log.debug('ListView - onselection. Selected item key: %s' % k)
                 if self.selected_item is not None:
                     self.selected_item.attributes['selected'] = False
                 self.selected_item = self.children[self.selected_key]
@@ -633,7 +635,7 @@ class DropDown(Widget):
         return self.selected_key
 
     def onchange(self, newValue):
-        debug_message('combo box. selected', newValue)
+        log.debug('combo box. selected %s' % newValue)
         self.set_value(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
@@ -928,7 +930,7 @@ class FileFolderNavigator(Widget):
                 except (IndexError, ValueError):
                     return (a > b)
 
-        debug_message("FileFolderNavigator - populate_folder_items")
+        log.debug("FileFolderNavigator - populate_folder_items")
 
         l = os.listdir(directory)
         l.sort(key=cmp_to_key(_sort_files))
@@ -961,7 +963,7 @@ class FileFolderNavigator(Widget):
             self.chdir(os.getcwd())
         except Exception as e:
             self.pathEditor.set_text(self.lastValidPath)
-            debug_alert(traceback.format_exc())
+            log.error('error changing directory', exc_info=True)
         os.chdir(curpath)  # restore the path
 
     def dir_go(self):
@@ -971,13 +973,13 @@ class FileFolderNavigator(Widget):
             os.chdir(self.pathEditor.get_text())
             self.chdir(os.getcwd())
         except Exception as e:
-            debug_alert(traceback.format_exc())
+            log.error('error going to directory', exc_info=True)
             self.pathEditor.set_text(self.lastValidPath)
         os.chdir(curpath)  # restore the path
 
     def chdir(self, directory):
         curpath = os.getcwd()  # backup the path
-        debug_message("FileFolderNavigator - chdir:" + directory + "\n")
+        log.debug("FileFolderNavigator - chdir: %s" % directory)
         for c in self.folderItems:
             self.itemContainer.remove(c)  # remove the file and folders from the view
         self.folderItems = []
@@ -994,7 +996,7 @@ class FileFolderNavigator(Widget):
             for c in self.folderItems:
                 c.set_selected(False)
             folderitem.set_selected(True)
-        debug_message("FileFolderNavigator - on_folder_item_click")
+        log.debug("FileFolderNavigator - on_folder_item_click")
         # when an item is clicked it is added to the file selection list
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if f in self.selectionlist:
@@ -1003,7 +1005,7 @@ class FileFolderNavigator(Widget):
             self.selectionlist.append(f)
 
     def on_folder_item_click(self,folderitem):
-        debug_message("FileFolderNavigator - on_folder_item_dblclick")
+        log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if not os.path.isfile(f):
