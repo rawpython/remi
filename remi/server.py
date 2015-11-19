@@ -398,6 +398,9 @@ class App(BaseHTTPRequestHandler, object):
         - function calls with parameters
         - file requests
     """
+    def __init__(self, request, client_address, server, **app_args):
+        self._app_args = app_args
+        super(App, self).__init__(request, client_address, server)
 
     def instance(self):
         global clients
@@ -415,9 +418,9 @@ class App(BaseHTTPRequestHandler, object):
         wshost, wsport = self.server.websocket_address
         net_interface_ip = self.connection.getsockname()[0]
 
-        #refreshing the script every instance() call, beacuse of different net_interface_ip connections
-        #can happens for the same 'k'
-        clients[k].attachments = """
+        # refreshing the script every instance() call, beacuse of different net_interface_ip connections
+        # can happens for the same 'k'
+        clients[k].script_header = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
@@ -513,8 +516,14 @@ ws.onerror = function(evt){
 };
 </script>""" % (net_interface_ip, wsport)
 
+        # add any app specific headers
+        clients[k].html_header = self._app_args.get('html_header', '\n')
+
+        # add client styling
+        clients[k].css_header = self._app_args.get('css_header', "<link href='/res/style.css' rel='stylesheet' />\n")
+
         if not hasattr(clients[k], 'websockets'):
-            clients[k].websockets = list()
+            clients[k].websockets = []
 
         self.client = clients[k]
 
@@ -584,8 +593,11 @@ ws.onerror = function(evt){
             self.wfile.write(encodeIfPyGT3("<!DOCTYPE html>\n"))
             self.wfile.write(encodeIfPyGT3("<html>\n<head>\n"))
             self.wfile.write(encodeIfPyGT3(
-                "<link href='/res/style.css' rel='stylesheet' /><meta content='text/html;charset=utf-8' http-equiv='Content-Type'><meta content='utf-8' http-equiv='encoding'> "))
-            self.wfile.write(encodeIfPyGT3(self.client.attachments))
+                "<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>\n"
+                "<meta content='utf-8' http-equiv='encoding'>\n"))
+            self.wfile.write(encodeIfPyGT3(self.client.css_header))
+            self.wfile.write(encodeIfPyGT3(self.client.html_header))
+            self.wfile.write(encodeIfPyGT3(self.client.script_header))
             self.wfile.write(encodeIfPyGT3("\n</head>\n<body>\n"))
             # render the HTML replacing any local absolute references to the correct IP of this instance
             html = self.client.root.repr(self.client)
