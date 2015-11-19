@@ -604,8 +604,18 @@ ws.onerror = function(evt){
             self.wfile.write(encodeIfPyGT3(html))
             self.wfile.write(encodeIfPyGT3("</body>\n</html>"))
         elif static_file:
-            filename = os.path.join(os.path.dirname(__file__), 'res', static_file.groups()[0])
-            if not os.path.exists(filename):
+            static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
+            static_paths.extend(self._app_args.get('static_paths', ()))
+
+            found = False
+            for s in reversed(static_paths):
+                filename = os.path.join(s, static_file.groups()[0])
+                print filename
+                if os.path.exists(filename):
+                    found = True
+                    break
+
+            if not found:
                 self.send_response(404)
                 return
 
