@@ -610,7 +610,6 @@ ws.onerror = function(evt){
             found = False
             for s in reversed(static_paths):
                 filename = os.path.join(s, static_file.groups()[0])
-                print filename
                 if os.path.exists(filename):
                     found = True
                     break
