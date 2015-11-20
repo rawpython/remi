@@ -1150,36 +1150,13 @@ class FileUploader(Widget):
         self.EVENT_ON_SUCCESS = 'onsuccess'
         self.EVENT_ON_FAILED = 'onfailed'
 
-        fileUploadScript = """
-        function uploadFile(savePath,file){
-            var url = '/';
-            var xhr = new XMLHttpRequest();
-            var fd = new FormData();
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('savepath', savePath);
-            xhr.setRequestHeader('filename', file.name);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    /* Every thing ok, file uploaded */
-                    var params={};params['filename']=file.name;
-                    sendCallbackParam('%(id)s','%(evt_success)s',params);
-                    console.log('upload success: ' + file.name);
-                }else if(xhr.status == 400){
-                    var params={};params['filename']=file.name;
-                    sendCallbackParam('%(id)s','%(evt_failed)s',params);
-                    console.log('upload failed: ' + file.name);
-                }
-            };
-            fd.append('upload_file', file);
-            xhr.send(fd);
-        };
-        var files = this.files;for(var i=0; i<files.length; i++){uploadFile('%(savepath)s',files[i]);}
-        """ % {'id':id(self),
-               'evt_success':self.EVENT_ON_SUCCESS, 'evt_failed':self.EVENT_ON_FAILED,
-               'savepath':self._savepath}
+        self.attributes[self.EVENT_ONCHANGE] = \
+            "var files = this.files;"\
+            "for(var i=0; i<files.length; i++){"\
+            "uploadFile('%(id)s','%(evt_success)s','%(evt_failed)s','%(savepath)s',files[i]);}" % {
+                'id':id(self), 'evt_success':self.EVENT_ON_SUCCESS, 'evt_failed':self.EVENT_ON_FAILED,
+                'savepath':self._savepath}
 
-        self.attributes[self.EVENT_ONCHANGE] = fileUploadScript
-        
     def onsuccess(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
 
