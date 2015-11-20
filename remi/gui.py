@@ -109,7 +109,7 @@ class Tag(object):
         if hasattr(value, 'attributes'):
             value.attributes['parent_widget'] = str(id(self))
 
-        if key in self.children.keys():
+        if key in self.children:
             self._render_children_list.remove(self.children[key])
         self._render_children_list.append(value)
 

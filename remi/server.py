@@ -39,7 +39,7 @@ try:
     from urllib import quote
     from urlparse import urlparse
     from urlparse import parse_qs
-except:
+except ImportError:
     from urllib.parse import unquote
     from urllib.parse import quote
     from urllib.parse import unquote_to_bytes
@@ -63,14 +63,13 @@ def toWebsocket(data):
     #encoding end deconding utility function
     if pyLessThan3:
         return quote(data)
-    return quote(data,encoding='utf-8')
-        
-        
+    return quote(data, encoding='utf-8')
+
 def fromWebsocket(data):
     #encoding end deconding utility function
     if pyLessThan3:
         return unquote(data)
-    return unquote(data,encoding='utf-8')
+    return unquote(data, encoding='utf-8')
 
 
 def encodeIfPyGT3(data):
@@ -85,7 +84,7 @@ def get_method_by(rootNode, idname):
     return get_method_by_name(rootNode, idname)
 
 
-def get_method_by_name(rootNode, name, maxIter=5):
+def get_method_by_name(rootNode, name):
     val = None
     if hasattr(rootNode, name):
         val = getattr(rootNode, name)
@@ -111,7 +110,7 @@ def get_method_by_id(rootNode, _id, maxIter=5):
     try:
         if hasattr(rootNode, 'children'):
             for i in rootNode.children.values():
-                val = get_method_by_id(i, _id, maxIter)
+                val = get_method_by_id(i, _id)
                 if val is not None:
                     return val
     except:
@@ -253,7 +252,6 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
-
 
 
 def parse_parametrs(p):
