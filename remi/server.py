@@ -380,8 +380,17 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
     def __init__(self, request, client_address, server, **app_args):
+        self._log = logging.getLogger('remi.server.request')
         self._app_args = app_args
         super(App, self).__init__(request, client_address, server)
+
+    def log_message(self, format, *args):
+        msg = format % args
+        self._log.debug("%s %s" % (self.address_string(), msg))
+
+    def log_error(self, format, *args):
+        msg = format % args
+        self._log.error("%s %s" % (self.address_string(), msg))
 
     def instance(self):
         global clients
