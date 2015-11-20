@@ -549,7 +549,7 @@ ws.onerror = function(evt){
                     log.debug('post: %s=%s\n' % (field, form[field].value))
 
             if file_data is not None:
-                log.debug('GUI - server.py do_POST: fileupload path= %s name= %s' + (savepath, filename))
+                log.debug('GUI - server.py do_POST: fileupload path= %s name= %s' % (savepath, filename))
                 with open(savepath+filename,'wb') as f:
                     f.write(file_data)
                     self.send_response(200)
