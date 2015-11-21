@@ -72,18 +72,13 @@ class Tag(object):
         self.attributes['id'] = str(id(self))
         self.attributes['class'] = self.__class__.__name__
 
-    @staticmethod
-    def _replace_client_specific_values(html, client):
-        return html
-
-    def repr(self, client, include_children = True):
+    def repr(self, client, include_children=True):
         """it is used to automatically represent the object to HTML format
         packs all the attributes, children and so on."""
-        classname = self.__class__.__name__
 
         self.attributes['children_list'] = ','.join(map(lambda k, v: str(
             id(v)), self.children.keys(), self.children.values())) 
-        
+
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
@@ -95,9 +90,11 @@ class Tag(object):
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
-        html = '<%s %s>%s</%s>' % (self.type, ' '.join(map(lambda k, v: k + "=\"" + str(
-            v) + "\"", self.attributes.keys(), self.attributes.values())), innerHTML, self.type)
-        return self._replace_client_specific_values(html, client)
+        html = '<%s %s>%s</%s>' % (self.type,
+                                   ' '.join(map(lambda k, v: k + '="' + str(v) + '"', self.attributes.keys(), self.attributes.values())),
+                                   innerHTML,
+                                   self.type)
+        return html
 
     def append(self, key, value):
         """it allows to add child to this.
