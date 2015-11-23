@@ -651,6 +651,9 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
             widget,function = attr_call.group(1,2)
             try:
                 content,headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
+                if content is None:
+                    self.send_response(503)
+                    return
                 self.send_response(200)
             except IOError:
                 log.error('attr call error', exc_info=True)
