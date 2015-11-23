@@ -349,6 +349,8 @@ class _UpdateThread(threading.Thread):
             with update_lock:
                 try:
                     for client in clients.values():
+                        if not hasattr(client, 'root'):
+                            continue
                         # here we check if the root window has changed
                         if not hasattr(client,'old_root_window') or client.old_root_window != client.root:
                             # a new window is shown, clean the old_runtime_widgets
