@@ -23,7 +23,7 @@ from remi import start, App
 class OpencvVideoWidget(gui.Image):
     def __init__(self, width, height, video_source=0, fps=5):
         super(OpencvVideoWidget, self).__init__(width, height, "/%s/get_image_data")
-        
+
         self.fps = fps
         self.capture = cv2.VideoCapture(video_source)
 
@@ -46,27 +46,28 @@ class OpencvVideoWidget(gui.Image):
                 }
                 xhr.send();
             };
-            
+
             setInterval( update_image%(id)s, %(update_rate)s );
-            """ %  {'id':id(self),'update_rate':1000/self.fps} )
-            
-        self.append( 'javascript_code', javascript_code )
+            """ % {'id':id(self), 'update_rate':1000/self.fps})
+
+        self.append('javascript_code', javascript_code)
         self.play()
-        
+
     def play(self):
         self.attributes['play'] = True
 
     def stop(self):
         self.attributes['play'] = False
-        
+
     def get_image_data(self):
         ret, frame = self.capture.read()
-        # Our operations on the frame come here
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
-        ret, jpeg = cv2.imencode('.jpg', frame)
-        headers = {'Content-type':'image/jpeg'}
-        return [jpeg.tobytes(),headers]
+        if ret:
+            ret, jpeg = cv2.imencode('.jpg', frame)
+            if ret:
+                headers = {'Content-type':'image/jpeg'}
+                # tostring is an alias to tobytes, which wasn't added till numpy 1.9
+                return [jpeg.tostring(), headers]
+        return None,None
 
 
 class MyApp(App):
@@ -89,10 +90,10 @@ class MyApp(App):
         self.menu.append('1',m1)
         m1.append('11',m11)
         m1.append('12',m12)
-        
+
         wid.append('0', self.menu)
         wid.append('1', self.opencvideo_widget)
-        
+
         # returning the root widget
         return wid
 
@@ -101,15 +102,9 @@ class MyApp(App):
 
     def menu_stop_clicked(self):
         self.opencvideo_widget.stop()
-                
+
 
 if __name__ == "__main__":
-	# setting up remi debug level 
-	#       2=all debug messages   1=error messages   0=no messages
-    # import remi.server
-    # remi.server.DEBUG_MODE = 2
-
-	# starts the webserver
-	# optional parameters   
-	#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
+    # optional parameters
+    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
     start(MyApp)
