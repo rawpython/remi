@@ -175,7 +175,7 @@ class MyApp(App):
         Timer(1,self.display_counter).start()         
         
     def menu_dialog_clicked(self):
-        self.dialog=gui.GenericDialog(400,400,'Dialog Box','Click Ok to transfer content to main page')
+        self.dialog=gui.GenericDialog(title='Dialog Box', message='Click Ok to transfer content to main page')
 
         self.dtextinput= gui.TextInput(200, 30)
         self.dtextinput.set_value('Initial Text')

@@ -355,7 +355,7 @@ class GenericDialog(Widget):
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
 
-    def __init__(self, width=500, height=160, title='Title', message='Message'):
+    def __init__(self, width=500, height=80, title='', message=''):
         self.width = width
         self.height = height
         super(GenericDialog, self).__init__(self.width, self.height, Widget.LAYOUT_VERTICAL, 10)
@@ -363,15 +363,23 @@ class GenericDialog(Widget):
         self.EVENT_ONCONFIRM = 'confirm_dialog'
         self.EVENT_ONCANCEL = 'cancel_dialog'
 
-        t = Label(self.width - 20, 50, title)
-        m = Label(self.width - 20, 30, message)
-
+        if len(title) > 0:
+            t = Label(self.width - 20, 50, title)
+            t.style['font-size'] = '16px'
+            t.style['font-weight'] = 'bold'
+            self.append('1', t)
+            self.height = self.height + 50
+            self.style['height'] = to_pix(from_pix(self.style['height']) + 50)
+            
+        if len(message) > 0:
+            m = Label(self.width - 20, 30, message)
+            self.append('2', m)
+            self.height = self.height + 30
+            self.style['height'] = to_pix(from_pix(self.style['height']) + 30)
+        
         self.container = Widget(self.width - 20,0, Widget.LAYOUT_VERTICAL, 0)
         self.conf = Button(50, 30, 'Ok')
         self.cancel = Button(50, 30, 'Cancel')
-
-        t.style['font-size'] = '16px'
-        t.style['font-weight'] = 'bold'
 
         hlay = Widget(self.width - 20, 30)
         hlay.append('1', self.conf)
@@ -379,8 +387,6 @@ class GenericDialog(Widget):
         self.conf.style['float'] = 'right'
         self.cancel.style['float'] = 'right'
 
-        self.append('1', t)
-        self.append('2', m)
         self.append('3', self.container)
         self.append('4', hlay)
 
@@ -1065,7 +1071,7 @@ class FileSelectionDialog(GenericDialog):
 
     def __init__(self, width = 600, fileFolderNavigatorHeight=210, title='File dialog',
                  message='Select files and folders', multiple_selection=True, selection_folder='.'):
-        super(FileSelectionDialog, self).__init__(width, 160, title, message)
+        super(FileSelectionDialog, self).__init__(width, 80, title, message)
         self.fileFolderNavigator = FileFolderNavigator(width-30, fileFolderNavigatorHeight,
                                                        multiple_selection, selection_folder)
         self.add_field('fileFolderNavigator',self.fileFolderNavigator)
