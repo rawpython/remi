@@ -22,6 +22,7 @@ try:
     import socketserver
 except:
     import SocketServer as socketserver
+import socket
 import mimetypes
 import webbrowser
 import struct
