@@ -163,11 +163,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def read_next_message(self):
         log.debug('ws read_next_message')
-        start_read_time = time()
+        start_read_time = time.time()
         try:
             length = self.rfile.read(2)
         except socket.timeout:
-            end_read_time = time()
+            end_read_time = time.time()
             TCP_FIN_TIMEOUT_TIME = 60.0 # In linux, take from /proc/sys/net/ipv4/tcp_fin_timeout
             # Some Windows is 240s, linux 60s according to this link
             # http://www.outsystems.com/forums/discussion/6956/how-to-tune-the-tcp-ip-stack-for-high-volume-of-web-requests/
