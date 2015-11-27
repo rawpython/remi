@@ -82,18 +82,18 @@ class MyApp(App):
         li1 = gui.ListItem(279, 20, 'Christine Holand')
         li2 = gui.ListItem(279, 20, 'Lars Gordon')
         li3 = gui.ListItem(279, 20, 'Roberto Robitaille')
-        self.listView.append('0', li0)
-        self.listView.append('1', li1)
-        self.listView.append('2', li2)
-        self.listView.append('3', li3)
+        self.listView.append(li0, '0')
+        self.listView.append(li1, '1')
+        self.listView.append(li2, '2')
+        self.listView.append(li3, '3')
 
         self.link = gui.Link(200, 20, "http://localhost:8081", "A link to here")
 
         self.dropDown = gui.DropDown(200, 20)
         c0 = gui.DropDownItem(200, 20, 'DropDownItem 0')
         c1 = gui.DropDownItem(200, 20, 'DropDownItem 1')
-        self.dropDown.append('0', c0)
-        self.dropDown.append('1', c1)
+        self.dropDown.append(c0)
+        self.dropDown.append(c1)
         self.dropDown.set_on_change_listener( self.drop_down_changed )
         self.dropDown.set_value('DropDownItem 0')
 
@@ -109,31 +109,31 @@ class MyApp(App):
         self.video = gui.VideoPlayer(480, 270, 'http://www.w3schools.com/tags/movie.mp4', 
                     'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg')
 
-        # appending a widget to another, the first argument is a string key
-        subContainerRight.append('0', self.counter)        
-        subContainerRight.append('1', self.lbl)
-        subContainerRight.append('2', self.bt)
-        subContainerRight.append('3', self.txt)
-        subContainerRight.append('4', self.spin)
-        subContainerRight.append('checkbox', self.check)
-        subContainerRight.append('5', self.btInputDiag)
-        subContainerRight.append('5_', self.btFileDiag)
-        subContainerRight.append('5__', gui.FileDownloader(200, 30, 'download test', '../remi/res/logo.png'))
-        subContainerRight.append('5___', self.btUploadFile)
-        subContainerRight.append('6', self.dropDown)
-        subContainerRight.append('7', self.slider)
-        subContainerRight.append('8', self.colorPicker)
-        subContainerRight.append('9', self.date)
+        # appending a widget to another
+        subContainerRight.append(self.counter)        
+        subContainerRight.append(self.lbl)
+        subContainerRight.append(self.bt)
+        subContainerRight.append(self.txt)
+        subContainerRight.append(self.spin)
+        subContainerRight.append(self.check)
+        subContainerRight.append(self.btInputDiag)
+        subContainerRight.append(self.btFileDiag)
+        subContainerRight.append(gui.FileDownloader(200, 30, 'download test', '../remi/res/logo.png'))
+        subContainerRight.append(self.btUploadFile)
+        subContainerRight.append(self.dropDown)
+        subContainerRight.append(self.slider)
+        subContainerRight.append(self.colorPicker)
+        subContainerRight.append(self.date)
         self.subContainerRight = subContainerRight
 
-        subContainerLeft.append('0', self.img)
-        subContainerLeft.append('1', self.table)
-        subContainerLeft.append('2', self.listView)
-        subContainerLeft.append('3', self.link)
-        subContainerLeft.append('4', self.video)
+        subContainerLeft.append(self.img)
+        subContainerLeft.append(self.table)
+        subContainerLeft.append(self.listView)
+        subContainerLeft.append(self.link)
+        subContainerLeft.append(self.video)
 
-        horizontalContainer.append('0', subContainerLeft)
-        horizontalContainer.append('1', subContainerRight)
+        horizontalContainer.append(subContainerLeft)
+        horizontalContainer.append(subContainerRight)
 
         menu = gui.Menu(620, 30)
         m1 = gui.MenuItem(100, 30, 'File')
@@ -149,19 +149,19 @@ class MyApp(App):
         self.menuDialog = gui.MenuItem(100,30,'Dialog')
         self.menuDialog.set_on_click_listener(self.menu_clicked, 'Dialog')
 
-        menu.append('1',m1)
-        menu.append('2',self.menuView)
-        menu.append('3',self.menuDialog)
-        m1.append('11',m11)
-        m1.append('12',self.menuOpen)
-        m11.append('111',self.menuSave)
-        m11.append('112',self.menuSaveAs)
+        menu.append(m1)
+        menu.append(self.menuView)
+        menu.append(self.menuDialog)
+        m1.append(m11)
+        m1.append(self.menuOpen)
+        m11.append(self.menuSave)
+        m11.append(self.menuSaveAs)
 
         menubar = gui.MenuBar(620, 30)
-        menubar.append('1', menu)
+        menubar.append(menu)
 
-        verticalContainer.append('0',menubar)
-        verticalContainer.append('1',horizontalContainer)
+        verticalContainer.append(menubar)
+        verticalContainer.append(horizontalContainer)
 
         # kick of regular display of counter
         self.display_counter()
@@ -179,42 +179,42 @@ class MyApp(App):
 
         self.dtextinput= gui.TextInput(200, 30)
         self.dtextinput.set_value('Initial Text')
-        self.dialog.add_field_with_label('dtextinput','Text Input',self.dtextinput)
+        self.dialog.add_field_with_label('Text Input', self.dtextinput, 'dtextinput')
 
         self.dcheck = gui.CheckBox(200, 30, False)
-        self.dialog.add_field_with_label('dcheck','Label Checkbox',self.dcheck)        
+        self.dialog.add_field_with_label('Label Checkbox', self.dcheck, 'dcheck')        
         values=( 'Danny Young','Christine Holand','Lars Gordon','Roberto Robitaille')
         self.dlistView = gui.ListView(200, 120)
         key=0
         for value in values:
             obj = gui.ListItem(170, 20,value)
-            self.dlistView.append(str(key), obj)
+            self.dlistView.append(obj, str(key))
             key+=1
-        self.dialog.add_field_with_label('dlistView','Listview',self.dlistView)
+        self.dialog.add_field_with_label('Listview', self.dlistView, 'dlistView')
 
         self.ddropdown = gui.DropDown(200, 20)
         c0 = gui.DropDownItem(200, 20, 'DropDownItem 0')
         c1 = gui.DropDownItem(200, 20, 'DropDownItem 1')
-        self.ddropdown.append('0', c0)
-        self.ddropdown.append('1', c1)
+        self.ddropdown.append(c0)
+        self.ddropdown.append(c1)
         self.ddropdown.set_value('Value1')
-        self.dialog.add_field_with_label('ddropdown','Dropdown',self.ddropdown)
+        self.dialog.add_field_with_label('Dropdown', self.ddropdown, 'ddropdown')
 
         self.dspinbox= gui.SpinBox(200, 20,min=0, max=5000)
         self.dspinbox.set_value(50)
-        self.dialog.add_field_with_label('dspinbox','Spinbox',self.dspinbox)
+        self.dialog.add_field_with_label('Spinbox', self.dspinbox, 'dspinbox')
 
         self.dslider= gui.Slider(200, 20, 10, 0, 100, 5)
         self.dspinbox.set_value(50)
-        self.dialog.add_field_with_label('dslider','Slider',self.dslider)
+        self.dialog.add_field_with_label('Slider', self.dslider, 'dslider')
 
         self.dcolor= gui.ColorPicker(200, 20)
         self.dcolor.set_value('#ffff00')
-        self.dialog.add_field_with_label('dcolor','Colour Picker',self.dcolor)
+        self.dialog.add_field_with_label('Colour Picker', self.dcolor, 'dcolor')
 
         self.ddate = gui.Date(200, 20,)
         self.ddate.set_value( '2000-01-01')
-        self.dialog.add_field_with_label('ddate','Date',self.ddate)
+        self.dialog.add_field_with_label('Date', self.ddate, 'ddate')
 
         self.dialog.set_on_confirm_dialog_listener(self.dialog_confirm)
         self.dialog.show(self)
@@ -286,7 +286,7 @@ class MyApp(App):
         #a list() of filenames and folders is returned
         self.lbl.set_text('Selected files:' + str(filelist))
         for f in filelist:
-            self.subContainerRight.append('5__', gui.FileDownloader(200, 30, "download selected", f))
+            self.subContainerRight.append(gui.FileDownloader(200, 30, "download selected", f))
 
     def list_view_on_selected(self, evt, selected_item_key):
         """ The selection event of the listView, returns a key of the clicked event.

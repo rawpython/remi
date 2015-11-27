@@ -107,13 +107,12 @@ class Tag(object):
                                    self.type)
         return html
 
-    def append(self, key, value):
-        """it allows to add child to this.
-
-        The key can be everything you want, in order to access to the
-        specific child in this way 'widget.children[key]'.
-
+    def append(self, value, key = None):
         """
+        it allows to add child to this.
+        """
+        key = str(id(value)) if not key else key
+        
         if hasattr(value, 'attributes'):
             value.attributes['parent_widget'] = str(id(self))
 
@@ -204,14 +203,12 @@ class Widget(Tag):
         self.attributes['style'] = jsonize(self.style)
         return super(Widget,self).repr(client, include_children)
 
-    def append(self, key, value):
-        """it allows to add child widgets to this.
-
-        The key can be everything you want, in order to access to the
-        specific child in this way 'widget.children[key]'.
-
+    def append(self, value, key = None):
         """
-        super(Widget,self).append(key, value)
+        it allows to add child widgets to this.
+        """
+        key = str(id(value)) if not key else key
+        super(Widget,self).append(value, key)
 
         if hasattr(self.children[key], 'style'):
             spacing = to_pix(self.widget_spacing)
@@ -275,7 +272,7 @@ class Button(Widget):
         self.set_text(text)
 
     def set_text(self, t):
-        self.append('text', t)
+        self.append(t, 'text')
 
 
 class TextInput(Widget):
@@ -299,7 +296,7 @@ class TextInput(Widget):
 
     def set_text(self, t):
         """sets the text content."""
-        self.append('text', t)
+        self.append(t, 'text')
 
     def get_text(self):
         return self.children['text']
@@ -352,10 +349,10 @@ class Label(Widget):
     def __init__(self, w, h, text):
         super(Label, self).__init__(w, h)
         self.type = 'p'
-        self.append('text', text)
+        self.append(text, 'text')
 
     def set_text(self, t):
-        self.append('text', t)
+        self.append(t, 'text')
 
     def get_text(self):
         return self.children['text']
@@ -378,13 +375,13 @@ class GenericDialog(Widget):
             t = Label(self.width - 20, 50, title)
             t.style['font-size'] = '16px'
             t.style['font-weight'] = 'bold'
-            self.append('1', t)
+            self.append(t)
             self.height = self.height + 50
             self.style['height'] = to_pix(from_pix(self.style['height']) + 50)
             
         if len(message) > 0:
             m = Label(self.width - 20, 30, message)
-            self.append('2', m)
+            self.append(m)
             self.height = self.height + 30
             self.style['height'] = to_pix(from_pix(self.style['height']) + 30)
         
@@ -393,13 +390,13 @@ class GenericDialog(Widget):
         self.cancel = Button(50, 30, 'Cancel')
 
         hlay = Widget(self.width - 20, 30)
-        hlay.append('1', self.conf)
-        hlay.append('2', self.cancel)
+        hlay.append(self.conf)
+        hlay.append(self.cancel)
         self.conf.style['float'] = 'right'
         self.cancel.style['float'] = 'right'
 
-        self.append('3', self.container)
-        self.append('4', hlay)
+        self.append(self.container)
+        self.append(hlay)
 
         self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCONFIRM)
         self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCANCEL)
@@ -408,7 +405,8 @@ class GenericDialog(Widget):
 
         self.baseAppInstance = None
 
-    def add_field_with_label(self,key,labelDescription,field):
+    def add_field_with_label(self, labelDescription, field, key=None):
+        key = str(id(field)) if not key else key
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
         field_width = from_pix(field.style['width']) + fields_spacing*4
@@ -417,11 +415,12 @@ class GenericDialog(Widget):
         self.inputs[key] = field
         label = Label(self.width-20-field_width-1, 30, labelDescription )
         container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
-        container.append('lbl' + key,label)
-        container.append(key, self.inputs[key])
-        self.container.append(key, container)
+        container.append(label, 'lbl' + key)
+        container.append(self.inputs[key], key)
+        self.container.append(container, key)
         
-    def add_field(self,key,field):
+    def add_field(self, field, key=None):
+        key = str(id(field)) if not key else key
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
         field_width = from_pix(field.style['width']) + fields_spacing*2
@@ -429,8 +428,8 @@ class GenericDialog(Widget):
         self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
         container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
-        container.append(key, self.inputs[key])
-        self.container.append(key, container)
+        container.append(self.inputs[key], key)
+        self.container.append(container, key)
 
     def get_field(self, key):
         return self.inputs[key]
@@ -463,7 +462,7 @@ class InputDialog(GenericDialog):
 
         self.inputText = TextInput(width - 20, 30)
         self.inputText.set_on_enter_listener(self.on_text_enter_listener)
-        self.add_field('textinput',self.inputText)
+        self.add_field(self.inputText, 'textinput')
         self.inputText.set_text(initial_value)
 
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
@@ -498,12 +497,13 @@ class ListView(Widget):
         self.selected_item = None
         self.selected_key = None
 
-    def append(self, key, item):
+    def append(self, item, key = None):
+        key = str(id(item)) if not key else key
         # if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
             item.set_on_click_listener(self.onselection)
         item.attributes['selected'] = False
-        super(ListView, self).append(key, item)
+        super(ListView, self).append(item, key)
     
     def empty(self):
         self.selected_item = None
@@ -582,7 +582,7 @@ class ListItem(Widget):
         self.set_text(text)
 
     def set_text(self, text):
-        self.append('text', text)
+        self.append(text,'text')
 
     def get_text(self):
         return self.children['text']
@@ -669,7 +669,7 @@ class DropDownItem(Widget):
 
     def set_text(self, text):
         self.attributes['value'] = text
-        self.append('text', text)
+        self.append(text,'text')
 
     def get_text(self):
         return self.attributes['value']
@@ -718,8 +718,8 @@ class Table(Widget):
                     ti = TableTitle(item)
                 else:
                     ti = TableItem(item)
-                tr.append( str(id(ti)), ti )
-            self.append( str(id(tr)), tr )
+                tr.append( ti )
+            self.append( tr )
             first_row = False
 
 
@@ -742,7 +742,7 @@ class TableItem(Widget):
     def __init__(self, text=''):
         super(TableItem, self).__init__(-1, -1)
         self.type = 'td'
-        self.append('text', text)
+        self.append(text, 'text')
         self.style['float'] = 'none'
 
 
@@ -753,7 +753,7 @@ class TableTitle(Widget):
     def __init__(self, title=''):
         super(TableTitle, self).__init__(-1, -1)
         self.type = 'th'
-        self.append('text', title)
+        self.append(title, 'text')
         self.style['float'] = 'none'
 
 
@@ -795,8 +795,8 @@ class CheckBoxLabel(Widget):
         inner_label_padding_left = 10
         self._checkbox = CheckBox(inner_checkbox_width, h, checked, user_data)
         self._label = Label(w-inner_checkbox_width-inner_label_padding_left, h, label)
-        self.append('checkbox', self._checkbox)
-        self.append('label', self._label)
+        self.append(self._checkbox, 'checkbox')
+        self.append(self._label, 'label')
         self._label.style['padding-left'] = to_pix(inner_label_padding_left)
 
         self.set_value = self._checkbox.set_value
@@ -912,16 +912,16 @@ class FileFolderNavigator(Widget):
         self.pathEditor = TextInput(w-90, 25)
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
-        self.controlsContainer.append('1', self.controlBack)
-        self.controlsContainer.append('2', self.pathEditor)
-        self.controlsContainer.append('3', self.controlGo)
+        self.controlsContainer.append(self.controlBack)
+        self.controlsContainer.append(self.pathEditor)
+        self.controlsContainer.append(self.controlGo)
 
         self.itemContainer = Widget(w, h-25, Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
 
-        self.append('controls', self.controlsContainer)
-        self.append('items', self.itemContainer)
+        self.append(self.controlsContainer)
+        self.append(self.itemContainer, 'items')
 
         self.folderItems = list()
 
@@ -967,8 +967,8 @@ class FileFolderNavigator(Widget):
             fi.set_on_click_listener(self.on_folder_item_click)  # navigation purpose
             fi.set_on_selection_listener(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
-            self.itemContainer.append(i, fi)
-        self.append('items', self.itemContainer)
+            self.itemContainer.append(fi, i)
+        self.append(self.itemContainer, 'items')
 
     def dir_go_back(self, evt):
         curpath = os.getcwd()  # backup the path
@@ -1047,8 +1047,8 @@ class FileFolderItem(Widget):
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(w-33, h, text)
         self.label.set_on_click_listener(self.onselection)
-        self.append('icon', self.icon)
-        self.append('text', self.label)
+        self.append(self.icon, 'icon')
+        self.append(self.label, 'text')
         self.selected = False
 
     def onclick(self, evt):
@@ -1086,7 +1086,7 @@ class FileSelectionDialog(GenericDialog):
         super(FileSelectionDialog, self).__init__(width, 80, title, message)
         self.fileFolderNavigator = FileFolderNavigator(width-30, fileFolderNavigatorHeight,
                                                        multiple_selection, selection_folder)
-        self.add_field('fileFolderNavigator',self.fileFolderNavigator)
+        self.add_field(self.fileFolderNavigator, 'fileFolderNavigator')
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
         self.set_on_confirm_dialog_listener(self.confirm_value)
 
@@ -1131,14 +1131,15 @@ class MenuItem(Widget):
         self.set_text(text)
         self.append = self.addSubMenu
 
-    def addSubMenu(self, key, value):
+    def addSubMenu(self, value, key = None):
+        key = str(id(value)) if not key else key
         if self.subcontainer is None:
             self.subcontainer = Menu(self.w, self.h, Widget.LAYOUT_VERTICAL)
-            super(MenuItem, self).append('subcontainer', self.subcontainer)
-        self.subcontainer.append(key, value)
+            super(MenuItem, self).append(self.subcontainer, 'subcontainer')
+        self.subcontainer.append(value, key)
 
     def set_text(self, text):
-        self.append('text', text)
+        self.append(text, 'text')
 
     def get_text(self):
         return self.children['text']
@@ -1200,7 +1201,7 @@ class FileDownloader(Widget):
         self._path_separator = path_separator
 
     def set_text(self, t):
-        self.append('text', t)
+        self.append(t, 'text')
 
     def download(self):
         with open(self._filename, 'r+b') as f:
@@ -1221,7 +1222,7 @@ class Link(Widget):
         self.set_text(text)
 
     def set_text(self, t):
-        self.append('text', t)
+        self.append(t, 'text')
 
     def get_text(self):
         return self.children['text']
