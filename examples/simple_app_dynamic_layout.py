@@ -45,7 +45,7 @@ class MyApp(App):
         self.dropdown.append('2', label_ddi)
 
         # Add a listener
-        self.dropdown.set_on_change_listener(self, 'on_dropdown_change')
+        self.dropdown.set_on_change_listener(self.on_dropdown_change)
 
         # Add the dropdown to the widget
         self.wid.append('0', self.tittle_label)
@@ -56,7 +56,7 @@ class MyApp(App):
         return self.wid
 
     # listener function
-    def on_dropdown_change(self, value):
+    def on_dropdown_change(self, evt, value):
         print "Chosen dropdown value: " + str(value)
         # Create the widget chosen
         if "button" in value:
