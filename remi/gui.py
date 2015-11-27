@@ -38,22 +38,33 @@ def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
+class Event(object):
+    source = None
+    user_data = None
+    def __init__(self, source=None, user_data=None):
+        self.source = source
+        self.user_data = user_data
+
+
 class EventManager(object):
     """Manages the event propagation to the listeners functions"""
 
-    def __init__(self):
+    def __init__(self,event_source):
+        self.event_source = event_source
         self.listeners = {}
+        self.event = {}
 
     def propagate(self, eventname, params):
         # if for an event there is a listener, it calls the listener passing the parameters
         if eventname not in self.listeners:
             return
         listener = self.listeners[eventname]
-        return getattr(listener['instance'], listener['funcname'])(*params)
+        return listener(self.event[eventname],*params)
 
-    def register_listener(self, eventname, instance, funcname):
+    def register_listener(self, eventname, listener, user_data=None):
         """register a listener for a specific event"""
-        self.listeners[eventname] = {'instance':instance, 'funcname':funcname}
+        self.listeners[eventname] = listener
+        self.event[eventname] = Event(self.event_source, user_data)
 
 
 class Tag(object):
@@ -182,7 +193,7 @@ class Widget(Tag):
 
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.eventManager = EventManager()
+        self.eventManager = EventManager(self)
 
     def redraw(self):
         update_event.set()
@@ -223,16 +234,16 @@ class Widget(Tag):
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
-    def set_on_focus_listener(self, listener, funcname):
+    def set_on_focus_listener(self, listener, user_data = None):
         self.attributes[self.EVENT_ONFOCUS] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONFOCUS)
-        self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, user_data)
 
     def onblur(self):
         return self.eventManager.propagate(self.EVENT_ONBLUR, [])
 
-    def set_on_blur_listener(self, listener, funcname):
+    def set_on_blur_listener(self, listener, user_data = None):
         self.attributes[self.EVENT_ONBLUR] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONBLUR)
-        self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONBLUR, listener, user_data)
 
     def show(self, baseAppInstance):
         """Allows to show the widget as root window"""
@@ -250,9 +261,9 @@ class Widget(Tag):
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
-    def set_on_click_listener(self, listener, funcname):
+    def set_on_click_listener(self, listener, user_data = None):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, user_data)
 
 
 class Button(Widget):
@@ -305,27 +316,27 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
-    def set_on_change_listener(self, listener, funcname):
+    def set_on_change_listener(self, listener, user_data = None):
         """register the listener for the onchange event."""
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, user_data)
 
     def onkeydown(self,newValue):
         """returns the new text value."""
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, [newValue])
         
-    def set_on_key_down_listener(self,listener,funcname):
+    def set_on_key_down_listener(self, listener, user_data = None):
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONKEYDOWN}
-        self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, user_data)
 
     def onenter(self,newValue):
         """returns the new text value."""
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONENTER, [newValue])
 
-    def set_on_enter_listener(self,listener,funcname):
+    def set_on_enter_listener(self, listener, user_data = None):
         self.attributes[self.EVENT_ONKEYDOWN] = """
             if (event.keyCode == 13) {
                 var params={};
@@ -333,7 +344,7 @@ class TextInput(Widget):
                 sendCallbackParam('%(id)s','%(evt)s',params);
                 return false;
             }""" % {'id':id(self), 'evt':self.EVENT_ONENTER}
-        self.eventManager.register_listener(self.EVENT_ONENTER, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONENTER, listener, user_data)
 
 
 class Label(Widget):
@@ -430,15 +441,15 @@ class GenericDialog(Widget):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRM, [])
 
-    def set_on_confirm_dialog_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCONFIRM, listener, funcname)
+    def set_on_confirm_dialog_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONCONFIRM, listener, user_data)
 
     def cancel_dialog(self):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCANCEL, [])
 
-    def set_on_cancel_dialog_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, funcname)
+    def set_on_cancel_dialog_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, user_data)
 
 
 class InputDialog(GenericDialog):
@@ -451,29 +462,29 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(width, height, title, message)
 
         self.inputText = TextInput(width - 20, 30)
-        self.inputText.set_on_enter_listener(self,'on_text_enter_listener')
+        self.inputText.set_on_enter_listener(self.on_text_enter_listener)
         self.add_field('textinput',self.inputText)
         self.inputText.set_text(initial_value)
 
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
-        self.set_on_confirm_dialog_listener(self, 'confirm_value')
+        self.set_on_confirm_dialog_listener(self.confirm_value)
 
-    def on_text_enter_listener(self,value):
+    def on_text_enter_listener(self, evt, value):
         """event called pressing on ENTER key.
         propagates the string content of the input field
         """
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [value])
 
-    def confirm_value(self):
+    def confirm_value(self, evt):
         """event called pressing on OK button.
         propagates the string content of the input field
         """
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [self.inputText.get_text()])
 
-    def set_on_confirm_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
+    def set_on_confirm_value_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, user_data)
 
 
 class ListView(Widget):
@@ -490,7 +501,7 @@ class ListView(Widget):
     def append(self, key, item):
         # if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
-            item.set_on_click_listener(self, self.EVENT_ONSELECTION)
+            item.set_on_click_listener(self.onselection)
         item.attributes['selected'] = False
         super(ListView, self).append(key, item)
     
@@ -499,7 +510,7 @@ class ListView(Widget):
         self.selected_key = None
         super(ListView,self).empty()
 
-    def onselection(self, clicked_item):
+    def onselection(self, evt, clicked_item):
         self.selected_key = None
         for k in self.children:
             if self.children[k] == clicked_item:
@@ -512,11 +523,11 @@ class ListView(Widget):
                 break
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
-    def set_on_selection_listener(self, listener, funcname):
+    def set_on_selection_listener(self, listener, user_data = None):
         """The listener will receive the key of the selected item.
         If you add the element from an array, use a numeric incremental key
         """
-        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, user_data)
 
     def get_value(self):
         """Returns the value of the selected item or None
@@ -642,8 +653,8 @@ class DropDown(Widget):
         self.set_value(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
-    def set_on_change_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+    def set_on_change_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, user_data)
 
 
 class DropDownItem(Widget):
@@ -772,9 +783,9 @@ class Input(Widget):
         self.attributes['value'] = newValue
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
-    def set_on_change_listener(self, listener, funcname):
+    def set_on_change_listener(self, listener, user_data = None):
         """register the listener for the onchange event."""
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, user_data)
 
 
 class CheckBoxLabel(Widget):
@@ -850,11 +861,11 @@ class Slider(Input):
     def oninput(self, newValue):
         return self.eventManager.propagate(self.EVENT_ONINPUT, [newValue])
 
-    def set_oninput_listener(self, listener, funcname):
+    def set_oninput_listener(self, listener, user_data = None):
         self.attributes[self.EVENT_ONINPUT] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONINPUT}
-        self.eventManager.register_listener(self.EVENT_ONINPUT, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONINPUT, listener, user_data)
 
 
 class ColorPicker(Input):
@@ -895,9 +906,9 @@ class FileFolderNavigator(Widget):
         self.selectionlist = []
         self.controlsContainer = Widget(w, 25, Widget.LAYOUT_HORIZONTAL)
         self.controlBack = Button(45, 25, 'Up')
-        self.controlBack.set_on_click_listener(self, 'dir_go_back')
+        self.controlBack.set_on_click_listener(self.dir_go_back)
         self.controlGo = Button(45, 25, 'Go >>')
-        self.controlGo.set_on_click_listener(self, 'dir_go')
+        self.controlGo.set_on_click_listener(self.dir_go)
         self.pathEditor = TextInput(w-90, 25)
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
@@ -953,13 +964,13 @@ class FileFolderNavigator(Widget):
             full_path = os.path.join(directory, i)
             is_folder = not os.path.isfile(full_path)
             fi = FileFolderItem(self.w, 33, i, is_folder)
-            fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
-            fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
+            fi.set_on_click_listener(self.on_folder_item_click)  # navigation purpose
+            fi.set_on_selection_listener(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
             self.itemContainer.append(i, fi)
         self.append('items', self.itemContainer)
 
-    def dir_go_back(self):
+    def dir_go_back(self, evt):
         curpath = os.getcwd()  # backup the path
         try:
             os.chdir( self.pathEditor.get_text() )
@@ -970,7 +981,7 @@ class FileFolderNavigator(Widget):
             log.error('error changing directory', exc_info=True)
         os.chdir(curpath)  # restore the path
 
-    def dir_go(self):
+    def dir_go(self, evt):
         # when the GO button is pressed, it is supposed that the pathEditor is changed
         curpath = os.getcwd()  # backup the path
         try:
@@ -994,7 +1005,7 @@ class FileFolderNavigator(Widget):
         self.pathEditor.set_text(directory)
         os.chdir(curpath)  # restore the path
 
-    def on_folder_item_selected(self,folderitem):
+    def on_folder_item_selected(self, evt, folderitem):
         if not self.multiple_selection:
             self.selectionlist = []
             for c in self.folderItems:
@@ -1008,7 +1019,7 @@ class FileFolderNavigator(Widget):
         else:
             self.selectionlist.append(f)
 
-    def on_folder_item_click(self,folderitem):
+    def on_folder_item_click(self, evt, folderitem):
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
@@ -1030,32 +1041,32 @@ class FileFolderItem(Widget):
         self.icon = Widget(33, h)
         # the icon click activates the onselection event, that is propagates to registered listener
         if isFolder:
-            self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
+            self.icon.set_on_click_listener(self.onclick)
         self.icon.attributes['class'] = 'FileFolderItemIcon'
         icon_file = 'res/folder.png' if isFolder else 'res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(w-33, h, text)
-        self.label.set_on_click_listener(self, self.EVENT_ONSELECTION)
+        self.label.set_on_click_listener(self.onselection)
         self.append('icon', self.icon)
         self.append('text', self.label)
         self.selected = False
 
-    def onclick(self):
+    def onclick(self, evt):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
-    def set_on_click_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+    def set_on_click_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, user_data)
 
     def set_selected(self, selected):
         self.selected = selected
         self.style['color'] = 'red' if self.selected else 'black'
 
-    def onselection(self):
+    def onselection(self, evt):
         self.set_selected(not self.selected)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self])
 
-    def set_on_selection_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
+    def set_on_selection_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, user_data)
 
     def set_text(self, t):
         """sets the text content."""
@@ -1077,9 +1088,9 @@ class FileSelectionDialog(GenericDialog):
                                                        multiple_selection, selection_folder)
         self.add_field('fileFolderNavigator',self.fileFolderNavigator)
         self.EVENT_ONCONFIRMVALUE = 'confirm_value'
-        self.set_on_confirm_dialog_listener(self, 'confirm_value')
+        self.set_on_confirm_dialog_listener(self.confirm_value)
 
-    def confirm_value(self):
+    def confirm_value(self, evt):
         """event called pressing on OK button.
            propagates the string content of the input field
         """
@@ -1087,8 +1098,8 @@ class FileSelectionDialog(GenericDialog):
         params = [self.fileFolderNavigator.get_selection_list()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
-    def set_on_confirm_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
+    def set_on_confirm_value_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, user_data)
 
 
 class MenuBar(Widget):
@@ -1164,15 +1175,15 @@ class FileUploader(Widget):
     def onsuccess(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
 
-    def set_on_success_listener(self, listener, funcname):
+    def set_on_success_listener(self, listener, user_data = None):
         self.eventManager.register_listener(
-            self.EVENT_ON_SUCCESS, listener, funcname)
+            self.EVENT_ON_SUCCESS, listener, user_data)
 
     def onfailed(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_FAILED, [filename])
 
-    def set_on_failed_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, funcname)
+    def set_on_failed_listener(self, listener, user_data = None):
+        self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, user_data)
         
 
 class FileDownloader(Widget):

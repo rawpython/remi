@@ -34,7 +34,7 @@ class MyApp(App):
 
         subContainerLeft = gui.Widget(340, 530, gui.Widget.LAYOUT_VERTICAL, 10)
         self.img = gui.Image(100, 100, '/res/logo.png')
-        self.img.set_on_click_listener(self, 'on_img_clicked')
+        self.img.set_on_click_listener(self.on_img_clicked)
 
         self.table = gui.Table(300, 200)
         self.table.from_2d_matrix([['ID', 'First Name', 'Last Name']
@@ -54,30 +54,30 @@ class MyApp(App):
 
         self.bt = gui.Button(200, 30, 'Press me!')
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_click_listener(self.on_button_pressed)
 
         self.txt = gui.TextInput(200, 30)
         self.txt.set_text('This is a TEXTAREA')
-        self.txt.set_on_change_listener(self, 'on_text_area_change')
+        self.txt.set_on_change_listener(self.on_text_area_change)
 
         self.spin = gui.SpinBox(200, 30, 100)
-        self.spin.set_on_change_listener(self, 'on_spin_change')
+        self.spin.set_on_change_listener(self.on_spin_change)
 
         self.check = gui.CheckBoxLabel(200, 30, 'Label checkbox', True)
-        self.check.set_on_change_listener(self, 'on_check_change')
+        self.check.set_on_change_listener(self.on_check_change)
 
         self.btInputDiag = gui.Button(200, 30, 'Open InputDialog')
-        self.btInputDiag.set_on_click_listener(self, 'open_input_dialog')
+        self.btInputDiag.set_on_click_listener(self.open_input_dialog)
 
         self.btFileDiag = gui.Button(200, 30, 'File Selection Dialog')
-        self.btFileDiag.set_on_click_listener(self, 'open_fileselection_dialog')
+        self.btFileDiag.set_on_click_listener(self.open_fileselection_dialog)
 
         self.btUploadFile = gui.FileUploader(200, 30, './')
-        self.btUploadFile.set_on_success_listener( self, 'fileupload_on_success')
-        self.btUploadFile.set_on_failed_listener( self, 'fileupload_on_failed')
+        self.btUploadFile.set_on_success_listener( self.fileupload_on_success )
+        self.btUploadFile.set_on_failed_listener( self.fileupload_on_failed )
 
         self.listView = gui.ListView(300, 120)
-        self.listView.set_on_selection_listener(self,"list_view_on_selected")
+        self.listView.set_on_selection_listener( self.list_view_on_selected )
         li0 = gui.ListItem(279, 20, 'Danny Young')
         li1 = gui.ListItem(279, 20, 'Christine Holand')
         li2 = gui.ListItem(279, 20, 'Lars Gordon')
@@ -94,17 +94,17 @@ class MyApp(App):
         c1 = gui.DropDownItem(200, 20, 'DropDownItem 1')
         self.dropDown.append('0', c0)
         self.dropDown.append('1', c1)
-        self.dropDown.set_on_change_listener(self, 'drop_down_changed')
+        self.dropDown.set_on_change_listener( self.drop_down_changed )
         self.dropDown.set_value('DropDownItem 0')
 
         self.slider = gui.Slider(200, 20, 10, 0, 100, 5)
-        self.slider.set_on_change_listener(self, 'slider_changed')
+        self.slider.set_on_change_listener( self.slider_changed )
 
         self.colorPicker = gui.ColorPicker(200, 20, '#ffbb00')
-        self.colorPicker.set_on_change_listener(self, 'color_picker_changed')
+        self.colorPicker.set_on_change_listener( self.color_picker_changed )
 
         self.date = gui.Date(200, 20, '2015-04-13')
-        self.date.set_on_change_listener(self, 'date_changed')
+        self.date.set_on_change_listener( self.date_changed )
 
         self.video = gui.VideoPlayer(480, 270, 'http://www.w3schools.com/tags/movie.mp4', 
                     'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg')
@@ -137,25 +137,25 @@ class MyApp(App):
 
         menu = gui.Menu(620, 30)
         m1 = gui.MenuItem(100, 30, 'File')
-        m2 = gui.MenuItem(100, 30, 'View')
-        m2.set_on_click_listener(self, 'menu_view_clicked')
+        self.menuView = gui.MenuItem(100, 30, 'View')
+        self.menuView.set_on_click_listener(self.menu_clicked, 'View')
         m11 = gui.MenuItem(100, 30, 'Save')
-        m12 = gui.MenuItem(100, 30, 'Open')
-        m12.set_on_click_listener(self, 'menu_open_clicked')
-        m111 = gui.MenuItem(100, 30, 'Save')
-        m111.set_on_click_listener(self, 'menu_save_clicked')
-        m112 = gui.MenuItem(100, 30, 'Save as')
-        m112.set_on_click_listener(self, 'menu_saveas_clicked')
-        m3 = gui.MenuItem(100,30,'Dialog')
-        m3.set_on_click_listener(self, 'menu_dialog_clicked')
+        self.menuOpen = gui.MenuItem(100, 30, 'Open')
+        self.menuOpen.set_on_click_listener(self.menu_clicked, 'Open')
+        self.menuSave = gui.MenuItem(100, 30, 'Save')
+        self.menuSave.set_on_click_listener(self.menu_clicked, 'Save')
+        self.menuSaveAs = gui.MenuItem(100, 30, 'Save as')
+        self.menuSaveAs.set_on_click_listener(self.menu_clicked, 'SaveAs')
+        self.menuDialog = gui.MenuItem(100,30,'Dialog')
+        self.menuDialog.set_on_click_listener(self.menu_clicked, 'Dialog')
 
         menu.append('1',m1)
-        menu.append('2',m2)
-        menu.append('3',m3)
+        menu.append('2',self.menuView)
+        menu.append('3',self.menuDialog)
         m1.append('11',m11)
-        m1.append('12',m12)
-        m11.append('111',m111)
-        m11.append('112',m112)
+        m1.append('12',self.menuOpen)
+        m11.append('111',self.menuSave)
+        m11.append('112',self.menuSaveAs)
 
         menubar = gui.MenuBar(620, 30)
         menubar.append('1', menu)
@@ -174,7 +174,7 @@ class MyApp(App):
         self.count+=1
         Timer(1,self.display_counter).start()         
         
-    def menu_dialog_clicked(self):
+    def show_dialog(self):
         self.dialog=gui.GenericDialog(title='Dialog Box', message='Click Ok to transfer content to main page')
 
         self.dtextinput= gui.TextInput(200, 30)
@@ -216,10 +216,10 @@ class MyApp(App):
         self.ddate.set_value( '2000-01-01')
         self.dialog.add_field_with_label('ddate','Date',self.ddate)
 
-        self.dialog.set_on_confirm_dialog_listener(self,'dialog_confirm')
+        self.dialog.set_on_confirm_dialog_listener(self.dialog_confirm)
         self.dialog.show(self)
 
-    def dialog_confirm(self):
+    def dialog_confirm(self, evt):
         result=self.dialog.get_field('dtextinput').get_value()
         self.txt.set_value(result)
 
@@ -245,83 +245,77 @@ class MyApp(App):
         self.listView.select_by_key(result)
 
     # listener function
-    def on_img_clicked(self):
+    def on_img_clicked(self, evt):
         self.lbl.set_text('Image clicked!')
 
-    def on_button_pressed(self):
+    def on_button_pressed(self, evt):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
-    def on_text_area_change(self, newValue):
+    def on_text_area_change(self, evt, newValue):
         self.lbl.set_text('Text Area value changed!')
 
-    def on_spin_change(self, newValue):
+    def on_spin_change(self, evt, newValue):
         self.lbl.set_text('SpinBox changed, new value: ' + str(newValue))
 
-    def on_check_change(self, newValue):
+    def on_check_change(self, evt, newValue):
         self.lbl.set_text('CheckBox changed, new value: ' + str(newValue))
 
-    def open_input_dialog(self):
+    def open_input_dialog(self, evt):
         self.inputDialog = gui.InputDialog(500, 160, 'Input Dialog', 'Your name?',
         initial_value='type here')
         self.inputDialog.set_on_confirm_value_listener(
-            self, 'on_input_dialog_confirm')
+            self.on_input_dialog_confirm)
 
         # here is returned the Input Dialog widget, and it will be shown
         self.inputDialog.show(self)
 
-    def on_input_dialog_confirm(self, value):
+    def on_input_dialog_confirm(self, evt, value):
         self.lbl.set_text('Hello ' + value)
         
-    def open_fileselection_dialog(self):
+    def open_fileselection_dialog(self, evt):
         self.fileselectionDialog = gui.FileSelectionDialog( 600, 310, 
             'File Selection Dialog', 'Select files and folders',False,'.')
         self.fileselectionDialog.set_on_confirm_value_listener(
-            self, 'on_fileselection_dialog_confirm')
+            self.on_fileselection_dialog_confirm)
 
         # here is returned the Input Dialog widget, and it will be shown
         self.fileselectionDialog.show(self)
 
-    def on_fileselection_dialog_confirm(self, filelist):
+    def on_fileselection_dialog_confirm(self, evt, filelist):
         #a list() of filenames and folders is returned
         self.lbl.set_text('Selected files:' + str(filelist))
         for f in filelist:
             self.subContainerRight.append('5__', gui.FileDownloader(200, 30, "download selected", f))
 
-    def list_view_on_selected(self,selected_item_key):
+    def list_view_on_selected(self, evt, selected_item_key):
         """ The selection event of the listView, returns a key of the clicked event.
             You can retrieve the item rapidly
         """
         self.lbl.set_text('List selection: ' + self.listView.children[selected_item_key].get_text())
 
-    def drop_down_changed(self, value):
+    def drop_down_changed(self, evt, value):
         self.lbl.set_text('New Combo value: ' + value)
 
-    def slider_changed(self, value):
+    def slider_changed(self, evt, value):
         self.lbl.set_text('New slider value: ' + str(value))
 
-    def color_picker_changed(self, value):
+    def color_picker_changed(self, evt, value):
         self.lbl.set_text('New color value: ' + value)
 
-    def date_changed(self, value):
+    def date_changed(self, evt, value):
         self.lbl.set_text('New date value: ' + value)
 
-    def menu_save_clicked(self):
-        self.lbl.set_text('Menu clicked: Save')
-
-    def menu_saveas_clicked(self):
-        self.lbl.set_text('Menu clicked: Save As')
-
-    def menu_open_clicked(self):
-        self.lbl.set_text('Menu clicked: Open')
-
-    def menu_view_clicked(self):
-        self.lbl.set_text('Menu clicked: View')
-        
-    def fileupload_on_success(self, filename):
+    def menu_clicked(self, evt):
+        if evt.source == self.menuDialog:
+            self.show_dialog()
+        else:
+            self.lbl.set_text('Menu clicked: ' + evt.user_data)
+            
+    def fileupload_on_success(self, evt, filename):
         self.lbl.set_text('File upload success: ' + filename)
 
-    def fileupload_on_failed(self, filename):
+    def fileupload_on_failed(self, evt, filename):
         self.lbl.set_text('File upload failed: ' + filename)
 
 if __name__ == "__main__":
