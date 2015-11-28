@@ -68,6 +68,7 @@ class EventManager(object):
 
 
 class Tag(object):
+    """Tag class represents an object that can be represented in html format."""
     def __init__(self):
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
@@ -84,8 +85,11 @@ class Tag(object):
         self.attributes['class'] = self.__class__.__name__
 
     def repr(self, client, include_children=True):
-        """it is used to automatically represent the object to HTML format
-        packs all the attributes, children and so on."""
+        """
+        It is used to automatically represent the object to HTML format.
+
+        Packs into a single string all the attributes, children and so on.
+        """
 
         self.attributes['children_list'] = ','.join(map(lambda k, v: str(
             id(v)), self.children.keys(), self.children.values())) 
@@ -109,7 +113,14 @@ class Tag(object):
 
     def append(self, value, key = None):
         """
-        it allows to add child to this.
+        It allows to add children Tags to this.
+
+        Keyword arguments:
+        value -- the Tag instance
+        key -- the key index used to store the Tag inside the self.children dictionary (default str(id(value)))
+
+        Returns:
+        The provided or generated key.
         """
         key = str(id(value)) if not key else key
         
@@ -121,12 +132,15 @@ class Tag(object):
         self._render_children_list.append(value)
 
         self.children[key] = value
+        return key
 
     def empty(self):
+        """Removes all the children Tags."""
         for k in list(self.children.keys()):
             self.remove(self.children[k])
 
     def remove(self, child):
+        """Removes a single child from the self.children dictionary."""
         if child in self.children.values():
             #runtimeInstances.pop( runtimeInstances.index( self.children[key] ) )
             self._render_children_list.remove(child)
@@ -205,7 +219,14 @@ class Widget(Tag):
 
     def append(self, value, key = None):
         """
-        it allows to add child widgets to this.
+        It allows to add children Tags to this.
+
+        Keyword arguments:
+        value -- the Tag instance
+        key -- the key index used to store the Tag inside the self.children dictionary (default str(id(value)))
+
+        Returns:
+        The provided or generated key.
         """
         key = str(id(value)) if not key else key
         super(Widget,self).append(value, key)
@@ -227,6 +248,7 @@ class Widget(Tag):
                         self.children[key].style['float'] = 'left'
                 else:
                     self.children[key].style['float'] = 'left'
+        return key
 
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
@@ -406,6 +428,17 @@ class GenericDialog(Widget):
         self.baseAppInstance = None
 
     def add_field_with_label(self, labelDescription, field, key=None):
+        """
+        It allows to add input fields to the dialog with a description Label.
+
+        Keyword arguments:
+        labelDescription -- textual content of the description label
+        field -- the Widget instance
+        key -- the key index used to store the Widget inside the self.inputs dictionary (default str(id(value)))
+
+        Returns:
+        The provided or generated key.
+        """
         key = str(id(field)) if not key else key
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
@@ -418,8 +451,19 @@ class GenericDialog(Widget):
         container.append(label, 'lbl' + key)
         container.append(self.inputs[key], key)
         self.container.append(container, key)
+        return key
         
     def add_field(self, field, key=None):
+        """
+        It allows to add input fields to the dialog.
+
+        Keyword arguments:
+        field -- the Widget instance
+        key -- the key index used to store the Widget inside the self.inputs dictionary (default str(id(value)))
+
+        Returns:
+        The provided or generated key.
+        """
         key = str(id(field)) if not key else key
         fields_spacing = 5
         field_height = from_pix(field.style['height']) + fields_spacing*2
@@ -430,6 +474,7 @@ class GenericDialog(Widget):
         container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
         container.append(self.inputs[key], key)
         self.container.append(container, key)
+        return key
 
     def get_field(self, key):
         return self.inputs[key]
@@ -498,12 +543,23 @@ class ListView(Widget):
         self.selected_key = None
 
     def append(self, item, key = None):
+        """
+        It allows to add children ListItems.
+
+        Keyword arguments:
+        item -- the ListItem instance
+        key -- the key index used to store the ListItem inside the self.children dictionary (default str(id(value)))
+
+        Returns:
+        The provided or generated key.
+        """
         key = str(id(item)) if not key else key
         # if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
             item.set_on_click_listener(self.onselection)
         item.attributes['selected'] = False
         super(ListView, self).append(item, key)
+        return key
     
     def empty(self):
         self.selected_item = None
@@ -524,21 +580,21 @@ class ListView(Widget):
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
     def set_on_selection_listener(self, listener, user_data = None):
-        """The listener will receive the key of the selected item.
+        """
+        The listener will receive the key of the selected item.
+
         If you add the element from an array, use a numeric incremental key
         """
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, user_data)
 
     def get_value(self):
-        """Returns the value of the selected item or None
-        """
+        """Returns the value of the selected item or None"""
         if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
     def get_key(self):
-        """Returns the key of the selected item or None
-        """
+        """Returns the key of the selected item or None"""
         return self.selected_key
 
     def select_by_key(self, itemKey):
@@ -1132,11 +1188,23 @@ class MenuItem(Widget):
         self.append = self.addSubMenu
 
     def addSubMenu(self, value, key = None):
+        """
+        It allows to add children MenuItem to this.
+
+        Keyword arguments:
+        value -- the MenuItem instance
+        key -- the key index used to store the MenuItem inside the self.subcontainer.children
+                dictionary (default str(id(value)))
+
+        Returns:
+        The provided or generated key.
+        """
         key = str(id(value)) if not key else key
         if self.subcontainer is None:
             self.subcontainer = Menu(self.w, self.h, Widget.LAYOUT_VERTICAL)
             super(MenuItem, self).append(self.subcontainer, 'subcontainer')
         self.subcontainer.append(value, key)
+        return key
 
     def set_text(self, text):
         self.append(text, 'text')
