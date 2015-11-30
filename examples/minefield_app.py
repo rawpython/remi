@@ -102,11 +102,27 @@ class MyApp(App):
     def main(self):
         # the arguments are	width - height - layoutOrientationOrizontal
         self.main_container = gui.Widget(1020, 520, False, 10)
-        self.title = gui.Label( 600, 30, 'Mine Field GAME' )
+        
+        self.title = gui.Label( 1000, 30, 'Mine Field GAME' )
         self.title.style['font-size'] = '25px'
         self.title.style['font-weight'] = 'bold'
+        
+        self.horizontal_container = gui.Widget(1000, 30, True, 0)
+        
         self.info = gui.Label( 600, 30, 'Collaborative minefiled game. Enjoy.' )
         self.info.style['font-size'] = '20px'
+        
+        self.icon_mine = gui.Image(30,30,'/res/mine.png')
+        self.icon_flag = gui.Image(30,30,'/res/flag.png')
+        
+        self.lblMineCount = gui.Label( 100, 30, 'Mines' )
+        self.lblFlagCount = gui.Label( 100, 30, 'Flags' )
+        
+        self.horizontal_container.append( 'info', self.info )
+        self.horizontal_container.append( 'icon_mine', self.icon_mine )
+        self.horizontal_container.append( 'info_mine', self.lblMineCount )
+        self.horizontal_container.append( 'icon_flag', self.icon_flag )
+        self.horizontal_container.append( 'info_flag', self.lblFlagCount )
         
         self.minecount = 0 #mine number in the map
         self.flagcount = 0 #flag placed by the players
@@ -117,9 +133,10 @@ class MyApp(App):
         self.mine_table.from_2d_matrix( self.mine_matrix, False )
         
         self.main_container.append('title', self.title)
-        self.main_container.append('info', self.info)
+        self.main_container.append('horizontal_container', self.horizontal_container)
         self.main_container.append('mine_table', self.mine_table)
-        
+       
+        self.check_if_win() 
         # returning the root widget
         return self.main_container
 
@@ -151,6 +168,7 @@ class MyApp(App):
 
     def check_if_win(self):
         """Here are counted the flags. Is checked if the user win."""
+        self.flagcount = 0
         win = True
         for x in range(0,len(self.mine_matrix)):
             for y in range(0,len(self.mine_matrix[0])):
@@ -160,6 +178,8 @@ class MyApp(App):
                         win = False
                 elif self.mine_matrix[x][y].has_mine == True:
                     win = False
+        self.lblMineCount.set_text("%s"%self.minecount)
+        self.lblFlagCount.set_text("%s"%self.flagcount)
                     
     def fill_void_cells(self, cell):
         fill_color_voidcells = random.randint(0,0xffffff)
@@ -190,6 +210,7 @@ class MyApp(App):
             for y in range(0,len(self.mine_matrix[0])):
                 self.mine_matrix[x][y].style['background-color'] = 'red'
                 self.mine_matrix[x][y].check_mine(False)
+
 
 if __name__ == "__main__":
     start(MyApp,multiple_instance=False)
