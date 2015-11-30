@@ -18,6 +18,7 @@ import io
 import remi.gui as gui
 from remi import start, App
 import random
+from threading import Timer
 
 class Cell(gui.Widget):
     """
@@ -55,7 +56,7 @@ class Cell(gui.Widget):
         self.game.check_if_win()
         
     def check_mine(self, notify_game = True):
-        if self.state == 2:
+        if self.state == 1:
             return
         if self.opened: 
             return
@@ -85,9 +86,9 @@ class Cell(gui.Widget):
             return
         if self.state == 0:
             self.style['background-image'] = "''"
-        if self.state == 1:
-            self.style['background-image'] = "url('/res/doubt.png')"
         if self.state == 2:
+            self.style['background-image'] = "url('/res/doubt.png')"
+        if self.state == 1:
             self.style['background-image'] = "url('/res/flag.png')"
             
     def add_nearest_mine(self):
@@ -99,6 +100,11 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args, static_paths=('./res/',))
 
+    def display_time(self):
+        self.lblTime.set_text('Play time: ' + str(self.time_count))
+        self.time_count+=1
+        Timer(1,self.display_time).start()   
+
     def main(self):
         # the arguments are	width - height - layoutOrientationOrizontal
         self.main_container = gui.Widget(1020, 520, False, 10)
@@ -109,7 +115,7 @@ class MyApp(App):
         
         self.horizontal_container = gui.Widget(1000, 30, True, 0)
         
-        self.info = gui.Label( 600, 30, 'Collaborative minefiled game. Enjoy.' )
+        self.info = gui.Label( 500, 30, 'Collaborative minefiled game. Enjoy.' )
         self.info.style['font-size'] = '20px'
         
         self.icon_mine = gui.Image(30,30,'/res/mine.png')
@@ -118,27 +124,36 @@ class MyApp(App):
         self.lblMineCount = gui.Label( 100, 30, 'Mines' )
         self.lblFlagCount = gui.Label( 100, 30, 'Flags' )
         
+        self.time_count = 0
+        self.lblTime = gui.Label( 100, 30, 'Time' )
+        
         self.horizontal_container.append( 'info', self.info )
         self.horizontal_container.append( 'icon_mine', self.icon_mine )
         self.horizontal_container.append( 'info_mine', self.lblMineCount )
         self.horizontal_container.append( 'icon_flag', self.icon_flag )
         self.horizontal_container.append( 'info_flag', self.lblFlagCount )
+        self.horizontal_container.append( 'info_time', self.lblTime )
         
         self.minecount = 0 #mine number in the map
         self.flagcount = 0 #flag placed by the players
         
         self.mine_table = gui.Table( 1000, 400 )
         
-        self.mine_matrix = self.build_mine_matrix(20,50,30)
-        self.mine_table.from_2d_matrix( self.mine_matrix, False )
-        
         self.main_container.append('title', self.title)
         self.main_container.append('horizontal_container', self.horizontal_container)
         self.main_container.append('mine_table', self.mine_table)
        
-        self.check_if_win() 
+        self.new_game()
+         
+        self.display_time()
         # returning the root widget
         return self.main_container
+
+    def new_game(self):
+        self.time_count = 0
+        self.mine_matrix = self.build_mine_matrix(20,50,3)
+        self.mine_table.from_2d_matrix( self.mine_matrix, False )
+        self.check_if_win()
 
     def build_mine_matrix(self, w, h, minenum):
         """random fill cells with mines and increments nearest mines num in adiacent cells"""
@@ -172,7 +187,7 @@ class MyApp(App):
         win = True
         for x in range(0,len(self.mine_matrix)):
             for y in range(0,len(self.mine_matrix[0])):
-                if self.mine_matrix[x][y].state == 2:
+                if self.mine_matrix[x][y].state == 1:
                     self.flagcount = self.flagcount + 1
                     if self.mine_matrix[x][y].has_mine == False:
                         win = False
@@ -180,6 +195,8 @@ class MyApp(App):
                     win = False
         self.lblMineCount.set_text("%s"%self.minecount)
         self.lblFlagCount.set_text("%s"%self.flagcount)
+        if win:
+            self.new_game()
                     
     def fill_void_cells(self, cell):
         fill_color_voidcells = random.randint(0,0xffffff)
