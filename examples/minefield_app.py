@@ -209,8 +209,8 @@ class MyApp(App):
             self.dialog.show(self)
                     
     def fill_void_cells(self, cell):
-        self.mine_table = gui.Table( 800, 400 )
-        self.main_container.append( "mine_table", self.mine_table )
+        #self.mine_table = gui.Table( 800, 400 )
+        #self.main_container.append( "mine_table", self.mine_table )
 
         fill_color_voidcells = random.randint(0,0xffffff)
         terminated = False
@@ -234,22 +234,22 @@ class MyApp(App):
                                 terminated = False
                                 checked_cells.append(self.mine_matrix[x + _x][y + _y])
 
-        self.mine_table.from_2d_matrix( self.mine_matrix, False )
+        #self.mine_table.from_2d_matrix( self.mine_matrix, False )
         
     def explosion(self, cell):
         print("explosion")
-        self.mine_table = gui.Table( 800, 400 )
-        self.main_container.append( "mine_table", self.mine_table )
+        #self.mine_table = gui.Table( 800, 400 )
+        #self.main_container.append( "mine_table", self.mine_table )
         for x in range(0,len(self.mine_matrix)):
             for y in range(0,len(self.mine_matrix[0])):
                 self.mine_matrix[x][y].style['background-color'] = 'red'
                 self.mine_matrix[x][y].check_mine(False)
-        self.mine_table.from_2d_matrix( self.mine_matrix, False )
-        self.dialog = gui.GenericDialog(title='You Lose!', message='Try Again')
-        self.dialog.set_on_confirm_dialog_listener(self,'new_game')
-        self.dialog.set_on_cancel_dialog_listener(self,'new_game')
-        self.dialog.show(self)
+        #self.mine_table.from_2d_matrix( self.mine_matrix, False )
+        #self.dialog = gui.GenericDialog(title='You Lose!', message='Try Again')
+        #self.dialog.set_on_confirm_dialog_listener(self,'new_game')
+        #self.dialog.set_on_cancel_dialog_listener(self,'new_game')
+        #self.dialog.show(self)
 
 
 if __name__ == "__main__":
-    start(MyApp,multiple_instance=False,address='0.0.0.0', port=8081,debug=True)
+    start(MyApp,multiple_instance=False,address='0.0.0.0', port=8081,debug=False)
