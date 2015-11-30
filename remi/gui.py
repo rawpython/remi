@@ -692,7 +692,7 @@ class Table(Widget):
         self.type = 'table'
         self.style['float'] = 'none'
         
-    def from_2d_matrix(self, _matrix):
+    def from_2d_matrix(self, _matrix, fill_title=True):
         """
         Fills the table with the data contained in the provided 2d _matrix
         The first row of the matrix is set as table title
@@ -703,7 +703,7 @@ class Table(Widget):
         for row in _matrix:
             tr = TableRow()
             for item in row:
-                if first_row:
+                if first_row and fill_title:
                     ti = TableTitle(item)
                 else:
                     ti = TableItem(item)

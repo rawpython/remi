@@ -70,10 +70,13 @@ table {
 	border-spacing: 0;
 	overflow: scroll;
 	border-collapse: collapse;
+	text-align: center;
 }
 
 .TableItem {
-	padding-left: 5px;
+	padding: 0px;
+	border: none;
+	outline: 1px solid lightgray;
 }
 
 td {
