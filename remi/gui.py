@@ -171,7 +171,7 @@ class Widget(Tag):
         self.EVENT_ONCHANGE = 'onchange'
         self.EVENT_ONFOCUS = 'onfocus'
         self.EVENT_ONBLUR = 'onblur'
-
+        self.EVENT_ONCONTEXTMENU = "oncontextmenu"
         self.EVENT_ONUPDATE = 'onupdate'
 
         if w > -1:
@@ -253,6 +253,13 @@ class Widget(Tag):
     def set_on_click_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+
+    def oncontextmenu(self):
+        return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
+
+    def set_on_contextmenu_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONCONTEXTMENU] = "sendCallback('%s','%s');return false;" % (id(self), self.EVENT_ONCONTEXTMENU)
+        self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
 
 
 class Button(Widget):

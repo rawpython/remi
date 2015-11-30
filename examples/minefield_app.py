@@ -22,11 +22,7 @@ from threading import Timer
 
 class Cell(gui.Widget):
     """
-    Represent a message from a client. 
-    It contains:
-        nick, 
-        message body,
-        personal reply control
+    Represent a cell in the minefield map
     """
     def __init__(self, width, height, x, y, game):
         super(Cell, self).__init__(width, height)
@@ -41,11 +37,10 @@ class Cell(gui.Widget):
         self.style['font-weight'] = 'bold'
         self.style['text-align'] = 'center'
         self.style['background-size'] = 'contain'
-        self.EVENT_ONRIGHTCLICK = "oncontextmenu"
-        self.attributes[self.EVENT_ONRIGHTCLICK] = "sendCallback('%s','%s');return false;" % (id(self), self.EVENT_ONRIGHTCLICK)
+        self.set_on_contextmenu_listener( self, 'on_right_click' )
         self.set_on_click_listener( self, "check_mine" )
         
-    def oncontextmenu(self):
+    def on_right_click(self):
         if self.opened: 
             return
         self.next_state()
@@ -93,7 +88,7 @@ class Cell(gui.Widget):
             
     def add_nearest_mine(self):
         self.nearest_mine = self.nearest_mine + 1
-        #self.append( 'nearestbomb', "%s"%self.nearest_mine )
+
 
 class MyApp(App):
 
