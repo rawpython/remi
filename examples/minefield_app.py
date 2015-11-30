@@ -31,7 +31,7 @@ class Cell(gui.Widget):
         self.has_mine = False
         self.state = 0 #unknown - doubt - flag
         self.opened = False
-        self.nearest_mine = 0
+        self.nearest_mine = 0 #number of mines adjacent with this cell
         self.game = game
         
         self.style['font-weight'] = 'bold'
@@ -41,11 +41,9 @@ class Cell(gui.Widget):
         self.set_on_click_listener( self, "check_mine" )
         
     def on_right_click(self):
-        if self.opened: 
+        """ Here with right click the change of cell is changed """
+        if self.opened:
             return
-        self.next_state()
-        
-    def next_state(self):
         self.state = (self.state + 1)%3
         self.set_icon()
         self.game.check_if_win()
@@ -63,10 +61,7 @@ class Cell(gui.Widget):
         if notify_game:
             self.game.no_mine( self )
         self.set_icon()
-        
-    def set_mine(self):
-        self.has_mine = True
-        
+
     def set_icon(self):
         self.style['background-image'] = "''"
         if self.opened:
@@ -76,16 +71,13 @@ class Cell(gui.Widget):
                 if self.nearest_mine > 0:
                     self.append( 'nearestbomb', "%s"%self.nearest_mine )
                 else:
-                    #self.append( 'nearestbomb', "%s"%self.nearest_mine )
                     self.style['background-color'] = 'rgb(200,255,100)'
             return
-        if self.state == 0:
-            self.style['background-image'] = "''"
         if self.state == 2:
             self.style['background-image'] = "url('/res/doubt.png')"
         if self.state == 1:
             self.style['background-image'] = "url('/res/flag.png')"
-            
+
     def add_nearest_mine(self):
         self.nearest_mine = self.nearest_mine + 1
 
@@ -108,13 +100,8 @@ class MyApp(App):
         self.title.style['font-size'] = '25px'
         self.title.style['font-weight'] = 'bold'
         
-        self.horizontal_container = gui.Widget(1000, 30, True, 0)
-        
         self.info = gui.Label( 400, 30, 'Collaborative minefiled game. Enjoy.' )
         self.info.style['font-size'] = '20px'
-        
-        self.icon_mine = gui.Image(30,30,'/res/mine.png')
-        self.icon_flag = gui.Image(30,30,'/res/flag.png')
         
         self.lblMineCount = gui.Label( 100, 30, 'Mines' )
         self.lblFlagCount = gui.Label( 100, 30, 'Flags' )
@@ -124,11 +111,12 @@ class MyApp(App):
 
         self.btReset = gui.Button( 100,30, 'Restart' )
         self.btReset.set_on_click_listener( self, "new_game")
-        
+
+        self.horizontal_container = gui.Widget(1000, 30, True, 0)
         self.horizontal_container.append( 'info', self.info )
-        self.horizontal_container.append( 'icon_mine', self.icon_mine )
+        self.horizontal_container.append( 'icon_mine', gui.Image(30,30,'/res/mine.png') )
         self.horizontal_container.append( 'info_mine', self.lblMineCount )
-        self.horizontal_container.append( 'icon_flag', self.icon_flag )
+        self.horizontal_container.append( 'icon_flag', gui.Image(30,30,'/res/flag.png') )
         self.horizontal_container.append( 'info_flag', self.lblFlagCount )
         self.horizontal_container.append( 'info_time', self.lblTime )
         self.horizontal_container.append( 'reset', self.btReset )
@@ -154,8 +142,8 @@ class MyApp(App):
         return not (x > w-1 or y > h-1 or  x < 0 or y < 0)
 
     def new_game(self):
-        self.mine_table = gui.Table( 900, 450 )
         self.time_count = 0
+        self.mine_table = gui.Table( 900, 450 )
         self.mine_matrix = self.build_mine_matrix(30,15,60)
         self.mine_table.from_2d_matrix( self.mine_matrix, False )
         self.main_container.append( "mine_table", self.mine_table )
@@ -172,7 +160,7 @@ class MyApp(App):
                 continue 
                 
             self.minecount = self.minecount + 1
-            matrix[y][x].set_mine()
+            matrix[y][x].has_mine = True
             for coord in [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]:
                 _x,_y = coord
                 if not self.coord_in_map(x+_x,y+_y,w,h):
@@ -220,7 +208,7 @@ class MyApp(App):
                         if not self.mine_matrix[cell.y + _y][cell.x + _x].opened:
                             self.mine_matrix[cell.y + _y][cell.x + _x].check_mine(False)
                             checked_cells.append(self.mine_matrix[cell.y + _y][cell.x + _x])
-        
+
     def explosion(self, cell):
         print("explosion")
         self.mine_table = gui.Table( 900, 450 )
