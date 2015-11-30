@@ -107,7 +107,7 @@ class MyApp(App):
 
     def main(self):
         # the arguments are	width - height - layoutOrientationOrizontal
-        self.main_container = gui.Widget(1020, 520, False, 10)
+        self.main_container = gui.Widget(1020, 540, False, 10)
         
         self.title = gui.Label( 1000, 30, 'Mine Field GAME' )
         self.title.style['font-size'] = '25px'
@@ -115,7 +115,7 @@ class MyApp(App):
         
         self.horizontal_container = gui.Widget(1000, 30, True, 0)
         
-        self.info = gui.Label( 500, 30, 'Collaborative minefiled game. Enjoy.' )
+        self.info = gui.Label( 400, 30, 'Collaborative minefiled game. Enjoy.' )
         self.info.style['font-size'] = '20px'
         
         self.icon_mine = gui.Image(30,30,'/res/mine.png')
@@ -126,6 +126,9 @@ class MyApp(App):
         
         self.time_count = 0
         self.lblTime = gui.Label( 100, 30, 'Time' )
+
+        self.btReset = gui.Button( 100,30, 'Restart' )
+        self.btReset.set_on_click_listener( self, "new_game")
         
         self.horizontal_container.append( 'info', self.info )
         self.horizontal_container.append( 'icon_mine', self.icon_mine )
@@ -133,15 +136,16 @@ class MyApp(App):
         self.horizontal_container.append( 'icon_flag', self.icon_flag )
         self.horizontal_container.append( 'info_flag', self.lblFlagCount )
         self.horizontal_container.append( 'info_time', self.lblTime )
+        self.horizontal_container.append( 'reset', self.btReset )
         
         self.minecount = 0 #mine number in the map
         self.flagcount = 0 #flag placed by the players
-        
-        self.mine_table = gui.Table( 1000, 400 )
-        
+
+        self.link = gui.Link(1000, 20, "https://github.com/dddomodossola/remi", "This is an example of REMI gui library.")
+
         self.main_container.append('title', self.title)
         self.main_container.append('horizontal_container', self.horizontal_container)
-        self.main_container.append('mine_table', self.mine_table)
+        self.main_container.append('link', self.link)
        
         self.new_game()
          
@@ -150,9 +154,11 @@ class MyApp(App):
         return self.main_container
 
     def new_game(self):
+        self.mine_table = gui.Table( 800, 400 )
         self.time_count = 0
-        self.mine_matrix = self.build_mine_matrix(20,50,40)
+        self.mine_matrix = self.build_mine_matrix(20,40,120)
         self.mine_table.from_2d_matrix( self.mine_matrix, False )
+        self.main_container.append( "mine_table", self.mine_table )
         self.check_if_win()
 
     def build_mine_matrix(self, w, h, minenum):
@@ -199,14 +205,18 @@ class MyApp(App):
         if win:
             self.dialog = gui.GenericDialog(title='You Win!', message='Game done in %s seconds'%self.time_count)
             self.dialog.set_on_confirm_dialog_listener(self,'new_game')
+            self.dialog.set_on_cancel_dialog_listener(self,'new_game')
             self.dialog.show(self)
                     
     def fill_void_cells(self, cell):
+        self.mine_table = gui.Table( 800, 400 )
+        self.main_container.append( "mine_table", self.mine_table )
+
         fill_color_voidcells = random.randint(0,0xffffff)
         terminated = False
         cell.fillcolor = fill_color_voidcells
         checked_cells = [cell,]
-        while not terminated:
+        while not terminated and len(checked_cells)>0:
             terminated = True
             for cell in checked_cells[:]:
                 checked_cells.remove(cell)
@@ -223,14 +233,23 @@ class MyApp(App):
                                 self.mine_matrix[x + _x][y + _y].fillcolor = fill_color_voidcells
                                 terminated = False
                                 checked_cells.append(self.mine_matrix[x + _x][y + _y])
+
+        self.mine_table.from_2d_matrix( self.mine_matrix, False )
         
     def explosion(self, cell):
         print("explosion")
+        self.mine_table = gui.Table( 800, 400 )
+        self.main_container.append( "mine_table", self.mine_table )
         for x in range(0,len(self.mine_matrix)):
             for y in range(0,len(self.mine_matrix[0])):
                 self.mine_matrix[x][y].style['background-color'] = 'red'
                 self.mine_matrix[x][y].check_mine(False)
+        self.mine_table.from_2d_matrix( self.mine_matrix, False )
+        self.dialog = gui.GenericDialog(title='You Lose!', message='Try Again')
+        self.dialog.set_on_confirm_dialog_listener(self,'new_game')
+        self.dialog.set_on_cancel_dialog_listener(self,'new_game')
+        self.dialog.show(self)
 
 
 if __name__ == "__main__":
-    start(MyApp,multiple_instance=False)
+    start(MyApp,multiple_instance=False,address='0.0.0.0', port=8081,debug=True)
