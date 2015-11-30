@@ -151,12 +151,13 @@ class MyApp(App):
 
     def new_game(self):
         self.time_count = 0
-        self.mine_matrix = self.build_mine_matrix(20,50,3)
+        self.mine_matrix = self.build_mine_matrix(20,50,40)
         self.mine_table.from_2d_matrix( self.mine_matrix, False )
         self.check_if_win()
 
     def build_mine_matrix(self, w, h, minenum):
         """random fill cells with mines and increments nearest mines num in adiacent cells"""
+        self.minecount = 0
         matrix = [[Cell(20, 20, x, y, self) for y in range(h)] for x in range(w)]
         for i in range(0,minenum):
             x = random.randint(0,w-1)
@@ -196,7 +197,9 @@ class MyApp(App):
         self.lblMineCount.set_text("%s"%self.minecount)
         self.lblFlagCount.set_text("%s"%self.flagcount)
         if win:
-            self.new_game()
+            self.dialog = gui.GenericDialog(title='You Win!', message='Game done in %s seconds'%self.time_count)
+            self.dialog.set_on_confirm_dialog_listener(self,'new_game')
+            self.dialog.show(self)
                     
     def fill_void_cells(self, cell):
         fill_color_voidcells = random.randint(0,0xffffff)
