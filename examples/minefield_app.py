@@ -153,10 +153,15 @@ class MyApp(App):
         # returning the root widget
         return self.main_container
 
+    def coord_in_map(self, x, y, w = None, h = None):
+        w = len(self.mine_matrix[0]) if w == None else w
+        h = len(self.mine_matrix) if h == None else h
+        return not (x > w-1 or y > h-1 or  x < 0 or y < 0)
+
     def new_game(self):
         self.mine_table = gui.Table( 800, 400 )
         self.time_count = 0
-        self.mine_matrix = self.build_mine_matrix(20,40,120)
+        self.mine_matrix = self.build_mine_matrix(40,20,100)
         self.mine_table.from_2d_matrix( self.mine_matrix, False )
         self.main_container.append( "mine_table", self.mine_table )
         self.check_if_win()
@@ -164,26 +169,24 @@ class MyApp(App):
     def build_mine_matrix(self, w, h, minenum):
         """random fill cells with mines and increments nearest mines num in adiacent cells"""
         self.minecount = 0
-        matrix = [[Cell(20, 20, x, y, self) for y in range(h)] for x in range(w)]
+        matrix = [[Cell(20, 20, x, y, self) for x in range(w)] for y in range(h)]
         for i in range(0,minenum):
             x = random.randint(0,w-1)
             y = random.randint(0,h-1)
-            if matrix[x][y].has_mine:
+            if matrix[y][x].has_mine:
                 continue 
                 
             self.minecount = self.minecount + 1
-            matrix[x][y].set_mine()
-            for _x in range(-1,2):
-                for _y in range(-1,2):
-                    if _x!=0 or _y!=0:
-                        if (x + _x) > w-1 or (y + _y) > h-1 or  (x + _x) < 0 or (y + _y) < 0 :
-                            continue
-                        matrix[x+_x][y+_y].add_nearest_mine()
+            matrix[y][x].set_mine()
+            for coord in [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]:
+                _x,_y = coord
+                if not self.coord_in_map(x+_x,y+_y,w,h):
+                    continue
+                matrix[y+_y][x+_x].add_nearest_mine()
         return matrix
 
     def no_mine(self, cell):
         """opens nearest cells that are not near a mine"""
-        print("cell x: %s   y:%s"%(cell.x, cell.y))
         if cell.nearest_mine > 0:
             return
         self.fill_void_cells(cell)
@@ -192,13 +195,13 @@ class MyApp(App):
         """Here are counted the flags. Is checked if the user win."""
         self.flagcount = 0
         win = True
-        for x in range(0,len(self.mine_matrix)):
-            for y in range(0,len(self.mine_matrix[0])):
-                if self.mine_matrix[x][y].state == 1:
+        for x in range(0,len(self.mine_matrix[0])):
+            for y in range(0,len(self.mine_matrix)):
+                if self.mine_matrix[y][x].state == 1:
                     self.flagcount = self.flagcount + 1
-                    if self.mine_matrix[x][y].has_mine == False:
+                    if self.mine_matrix[y][x].has_mine == False:
                         win = False
-                elif self.mine_matrix[x][y].has_mine == True:
+                elif self.mine_matrix[y][x].has_mine == True:
                     win = False
         self.lblMineCount.set_text("%s"%self.minecount)
         self.lblFlagCount.set_text("%s"%self.flagcount)
@@ -209,46 +212,29 @@ class MyApp(App):
             self.dialog.show(self)
                     
     def fill_void_cells(self, cell):
-        #self.mine_table = gui.Table( 800, 400 )
-        #self.main_container.append( "mine_table", self.mine_table )
-
-        fill_color_voidcells = random.randint(0,0xffffff)
-        terminated = False
-        cell.fillcolor = fill_color_voidcells
         checked_cells = [cell,]
-        while not terminated and len(checked_cells)>0:
-            terminated = True
+        while len(checked_cells)>0:
             for cell in checked_cells[:]:
                 checked_cells.remove(cell)
-                x = cell.x
-                y = cell.y
-                if hasattr(self.mine_matrix[x][y],'fillcolor') and self.mine_matrix[x][y].has_mine == False and self.mine_matrix[x][y].nearest_mine==0:
-                    for _x in range(-1,2):
-                        for _y in range(-1,2):
-                            if (_x+x < 0) or (_y+y < 0) or (_x+x>len(self.mine_matrix)-1) or (_y+y>len(self.mine_matrix[0])-1):
-                                continue
+                if self.mine_matrix[cell.y][cell.x].has_mine == False and self.mine_matrix[cell.y][cell.x].nearest_mine==0:
+                    for coord in [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]:
+                        _x,_y = coord
+                        if not self.coord_in_map( cell.x + _x, cell.y + _y):
+                            continue
                                     
-                            if not hasattr(self.mine_matrix[x + _x][y + _y],'fillcolor'):
-                                self.mine_matrix[x + _x][y + _y].check_mine(False)
-                                self.mine_matrix[x + _x][y + _y].fillcolor = fill_color_voidcells
-                                terminated = False
-                                checked_cells.append(self.mine_matrix[x + _x][y + _y])
-
-        #self.mine_table.from_2d_matrix( self.mine_matrix, False )
+                        if not self.mine_matrix[cell.y + _y][cell.x + _x].opened:
+                            self.mine_matrix[cell.y + _y][cell.x + _x].check_mine(False)
+                            checked_cells.append(self.mine_matrix[cell.y + _y][cell.x + _x])
         
     def explosion(self, cell):
         print("explosion")
-        #self.mine_table = gui.Table( 800, 400 )
-        #self.main_container.append( "mine_table", self.mine_table )
-        for x in range(0,len(self.mine_matrix)):
-            for y in range(0,len(self.mine_matrix[0])):
-                self.mine_matrix[x][y].style['background-color'] = 'red'
-                self.mine_matrix[x][y].check_mine(False)
-        #self.mine_table.from_2d_matrix( self.mine_matrix, False )
-        #self.dialog = gui.GenericDialog(title='You Lose!', message='Try Again')
-        #self.dialog.set_on_confirm_dialog_listener(self,'new_game')
-        #self.dialog.set_on_cancel_dialog_listener(self,'new_game')
-        #self.dialog.show(self)
+        self.mine_table = gui.Table( 800, 400 )
+        self.main_container.append( "mine_table", self.mine_table )
+        for x in range(0,len(self.mine_matrix[0])):
+            for y in range(0,len(self.mine_matrix)):
+                self.mine_matrix[y][x].style['background-color'] = 'red'
+                self.mine_matrix[y][x].check_mine(False)
+        self.mine_table.from_2d_matrix( self.mine_matrix, False )
 
 
 if __name__ == "__main__":
