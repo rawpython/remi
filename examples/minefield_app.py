@@ -107,7 +107,7 @@ class MyApp(App):
 
     def main(self):
         # the arguments are	width - height - layoutOrientationOrizontal
-        self.main_container = gui.Widget(1020, 540, False, 10)
+        self.main_container = gui.Widget(1020, 600, False, 10)
         
         self.title = gui.Label( 1000, 30, 'Mine Field GAME' )
         self.title.style['font-size'] = '25px'
@@ -159,9 +159,9 @@ class MyApp(App):
         return not (x > w-1 or y > h-1 or  x < 0 or y < 0)
 
     def new_game(self):
-        self.mine_table = gui.Table( 800, 400 )
+        self.mine_table = gui.Table( 900, 450 )
         self.time_count = 0
-        self.mine_matrix = self.build_mine_matrix(40,20,100)
+        self.mine_matrix = self.build_mine_matrix(30,15,60)
         self.mine_table.from_2d_matrix( self.mine_matrix, False )
         self.main_container.append( "mine_table", self.mine_table )
         self.check_if_win()
@@ -169,7 +169,7 @@ class MyApp(App):
     def build_mine_matrix(self, w, h, minenum):
         """random fill cells with mines and increments nearest mines num in adiacent cells"""
         self.minecount = 0
-        matrix = [[Cell(20, 20, x, y, self) for x in range(w)] for y in range(h)]
+        matrix = [[Cell(30, 30, x, y, self) for x in range(w)] for y in range(h)]
         for i in range(0,minenum):
             x = random.randint(0,w-1)
             y = random.randint(0,h-1)
@@ -228,7 +228,7 @@ class MyApp(App):
         
     def explosion(self, cell):
         print("explosion")
-        self.mine_table = gui.Table( 800, 400 )
+        self.mine_table = gui.Table( 900, 450 )
         self.main_container.append( "mine_table", self.mine_table )
         for x in range(0,len(self.mine_matrix[0])):
             for y in range(0,len(self.mine_matrix)):
