@@ -156,6 +156,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 self.handshake()
             else:
                 if not self.read_next_message():
+                    k = get_instance_key(self)
+                    clients[k].websockets.remove(self)
+                    self.handshake_done = False
                     log.debug('ws ending websocket service')
                     break
             
@@ -222,12 +225,13 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         global runtimeInstances
         global update_lock, update_event
 
+        self.send_message('ack')
+
         with update_lock:
             try:
                 # saving the websocket in order to update the client
                 k = get_instance_key(self)
                 if not self in clients[k].websockets:
-                    #clients[k].websockets.clear()
                     clients[k].websockets.append(self)
                 log.debug('on_message')
 
@@ -418,6 +422,7 @@ class App(BaseHTTPRequestHandler, object):
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
 // characters than they actually were
+var pendingSendMessages=[];
 function byteLength(str) {
   // returns the byte length of an utf8 string
   var s = str.length;
@@ -430,7 +435,6 @@ function byteLength(str) {
   return s;
 }
 
-
 var paramPacketize = function (ps){
     var ret = '';
     for (var pkey in ps) {
@@ -442,6 +446,7 @@ var paramPacketize = function (ps){
     }
     return ret;
 };
+
 var ws;
 function openSocket(){
     try{
@@ -449,11 +454,18 @@ function openSocket(){
         console.debug('opening websocket');
         ws.onopen = function(evt) {
             ws.send('Hello from the client!');
+            while(pendingSendMessages.length>0){
+                ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
+            }
         };
+        ws.onmessage = websocketOnMessage;
+        ws.onclose = websocketOnClose;
+        ws.onerror = websocketOnError;
     }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
 }
 openSocket();
-ws.onmessage = function (evt) {
+var comTimeout = null;
+function websocketOnMessage (evt){
     var received_msg = evt.data;
     console.debug('Message is received:' + received_msg);
     var s = received_msg.split(',');
@@ -477,35 +489,48 @@ ws.onmessage = function (evt) {
             var elem = document.getElementById(s[2]);
             elem.innerHTML = elem.innerHTML + decodeURIComponent(content);
         }
+    }else if( command=='ack'){
+        pendingSendMessages.shift() /*remove the oldest*/
     }
     console.debug('command:' + command);
     console.debug('content:' + content);
 };
 /*this uses websockets*/
 var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
-    if (ws.readyState != WebSocket.OPEN){
-        console.debug('socket not opened');
-        openSocket();
+    var paramStr = '';
+    if(params!=null) paramStr=paramPacketize(params);
+    var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
+    pendingSendMessages.push(message);
+    if( pendingSendMessages.length < 2 ){
+        ws.send(message);
+        console.debug('to client len:' + message);
+        if(comTimeout!=null)clearTimeout(comTimeout);
+        comTimeout = setTimeout(checkTimeout,1000);
+    }else{
+        renewConnection();
     }
-    ws.send(encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params))));
-    console.debug('to client len:' + encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramPacketize(params))));
 };
 /*this uses websockets*/
 var sendCallback = function (widgetID,functionName){
-    if (ws.readyState != WebSocket.OPEN){
-        console.debug('socket not opened');
-        openSocket();
-    }
-    ws.send(encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName+'/')));
-    console.debug( 'to client len:' + encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName+'/')));
+    sendCallbackParam(widgetID,functionName,null);
 };
-ws.onclose = function(evt){
+function renewConnection(){
+    try{
+        ws.close();
+    }catch(err){};
+    openSocket();
+}
+function checkTimeout(){
+    if(pendingSendMessages.length>0)
+        renewConnection();    
+}
+function websocketOnClose(evt){
     /* websocket is closed. */
-    alert('Connection is closed...');
+    /*alert('Connection is closed...');*/
 };
-ws.onerror = function(evt){
+function websocketOnError(evt){
     /* websocket is closed. */
-    alert('Websocket error...');
+    /*alert('Websocket error...');*/
 };
 
 function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
@@ -530,8 +555,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
     fd.append('upload_file', file);
     xhr.send(fd);
 };
-
-
 </script>""" % (net_interface_ip, wsport)
 
         # add any app specific headers
