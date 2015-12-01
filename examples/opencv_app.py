@@ -30,7 +30,7 @@ class OpencvVideoWidget(gui.Image):
         javascript_code = gui.Tag()
         javascript_code.type = 'script'
         javascript_code.attributes['type'] = 'text/javascript'
-        javascript_code.append( 'code' , """
+        javascript_code.append("""
             function update_image%(id)s(){
                 if(document.getElementById('%(id)s').getAttribute('play')=='False')
                     return;
@@ -50,7 +50,7 @@ class OpencvVideoWidget(gui.Image):
             setInterval( update_image%(id)s, %(update_rate)s );
             """ % {'id':id(self), 'update_rate':1000/self.fps})
 
-        self.append('javascript_code', javascript_code)
+        self.append(javascript_code)
         self.play()
 
     def play(self):
@@ -84,23 +84,23 @@ class MyApp(App):
         m1 = gui.MenuItem(100, 30, 'Video')
         m11 = gui.MenuItem(100, 30, 'Play')
         m12 = gui.MenuItem(100, 30, 'Stop')
-        m11.set_on_click_listener(self, 'menu_play_clicked')
-        m12.set_on_click_listener(self, 'menu_stop_clicked')
+        m11.set_on_click_listener(self.menu_play_clicked)
+        m12.set_on_click_listener(self.menu_stop_clicked)
 
-        self.menu.append('1',m1)
-        m1.append('11',m11)
-        m1.append('12',m12)
+        self.menu.append(m1)
+        m1.append(m11)
+        m1.append(m12)
 
-        wid.append('0', self.menu)
-        wid.append('1', self.opencvideo_widget)
+        wid.append(self.menu)
+        wid.append(self.opencvideo_widget)
 
         # returning the root widget
         return wid
 
-    def menu_play_clicked(self):
+    def menu_play_clicked(self, evt):
         self.opencvideo_widget.play()
 
-    def menu_stop_clicked(self):
+    def menu_stop_clicked(self, evt):
         self.opencvideo_widget.stop()
 
 

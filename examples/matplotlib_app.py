@@ -76,7 +76,7 @@ class MyApp(App):
         wid = gui.Widget(320, 320, False, 10)
 
         bt = gui.Button(100, 30, 'Data')
-        bt.set_on_click_listener(self, 'on_button_pressed')
+        bt.set_on_click_listener(self.on_button_pressed)
 
         self.plot_data = [0,1]
         self.mpl = MatplotImage(250,250)
@@ -84,13 +84,13 @@ class MyApp(App):
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()
 
-        # appending a widget to another, the first argument is a string key
-        wid.append('1', bt)
-        wid.append('2', self.mpl)
+        # appending a widget to another
+        wid.append(bt)
+        wid.append(self.mpl)
 
         return wid
 
-    def on_button_pressed(self):
+    def on_button_pressed(self, evt):
         self.plot_data.append(random.random())
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()
