@@ -81,7 +81,8 @@ class Cell(gui.Widget):
 class MyApp(App):
 
     def __init__(self, *args):
-        super(MyApp, self).__init__(*args, static_paths=('./res/',))
+        res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'res')
+        super(MyApp, self).__init__(*args, static_paths=(res_path,))
 
     def display_time(self):
         self.lblTime.set_text('Play time: ' + str(self.time_count))
