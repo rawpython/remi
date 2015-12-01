@@ -148,6 +148,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         log.debug('ws handle')
+        #on some systems like ROS, the default socket timeout
+        #is less than expected, we force it to infinite (None) as default socket value
+        self.request.settimeout(None)
         while True:
             if not self.handshake_done:
                 self.handshake()
