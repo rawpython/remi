@@ -87,6 +87,10 @@ class Tag(object):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
                 innerHTML = innerHTML + s.encode('utf-8')
+            elif isinstance(s, float):
+                innerHTML = innerHTML + '{}'.format(s)
+            elif isinstance(s, int):
+                innerHTML = innerHTML + '{}'.format(s)
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
