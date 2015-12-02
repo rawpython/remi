@@ -277,12 +277,14 @@ def parse_parametrs(p):
             fieldValue = p[len(fieldName) + 1:l]
             p = p[l + 1:]
             if fieldValue.count("'") == 0 and fieldValue.count('"') == 0:
-                if fieldValue.count('.') == 1 and fieldValue.replace('.','').isdigit():
-                    fieldValue = float(fieldValue)
-                elif fieldValue.isdigit():
+                try:
                     fieldValue = int(fieldValue)
+                except ValueError:
+                    try:
+                        fieldValue = float(fieldValue)
+                    except ValueError:
+                        pass
             ret[fieldName] = fieldValue
-
     return ret
 
 
