@@ -1273,7 +1273,7 @@ class VideoPlayer(Widget):
         self.attributes['poster'] = poster
         
 
-class Svg(gui.Widget):
+class Svg(Widget):
     def __init__(self, width, height):
         super(Svg, self).__init__(width, height)
         self.attributes['width'] = width
@@ -1281,7 +1281,7 @@ class Svg(gui.Widget):
         self.type = 'svg'
 
 
-class SvgCircle(gui.Widget):
+class SvgCircle(Widget):
     def __init__(self, x, y, radix):
         super(SvgCircle, self).__init__(0, 0)
         self.set_position(x, y)
@@ -1304,7 +1304,7 @@ class SvgCircle(gui.Widget):
         self.attributes['fill'] = color
 
 
-class SvgLine(gui.Widget):
+class SvgLine(Widget):
     def __init__(self, x1, y1, x2, y2):
         super(SvgLine, self).__init__(0, 0)
         self.set_coords(x1, y1, x2, y2)
