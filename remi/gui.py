@@ -166,6 +166,12 @@ class Widget(Tag):
         self.EVENT_ONMOUSEOUT = 'onmouseout'
         self.EVENT_ONMOUSELEAVE = 'onmouseleave'
         self.EVENT_ONMOUSEUP = 'onmouseup'
+        self.EVENT_ONTOUCHMOVE = 'ontouchmove'
+        self.EVENT_ONTOUCHSTART = 'ontouchstart'
+        self.EVENT_ONTOUCHEND = 'ontouchend'
+        self.EVENT_ONTOUCHENTER = 'ontouchenter'
+        self.EVENT_ONTOUCHLEAVE = 'ontouchleave'
+        self.EVENT_ONTOUCHCANCEL = 'ontouchcancel'
         self.EVENT_ONKEYDOWN = 'onkeydown'
         self.EVENT_ONKEYPRESS = 'onkeypress'
         self.EVENT_ONKEYUP = 'onkeyup'
@@ -265,37 +271,79 @@ class Widget(Tag):
     def onmousedown(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
 
-    def set_on_onmousedown_listener(self, listener, funcname):
+    def set_on_mousedown_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEDOWN] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEDOWN)
         self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
         
     def onmouseup(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
 
-    def set_on_onmouseup_listener(self, listener, funcname):
+    def set_on_mouseup_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEUP] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEUP)
         self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
         
     def onmouseout(self):
         return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
 
-    def set_on_onmouseout_listener(self, listener, funcname):
+    def set_on_mouseout_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEOUT] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEOUT)
         self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
 
     def onmouseleave(self):
         return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
 
-    def set_on_onmouseleave_listener(self, listener, funcname):
+    def set_on_mouseleave_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSELEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSELEAVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
 
     def onmousemove(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
 
-    def set_on_onmousemove_listener(self, listener, funcname):
+    def set_on_mousemove_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEMOVE] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEMOVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
+
+    def ontouchmove(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
+
+    def set_on_touchmove_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONTOUCHMOVE] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHMOVE)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
+
+    def ontouchstart(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
+
+    def set_on_touchstart_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONTOUCHSTART] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHSTART)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
+
+    def ontouchend(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
+
+    def set_on_touchend_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONTOUCHEND] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHEND)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
+
+    def ontouchenter(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
+
+    def set_on_touchenter_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONTOUCHENTER] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHENTER)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
+
+    def ontouchleave(self):
+        return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
+
+    def set_on_touchleave_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONTOUCHLEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHLEAVE)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
+
+    def ontouchcancel(self):
+        return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
+
+    def set_on_touchcancel_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONTOUCHCANCEL] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHCANCEL)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
 
 
 class Button(Widget):
