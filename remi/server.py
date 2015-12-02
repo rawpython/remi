@@ -491,6 +491,7 @@ function websocketOnMessage (evt){
         }
     }else if( command=='ack'){
         pendingSendMessages.shift() /*remove the oldest*/
+        if(comTimeout!=null)clearTimeout(comTimeout);
     }
     console.debug('command:' + command);
     console.debug('content:' + content);
@@ -501,11 +502,10 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
     if(params!=null) paramStr=paramPacketize(params);
     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
     pendingSendMessages.push(message);
-    if( pendingSendMessages.length < 2 ){
+    if( pendingSendMessages.length < 1000 ){
         ws.send(message);
-        console.debug('to client len:' + message);
-        if(comTimeout!=null)clearTimeout(comTimeout);
-        comTimeout = setTimeout(checkTimeout,1000);
+        if(comTimeout==null)
+            comTimeout = setTimeout(checkTimeout,1000);
     }else{
         renewConnection();
     }

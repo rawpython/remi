@@ -164,6 +164,7 @@ class Widget(Tag):
         self.EVENT_ONMOUSEMOVE = 'onmousemove'
         self.EVENT_ONMOUSEOVER = 'onmouseover'
         self.EVENT_ONMOUSEOUT = 'onmouseout'
+        self.EVENT_ONMOUSELEAVE = 'onmouseleave'
         self.EVENT_ONMOUSEUP = 'onmouseup'
         self.EVENT_ONKEYDOWN = 'onkeydown'
         self.EVENT_ONKEYPRESS = 'onkeypress'
@@ -224,14 +225,14 @@ class Widget(Tag):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
     def set_on_focus_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONFOCUS] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONFOCUS)
+        self.attributes[self.EVENT_ONFOCUS] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONFOCUS)
         self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
         return self.eventManager.propagate(self.EVENT_ONBLUR, [])
 
     def set_on_blur_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONBLUR] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONBLUR)
+        self.attributes[self.EVENT_ONBLUR] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
 
     def show(self, baseAppInstance):
@@ -251,15 +252,50 @@ class Widget(Tag):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     def set_on_click_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def oncontextmenu(self):
         return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
 
     def set_on_contextmenu_listener(self, listener, funcname):
-        self.attributes[self.EVENT_ONCONTEXTMENU] = "sendCallback('%s','%s');return false;" % (id(self), self.EVENT_ONCONTEXTMENU)
+        self.attributes[self.EVENT_ONCONTEXTMENU] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONCONTEXTMENU)
         self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
+
+    def onmousedown(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
+
+    def set_on_onmousedown_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONMOUSEDOWN] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEDOWN)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
+        
+    def onmouseup(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
+
+    def set_on_onmouseup_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONMOUSEUP] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEUP)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
+        
+    def onmouseout(self):
+        return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
+
+    def set_on_onmouseout_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONMOUSEOUT] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEOUT)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
+
+    def onmouseleave(self):
+        return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
+
+    def set_on_onmouseleave_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONMOUSELEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSELEAVE)
+        self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
+
+    def onmousemove(self, x, y):
+        return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
+
+    def set_on_onmousemove_listener(self, listener, funcname):
+        self.attributes[self.EVENT_ONMOUSEMOVE] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEMOVE)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
 
 
 class Button(Widget):
@@ -1235,3 +1271,58 @@ class VideoPlayer(Widget):
         self.attributes['preload'] = 'auto'
         self.attributes['controls'] = None
         self.attributes['poster'] = poster
+        
+
+class Svg(gui.Widget):
+    def __init__(self, width, height):
+        super(Svg, self).__init__(width, height)
+        self.attributes['width'] = width
+        self.attributes['height'] = height
+        self.type = 'svg'
+
+
+class SvgCircle(gui.Widget):
+    def __init__(self, x, y, radix):
+        super(SvgCircle, self).__init__(0, 0)
+        self.set_position(x, y)
+        self.set_radix(radix)
+        self.set_stroke()
+        self.type = 'circle'
+    
+    def set_position(self, x, y):
+        self.attributes['cx'] = x
+        self.attributes['cy'] = y
+        
+    def set_radix(self, radix):
+        self.attributes['r'] = radix
+        
+    def set_stroke(self, width=1, color='black'):
+        self.attributes['stroke'] = color
+        self.attributes['stroke-width'] = str(width)
+
+    def set_fill(self, color):
+        self.attributes['fill'] = color
+
+
+class SvgLine(gui.Widget):
+    def __init__(self, x1, y1, x2, y2):
+        super(SvgLine, self).__init__(0, 0)
+        self.set_coords(x1, y1, x2, y2)
+        self.set_stroke()
+        self.type = 'line'
+    
+    def set_coords(self, x1, y1, x2, y2):
+        self.set_p1(x1, y1)
+        self.set_p2(x2, y2)
+        
+    def set_p1(self, x1, y1):
+        self.attributes['x1'] = x1
+        self.attributes['y1'] = y1
+    
+    def set_p2(self, x2, y2):
+        self.attributes['x2'] = x2
+        self.attributes['y2'] = y2
+    
+    def set_stroke(self, width=1, color='black'):
+        self.style['stroke'] = color
+        self.style['stroke-width'] = str(width)
