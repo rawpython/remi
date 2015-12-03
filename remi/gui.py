@@ -1279,7 +1279,11 @@ class Svg(Widget):
         self.attributes['width'] = width
         self.attributes['height'] = height
         self.type = 'svg'
-
+        
+    def set_viewbox(self, x, y, w, h):
+        self.attributes['viewBox'] = "%s %s %s %s"%(x,y,w,h)
+        self.attributes['preserveAspectRatio'] = 'xMidYMid meet'
+        
 
 class SvgCircle(Widget):
     def __init__(self, x, y, radix):
@@ -1326,3 +1330,33 @@ class SvgLine(Widget):
     def set_stroke(self, width=1, color='black'):
         self.style['stroke'] = color
         self.style['stroke-width'] = str(width)
+        
+
+class SvgPolyline(Widget):
+    def __init__(self):
+        super(SvgPolyline, self).__init__(0, 0)
+        self.set_stroke()
+        self.style['fill'] = 'none'
+        self.type = 'polyline'
+        self.coordsX = list()
+        self.coordsY = list()
+        self.max_len = 100
+
+    def add_coord(self, x, y):
+        if len(self.coordsX) > self.max_len:
+            self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
+            self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
+        self.coordsX.append(x)
+        self.coordsY.append(y)
+        self.update_values()
+    
+    def set_max_len(self, value):
+        self.max_len = value
+        
+    def set_stroke(self, width=1, color='black'):
+        self.style['stroke'] = color
+        self.style['stroke-width'] = str(width)
+        
+    def update_values(self):
+        self.attributes['points'] = ' '.join(map(lambda x,y: str(x) + ',' + str(y), self.coordsX, self.coordsY))
+        
