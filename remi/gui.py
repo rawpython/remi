@@ -1395,7 +1395,7 @@ class SvgPolyline(Widget):
         if self.max_len > 0:
             if len(self.coordsX) > self.max_len:
                 #we assume that if there is some chars, there is a space
-                if(self.attributes['points']) > 1: #slower performaces if ' ' in self.attributes['points'] :
+                if len(self.attributes['points']) > 1: #slower performaces if ' ' in self.attributes['points'] :
                     self.attributes['points'] = self.attributes['points'][self.attributes['points'].find(' ')+1:]
                 self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
                 self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
