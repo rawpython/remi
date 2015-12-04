@@ -417,6 +417,9 @@ class App(BaseHTTPRequestHandler, object):
         wshost, wsport = self.server.websocket_address
         net_interface_ip = self.connection.getsockname()[0]
 
+        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
+        pending_messages_queue_length = str(self.server.pending_messages_queue_length)
+
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
         clients[k].script_header = """
@@ -455,9 +458,14 @@ function openSocket(){
         ws = new WebSocket('ws://%s:%s/');
         console.debug('opening websocket');
         ws.onopen = function(evt) {
-            ws.send('Hello from the client!');
-            while(pendingSendMessages.length>0){
-                ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
+            if(ws.readyState == 1){
+                ws.send('Hello from the client!');
+                while(pendingSendMessages.length>0){
+                    ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
+                }
+            }
+            else{
+                console.debug('onopen fired but the socket readyState was not 1');
             }
         };
         ws.onmessage = websocketOnMessage;
@@ -504,11 +512,12 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
     if(params!=null) paramStr=paramPacketize(params);
     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
     pendingSendMessages.push(message);
-    if( pendingSendMessages.length < 1000 ){
+    if( pendingSendMessages.length < %s ){
         ws.send(message);
         if(comTimeout==null)
-            comTimeout = setTimeout(checkTimeout,1000);
+            comTimeout = setTimeout(checkTimeout, %s);
     }else{
+        console.debug('Renewing connection, ws.readyState when trying to send was: ' + ws.readyState)
         renewConnection();
     }
 };
@@ -517,10 +526,22 @@ var sendCallback = function (widgetID,functionName){
     sendCallbackParam(widgetID,functionName,null);
 };
 function renewConnection(){
-    try{
-        ws.close();
-    }catch(err){};
-    openSocket();
+    // ws.readyState:
+    //A value of 0 indicates that the connection has not yet been established.
+    //A value of 1 indicates that the connection is established and communication is possible.
+    //A value of 2 indicates that the connection is going through the closing handshake.
+    //A value of 3 indicates that the connection has been closed or could not be opened.
+    if( ws.readyState == 1){
+        try{
+            ws.close();
+        }catch(err){};
+    }
+    else if(ws.readyState == 0){
+     // Don't do anything, just wait for the connection to be stablished
+    }
+    else{
+        openSocket();
+    }
 }
 function checkTimeout(){
     if(pendingSendMessages.length>0)
@@ -528,11 +549,21 @@ function checkTimeout(){
 }
 function websocketOnClose(evt){
     /* websocket is closed. */
-    /*alert('Connection is closed...');*/
+    console.debug('Connection is closed... event code: ' + evt.code + ', reason: ' + evt.reason);
+    // Some explanation on this error: http://stackoverflow.com/questions/19304157/getting-the-reason-why-websockets-closed
+    // In practice, on a unstable network (wifi with a lot of traffic for example) this error appears
+    // Got it with Chrome saying:
+    // WebSocket connection to 'ws://x.x.x.x:y/' failed: Could not decode a text frame as UTF-8.
+    // WebSocket connection to 'ws://x.x.x.x:y/' failed: Invalid frame header
+    if(evt.code == 1006){
+        renewConnection();
+    }
+
 };
 function websocketOnError(evt){
     /* websocket is closed. */
-    /*alert('Websocket error...');*/
+    /* alert('Websocket error...');*/
+    console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
 };
 
 function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
@@ -557,7 +588,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
     fd.append('upload_file', file);
     xhr.send(fd);
 };
-</script>""" % (net_interface_ip, wsport)
+</script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
 
         # add any app specific headers
         clients[k].html_header = self._app_args.get('html_header', '\n')
@@ -698,18 +729,23 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     daemon_threads = True
 
-    def __init__(self, server_address, RequestHandlerClass, websocket_address, multiple_instance, enable_file_cache, update_interval, *userdata):
+    def __init__(self, server_address, RequestHandlerClass, websocket_address,
+                 multiple_instance, enable_file_cache, update_interval,
+                 websocket_timeout_timer_ms, pending_messages_queue_length, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
         self.multiple_instance = multiple_instance
         self.enable_file_cache = enable_file_cache
         self.update_interval = update_interval
+        self.websocket_timeout_timer_ms = websocket_timeout_timer_ms
+        self.pending_messages_queue_length = pending_messages_queue_length
         self.userdata = userdata
 
 
 class Server(object):
     def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, multiple_instance=False,
-                 enable_file_cache=True, update_interval=0.1, start_browser=True, userdata=()):
+                 enable_file_cache=True, update_interval=0.1, start_browser=True, websocket_timeout_timer_ms=1000,
+                 pending_messages_queue_length=1000, userdata=()):
         self._gui = gui_class
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
@@ -719,6 +755,8 @@ class Server(object):
         self._enable_file_cache = enable_file_cache
         self._update_interval = update_interval
         self._start_browser = start_browser
+        self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
+        self._pending_messages_queue_length = pending_messages_queue_length
 
         if not isinstance(userdata, tuple):
             raise ValueError('userdata must be a tuple')
@@ -739,7 +777,8 @@ class Server(object):
         # request
         self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui,
                                            (wshost, wsport), self._multiple_instance, self._enable_file_cache,
-                                           self._update_interval, *userdata)
+                                           self._update_interval, self._websocket_timeout_timer_ms,
+                                           self._pending_messages_queue_length, *userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
