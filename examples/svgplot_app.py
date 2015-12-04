@@ -26,26 +26,32 @@ class SvgPlot(gui.Svg):
         self.polyList = []
         self.font_size = 15
         self.plot_inner_border = self.font_size
-        self.textMin = gui.SvgText(0,self.font_size,"min")
-        self.textMax = gui.SvgText(0,self.height - self.font_size,"max")
-        self.textMin.style['font-size'] = gui.to_pix(self.font_size)
-        self.textMax.style['font-size'] = gui.to_pix(self.font_size)
-        self.append( str(id(self.textMin)), self.textMin )
-        self.append( str(id(self.textMax)), self.textMax )
+        self.textYMin = gui.SvgText(0,self.font_size,"min")
+        self.textYMax = gui.SvgText(0,self.height - self.font_size,"max")
+        self.textYMin.style['font-size'] = gui.to_pix(self.font_size)
+        self.textYMax.style['font-size'] = gui.to_pix(self.font_size)
+        self.append( str(id(self.textYMin)), self.textYMin )
+        self.append( str(id(self.textYMax)), self.textYMax )
         
     def append_poly(self, poly):
         self.append(str(id(poly)), poly)
         self.polyList.append(poly)
-        poly.textVal = gui.SvgText(0,0,"actualValue")
-        poly.textVal.style['font-size'] = gui.to_pix(self.font_size)
+        poly.textXMin = gui.SvgText(0,0,"actualValue")
+        poly.textXMax = gui.SvgText(0,0,"actualValue")
+        poly.textYVal = gui.SvgText(0,0,"actualValue")
+        poly.textYVal.style['font-size'] = gui.to_pix(self.font_size)
         poly.lineValIndicator = gui.SvgLine(0,0,0,0)
-        self.append( str(id(poly.textVal)), poly.textVal )
+        self.append( str(id(poly.textXMin)), poly.textXMin )
+        self.append( str(id(poly.textXMax)), poly.textXMax )
+        self.append( str(id(poly.textYVal)), poly.textYVal )
         self.append( str(id(poly.lineValIndicator)), poly.lineValIndicator )
     
     def remove_poly(self, poly):
         self.remove(poly)
         self.polyList.remove(poly)
-        self.remove(poly.textVal)
+        self.remove(poly.textXMin)
+        self.remove(poly.textXMax)
+        self.remove(poly.textYVal)
     
     def render(self):
         
@@ -62,8 +68,8 @@ class SvgPlot(gui.Svg):
             maxX = max(maxX, max(poly.coordsX))
             minY = min(minY, min(poly.coordsY))
             maxY = max(maxY, max(poly.coordsY))
-        self.textMin.set_text( "min:%s"%minY )
-        self.textMax.set_text( "max:%s"%maxY )
+        self.textYMin.set_text( "min:%s"%minY )
+        self.textYMax.set_text( "max:%s"%maxY )
 
         scaleWidth = 1.0
         scaleHeight = 1.0
@@ -72,10 +78,23 @@ class SvgPlot(gui.Svg):
         if (maxY>minY):
             scaleHeight = self.height/float(abs(maxY-minY))
         for poly in self.polyList:
-            poly.textVal.set_text( str(poly.coordsY[-1]) )
-            poly.textVal.set_fill( poly.style['stroke'])
             scaledTranslatedYpos = (poly.coordsY[-1]-minY)*scaleHeight
-            poly.textVal.set_position( 0, scaledTranslatedYpos )
+            
+            poly.textXMin.set_text( str(poly.coordsY[-1]) )
+            poly.textXMin.set_fill( poly.style['stroke'])
+            #poly.textXMin.set_position( -scaledTranslatedYpos, (min(poly.coordsX)-minX)*scaleWidth )
+            poly.textXMin.set_position( -self.height/2.0, (min(poly.coordsX)-minX)*scaleWidth )
+            poly.textXMin.attributes['transform']="rotate(%s)"%(-90)
+            poly.textXMax.set_text( str(poly.coordsY[-1]) )
+            poly.textXMax.set_fill( poly.style['stroke'])
+            poly.textXMax.set_position( -self.height/2.0, (maxX-minX)*scaleWidth )
+            #poly.textXMax.set_position( -scaledTranslatedYpos, (maxX-minX)*scaleWidth )
+            poly.textXMax.attributes['transform']="rotate(%s)"%(-90)
+            poly.textYVal.set_text( str(poly.coordsY[-1]) )
+            poly.textYVal.set_fill( poly.style['stroke'])
+            poly.textYVal.set_position( 0, scaledTranslatedYpos )
+            #poly.textYVal.set_position( (maxX-minX)*scaleWidth/2.0, scaledTranslatedYpos )
+                        
             poly.lineValIndicator.set_stroke(1,poly.style['stroke'])
             poly.lineValIndicator.set_coords(0,scaledTranslatedYpos,self.width,scaledTranslatedYpos)
             poly.attributes['transform']=('translate(%s,%s)'%(-minX*scaleWidth,-minY*scaleHeight) + ' scale(%s,%s)'%((scaleWidth),(scaleHeight)))
@@ -98,7 +117,7 @@ class MyApp(App):
         self.plotData2.set_max_len(500)
         self.plotData3 = gui.SvgPolyline()
         self.plotData3.set_stroke(0.05,'orange')
-        self.plotData3.set_max_len(500)
+        self.plotData3.set_max_len(300)
         self.svgplot.append_poly( self.plotData1 )
         self.svgplot.append_poly( self.plotData2 )
         self.svgplot.append_poly( self.plotData3 )
