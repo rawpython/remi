@@ -1330,7 +1330,7 @@ class Svg(Widget):
         
     def set_viewbox(self, x, y, w, h):
         self.attributes['viewBox'] = "%s %s %s %s"%(x,y,w,h)
-        self.attributes['preserveAspectRatio'] = 'xMidYMid meet'
+        self.attributes['preserveAspectRatio'] = 'none'
         
 
 class SvgCircle(Widget):
@@ -1388,23 +1388,48 @@ class SvgPolyline(Widget):
         self.type = 'polyline'
         self.coordsX = list()
         self.coordsY = list()
-        self.max_len = 100
+        self.max_len = 0 #no limit
+        self.attributes['points'] = ''
 
     def add_coord(self, x, y):
-        if len(self.coordsX) > self.max_len:
-            self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
-            self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
+        if self.max_len > 0:
+            if len(self.coordsX) > self.max_len:
+                #we assume that if there is some chars, there is a space
+                if(self.attributes['points']) > 1: #slower performaces if ' ' in self.attributes['points'] :
+                    self.attributes['points'] = self.attributes['points'][self.attributes['points'].find(' ')+1:]
+                self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
+                self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
         self.coordsX.append(x)
         self.coordsY.append(y)
-        self.update_values()
+        self.attributes['points'] = self.attributes['points'] + "%s,%s "%(x,y)
     
     def set_max_len(self, value):
         self.max_len = value
+        if len(self.coordsX) > self.max_len:
+            self.attributes['points'] = ' '.join(map(lambda x,y: str(x) + ',' + str(y), self.coordsX, self.coordsY))
+            self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
+            self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
         
     def set_stroke(self, width=1, color='black'):
         self.style['stroke'] = color
         self.style['stroke-width'] = str(width)
         
-    def update_values(self):
-        self.attributes['points'] = ' '.join(map(lambda x,y: str(x) + ',' + str(y), self.coordsX, self.coordsY))
+
+class SvgText(Widget):
+    def __init__(self, x, y, text):
+        super(SvgText, self).__init__(0, 0)
+        self.type = 'text'
+        self.set_position(x, y)
+        self.set_fill()
+        self.set_text(text)
+
+    def set_text(self, text):
+        self.append('text', text)
+    
+    def set_position(self, x, y):
+        self.attributes['x'] = str(x)
+        self.attributes['y'] = str(y)
+    
+    def set_fill(self, color='black'):
+        self.attributes['fill'] = color
         
