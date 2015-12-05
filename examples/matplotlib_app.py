@@ -24,28 +24,28 @@ import random
 import remi.gui as gui
 from remi import start, App
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 class MatplotImage(gui.Image):
 
     ax = None
 
-    def __init__(self, width, height, fig=None, ax=None):
+    def __init__(self, width, height):
         super(MatplotImage, self).__init__(width, height, "/%s/get_image_data?update_index=0" % id(self))
         self._buf = None
         self._buflock = threading.Lock()
 
-        if fig is None:
-            fig,ax = plt.subplots()
-        self._fig = fig
-        self.ax = ax
+        self._fig = Figure(figsize=(4,4))
+        self.ax = self._fig.add_subplot(111)
 
         self.redraw()
 
     def redraw(self):
+        canv = FigureCanvasAgg(self._fig)
         buf = io.BytesIO()
-        self._fig.savefig(buf, format='png')
+        canv.print_figure(buf, format='png')
         with self._buflock:
             if self._buf is not None:
                 self._buf.close()
