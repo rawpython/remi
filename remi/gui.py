@@ -1319,7 +1319,7 @@ class VideoPlayer(Widget):
         self.attributes['preload'] = 'auto'
         self.attributes['controls'] = None
         self.attributes['poster'] = poster
-        
+
 
 class Svg(Widget):
     def __init__(self, width, height):
@@ -1327,11 +1327,11 @@ class Svg(Widget):
         self.attributes['width'] = width
         self.attributes['height'] = height
         self.type = 'svg'
-        
+
     def set_viewbox(self, x, y, w, h):
-        self.attributes['viewBox'] = "%s %s %s %s"%(x,y,w,h)
+        self.attributes['viewBox'] = "%s %s %s %s" % (x, y, w, h)
         self.attributes['preserveAspectRatio'] = 'none'
-        
+
 
 class SvgCircle(Widget):
     def __init__(self, x, y, radix):
@@ -1340,14 +1340,14 @@ class SvgCircle(Widget):
         self.set_radix(radix)
         self.set_stroke()
         self.type = 'circle'
-    
+
     def set_position(self, x, y):
         self.attributes['cx'] = x
         self.attributes['cy'] = y
-        
+
     def set_radix(self, radix):
         self.attributes['r'] = radix
-        
+
     def set_stroke(self, width=1, color='black'):
         self.attributes['stroke'] = color
         self.attributes['stroke-width'] = str(width)
@@ -1362,23 +1362,23 @@ class SvgLine(Widget):
         self.set_coords(x1, y1, x2, y2)
         self.set_stroke()
         self.type = 'line'
-    
+
     def set_coords(self, x1, y1, x2, y2):
         self.set_p1(x1, y1)
         self.set_p2(x2, y2)
-        
+
     def set_p1(self, x1, y1):
         self.attributes['x1'] = x1
         self.attributes['y1'] = y1
-    
+
     def set_p2(self, x2, y2):
         self.attributes['x2'] = x2
         self.attributes['y2'] = y2
-    
+
     def set_stroke(self, width=1, color='black'):
         self.style['stroke'] = color
         self.style['stroke-width'] = str(width)
-        
+
 
 class SvgPolyline(Widget):
     def __init__(self):
@@ -1388,32 +1388,32 @@ class SvgPolyline(Widget):
         self.type = 'polyline'
         self.coordsX = list()
         self.coordsY = list()
-        self.max_len = 0 #no limit
+        self.max_len = 0  # no limit
         self.attributes['points'] = ''
 
     def add_coord(self, x, y):
         if self.max_len > 0:
             if len(self.coordsX) > self.max_len:
-                #we assume that if there is some chars, there is a space
-                if len(self.attributes['points']) > 1: #slower performaces if ' ' in self.attributes['points'] :
-                    self.attributes['points'] = self.attributes['points'][self.attributes['points'].find(' ')+1:]
-                self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
-                self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
+                # we assume that if there is some chars, there is a space
+                if len(self.attributes['points']) > 1:
+                    self.attributes['points'] = self.attributes['points'][self.attributes['points'].find(' ') + 1:]
+                self.coordsX = self.coordsX[len(self.coordsX) - self.max_len:]
+                self.coordsY = self.coordsY[len(self.coordsY) - self.max_len:]
         self.coordsX.append(x)
         self.coordsY.append(y)
-        self.attributes['points'] = self.attributes['points'] + "%s,%s "%(x,y)
-    
+        self.attributes['points'] += "%s,%s " % (x, y)
+
     def set_max_len(self, value):
         self.max_len = value
         if len(self.coordsX) > self.max_len:
-            self.attributes['points'] = ' '.join(map(lambda x,y: str(x) + ',' + str(y), self.coordsX, self.coordsY))
-            self.coordsX = self.coordsX[len(self.coordsX)-self.max_len:]
-            self.coordsY = self.coordsY[len(self.coordsY)-self.max_len:]
-        
+            self.attributes['points'] = ' '.join(map(lambda x, y: str(x) + ',' + str(y), self.coordsX, self.coordsY))
+            self.coordsX = self.coordsX[len(self.coordsX) - self.max_len:]
+            self.coordsY = self.coordsY[len(self.coordsY) - self.max_len:]
+
     def set_stroke(self, width=1, color='black'):
         self.style['stroke'] = color
         self.style['stroke-width'] = str(width)
-        
+
 
 class SvgText(Widget):
     def __init__(self, x, y, text):
@@ -1425,11 +1425,10 @@ class SvgText(Widget):
 
     def set_text(self, text):
         self.append('text', text)
-    
+
     def set_position(self, x, y):
         self.attributes['x'] = str(x)
         self.attributes['y'] = str(y)
-    
+
     def set_fill(self, color='black'):
         self.attributes['fill'] = color
-        
