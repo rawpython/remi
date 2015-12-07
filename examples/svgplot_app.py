@@ -34,6 +34,7 @@ class SvgPlot(gui.Svg):
         self.append( str(id(self.textYMax)), self.textYMax )
         
     def append_poly(self, poly):
+        poly.attributes['vector-effect'] = 'non-scaling-stroke'
         self.append(str(id(poly)), poly)
         self.polyList.append(poly)
         poly.textXMin = gui.SvgText(0,0,"actualValue")
@@ -125,13 +126,13 @@ class MyApp(App):
         
         self.svgplot = SvgPlot(600,600)
         self.plotData1 = gui.SvgPolyline()
-        self.plotData1.set_stroke(0.05,'rgba(255,0,0,0.8)')
+        self.plotData1.set_stroke(2.0,'rgba(255,0,0,0.8)')
         self.plotData1.set_max_len(500)
         self.plotData2 = gui.SvgPolyline()
-        self.plotData2.set_stroke(0.05,'green')
+        self.plotData2.set_stroke(1.0,'green')
         self.plotData2.set_max_len(500)
         self.plotData3 = gui.SvgPolyline()
-        self.plotData3.set_stroke(0.05,'orange')
+        self.plotData3.set_stroke(3.0,'orange')
         self.plotData3.set_max_len(300)
         self.svgplot.append_poly( self.plotData1 )
         self.svgplot.append_poly( self.plotData2 )
