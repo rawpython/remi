@@ -15,6 +15,7 @@
 import os
 import logging
 from functools import cmp_to_key
+import collections
 
 from .server import runtimeInstances, update_event
 
@@ -1381,34 +1382,25 @@ class SvgLine(Widget):
 
 
 class SvgPolyline(Widget):
-    def __init__(self):
+    def __init__(self, _maxlen=None):
         super(SvgPolyline, self).__init__(0, 0)
         self.set_stroke()
         self.style['fill'] = 'none'
         self.type = 'polyline'
-        self.coordsX = list()
-        self.coordsY = list()
-        self.max_len = 0  # no limit
+        self.coordsX = collections.deque(maxlen=_maxlen)
+        self.coordsY = collections.deque(maxlen=_maxlen)
+        self.maxlen = _maxlen  # no limit
         self.attributes['points'] = ''
+        self.attributes['vector-effect'] = 'non-scaling-stroke'
 
     def add_coord(self, x, y):
-        if self.max_len > 0:
-            if len(self.coordsX) > self.max_len:
-                # we assume that if there is some chars, there is a space
-                if len(self.attributes['points']) > 1:
-                    self.attributes['points'] = self.attributes['points'][self.attributes['points'].find(' ') + 1:]
-                self.coordsX = self.coordsX[len(self.coordsX) - self.max_len:]
-                self.coordsY = self.coordsY[len(self.coordsY) - self.max_len:]
+        if len(self.coordsX) == self.maxlen:
+            spacepos = self.attributes['points'].find(' ')
+            if spacepos > 0:
+                self.attributes['points'] = self.attributes['points'][spacepos + 1:]
         self.coordsX.append(x)
         self.coordsY.append(y)
         self.attributes['points'] += "%s,%s " % (x, y)
-
-    def set_max_len(self, value):
-        self.max_len = value
-        if len(self.coordsX) > self.max_len:
-            self.attributes['points'] = ' '.join(map(lambda x, y: str(x) + ',' + str(y), self.coordsX, self.coordsY))
-            self.coordsX = self.coordsX[len(self.coordsX) - self.max_len:]
-            self.coordsY = self.coordsY[len(self.coordsY) - self.max_len:]
 
     def set_stroke(self, width=1, color='black'):
         self.style['stroke'] = color

@@ -26,15 +26,14 @@ class SvgPlot(gui.Svg):
         self.polyList = []
         self.font_size = 15
         self.plot_inner_border = self.font_size
-        self.textYMin = gui.SvgText(0,0,"min")
-        self.textYMax = gui.SvgText(0,self.height + self.font_size,"max")
+        self.textYMin = gui.SvgText(0,self.height + self.font_size,"min")
+        self.textYMax = gui.SvgText(0,0,"max")
         self.textYMin.style['font-size'] = gui.to_pix(self.font_size)
         self.textYMax.style['font-size'] = gui.to_pix(self.font_size)
         self.append( str(id(self.textYMin)), self.textYMin )
         self.append( str(id(self.textYMax)), self.textYMax )
         
     def append_poly(self, poly):
-        poly.attributes['vector-effect'] = 'non-scaling-stroke'
         self.append(str(id(poly)), poly)
         self.polyList.append(poly)
         poly.textXMin = gui.SvgText(0,0,"actualValue")
@@ -86,7 +85,7 @@ class SvgPlot(gui.Svg):
 
         i = 1
         for poly in self.polyList:
-            scaledTranslatedYpos = (poly.coordsY[-1]-minY)*scaleHeight
+            scaledTranslatedYpos = (-poly.coordsY[-1]+maxY)*scaleHeight
 
             textXpos = self.height/(len(self.polyList)+1)*i
 
@@ -111,7 +110,7 @@ class SvgPlot(gui.Svg):
             poly.lineYValIndicator.set_coords(0,scaledTranslatedYpos,self.width,scaledTranslatedYpos)
             poly.lineXMinIndicator.set_coords((min(poly.coordsX)-minX)*scaleWidth,0,(min(poly.coordsX)-minX)*scaleWidth,self.height)
             poly.lineXMaxIndicator.set_coords((max(poly.coordsX)-minX)*scaleWidth,0,(max(poly.coordsX)-minX)*scaleWidth,self.height)
-            poly.attributes['transform']=('translate(%s,%s)'%(-minX*scaleWidth,-minY*scaleHeight) + ' scale(%s,%s)'%((scaleWidth),(scaleHeight)))
+            poly.attributes['transform']=('translate(%s,%s)'%(-minX*scaleWidth,(maxY*scaleHeight)) + ' scale(%s,%s)'%((scaleWidth),-(scaleHeight)))
 
             i = i + 1
 
@@ -125,15 +124,12 @@ class MyApp(App):
         self.wid = gui.Widget(620, 620, False, 10)
         
         self.svgplot = SvgPlot(600,600)
-        self.plotData1 = gui.SvgPolyline()
+        self.plotData1 = gui.SvgPolyline(500)
         self.plotData1.set_stroke(2.0,'rgba(255,0,0,0.8)')
-        self.plotData1.set_max_len(500)
-        self.plotData2 = gui.SvgPolyline()
+        self.plotData2 = gui.SvgPolyline(500)
         self.plotData2.set_stroke(1.0,'green')
-        self.plotData2.set_max_len(500)
-        self.plotData3 = gui.SvgPolyline()
+        self.plotData3 = gui.SvgPolyline(300)
         self.plotData3.set_stroke(3.0,'orange')
-        self.plotData3.set_max_len(300)
         self.svgplot.append_poly( self.plotData1 )
         self.svgplot.append_poly( self.plotData2 )
         self.svgplot.append_poly( self.plotData3 )
