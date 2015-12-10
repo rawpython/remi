@@ -28,6 +28,7 @@ class MyApp(App):
         self.bt = gui.Button(100, 30, 'Press me!')
 
         # setting the listener for the onclick event of the button
+        self.npressed = 0
         self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
@@ -39,7 +40,8 @@ class MyApp(App):
 
     # listener function
     def on_button_pressed(self):
-        self.lbl.set_text('Button pressed!')
+        self.npressed += 1
+        self.lbl.set_text('Button pressed %s times' % self.npressed)
         self.bt.set_text('Hi!')
 
 if __name__ == "__main__":
