@@ -25,7 +25,7 @@ except:
 import mimetypes
 import webbrowser
 import struct
-from base64 import b64encode
+import base64
 import hashlib
 import sys
 import threading
@@ -213,7 +213,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         #key = key
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
-        digest = b64encode(digest)
+        digest = base64.b64encode(digest)
         response = 'HTTP/1.1 101 Switching Protocols\r\n'
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
@@ -645,12 +645,33 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
 
+    def do_AUTHHEAD(self):
+        self.send_response(401)
+        self.send_header('WWW-Authenticate', 'Basic realm=\"Protected\"')
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
     def do_GET(self):
         """Handler for the GET requests."""
-        self.instance()
-        path = str(unquote(self.path))
-        self.process_all(path)
-        return
+        do_process = False
+        if self.server.auth is None:
+            do_process = True
+        else:
+            if self.headers.getheader('Authorization') is None:
+                log.info("Authenticating")
+                self.do_AUTHHEAD()
+                self.wfile.write('no auth header received')
+            elif self.headers.getheader('Authorization') == 'Basic ' + self.server.auth:
+                do_process = True
+            else:
+                self.do_AUTHHEAD()
+                self.wfile.write(self.headers.getheader('Authorization'))
+                self.wfile.write('not authenticated')
+
+        if do_process:
+            self.instance()
+            path = str(unquote(self.path))
+            self.process_all(path)
 
     def process_all(self, function):
         static_file = re.match(r"^/*res\/(.*)$", function)
@@ -730,10 +751,11 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
-                 multiple_instance, enable_file_cache, update_interval,
+                 auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, pending_messages_queue_length, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
+        self.auth = auth
         self.multiple_instance = multiple_instance
         self.enable_file_cache = enable_file_cache
         self.update_interval = update_interval
@@ -743,9 +765,10 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 
 class Server(object):
-    def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, multiple_instance=False,
-                 enable_file_cache=True, update_interval=0.1, start_browser=True, websocket_timeout_timer_ms=1000,
-                 pending_messages_queue_length=1000, userdata=()):
+    def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, username=None, password=None,
+                 multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
+                 websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000,
+                 userdata=()):
         self._gui = gui_class
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
@@ -757,6 +780,10 @@ class Server(object):
         self._start_browser = start_browser
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
         self._pending_messages_queue_length = pending_messages_queue_length
+        if username and password:
+            self._auth = base64.b64encode("%s:%s" % (username,password))
+        else:
+            self._auth = None
 
         if not isinstance(userdata, tuple):
             raise ValueError('userdata must be a tuple')
@@ -776,7 +803,8 @@ class Server(object):
         # Create a web server and define the handler to manage the incoming
         # request
         self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui,
-                                           (wshost, wsport), self._multiple_instance, self._enable_file_cache,
+                                           (wshost, wsport), self._auth,
+                                           self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._pending_messages_queue_length, *userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
