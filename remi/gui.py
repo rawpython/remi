@@ -448,7 +448,7 @@ class Label(Widget):
         self.add_child('text', t)
 
     def get_text(self):
-        self.get_child('text')
+        return self.get_child('text')
 
 
 class GenericDialog(Widget):
@@ -1058,7 +1058,7 @@ class FileFolderNavigator(Widget):
             fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
             fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
             self.folderItems.append(fi)
-            self.itemContainer.append(i, fi)
+            self.itemContainer.append(fi)
         self.append(self.itemContainer, key='items')  # replace the old widget
 
     def dir_go_back(self):
