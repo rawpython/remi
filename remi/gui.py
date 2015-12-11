@@ -58,6 +58,7 @@ class EventManager(object):
 
 
 class Tag(object):
+
     def __init__(self):
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
@@ -97,35 +98,38 @@ class Tag(object):
                                    self.type)
         return html
 
-    def append(self, key, value):
-        """it allows to add child to this.
+    def add_child(self, key, child):
+        """add a child to the widget
 
-        The key can be everything you want, in order to access to the
-        specific child in this way 'widget.children[key]'.
-
+        The key can be everything you want. To retrieve the child call get_child
         """
-        if hasattr(value, 'attributes'):
-            value.attributes['parent_widget'] = str(id(self))
+        if hasattr(child, 'attributes'):
+            child.attributes['parent_widget'] = str(id(self))
 
         if key in self.children:
             self._render_children_list.remove(self.children[key])
-        self._render_children_list.append(value)
+        self._render_children_list.append(child)
 
-        self.children[key] = value
+        self.children[key] = child
+
+    def get_child(self, key):
+        """return the child called 'key'"""
+        return self.children[key]
 
     def empty(self):
+        """remove all children from the widget"""
         for k in list(self.children.keys()):
-            self.remove(self.children[k])
+            self.remove_child(self.children[k])
 
-    def remove(self, child):
+    def remove_child(self, child):
+        """remove a child instance from the widget"""
         if child in self.children.values():
-            #runtimeInstances.pop( runtimeInstances.index( self.children[key] ) )
             self._render_children_list.remove(child)
             for k in self.children.keys():
                 if str(id(self.children[k])) == str(id(child)):
                     self.children.pop(k)
-                    #when the child is removed we stop the iteration
-                    #this implies that a child replication should not be allowed
+                    # when the child is removed we stop the iteration
+                    # this implies that a child replication should not be allowed
                     break
 
 
@@ -208,7 +212,7 @@ class Widget(Tag):
         specific child in this way 'widget.children[key]'.
 
         """
-        super(Widget,self).append(key, value)
+        self.add_child(key, value)
 
         if hasattr(self.children[key], 'style'):
             spacing = to_pix(self.widget_spacing)
@@ -790,7 +794,7 @@ class Table(Widget):
         The first row of the matrix is set as table title
         """
         for child_keys in list(self.children):
-            self.remove(self.children[child_keys])
+            self.remove_child(self.children[child_keys])
         first_row = True
         for row in _matrix:
             tr = TableRow()
@@ -1035,7 +1039,7 @@ class FileFolderNavigator(Widget):
         self.lastValidPath = directory 
         # we remove the container avoiding graphic update adding items
         # this speeds up the navigation
-        self.remove(self.itemContainer)
+        self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
         self.itemContainer = Widget(self.w,self.h-25,Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
@@ -1077,7 +1081,7 @@ class FileFolderNavigator(Widget):
         curpath = os.getcwd()  # backup the path
         log.debug("FileFolderNavigator - chdir: %s" % directory)
         for c in self.folderItems:
-            self.itemContainer.remove(c)  # remove the file and folders from the view
+            self.itemContainer.remove_child(c)  # remove the file and folders from the view
         self.folderItems = []
         self.selectionlist = []  # reset selected file list
         os.chdir(directory)

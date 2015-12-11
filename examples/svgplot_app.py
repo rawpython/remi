@@ -52,12 +52,12 @@ class SvgPlot(gui.Svg):
         self.append( str(id(poly.lineXMaxIndicator)), poly.lineXMaxIndicator )
 
     def remove_poly(self, poly):
-        self.remove(poly)
+        self.remove_child(poly)
         self.polyList.remove(poly)
-        self.remove(poly.textXMin)
-        self.remove(poly.textXMax)
-        self.remove(poly.textYVal)
-    
+        self.remove_child(poly.textXMin)
+        self.remove_child(poly.textXMax)
+        self.remove_child(poly.textYVal)
+
     def render(self):
         
         self.set_viewbox(-self.plot_inner_border, -self.plot_inner_border, self.width + self.plot_inner_border*2, self.height + self.plot_inner_border*2)

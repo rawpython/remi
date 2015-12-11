@@ -30,11 +30,11 @@ class OpencvVideoWidget(gui.Image):
         javascript_code = gui.Tag()
         javascript_code.type = 'script'
         javascript_code.attributes['type'] = 'text/javascript'
-        javascript_code.append( 'code' , """
+        javascript_code.add_child('code', """
             function update_image%(id)s(){
                 if(document.getElementById('%(id)s').getAttribute('play')=='False')
                     return;
-                    
+
                 var url = '/%(id)s/get_image_data';
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, true);
