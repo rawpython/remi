@@ -22,7 +22,7 @@ from remi import start, App
 
 class OpencvVideoWidget(gui.Image):
     def __init__(self, width, height, video_source=0, fps=5):
-        super(OpencvVideoWidget, self).__init__(width, height, "/%s/get_image_data")
+        super(OpencvVideoWidget, self).__init__(width, height, "/%s/get_image_data" % id(self))
 
         self.fps = fps
         self.capture = cv2.VideoCapture(video_source)
@@ -48,7 +48,7 @@ class OpencvVideoWidget(gui.Image):
             };
 
             setInterval( update_image%(id)s, %(update_rate)s );
-            """ % {'id':id(self), 'update_rate':1000/self.fps})
+            """ % {'id':id(self), 'update_rate':1000.0/self.fps})
 
         self.add_child('javascript_code', javascript_code)
         self.play()
