@@ -70,7 +70,7 @@ class Cell(gui.Widget):
                 self.style['background-image'] = "url('/res/mine.png')"
             else:
                 if self.nearest_mine > 0:
-                    self.append("%s" % self.nearest_mine)
+                    self.add_child('nearestbomb', "%s" % self.nearest_mine)
                 else:
                     self.style['background-color'] = 'rgb(200,255,100)'
             return
