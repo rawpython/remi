@@ -30,11 +30,11 @@ class SvgPlot(gui.Svg):
         self.textYMax = gui.SvgText(0,0,"max")
         self.textYMin.style['font-size'] = gui.to_pix(self.font_size)
         self.textYMax.style['font-size'] = gui.to_pix(self.font_size)
-        self.append( str(id(self.textYMin)), self.textYMin )
-        self.append( str(id(self.textYMax)), self.textYMax )
-        
+        self.append(self.textYMin)
+        self.append(self.textYMax)
+
     def append_poly(self, poly):
-        self.append(str(id(poly)), poly)
+        self.append(poly)
         self.polyList.append(poly)
         poly.textXMin = gui.SvgText(0,0,"actualValue")
         poly.textXMax = gui.SvgText(0,0,"actualValue")
@@ -44,12 +44,12 @@ class SvgPlot(gui.Svg):
         poly.lineYValIndicator = gui.SvgLine(0,0,0,0)
         poly.lineXMinIndicator = gui.SvgLine(0,0,0,0)
         poly.lineXMaxIndicator = gui.SvgLine(0,0,0,0)
-        self.append( str(id(poly.textXMin)), poly.textXMin )
-        self.append( str(id(poly.textXMax)), poly.textXMax )
-        self.append( str(id(poly.textYVal)), poly.textYVal )
-        self.append( str(id(poly.lineYValIndicator)), poly.lineYValIndicator )
-        self.append( str(id(poly.lineXMinIndicator)), poly.lineXMinIndicator )
-        self.append( str(id(poly.lineXMaxIndicator)), poly.lineXMaxIndicator )
+        self.append(poly.textXMin)
+        self.append(poly.textXMax)
+        self.append(poly.textYVal)
+        self.append(poly.lineYValIndicator)
+        self.append(poly.lineXMinIndicator)
+        self.append(poly.lineXMaxIndicator)
 
     def remove_poly(self, poly):
         self.remove_child(poly)
@@ -133,15 +133,15 @@ class MyApp(App):
         self.svgplot.append_poly( self.plotData1 )
         self.svgplot.append_poly( self.plotData2 )
         self.svgplot.append_poly( self.plotData3 )
-        
-        self.wid.append('plot', self.svgplot)
-        
+
+        self.wid.append(self.svgplot)
+
         self.count = 0
         self.add_data()
-        
+
         # returning the root widget
         return self.wid
-        
+
     def add_data(self):
         self.plotData1.add_coord(self.count, math.atan(self.count/180.0*math.pi))
         self.plotData2.add_coord(self.count, math.cos(self.count/180.0*math.pi))

@@ -40,17 +40,17 @@ class MyApp(App):
         button_ddi = gui.DropDownItem(200, 20, "Add button")
         label_ddi  = gui.DropDownItem(200, 20, "Add label")
 
-        self.dropdown.append('0', choose_ddi)
-        self.dropdown.append('1', button_ddi)
-        self.dropdown.append('2', label_ddi)
+        self.dropdown.append(choose_ddi)
+        self.dropdown.append(button_ddi)
+        self.dropdown.append(label_ddi)
 
         # Add a listener
         self.dropdown.set_on_change_listener(self, 'on_dropdown_change')
 
         # Add the dropdown to the widget
-        self.wid.append('0', self.tittle_label)
-        self.wid.append('1', self.description_label)
-        self.wid.append('2', self.dropdown)
+        self.wid.append(self.tittle_label)
+        self.wid.append(self.description_label)
+        self.wid.append(self.dropdown)
 
         # returning the root widget
         return self.wid
@@ -58,14 +58,17 @@ class MyApp(App):
     # listener function
     def on_dropdown_change(self, value):
         print "Chosen dropdown value: " + str(value)
+
         # Create the widget chosen
         if "button" in value:
             dynamic_widget = gui.Button(100, 100, "Button")
         elif "label" in value:
             dynamic_widget = gui.Label(100, 100, "Label")
+        else:
+            return
 
-        # Add it, as we use the same ID '3' it will overwrite it if we add it again
-        self.wid.append('3', dynamic_widget)
+        # Add it, as we use the same key will overwrite it if we add it again
+        self.wid.append(dynamic_widget, key='dynamic_widget')
 
 if __name__ == "__main__":
     start(MyApp)

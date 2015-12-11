@@ -50,7 +50,7 @@ class OpencvVideoWidget(gui.Image):
             setInterval( update_image%(id)s, %(update_rate)s );
             """ % {'id':id(self), 'update_rate':1000/self.fps})
 
-        self.append('javascript_code', javascript_code)
+        self.add_child('javascript_code', javascript_code)
         self.play()
 
     def play(self):
@@ -87,12 +87,12 @@ class MyApp(App):
         m11.set_on_click_listener(self, 'menu_play_clicked')
         m12.set_on_click_listener(self, 'menu_stop_clicked')
 
-        self.menu.append('1',m1)
-        m1.append('11',m11)
-        m1.append('12',m12)
+        self.menu.append(m1)
+        m1.append(m11)
+        m1.append(m12)
 
-        wid.append('0', self.menu)
-        wid.append('1', self.opencvideo_widget)
+        wid.append(self.menu)
+        wid.append(self.opencvideo_widget)
 
         # returning the root widget
         return wid

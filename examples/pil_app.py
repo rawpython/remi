@@ -64,15 +64,15 @@ class MyApp(App):
         m112 = gui.MenuItem(100, 30, 'Save as')
         m112.set_on_click_listener(self, 'menu_saveas_clicked')
 
-        self.menu.append('1',m1)
-        m1.append('11',m11)
-        m1.append('12',m12)
-        m11.append('111',m111)
-        m11.append('112',m112)
-        
-        wid.append('0', self.menu)
-        wid.append('1', self.image_widget)
-        
+        self.menu.append(m1)
+        m1.append(m11)
+        m1.append(m12)
+        m11.append(m111)
+        m11.append(m112)
+
+        wid.append(self.menu)
+        wid.append(self.image_widget)
+
         # returning the root widget
         return wid
 

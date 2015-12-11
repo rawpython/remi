@@ -85,8 +85,8 @@ class MyApp(App):
         self.mpl.redraw()
 
         # appending a widget to another, the first argument is a string key
-        wid.append('1', bt)
-        wid.append('2', self.mpl)
+        wid.append(bt)
+        wid.append(self.mpl)
 
         return wid
 

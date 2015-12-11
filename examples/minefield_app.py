@@ -70,7 +70,7 @@ class Cell(gui.Widget):
                 self.style['background-image'] = "url('/res/mine.png')"
             else:
                 if self.nearest_mine > 0:
-                    self.append('nearestbomb', "%s" % self.nearest_mine)
+                    self.append("%s" % self.nearest_mine)
                 else:
                     self.style['background-color'] = 'rgb(200,255,100)'
             return
@@ -114,13 +114,13 @@ class MyApp(App):
         self.btReset.set_on_click_listener(self, "new_game")
 
         self.horizontal_container = gui.Widget(1000, 30, True, 0)
-        self.horizontal_container.append('info', self.info)
-        self.horizontal_container.append('icon_mine', gui.Image(30, 30, '/res/mine.png'))
-        self.horizontal_container.append('info_mine', self.lblMineCount)
-        self.horizontal_container.append('icon_flag', gui.Image(30, 30, '/res/flag.png'))
-        self.horizontal_container.append('info_flag', self.lblFlagCount)
-        self.horizontal_container.append('info_time', self.lblTime)
-        self.horizontal_container.append('reset', self.btReset)
+        self.horizontal_container.append(self.info)
+        self.horizontal_container.append(gui.Image(30, 30, '/res/mine.png'))
+        self.horizontal_container.append(self.lblMineCount)
+        self.horizontal_container.append(gui.Image(30, 30, '/res/flag.png'))
+        self.horizontal_container.append(self.lblFlagCount)
+        self.horizontal_container.append(self.lblTime)
+        self.horizontal_container.append(self.btReset)
 
         self.minecount = 0  # mine number in the map
         self.flagcount = 0  # flag placed by the players
@@ -128,9 +128,9 @@ class MyApp(App):
         self.link = gui.Link(1000, 20, "https://github.com/dddomodossola/remi",
                              "This is an example of REMI gui library.")
 
-        self.main_container.append('title', self.title)
-        self.main_container.append('horizontal_container', self.horizontal_container)
-        self.main_container.append('link', self.link)
+        self.main_container.append(self.title)
+        self.main_container.append(self.horizontal_container)
+        self.main_container.append(self.link)
 
         self.new_game()
 
@@ -148,7 +148,7 @@ class MyApp(App):
         self.mine_table = gui.Table(900, 450)
         self.mine_matrix = self.build_mine_matrix(30, 15, 60)
         self.mine_table.from_2d_matrix(self.mine_matrix, False)
-        self.main_container.append("mine_table", self.mine_table)
+        self.main_container.append(self.mine_table, key="mine_table")
         self.check_if_win()
 
     def build_mine_matrix(self, w, h, minenum):
@@ -215,7 +215,7 @@ class MyApp(App):
     def explosion(self, cell):
         print("explosion")
         self.mine_table = gui.Table(900, 450)
-        self.main_container.append("mine_table", self.mine_table)
+        self.main_container.append(self.mine_table, key="mine_table")
         for x in range(0, len(self.mine_matrix[0])):
             for y in range(0, len(self.mine_matrix)):
                 self.mine_matrix[y][x].style['background-color'] = 'red'
