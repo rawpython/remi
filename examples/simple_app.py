@@ -17,7 +17,6 @@ from remi import start, App
 
 
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -43,6 +42,7 @@ class MyApp(App):
         self.npressed += 1
         self.lbl.set_text('Button pressed %s times' % self.npressed)
         self.bt.set_text('Hi!')
+
 
 if __name__ == "__main__":
     # starts the webserver

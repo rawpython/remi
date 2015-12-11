@@ -29,7 +29,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 class MatplotImage(gui.Image):
-
     ax = None
 
     def __init__(self, width, height):
@@ -37,7 +36,7 @@ class MatplotImage(gui.Image):
         self._buf = None
         self._buflock = threading.Lock()
 
-        self._fig = Figure(figsize=(4,4))
+        self._fig = Figure(figsize=(4, 4))
         self.ax = self._fig.add_subplot(111)
 
         self.redraw()
@@ -51,35 +50,33 @@ class MatplotImage(gui.Image):
                 self._buf.close()
             self._buf = buf
 
-        i = int(time.time()*1e6)
-        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self),i)
+        i = int(time.time() * 1e6)
+        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self), i)
 
         super(MatplotImage, self).redraw()
 
-    def get_image_data(self,update_index):
+    def get_image_data(self, update_index):
         with self._buflock:
             if self._buf is None:
                 return None
             self._buf.seek(0)
             data = self._buf.read()
 
-        return [data, {'Content-type':'image/png'}]
+        return [data, {'Content-type': 'image/png'}]
 
 
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-
         wid = gui.Widget(320, 320, False, 10)
 
         bt = gui.Button(100, 30, 'Data')
         bt.set_on_click_listener(self, 'on_button_pressed')
 
-        self.plot_data = [0,1]
-        self.mpl = MatplotImage(250,250)
+        self.plot_data = [0, 1]
+        self.mpl = MatplotImage(250, 250)
         self.mpl.ax.set_title("test")
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()
@@ -95,6 +92,6 @@ class MyApp(App):
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()
 
+
 if __name__ == "__main__":
     start(MyApp, debug=True)
-

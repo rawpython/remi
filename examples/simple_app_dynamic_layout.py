@@ -17,7 +17,6 @@ from remi import start, App
 
 
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -28,9 +27,9 @@ class MyApp(App):
 
         # To make it prettier put a tittle of what is this demo
         self.tittle_label = gui.Label(350, 20, "Dynamical layout change demo")
-        self.description_label = gui.Label(350, 80, 
-            """Choose from the dropdown a widget and it will be added to the interface. 
-            If you change the dropdown selection it will substitute it.""")
+        self.description_label = gui.Label(350, 80,
+                                           """Choose from the dropdown a widget and it will be added to the interface.
+                                           If you change the dropdown selection it will substitute it.""")
 
 
         # Create dropdown and it's contents
@@ -38,7 +37,7 @@ class MyApp(App):
 
         choose_ddi = gui.DropDownItem(200, 20, "Choose...")
         button_ddi = gui.DropDownItem(200, 20, "Add button")
-        label_ddi  = gui.DropDownItem(200, 20, "Add label")
+        label_ddi = gui.DropDownItem(200, 20, "Add label")
 
         self.dropdown.append(choose_ddi)
         self.dropdown.append(button_ddi)
@@ -69,6 +68,7 @@ class MyApp(App):
 
         # Add it, as we use the same key will overwrite it if we add it again
         self.wid.append(dynamic_widget, key='dynamic_widget')
+
 
 if __name__ == "__main__":
     start(MyApp)

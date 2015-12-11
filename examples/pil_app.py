@@ -25,27 +25,26 @@ class PILImageViewverWidget(gui.Image):
     def __init__(self, width, height, pil_image=None):
         super(PILImageViewverWidget, self).__init__(width, height, "/res/logo.png")
         self._buf = None
-    
+
     def load(self, file_path_name):
         pil_image = PIL.Image.open(file_path_name)
         self._buf = io.BytesIO()
         pil_image.save(self._buf, format='png')
         self.refresh()
-    
+
     def refresh(self):
-        i = int(time.time()*1e6)
-        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self),i)
-        
-    def get_image_data(self,update_index):
+        i = int(time.time() * 1e6)
+        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self), i)
+
+    def get_image_data(self, update_index):
         if self._buf is None:
             return None
         self._buf.seek(0)
-        headers = {'Content-type':'image/png'}
-        return [self._buf.read(),headers]
+        headers = {'Content-type': 'image/png'}
+        return [self._buf.read(), headers]
 
 
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -77,15 +76,15 @@ class MyApp(App):
         return wid
 
     def menu_open_clicked(self):
-        self.fileselectionDialog = gui.FileSelectionDialog( 600, 310, 
-            'File Selection Dialog', 'Select an image file',False,'.')
+        self.fileselectionDialog = gui.FileSelectionDialog(600, 310,
+                                                           'File Selection Dialog', 'Select an image file', False, '.')
         self.fileselectionDialog.set_on_confirm_value_listener(
             self, 'on_image_file_selected')
         # here is returned the Input Dialog widget, and it will be shown
         self.fileselectionDialog.show(self)
 
-    def on_image_file_selected(self,file_list):
-        if len(file_list)<1:
+    def on_image_file_selected(self, file_list):
+        if len(file_list) < 1:
             return
         self.image_widget.load(file_list[0])
 

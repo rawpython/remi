@@ -48,7 +48,7 @@ class OpencvVideoWidget(gui.Image):
             };
 
             setInterval( update_image%(id)s, %(update_rate)s );
-            """ % {'id':id(self), 'update_rate':1000.0/self.fps})
+            """ % {'id': id(self), 'update_rate': 1000.0 / self.fps})
 
         self.add_child('javascript_code', javascript_code)
         self.play()
@@ -64,14 +64,13 @@ class OpencvVideoWidget(gui.Image):
         if ret:
             ret, jpeg = cv2.imencode('.jpg', frame)
             if ret:
-                headers = {'Content-type':'image/jpeg'}
+                headers = {'Content-type': 'image/jpeg'}
                 # tostring is an alias to tobytes, which wasn't added till numpy 1.9
                 return [jpeg.tostring(), headers]
-        return None,None
+        return None, None
 
 
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -80,18 +79,18 @@ class MyApp(App):
         wid = gui.Widget(640, 600, False, 10)
         self.opencvideo_widget = OpencvVideoWidget(620, 530, 0, 10)
 
-        self.menu = gui.Menu(620, 30)
+        menu = gui.Menu(620, 30)
         m1 = gui.MenuItem(100, 30, 'Video')
         m11 = gui.MenuItem(100, 30, 'Play')
         m12 = gui.MenuItem(100, 30, 'Stop')
         m11.set_on_click_listener(self, 'menu_play_clicked')
         m12.set_on_click_listener(self, 'menu_stop_clicked')
 
-        self.menu.append(m1)
+        menu.append(m1)
         m1.append(m11)
         m1.append(m12)
 
-        wid.append(self.menu)
+        wid.append(menu)
         wid.append(self.opencvideo_widget)
 
         # returning the root widget
