@@ -219,16 +219,9 @@ class Widget(Tag):
         self.add_child(key, value)
 
         spacing = to_pix(self.widget_spacing)
-        this_height = 0
-        this_width = 0
-        if 'height' in self.style.keys() and 'height' in self.children[key].style.keys():
-            this_height = from_pix(self.style['height']) - from_pix(self.children[key].style['height'])
-        if 'width' in self.style.keys() and 'width' in self.children[key].style.keys():
-            this_width = from_pix(self.style['width']) - from_pix(self.children[key].style['width'])
-        self.children[key].style['margin'] = spacing + " " + to_pix(this_width/2)
+        self.children[key].style['margin'] = spacing + " " + spacing
 
-        if self.layout_orientation:
-            self.children[key].style['margin'] = to_pix(this_height/2) + " " + spacing
+        if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
             if 'float' in self.children[key].style.keys():
                 if not (self.children[key].style['float'] == 'none'):
                     self.children[key].style['float'] = 'left'
