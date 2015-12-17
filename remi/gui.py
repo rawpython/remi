@@ -581,14 +581,25 @@ class ListView(Widget):
 
     """list widget it can contain ListItems."""
 
-    def __init__(self, w, h, orientation=Widget.LAYOUT_VERTICAL):
-        super(ListView, self).__init__(w, h, orientation)
+    def __init__(self, w, h):
+        super(ListView, self).__init__(w, h, layout_orientation=Widget.LAYOUT_VERTICAL)
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
         self.selected_item = None
         self.selected_key = None
 
+    @classmethod
+    def new_from_list(cls, w, h, items):
+        obj = cls(w,h)
+        for item in items:
+            obj.append(item)
+        return obj
+
     def append(self, item, key=''):
+        if isinstance(item, (str,unicode)):
+            item = ListItem(-1,-1,item)
+        elif not isinstance(item, ListItem):
+            raise ValueError("item must be text or a ListItem instance")
         # if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
             item.set_on_click_listener(self, self.EVENT_ONSELECTION)

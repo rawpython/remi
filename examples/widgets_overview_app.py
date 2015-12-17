@@ -70,16 +70,9 @@ class MyApp(App):
         self.btUploadFile.set_on_success_listener(self, 'fileupload_on_success')
         self.btUploadFile.set_on_failed_listener(self, 'fileupload_on_failed')
 
-        self.listView = gui.ListView(300, 120)
+        items = ('Danny Young','Christine Holand','Lars Gordon','Roberto Robitaille')
+        self.listView = gui.ListView.new_from_list(300, 120, items)
         self.listView.set_on_selection_listener(self, "list_view_on_selected")
-        li0 = gui.ListItem(279, 20, 'Danny Young')
-        li1 = gui.ListItem(279, 20, 'Christine Holand')
-        li2 = gui.ListItem(279, 20, 'Lars Gordon')
-        li3 = gui.ListItem(279, 20, 'Roberto Robitaille')
-        self.listView.append(li0)
-        self.listView.append(li1)
-        self.listView.append(li2)
-        self.listView.append(li3)
 
         self.link = gui.Link(200, 20, "http://localhost:8081", "A link to here")
 
@@ -182,8 +175,7 @@ class MyApp(App):
         values = ('Danny Young', 'Christine Holand', 'Lars Gordon', 'Roberto Robitaille')
         self.dlistView = gui.ListView(200, 120)
         for key, value in enumerate(values):
-            obj = gui.ListItem(170, 20, value)
-            self.dlistView.append(obj, key=str(key))
+            self.dlistView.append(value, key=str(key))
         self.dialog.add_field_with_label('dlistView', 'Listview', self.dlistView)
 
         self.ddropdown = gui.DropDown(200, 20)
