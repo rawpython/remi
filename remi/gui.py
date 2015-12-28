@@ -596,7 +596,7 @@ class ListView(Widget):
         return obj
 
     def append(self, item, key=''):
-        if isinstance(item, (str,unicode)):
+        if isinstance(item, type('')) or isinstance(item, type(u'')):
             item = ListItem(-1,-1,item)
         elif not isinstance(item, ListItem):
             raise ValueError("item must be text or a ListItem instance")
