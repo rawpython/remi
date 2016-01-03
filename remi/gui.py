@@ -590,9 +590,12 @@ class ListView(Widget):
 
     @classmethod
     def new_from_list(cls, w, h, items):
+        """
+            the items are appended with an string enumeration key
+        """
         obj = cls(w,h)
-        for item in items:
-            obj.append(item)
+        for key,item in enumerate(items):
+            obj.append(item,str(key))
         return obj
 
     def append(self, item, key=''):
