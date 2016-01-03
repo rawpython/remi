@@ -215,7 +215,7 @@ class Widget(Tag):
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
-        key = str(id(value)) if not key else key
+        key = str(id(value)) if key=='' else key
         self.add_child(key, value)
 
         spacing = to_pix(self.widget_spacing)
