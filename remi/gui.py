@@ -240,14 +240,14 @@ class Widget(Tag):
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
-    def set_on_focus_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_focus_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONFOCUS] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONFOCUS)
         self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
         return self.eventManager.propagate(self.EVENT_ONBLUR, [])
 
-    def set_on_blur_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_blur_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONBLUR] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
 
@@ -267,91 +267,91 @@ class Widget(Tag):
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
-    def set_on_click_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_click_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def oncontextmenu(self):
         return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
 
-    def set_on_contextmenu_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_contextmenu_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCONTEXTMENU] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONCONTEXTMENU)
         self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
 
     def onmousedown(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
 
-    def set_on_mousedown_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_mousedown_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEDOWN] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEDOWN)
         self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
         
     def onmouseup(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
 
-    def set_on_mouseup_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_mouseup_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEUP] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEUP)
         self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
         
     def onmouseout(self):
         return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
 
-    def set_on_mouseout_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_mouseout_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEOUT] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEOUT)
         self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
 
     def onmouseleave(self):
         return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
 
-    def set_on_mouseleave_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_mouseleave_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSELEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSELEAVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
 
     def onmousemove(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
 
-    def set_on_mousemove_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_mousemove_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEMOVE] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEMOVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
 
     def ontouchmove(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
 
-    def set_on_touchmove_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_touchmove_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHMOVE] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHMOVE)
         self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
 
     def ontouchstart(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
 
-    def set_on_touchstart_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_touchstart_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHSTART] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHSTART)
         self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
 
     def ontouchend(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
 
-    def set_on_touchend_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_touchend_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHEND] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHEND)
         self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
 
     def ontouchenter(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
 
-    def set_on_touchenter_listener(self, listener, funcname) -> "event_listener_setter(self, x, y)":
+    def set_on_touchenter_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHENTER] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHENTER)
         self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
 
     def ontouchleave(self):
         return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
 
-    def set_on_touchleave_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_touchleave_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHLEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHLEAVE)
         self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
 
     def ontouchcancel(self):
         return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
 
-    def set_on_touchcancel_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_touchcancel_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHCANCEL] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHCANCEL)
         self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
 
@@ -406,7 +406,7 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
-    def set_on_change_listener(self, listener, funcname) -> "event_listener_setter(self, newValue)":
+    def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
@@ -415,7 +415,7 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, [newValue])
         
-    def set_on_key_down_listener(self,listener,funcname) -> "event_listener_setter(self, newValue)":
+    def set_on_key_down_listener(self,listener,funcname):
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONKEYDOWN}
@@ -426,7 +426,7 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONENTER, [newValue])
 
-    def set_on_enter_listener(self,listener,funcname) -> "event_listener_setter(self, newValue)":
+    def set_on_enter_listener(self,listener,funcname):
         self.attributes[self.EVENT_ONKEYDOWN] = """
             if (event.keyCode == 13) {
                 var params={};
@@ -531,14 +531,14 @@ class GenericDialog(Widget):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRM, [])
 
-    def set_on_confirm_dialog_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_confirm_dialog_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCONFIRM, listener, funcname)
 
     def cancel_dialog(self):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCANCEL, [])
 
-    def set_on_cancel_dialog_listener(self, listener, funcname) -> "event_listener_setter(self)":
+    def set_on_cancel_dialog_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, funcname)
 
 
@@ -573,7 +573,7 @@ class InputDialog(GenericDialog):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [self.inputText.get_text()])
 
-    def set_on_confirm_value_listener(self, listener, funcname) -> "event_listener_setter(self, value)":
+    def set_on_confirm_value_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
@@ -627,7 +627,7 @@ class ListView(Widget):
                 break
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
-    def set_on_selection_listener(self, listener, funcname) -> "event_listener_setter(self, selected_key)":
+    def set_on_selection_listener(self, listener, funcname):
         """The listener will receive the key of the selected item.
         If you add the element from an array, use a numeric incremental key
         """
@@ -757,7 +757,7 @@ class DropDown(Widget):
         self.set_value(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
-    def set_on_change_listener(self, listener, funcname) -> "event_listener_setter(self, newValue)":
+    def set_on_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
@@ -887,7 +887,7 @@ class Input(Widget):
         self.attributes['value'] = newValue
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
-    def set_on_change_listener(self, listener, funcname) -> "event_listener_setter(self, newValue)":
+    def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
@@ -966,7 +966,7 @@ class Slider(Input):
     def oninput(self, newValue):
         return self.eventManager.propagate(self.EVENT_ONINPUT, [newValue])
 
-    def set_oninput_listener(self, listener, funcname) -> "event_listener_setter(self, newValue)":
+    def set_oninput_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONINPUT] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONINPUT}
@@ -1168,7 +1168,7 @@ class FileFolderItem(Widget):
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
-    def set_on_click_listener(self, listener, funcname) -> "event_listener_setter(self, folderItem)":
+    def set_on_click_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def set_selected(self, selected):
@@ -1179,7 +1179,7 @@ class FileFolderItem(Widget):
         self.set_selected(not self.selected)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self])
 
-    def set_on_selection_listener(self, listener, funcname) -> "event_listener_setter(self, folderItem)":
+    def set_on_selection_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
 
     def set_text(self, t):
@@ -1215,7 +1215,7 @@ class FileSelectionDialog(GenericDialog):
         params = [self.fileFolderNavigator.get_selection_list()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
-    def set_on_confirm_value_listener(self, listener, funcname) -> "event_listener_setter(self, selected_file_list)":
+    def set_on_confirm_value_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
@@ -1291,14 +1291,14 @@ class FileUploader(Widget):
     def onsuccess(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
 
-    def set_on_success_listener(self, listener, funcname) -> "event_listener_setter(self, filename)":
+    def set_on_success_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ON_SUCCESS, listener, funcname)
 
     def onfailed(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_FAILED, [filename])
 
-    def set_on_failed_listener(self, listener, funcname) -> "event_listener_setter(self, filename)":
+    def set_on_failed_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, funcname)
         
 
