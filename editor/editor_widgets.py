@@ -57,3 +57,26 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         self.hide()
         params = [self.fileFolderNavigator.pathEditor.get_text()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
+        
+#widget that allows to edit a specific html attribute
+#   it has a descriptive label, an edit widget (TextInput, SpinBox) based on the 'type' and a title 
+class EditorAttributeInput(gui.Widget):
+    def __init__(self, w, h, attributeDict, defaultValue=''):
+        super(EditorAttributeInput, self).__init__(w,h,gui.Widget.LAYOUT_HORIZONTAL,3)
+        label = gui.Label(w/2-12, h-6, attributename)
+        self.append(label)
+        self.inputWidget = None
+        if len(attributedict.type) == 1:
+            if attributedict.type[0] in ('bool','int'):
+                if attributedict.type[0] == 'bool':
+                    self.inputWidget = gui.CheckBox(w/2-12, h-6, defaultValue=='checked')
+                if attributedict.type[0] == 'int':
+                    self.inputWidget = gui.SpinBox(w/2-12, h-6, defaultValue=='checked')
+            else: #default editor is string
+                self.inputWidget = gui.TextInput(w/2-12, h-6)
+        else:
+            self.inputWidget = gui.DropDown(w/2-12, h-6)
+        
+        self.inputWidget.set_on_change_listener
+        self.append(self.inputWidget)
+        

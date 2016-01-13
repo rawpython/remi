@@ -246,8 +246,6 @@ def getTagAttributesDictionary():
     #dictionary {tagname:{attributename:{type:'',description:''}}}
     reader = csv.reader(htmlCsvAttributeData.split("\n"), delimiter=";", quotechar='"')
     for row in reader:
-        print "\t".join(row)
-        
         applies_to_tags = row[1].split(';')
         for tagname in applies_to_tags:
             if not tagname in htmlAttributeDict:
@@ -258,23 +256,3 @@ def getTagAttributesDictionary():
             htmlAttributeDict[tagname][attributeName]['description'] = row[2]
             htmlAttributeDict[tagname][attributeName]['type'] = row[3].split(';')
     return htmlAttributeDict
-
-#returns a widget that allows to edit a specific html attribute
-#   it has a descriptive label, an edit widget (TextInput, SpinBox) based on the 'type' and a title 
-def getTagAttributeEditor(attributedict):
-    widget = gui.Widget(200, 30, gui.Widget.LAYOUT_HORIZONTAL, 3)
-    label = gui.Label(100, 24, attributename)
-    widget.append(label)
-    inputWidget = None
-    if len(attributedict.type) == 0:
-        if attributedict.type[0] in ('bool','int'):
-        else: #default editor is string
-            inputWidget = gui.TextInput(100, 24)
-    else:
-        inputWidget = gui.ComboBox()
-    
-    inputWidget.set_on_change_listener
-    widget.append(inputWidget)
-    return widget
-    
-print(getTagAttributesDictionary()['meta'])

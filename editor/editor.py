@@ -149,6 +149,7 @@ class Project(gui.Widget):
         
         self.style['overflow'] = 'scroll'
         self.style['background-color'] = 'gray'
+        self.style['background-image'] = "url( '/res/bg.png' );"
         self.soup = ''
 
         self.code_classes = ""
