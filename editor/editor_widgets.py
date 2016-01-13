@@ -58,6 +58,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         params = [self.fileFolderNavigator.pathEditor.get_text()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
         
+
 #widget that allows to edit a specific html attribute
 #   it has a descriptive label, an edit widget (TextInput, SpinBox) based on the 'type' and a title 
 class EditorAttributeInput(gui.Widget):

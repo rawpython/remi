@@ -1,0 +1,100 @@
+Name;Values;Initial value;Inherited?
+;;;
+'azimuth';<angle> | [[ left-side | far-left | left | center-left | center | center-right | right | far-right | right-side ] || behind ] | leftwards | rightwards | inherit;center;yes
+'background-attachment';scroll | fixed | inherit;scroll;no
+'background-color';<color> | transparent | inherit;transparent;no
+'background-image';<uri> | none | inherit;none;no
+'background-position';[ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit;0% 0%;no
+'background-repeat';repeat | repeat-x | repeat-y | no-repeat | inherit;repeat;no
+'background';['background-color' || 'background-image' || 'background-repeat' || 'background-attachment' ||'background-position'] | inherit;see individual properties;no
+'border-collapse';collapse | separate | inherit;separate;yes
+'border-color';[ <color> | transparent ]{1,4} | inherit;see individual properties;no
+'border-spacing';<length> <length>? | inherit;0;yes
+'border-style';<border-style>{1,4} | inherit;see individual properties;no
+'border-top' 'border-right' 'border-bottom' 'border-left';[ <border-width> || <border-style> || 'border-top-color' ] | inherit;see individual properties;no
+'border-top-color' 'border-right-color' 'border-bottom-color' 'border-left-color';<color> | transparent | inherit;the value of the 'color' property;no
+'border-top-style' 'border-right-style''border-bottom-style' 'border-left-style';<border-style> | inherit;none;no
+'border-top-width' 'border-right-width' 'border-bottom-width''border-left-width';<border-width> | inherit;medium;no
+'border-width';<border-width>{1,4} | inherit;see individual properties;no
+'border';[ <border-width> || <border-style> || 'border-top-color' ] | inherit;see individual properties;no
+'bottom';<length> | <percentage> | auto | inherit;auto;no
+'caption-side';top | bottom | inherit;top;yes
+'clear';none | left | right | both | inherit;none;no
+'clip';<shape> | auto | inherit;auto;no
+'color';<color> | inherit;depends on user agent;yes
+'content';normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit;normal;no
+'counter-increment';[ <identifier> <integer>? ]+ | none | inherit;none;no
+'counter-reset';[ <identifier> <integer>? ]+ | none | inherit;none;no
+'cue-after';<uri> | none | inherit;none;no
+'cue-before';<uri> | none | inherit;none;no
+'cue';[ 'cue-before' || 'cue-after' ] | inherit;see individual properties;no
+'cursor';[ [<uri> ,]* [ auto | crosshair | default | pointer | move | e-resize | ne-resize | nw-resize | n-resize | se-resize | sw-resize | s-resize | w-resize | text | wait | help | progress ] ] | inherit;auto;yes
+'direction';ltr | rtl | inherit;ltr;yes
+'display';inline | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit;inline;no
+'elevation';<angle> | below | level | above | higher | lower | inherit;level;yes
+'empty-cells';show | hide | inherit;show;yes
+'float';left | right | none | inherit;none;no
+'font-family';[[ <family-name> | <generic-family> ] [, <family-name>| <generic-family>]* ] | inherit;depends on user agent;yes
+'font-size';<absolute-size> | <relative-size> | <length> | <percentage> | inherit;medium;yes
+'font-style';normal | italic | oblique | inherit;normal;yes
+'font-variant';normal | small-caps | inherit;normal;yes
+'font-weight';normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit;normal;yes
+'font';[ [ 'font-style' || 'font-variant' || 'font-weight' ]? 'font-size' [ / 'line-height' ]? 'font-family' ] | caption | icon | menu | message-box | small-caption | status-bar | inherit;see individual properties;yes
+'height';<length> | <percentage> | auto | inherit;auto;no
+'left';<length> | <percentage> | auto | inherit;auto;no
+'letter-spacing';normal | <length> | inherit;normal;yes
+'line-height';normal | <number> | <length> | <percentage> | inherit;normal;yes
+'list-style-image';<uri> | none | inherit;none;yes
+'list-style-position';inside | outside | inherit;outside;yes
+'list-style-type';disc | circle | square | decimal | decimal-leading-zero | lower-roman | upper-roman | lower-greek | lower-latin | upper-latin | armenian | georgian | lower-alpha | upper-alpha | none |inherit;disc;yes
+'list-style';[ 'list-style-type' || 'list-style-position' || 'list-style-image' ] | inherit;see individual properties;yes
+'margin-right' 'margin-left';<margin-width> | inherit;0;no
+'margin-top' 'margin-bottom';<margin-width> | inherit;0;no
+'margin';<margin-width>{1,4} | inherit;see individual properties;no
+'max-height';<length> | <percentage> | none | inherit;none;no
+'max-width';<length> | <percentage> | none | inherit;none;no
+'min-height';<length> | <percentage> | inherit;0;no
+'min-width';<length> | <percentage> | inherit;0;no
+'orphans';<integer> | inherit;2;yes
+'outline-color';<color> | invert | inherit;invert;no
+'outline-style';<border-style> | inherit;none;no
+'outline-width';<border-width> | inherit;medium;no
+'outline';[ 'outline-color' || 'outline-style' || 'outline-width' ] | inherit;see individual properties;no
+'overflow';visible | hidden | scroll | auto | inherit;visible;no
+'padding-top' 'padding-right''padding-bottom' 'padding-left';<padding-width> | inherit;0;no
+'padding';<padding-width>{1,4} | inherit;see individual properties;no
+'page-break-after';auto | always | avoid | left | right | inherit;auto;no
+'page-break-before';auto | always | avoid | left | right | inherit;auto;no
+'page-break-inside';avoid | auto | inherit;auto;no
+'pause-after';<time> | <percentage> | inherit;0;no
+'pause-before';<time> | <percentage> | inherit;0;no
+'pause';[ [<time> | <percentage>]{1,2} ] | inherit;see individual properties;no
+'pitch-range';<number> | inherit;50;yes
+'pitch';<frequency> | x-low | low | medium | high | x-high | inherit;medium;yes
+'play-during';<uri> [ mix || repeat ]? | auto | none | inherit;auto;no
+'position';static | relative | absolute | fixed | inherit;static;no
+'quotes';[<string> <string>]+ | none | inherit;depends on user agent;yes
+'richness';<number> | inherit;50;yes
+'right';<length> | <percentage> | auto | inherit;auto;no
+'speak-header';once | always | inherit;once;yes
+'speak-numeral';digits | continuous | inherit;continuous;yes
+'speak-punctuation';code | none | inherit;none;yes
+'speak';normal | none | spell-out | inherit;normal;yes
+'speech-rate';<number> | x-slow | slow | medium | fast | x-fast | faster | slower | inherit;medium;yes
+'stress';<number> | inherit;50;yes
+'table-layout';auto | fixed | inherit;auto;no
+'text-align';left | right | center | justify | inherit;a nameless value that acts as 'left' if 'direction' is 'ltr', 'right' if 'direction' is 'rtl';yes
+'text-decoration';none | [ underline || overline || line-through || blink ] | inherit;none;no (see prose)
+'text-indent';<length> | <percentage> | inherit;0;yes
+'text-transform';capitalize | uppercase | lowercase | none | inherit;none;yes
+'top';<length> | <percentage> | auto | inherit;auto;no
+'unicode-bidi';normal | embed | bidi-override | inherit;normal;no
+'vertical-align';baseline | sub | super | top | text-top | middle | bottom | text-bottom | <percentage> | <length> |inherit;baseline;no
+'visibility';visible | hidden | collapse | inherit;visible;yes
+'voice-family';[[<specific-voice> | <generic-voice> ],]* [<specific-voice> | <generic-voice> ] | inherit;depends on user agent;yes
+'volume';<number> | <percentage> | silent | x-soft | soft | medium | loud | x-loud | inherit;medium;yes
+'white-space';normal | pre | nowrap | pre-wrap | pre-line | inherit;normal;yes
+'widows';<integer> | inherit;2;yes
+'width';<length> | <percentage> | auto | inherit;auto;no
+'word-spacing';normal | <length> | inherit;normal;yes
+'z-index';auto | <integer> | inherit;auto;no
