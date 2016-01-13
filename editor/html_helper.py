@@ -246,7 +246,7 @@ def getTagAttributesDictionary():
     #dictionary {tagname:{attributename:{type:'',description:''}}}
     reader = csv.reader(htmlCsvAttributeData.split("\n"), delimiter=";", quotechar='"')
     for row in reader:
-        applies_to_tags = row[1].split(';')
+        applies_to_tags = row[1].replace(' ','').split(';')
         for tagname in applies_to_tags:
             if not tagname in htmlAttributeDict:
                 htmlAttributeDict[tagname] = {}
@@ -254,5 +254,5 @@ def getTagAttributesDictionary():
             attributeName = row[0]
             htmlAttributeDict[tagname][attributeName] = {}
             htmlAttributeDict[tagname][attributeName]['description'] = row[2]
-            htmlAttributeDict[tagname][attributeName]['type'] = row[3].split(';')
+            htmlAttributeDict[tagname][attributeName]['type'] = row[3].replace(' ','').split(';')
     return htmlAttributeDict

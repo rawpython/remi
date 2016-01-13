@@ -299,7 +299,7 @@ class Editor(App):
         super(Editor, self).__init__(*args)
 
     def main(self):
-        self.mainContainer = gui.Widget(950, 700, gui.Widget.LAYOUT_VERTICAL, 0)
+        self.mainContainer = gui.Widget(970, 700, gui.Widget.LAYOUT_VERTICAL, 0)
         self.mainContainer.style['background-color'] = 'white'
         self.mainContainer.style['border'] = 'none'
         
@@ -347,7 +347,7 @@ class Editor(App):
         m21.set_on_click_listener(self, 'menu_cut_selection_clicked')
         m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
         
-        self.subContainer = gui.Widget(950, 700, gui.Widget.LAYOUT_HORIZONTAL, 5)
+        self.subContainer = gui.Widget(970, 700, gui.Widget.LAYOUT_HORIZONTAL, 5)
         self.subContainer.style['background-color'] = 'transparent'
         
         #here are contained the widgets
@@ -359,7 +359,7 @@ class Editor(App):
                 document.getElementById(data[0]).style.left = parseInt(document.getElementById(data[0]).style.left) + event.clientX - data[1] + 'px';
                 document.getElementById(data[0]).style.top = parseInt(document.getElementById(data[0]).style.top) + event.clientY - data[2] + 'px';
                 return false;"""
-        self.attributeEditor = gui.Widget(180,600)
+        self.attributeEditor = editor_widgets.EditorAttributes(180, 600)
 
         self.mainContainer.append(menu)
         self.mainContainer.append(self.subContainer)
@@ -420,6 +420,11 @@ class Editor(App):
     def selected_widget(self, widgetId):
         self.selectedWidgetId = widgetId
         print('selected widget%s'%widgetId)
+        self.project.soup = BeautifulSoup(str(self.project.soup))
+        tag = self.project.soup.find(id='%s'%self.selectedWidgetId)
+        print(tag)
+        print("tagname: " + tag.name)
+        self.attributeEditor.set_tag( tag )
 
     def menu_new_clicked(self):
         self.project.new()
