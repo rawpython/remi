@@ -14,8 +14,7 @@
 
 import remi.gui as gui
 from remi import start, App
-import bs4
-from bs4 import BeautifulSoup
+import imp
 import os #for path handling
 import prototypes
 import editor_widgets
@@ -137,6 +136,46 @@ class WidgetCollection(gui.Widget):
         helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")
 
 
+proto_code_class = """
+class %(classname)s( %(superclassname)s ):
+    def __init__(self, *args):
+        super( %(classname)s, self ).__init__(*args)
+        %(nested_code)s
+"""
+proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        "
+proto_attribute_setup = "%(varname)s.attributes['%(attrname)s'] = '%(attrvalue)s'\n        "
+proto_layout_append = "%(parentname)s.append(%(varname)s)\n        "
+proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
+
+
+def repr_widget_for_editor(widget, widgetVarName): #widgetVarName is the name with which the parent calls this instance
+    code_classes = ''
+    code_nested = '' #the code strings to return
+    
+    newClass = self.attributes['editor_newclass'] == 'True'
+    classname =  'CLASS' + widgetVarName if newClass else self.__class__.__name__
+    
+    code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': self.attributes['editor_constructor']}
+    
+    if newClass:
+        widgetVarName = 'self'
+            
+    for key in self.attributes.keys():
+        code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': self.attributes[key]}
+    
+    children_code_nested = ''
+    for child_key in self.children.keys():
+        child_ret = repr_for_editor(self.children[child_key])
+        children_code_nested += child_ret[1]
+        code_classes = child_ret[0] + code_classes
+    
+    if newClass:
+        code_classes = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(self.__class__,self).__name__,
+                                                    'nested_code': children_code_nested }
+    
+    return (code_classes, code_nested)
+    
+
 class Project(gui.Widget):
     """ The editor project is pure html with specific tag attributes
         This class loads and save the project file, 
@@ -153,33 +192,24 @@ class Project(gui.Widget):
         self.soup = ''
 
         self.code_classes = ""
-        self.main_widget_tag = None
         #self.code_listenfunctions = ""
         self.code_resourcepath = "" #should be defined in the project configuration
         
         self.code_classes = {}
-
-    def repr_soup(self, client, include_children=True):
-        if self.soup!=None:
-            if 'soup' in self.children:
-                if self.children['soup'] != str(self.soup):
-                    self.add_child('soup', str(self.soup))
-            else:
-                self.add_child('soup', str(self.soup))
-        return super(Project,self).repr('', True) #str(self.soup)
-        
+    
     def new(self):
-        self.soup = BeautifulSoup('','html.parser')# super(Project,self).repr('', True) )
-        #overwrite repr function
-        self.repr = self.repr_soup
+        #remove the main widget
         
     def load(self, ifile): #ifile must be an html compatible format
         self.ifile = ifile
         #print("project name:%s"%os.path.basename(self.ifile))
-        self.project_name = os.path.basename(self.ifile).replace('.html','')
-        self.soup = BeautifulSoup( open( ifile ),'html.parser' )
+        self.project_name = os.path.basename(self.ifile).replace('.py','')
         
-    def save(self, html, _ifile=None): #the html will come back from the browser
+        _module = imp.load_source('project', self.ifile) #imp.load_source('module.name', '/path/to/file.py')
+        
+        self.append( _module.load_project(), "root" )
+        
+    def save(self, code, _ifile=None): #the html will come back from the browser
         if _ifile is None:
             ifile = self.ifile
         
@@ -190,62 +220,51 @@ class Project(gui.Widget):
         code_layoutings=''
         code_listeners=''
         if rootchild is None:
-            rootchild = self.soup
+            rootchild = self.children['root']
                 
         for child in rootchild.children: #.descendants:
             #compile it and recursively continue
             #the child can be a widget or a meta or a script, 
             # we can use an attribute in order to determine the type and parse it appropriately
             print('compiling tag: %s    of type: %s'%(str(child),type(child)))
-            if not hasattr(child,'attrs'):
+            if not hasattr(child,'attributes'):
                 #this is the case of a string that has no attributes
                 #if type(child)!=bs4.element.Tag:
                 #    code_constructors += "self.set_text('%s')"%str(child)
                 continue
-                
-            if not ('editor_tag_type' in child.attrs):
-                continue
             
             #here the childs are processed and the retrieved codeparts in childresult will be used later
             childresult = self.compile(save_path_filename, child)
-            
-            if child['editor_tag_type']=='widget':
-                #here the tag have to be parsed in order to find out the
-                #class name
-                #variable name
-                #contructor parameters
-                #<p constructor="(100,200,'asd')" newclass='True' class="Label" id="2" name="mylabel" editor_tag_type="widget" style="width:100px;height:30px;">Hello world!</p>
                 
-                #this is the case where the user want to create a new widget class
-                newclass = child['editor_newclass']=='True'
-                if newclass:
-                    #if this is a new class, the relative class code is assembled and stored
-                    #codeparts coming from the children take part to the class code assembling
-                    #if not child['id'] in self.code_classes:
-                    self.code_classes[child['id']] = {'classcode':'','layoutingscode':'','listenerscode':''}
-                    self.code_classes[child['id']]['classcode'] = prototypes.proto_code_class%{'classname':'Class'+child['editor_varname'], 'superclassname':child['class'][0], 'code_constructors':childresult[0], 'code_layoutings':childresult[1], 'code_listeners':childresult[2]}                    
-                    
-                    #considering the codeparts are added to this newclass, the codeparts are now resetted avoiding to apply them to other parents
-                    childresult = ('','','')
+            #this is the case where the user want to create a new widget class
+            newclass = child.attributes['editor_newclass']=='True'
+            if newclass:
+                #if this is a new class, the relative class code is assembled and stored
+                #codeparts coming from the children take part to the class code assembling
+                self.code_classes[child.attributes['id']] = {'classcode':'','layoutingscode':'','listenerscode':''}
+                self.code_classes[child.attributes['id']]['classcode'] = prototypes.proto_code_class%{'classname':'Class'+child.attributes['editor_varname'], 'superclassname':child.attributes['class'][0], 'code_constructors':childresult[0], 'code_layoutings':childresult[1], 'code_listeners':childresult[2]}                    
+               
+                #considering the codeparts are added to this newclass, the codeparts are now resetted avoiding to apply them to other parents
+                childresult = ('','','')
 
-                code_constructors += prototypes.proto_widget_allocation % {'varname':child['editor_varname'], 'classname':'Class'+child['editor_varname'], 'editor_constructor':child['editor_constructor']}
+            code_constructors += prototypes.proto_widget_allocation % {'varname':child.attributes['editor_varname'], 'classname':'Class'+child.attributes['editor_varname'], 'editor_constructor':child.attributes['editor_constructor']}
 
-                for attrname in child.attrs.keys():
-                    #the attributes are assigned to variable
-                    if attrname in prototypes.internally_used_attrbutes:
-                        continue
-                    attrvalue = child.attrs[attrname]
-                    code_constructors += prototypes.proto_attribute_setup % {'varname':child['editor_varname'],'attrname':attrname,'attrvalue':attrvalue}
-                if rootchild!=self.soup:
-                    code_layoutings += prototypes.proto_layout_append % {'parentname':'self', 'varname':child['editor_varname']}
+            for attrname in child.attributes.keys():
+                #the attributes are assigned to variable
+                if attrname in prototypes.internally_used_attrbutes:
+                    continue
+                attrvalue = child.attributes[attrname]
+                code_constructors += prototypes.proto_attribute_setup % {'varname':child.attributes['editor_varname'],'attrname':attrname,'attrvalue':attrvalue}
+            if isroot:
+                code_layoutings += prototypes.proto_layout_append % {'parentname':'self', 'varname':child.attributes['editor_varname']}
                     
                     
-            elif child['editor_tag_type']=='signal':
+            elif child.attributes['editor_tag_type']=='signal':
                 #<meta content="utf-8" editor_tag_type="signal" source="3" listener="0" register_function="set_on_click_listener" listener_function="on_click" listener_function_parameters="(self)"></meta>
                 source_tag = self.soup.find(id=child['source'])
                 
                 if not child['listener'] in self.code_classes:
-                    self.code_classes[child['listener']] = {'classcode':'','listenerscode':''}
+                    self.code_classes[child.attributes['listener']] = {'classcode':'','listenerscode':''}
                     
                 listener_name = 'self'
                 if child['listener'] != '0': #the zero is the main App instance
@@ -401,7 +420,7 @@ class Editor(App):
     def add_widget_to_editor(self, widget):
         print('soup: %s    type: %s'%(str(self.project.soup),str(type(self.project.soup))))
         self.configure_widget_for_editing(widget)
-        self.add_tag_to_soup(BeautifulSoup(widget.repr('',True)))
+        self.add_tag_to_soup(BeautifulSoup(widget.repr('',True), 'html.parser'))
     
     def on_attribute_change(self, attributeName, value):
         tag = self.project.soup.find(id='%s'%self.selectedWidgetId)
@@ -410,7 +429,7 @@ class Editor(App):
     def add_tag_to_soup(self, child):
         #without the following line, BeautifulSoup.find does not work
         #it seems that there is a problem with append on an empty BeautifulSoup
-        self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
+        #self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
         
         #it is not inserted the widget
         #instead we use its representation in order to edit on html
@@ -457,7 +476,7 @@ class Editor(App):
             self.project.compile(filename)
             
     def menu_cut_selection_clicked(self):
-        self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
+        #self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
         self.edit_cutted_tag = self.project.soup.find(id=self.selectedWidgetId).extract()
         print("tag cutted:" + str(self.edit_cutted_tag))
 
