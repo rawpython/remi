@@ -84,14 +84,13 @@ class EditorAttributes(gui.Widget):
     def set_on_attribute_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, listener, funcname)
         
-    def set_tag(self, tag):
-        #tag should be a BeautifulSoup
-        self.targetTag = tag
+    def set_widget(self, widget):
+        self.targetWidget = widget
         #filter the attributes checking if them applies to tag type
         #update the values of the editors checking if there is an actual value
         for child in self.children.values():
             if type(child) == EditorAttributeInput:
-                child.hide_if_not_applies(tag.name)
+                child.hide_if_not_applies(self.targetWidget.type)
 
 
 #widget that allows to edit a specific html attribute

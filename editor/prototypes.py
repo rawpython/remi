@@ -18,7 +18,7 @@ proto_code_class = """
 class %(classname)s( %(superclassname)s ):
     def __init__(self, *args):
         super( %(classname)s, self ).__init__(*args)
-        %(code_constructors)s%(code_layoutings)s%(code_listeners)s
+        %(nested_code)s
 """
 
 #function prototype
