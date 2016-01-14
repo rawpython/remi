@@ -60,18 +60,18 @@ class WidgetHelper(gui.ListItem):
         """
         self.appInstance = appInstance
         param_as_string_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
-        param_annotation_dict = self.widgetClass.__init__.__annotations__
+        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list')
         self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput(200,30))
         for param in param_as_string_list:
-            note = " (%s)"%param_annotation_dict[param] if param in param_annotation_dict.keys() else ""
+            note = ''#" (%s)"%param_annotation_dict[param] if param in param_annotation_dict.keys() else ""
             self.dialog.add_field_with_label(param, param + note, gui.TextInput(200,30))
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
         
     def on_dialog_confirm(self):
         param_as_string_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
-        param_annotation_dict = self.widgetClass.__init__.__annotations__
+        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
         for param in param_as_string_list:
             param_values.append(self.dialog.get_field(param).get_value())
@@ -169,7 +169,7 @@ class Project(gui.Widget):
         return super(Project,self).repr('', True) #str(self.soup)
         
     def new(self):
-        self.soup = BeautifulSoup()# super(Project,self).repr('', True) )
+        self.soup = BeautifulSoup('','html.parser')# super(Project,self).repr('', True) )
         #overwrite repr function
         self.repr = self.repr_soup
         
@@ -177,7 +177,7 @@ class Project(gui.Widget):
         self.ifile = ifile
         #print("project name:%s"%os.path.basename(self.ifile))
         self.project_name = os.path.basename(self.ifile).replace('.html','')
-        self.soup = BeautifulSoup( open( ifile ) )
+        self.soup = BeautifulSoup( open( ifile ),'html.parser' )
         
     def save(self, html, _ifile=None): #the html will come back from the browser
         if _ifile is None:
@@ -360,7 +360,7 @@ class Editor(App):
                 document.getElementById(data[0]).style.top = parseInt(document.getElementById(data[0]).style.top) + event.clientY - data[2] + 'px';
                 return false;"""
         self.attributeEditor = editor_widgets.EditorAttributes(180, 600)
-
+        self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
         self.mainContainer.append(menu)
         self.mainContainer.append(self.subContainer)
         
@@ -403,10 +403,14 @@ class Editor(App):
         self.configure_widget_for_editing(widget)
         self.add_tag_to_soup(BeautifulSoup(widget.repr('',True)))
     
+    def on_attribute_change(self, attributeName, value):
+        tag = self.project.soup.find(id='%s'%self.selectedWidgetId)
+        tag.attrs[attributeName] = value
+    
     def add_tag_to_soup(self, child):
         #without the following line, BeautifulSoup.find does not work
         #it seems that there is a problem with append on an empty BeautifulSoup
-        self.project.soup = BeautifulSoup(str(self.project.soup))
+        self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
         
         #it is not inserted the widget
         #instead we use its representation in order to edit on html
@@ -420,7 +424,7 @@ class Editor(App):
     def selected_widget(self, widgetId):
         self.selectedWidgetId = widgetId
         print('selected widget%s'%widgetId)
-        self.project.soup = BeautifulSoup(str(self.project.soup))
+        self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
         tag = self.project.soup.find(id='%s'%self.selectedWidgetId)
         print(tag)
         print("tagname: " + tag.name)
@@ -453,7 +457,7 @@ class Editor(App):
             self.project.compile(filename)
             
     def menu_cut_selection_clicked(self):
-        self.project.soup = BeautifulSoup(str(self.project.soup))
+        self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
         self.edit_cutted_tag = self.project.soup.find(id=self.selectedWidgetId).extract()
         print("tag cutted:" + str(self.edit_cutted_tag))
 
@@ -472,7 +476,7 @@ def onfocus_with_instance(self):
         
 if __name__ == "__main__":
     p = Project(0,0)
-    p.load('D:/remi/editor/editorApp.html')
+    p.load('./editorApp.html')
     p.compile(None)
     # starts the webserver
     # optional parameters

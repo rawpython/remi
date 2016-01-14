@@ -79,7 +79,7 @@ class EditorAttributes(gui.Widget):
     #this function is called by an EditorAttributeInput change event and propagates to the listeners 
     #adding as first parameter the tag to which it refers
     def onattribute_changed(self, attributeName, newValue):
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self, self.attributeName, newValue])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [attributeName, newValue])
         
     def set_on_attribute_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, listener, funcname)
@@ -92,6 +92,7 @@ class EditorAttributes(gui.Widget):
         for child in self.children.values():
             if type(child) == EditorAttributeInput:
                 child.hide_if_not_applies(tag.name)
+
 
 #widget that allows to edit a specific html attribute
 #   it has a descriptive label, an edit widget (TextInput, SpinBox) based on the 'type' and a title 
