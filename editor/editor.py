@@ -142,23 +142,29 @@ def repr_widget_for_editor(widget): #widgetVarName is the name with which the pa
     
     if not hasattr( widget, 'attributes' ):
         return ('','')
+        
     widgetVarName = widget.attributes['editor_varname']
     newClass = widget.attributes['editor_newclass'] == 'True'
     classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
     
     code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor']}
     
-    if newClass:
-        widgetVarName = 'self'
-            
     for key in widget.attributes.keys():
         code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
     
+    if newClass:
+        widgetVarName = 'self'
+            
     children_code_nested = ''
     for child_key in widget.children.keys():
-        child_ret = repr_widget_for_editor(widget.children[child_key])
+        child = widget.children[child_key]
+        if type(child)==str:
+            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
+            continue
+        child_ret = repr_widget_for_editor(child)
         children_code_nested += child_ret[1]
         code_classes = child_ret[0] + code_classes
+        children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':child.attributes['editor_varname']}
     
     if newClass:
         code_classes = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
@@ -201,11 +207,7 @@ class Project(gui.Widget):
         
         self.append( _module.load_project(), "root" )
         
-    def save(self, code, _ifile=None): #the html will come back from the browser
-        if _ifile is None:
-            ifile = self.ifile
-        
-    def compile(self, save_path_filename, rootchild=None): 
+    def save(self, save_path_filename, rootchild=None): 
         #the first child is the soup
         #returns code_constructors,code_layoutings, ode_listeners
         compiled_code=''
@@ -221,7 +223,7 @@ class Project(gui.Widget):
                                                         'code_constructors':code_constructors, 
                                                         'code_layoutings':code_layoutings, 
                                                         'code_listeners':code_listeners,
-                                                        'mainwidgetname':''}#child['editor_varname']}
+                                                        'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
         compiled_code += main_code_class
         print(compiled_code)
@@ -249,13 +251,11 @@ class Editor(App):
         m11 = gui.MenuItem(100, 30, 'Open')
         m12 = gui.MenuItem(100, 30, 'Save')
         #m12.style['visibility'] = 'hidden'
-        m13 = gui.MenuItem(100, 30, 'Compile')
         m121 = gui.MenuItem(100, 30, 'Save')
         m122 = gui.MenuItem(100, 30, 'Save as')
         m1.append(m10)
         m1.append(m11)
         m1.append(m12)
-        m1.append(m13)
         m12.append(m121)
         m12.append(m122)
         
@@ -272,18 +272,13 @@ class Editor(App):
         self.fileOpenDialog.set_on_confirm_value_listener(self, 'on_open_dialog_confirm')
         
         self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog(600, 310, 'Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
-        self.fileSaveAsDialog.add_fileinput_field('untitled.html')
+        self.fileSaveAsDialog.add_fileinput_field('untitled.py')
         self.fileSaveAsDialog.set_on_confirm_value_listener(self, 'on_saveas_dialog_confirm')        
-        
-        self.fileCompileDialog = editor_widgets.EditorFileSaveDialog(600, 310, 'Project Compile', 'Select the folder and type a filename (extension .py)', False, '.', False, True, self)
-        self.fileCompileDialog.add_fileinput_field('untitled.py')
-        self.fileCompileDialog.set_on_confirm_value_listener(self, 'on_compile_dialog_confirm')        
-        
+
         m10.set_on_click_listener(self, 'menu_new_clicked')
         m11.set_on_click_listener(self.fileOpenDialog, 'show')
         m121.set_on_click_listener(self, 'menu_save_clicked')
         m122.set_on_click_listener(self.fileSaveAsDialog, 'show')
-        m13.set_on_click_listener(self.fileCompileDialog, 'show')
         m21.set_on_click_listener(self, 'menu_cut_selection_clicked')
         m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
         
@@ -293,12 +288,20 @@ class Editor(App):
         #here are contained the widgets
         self.widgetsCollection = WidgetCollection(180, 600, self)
         self.project = Project(580, 600)
-        self.project.attributes['ondragover'] = "event.preventDefault();"  
+        self.project.attributes['ondragover'] = "event.preventDefault();"
+        
+        self.EVENT_ONDROPPPED = "on_dropped"
         self.project.attributes['ondrop'] = """event.preventDefault();
                 var data = JSON.parse(event.dataTransfer.getData('application/json'));
                 document.getElementById(data[0]).style.left = parseInt(document.getElementById(data[0]).style.left) + event.clientX - data[1] + 'px';
                 document.getElementById(data[0]).style.top = parseInt(document.getElementById(data[0]).style.top) + event.clientY - data[2] + 'px';
-                return false;"""
+                
+                var params={};params['left']=document.getElementById(data[0]).style.left;
+                params['top']=document.getElementById(data[0]).style.top;
+                sendCallbackParam(data[0],'%(evt)s',params);
+                
+                return false;""" % {'evt':self.EVENT_ONDROPPPED}
+                
         self.attributeEditor = editor_widgets.EditorAttributes(180, 600)
         self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
         self.mainContainer.append(menu)
@@ -327,8 +330,9 @@ class Editor(App):
     def configure_widget_for_editing(self, widget):
         typefunc = type(widget.onfocus)
         widget.onfocus = typefunc(onfocus_with_instance, widget)
-        
         widget.set_on_focus_listener(self, "on_widget_selection")
+        
+        widget.__class__.on_dropped = on_dropped
 
         widget.attributes['contentEditable']='true';
         widget.attributes['tabindex']=str(self.tabindex)
@@ -336,7 +340,8 @@ class Editor(App):
     
     def add_widget_to_editor(self, widget):
         self.configure_widget_for_editing(widget)
-        self.selectedWidget.append(widget)
+        key = "root" if self.selectedWidget==self.project else None
+        self.selectedWidget.append(widget,key)
         
     def on_attribute_change(self, attributeName, value):
         self.selectedWidget.attributes[attributeName] = value
@@ -362,14 +367,8 @@ class Editor(App):
     def on_saveas_dialog_confirm(self, path):
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
-            print("file:%s"%filename)
+            print("file:%s"%self.projectPathFilename)
             self.project.save(self.projectPathFilename)
-        
-    def on_compile_dialog_confirm(self, path):
-        if len(path):
-            filename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
-            print("file:%s"%filename)
-            self.project.compile(filename)
             
     def menu_cut_selection_clicked(self):
         #self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
@@ -388,11 +387,14 @@ def onfocus_with_instance(self):
     return self.eventManager.propagate(self.EVENT_ONFOCUS, [self])
 #def onclick_with_instance(self):
 #    return self.eventManager.propagate(self.EVENT_ONCLICK, [str(id(self))])
-        
+def on_dropped(self, left, top):
+    self.style['left']=left
+    self.style['top']=top
+
 if __name__ == "__main__":
     p = Project(0,0)
     p.load('./example_project.py')
-    p.compile(None)
+    p.save(None)
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
