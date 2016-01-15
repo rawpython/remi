@@ -29,9 +29,10 @@ proto_code_main_class = """
 class %(classname)s(App):
     def __init__(self, *args):
         super(%(classname)s, self).__init__(*args, static_paths=('%(code_resourcepath)s',))
-
+    
+    @staticmethod
     def main(self):
-        %(code_constructors)s%(code_layoutings)s%(code_listeners)s
+        %(code_nested)s
         return %(mainwidgetname)s
     
 """

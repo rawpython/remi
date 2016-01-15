@@ -15,6 +15,8 @@
 import remi.gui as gui
 from remi import start, App
 import imp
+import inspect
+import sys
 import os #for path handling
 import prototypes
 import editor_widgets
@@ -136,43 +138,6 @@ class WidgetCollection(gui.Widget):
         helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")
 
 
-def repr_widget_for_editor(widget): #widgetVarName is the name with which the parent calls this instance
-    code_classes = ''
-    code_nested = '' #the code strings to return
-    
-    if not hasattr( widget, 'attributes' ):
-        return ('','')
-        
-    widgetVarName = widget.attributes['editor_varname']
-    newClass = widget.attributes['editor_newclass'] == 'True'
-    classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
-    
-    code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor']}
-    
-    for key in widget.attributes.keys():
-        code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
-    
-    if newClass:
-        widgetVarName = 'self'
-            
-    children_code_nested = ''
-    for child_key in widget.children.keys():
-        child = widget.children[child_key]
-        if type(child)==str:
-            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
-            continue
-        child_ret = repr_widget_for_editor(child)
-        children_code_nested += child_ret[1]
-        code_classes = child_ret[0] + code_classes
-        children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':child.attributes['editor_varname']}
-    
-    if newClass:
-        code_classes = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
-                                                    'nested_code': children_code_nested }
-    
-    return (code_classes, code_nested)
-    
-
 class Project(gui.Widget):
     """ The editor project is pure html with specific tag attributes
         This class loads and save the project file, 
@@ -186,13 +151,6 @@ class Project(gui.Widget):
         self.style['overflow'] = 'scroll'
         self.style['background-color'] = 'gray'
         self.style['background-image'] = "url( '/res/bg.png' );"
-        self.soup = ''
-
-        self.code_classes = ""
-        #self.code_listenfunctions = ""
-        self.code_resourcepath = "" #should be defined in the project configuration
-        
-        self.code_classes = {}
     
     def new(self):
         #remove the main widget
@@ -205,35 +163,76 @@ class Project(gui.Widget):
         
         _module = imp.load_source('project', self.ifile) #imp.load_source('module.name', '/path/to/file.py')
         
-        self.append( _module.load_project(), "root" )
+        #finding App class
+        clsmembers = inspect.getmembers(_module, inspect.isclass)
+        for (name, value) in clsmembers:
+            #print(name + "    " + str(issubclass(value,App)) )
+            if issubclass(value,App) and name!='App':
+                #self.append( _module.load_project(), "root" )
+                self.append(value.main(gui.Widget()), "root")
+                break
         
+    def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
+        code_nested = '' #the code strings to return
+        
+        if not hasattr( widget, 'attributes' ):
+            return '' #no nested code
+            
+        widgetVarName = widget.attributes['editor_varname']
+        newClass = widget.attributes['editor_newclass'] == 'True'
+        classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
+        
+        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor']}
+        
+        for key in widget.attributes.keys():
+            code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
+        
+        if newClass:
+            widgetVarName = 'self'
+                
+        children_code_nested = ''
+        for child_key in widget.children.keys():
+            child = widget.children[child_key]
+            if type(child)==str:
+                children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
+                continue
+            ret = self.repr_widget_for_editor(child)
+            children_code_nested += ret
+            #code_classes = child_ret[0] + code_classes
+            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':child.attributes['editor_varname']}
+        
+        if newClass and not (classname in self.code_declared_classes.keys()):
+            code_classes = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
+                                                        'nested_code': children_code_nested }
+            self.code_declared_classes[classname] = code_classes
+        return code_nested
+
     def save(self, save_path_filename, rootchild=None): 
-        #the first child is the soup
-        #returns code_constructors,code_layoutings, ode_listeners
-        compiled_code=''
-        code_constructors=''
-        code_layoutings=''
-        code_listeners=''
+        self.code_resourcepath = "" #should be defined in the project configuration
+        self.code_declared_classes = {}
         
-        ret = repr_widget_for_editor( self.children['root'] )
-        compiled_code = ret[0]
-        code_constructors = ret[1]
+        compiled_code = ''
+        code_classes = ''
+        
+        ret = self.repr_widget_for_editor( self.children['root'] )
+        code_nested = ret
         main_code_class = prototypes.proto_code_main_class%{'classname':self.project_name,
                                                         'code_resourcepath':self.code_resourcepath,
-                                                        'code_constructors':code_constructors, 
-                                                        'code_layoutings':code_layoutings, 
-                                                        'code_listeners':code_listeners,
+                                                        'code_nested':code_nested, 
                                                         'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
-        compiled_code += main_code_class
+        for code_class in self.code_declared_classes.values():
+            code_classes += code_class
+        
+        code_classes += main_code_class
+        compiled_code = prototypes.proto_code_program%{'code_classes':code_classes,
+                                                       'classname':self.project_name}
+        
         print(compiled_code)
         if save_path_filename!=None:
             f = open(save_path_filename, "w")
             f.write(compiled_code)
             f.close()
-            
-        #returning code parts to the parent
-        return ""
         
         
 class Editor(App):

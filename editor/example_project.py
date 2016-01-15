@@ -6,6 +6,7 @@ class example_project(App):
     def __init__(self, *args):
         super(example_project, self).__init__(*args)
 
+    @staticmethod
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
         wid = gui.Widget(120, 100, False, 10)
@@ -41,7 +42,3 @@ if __name__ == "__main__":
     # optional parameters
     # start(example_project,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
     start(example_project, debug=False)
-    
-
-def load_project():
-    return example_project.main(gui.Widget())
