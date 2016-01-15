@@ -169,7 +169,8 @@ class Project(gui.Widget):
             #print(name + "    " + str(issubclass(value,App)) )
             if issubclass(value,App) and name!='App':
                 #self.append( _module.load_project(), "root" )
-                self.append(value.main(gui.Widget()), "root")
+                self.fake_app_instance = gui.Widget()
+                self.append(value.main(self.fake_app_instance), "root")
                 break
         
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
@@ -182,7 +183,7 @@ class Project(gui.Widget):
         newClass = widget.attributes['editor_newclass'] == 'True'
         classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
         
-        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor']}
+        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':str(id(widget))}
         
         for key in widget.attributes.keys():
             code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
@@ -200,16 +201,18 @@ class Project(gui.Widget):
                 print(membername)
                 #if the member is decorated by decorate_set_on_listener
                 if hasattr(membervalue, '_event_listener') and membervalue._event_listener['eventName']==registered_event_name:
-                    eventName = membervalue._event_listener['eventName']
                     listenerPrototype = membervalue._event_listener['prototype']
                     #proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
-                    code_nested += prototypes.proto_set_listener%{'sourcename':widgetVarName, 
+                    listener_id = str(id(listener)) if self.fake_app_instance!=listener else '0'
+                    self.code_listener_registration += prototypes.proto_set_listener%{'sourcename':"editor_listener_instances['%s']"%str(id(widget)), 
                                                                   'register_function': membername,
-                                                                  'listenername': 'editor_listener_instances[%s]'%listener.attributes['editor_listener_instances_id'],
+                                                                  'listenername': "editor_listener_instances['%s']"%listener_id,
                                                                   'listener_function': listenerFunctionName}
                     #proto_code_function = "    def %(funcname)s%(parameters)s:\n        pass\n\n"
-                    #self.code_declared_classes[listener.attributes['editor_varname']] += prototypes.proto_code_function%{'funcname': listenerFunctionName,
-                    #                                                                'parameters': listenerPrototype}
+                    if not listener_id in self.code_declared_classes:
+                        self.code_declared_classes[listener_id] = '' 
+                    self.code_declared_classes[listener_id] += prototypes.proto_code_function%{'funcname': listenerFunctionName,
+                                                                                    'parameters': listenerPrototype}
                     
         if newClass:
             widgetVarName = 'self'
@@ -225,26 +228,32 @@ class Project(gui.Widget):
             #code_classes = child_ret[0] + code_classes
             children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':child.attributes['editor_varname']}
         
-        if newClass and not (classname in self.code_declared_classes.keys()):
+        if newClass:# and not (classname in self.code_declared_classes.keys()):
+            if not str(id(widget)) in self.code_declared_classes:
+                self.code_declared_classes[str(id(widget))] = ''
             code_classes = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
                                                         'nested_code': children_code_nested }
-            self.code_declared_classes[classname] = code_classes
+            self.code_declared_classes[str(id(widget))] = code_classes + self.code_declared_classes[str(id(widget))]
         return code_nested
 
     def save(self, save_path_filename, rootchild=None): 
         self.code_resourcepath = "" #should be defined in the project configuration
         self.code_declared_classes = {}
-        
+        self.code_listener_registration = ''
         compiled_code = ''
         code_classes = ''
         
         ret = self.repr_widget_for_editor( self.children['root'] )
-        code_nested = ret
+        code_nested = ret + self.code_listener_registration
         main_code_class = prototypes.proto_code_main_class%{'classname':self.project_name,
                                                         'code_resourcepath':self.code_resourcepath,
                                                         'code_nested':code_nested, 
                                                         'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
+        if '0' in self.code_declared_classes.keys():
+            main_code_class += self.code_declared_classes['0']
+            del self.code_declared_classes['0'] 
+        
         for code_class in self.code_declared_classes.values():
             code_classes += code_class
         

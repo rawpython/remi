@@ -6,7 +6,6 @@ editor_listener_instances = {}
 def registerEditorListener(instance, key):
     global editor_listener_instances
     editor_listener_instances[key] = instance
-    instance.attributes['editor_listener_instances_id'] = key
 
 class example_project(App):
     def __init__(self, *args):
@@ -19,7 +18,6 @@ class example_project(App):
         
         wid = gui.Widget(120, 100, False, 10)
         registerEditorListener(wid,str(id(wid)))
-        wid.attributes['editor_listener_instances_id'] = str(id(wid))
         wid.attributes['editor_varname'] = "wid"
         wid.attributes['editor_newclass'] = "True"
         wid.attributes['editor_constructor'] = "(120, 100, False, 10)"

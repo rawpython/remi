@@ -10,7 +10,6 @@ editor_listener_instances = {} #editor_listener_instances_id, instance
 def registerEditorListener(instance, key):
     global editor_listener_instances
     editor_listener_instances[key] = instance
-    instance.attributes['editor_listener_instances_id'] = key
     
 %(code_classes)s
     
@@ -46,7 +45,7 @@ class %(classname)s(App):
     
 """
 
-proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        registerEditorListener(%(varname)s,%(varname)s.attributes['id'])\n        "
+proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        registerEditorListener(%(varname)s,'%(editor_instance_id)s')\n        "
 
 proto_attribute_setup = "%(varname)s.attributes['%(attrname)s'] = '%(attrvalue)s'\n        "
 
