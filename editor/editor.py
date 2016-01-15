@@ -195,13 +195,14 @@ class Project(gui.Widget):
                                          append the listener prototype to the self.code_declared_classes[listener instance] class declaration 
         """
         for registered_event_name in widget.eventManager.listeners.keys():
-            listener = widget.eventManager.listeners[registered_event_name]['instance']
-            listenerFunctionName = widget.eventManager.listeners[registered_event_name]['funcname']
             for (membername,membervalue) in inspect.getmembers(widget, predicate=inspect.ismethod):
-                print(membername)
                 #if the member is decorated by decorate_set_on_listener
                 if hasattr(membervalue, '_event_listener') and membervalue._event_listener['eventName']==registered_event_name:
                     listenerPrototype = membervalue._event_listener['prototype']
+                    
+                    listener = widget.eventManager.listeners[registered_event_name]['instance']
+                    listenerFunctionName = membervalue._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
+                    
                     #proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
                     listener_id = str(id(listener)) if self.fake_app_instance!=listener else '0'
                     self.code_listener_registration += prototypes.proto_set_listener%{'sourcename':"editor_listener_instances['%s']"%str(id(widget)), 
