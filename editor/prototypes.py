@@ -6,6 +6,12 @@ proto_code_program = """
 import remi.gui as gui
 from remi import start, App
 
+editor_listener_instances = {} #editor_listener_instances_id, instance
+def registerEditorListener(instance, key):
+    global editor_listener_instances
+    editor_listener_instances[key] = instance
+    instance.attributes['editor_listener_instances_id'] = key
+    
 %(code_classes)s
     
 if __name__ == "__main__":
@@ -32,12 +38,15 @@ class %(classname)s(App):
     
     @staticmethod
     def main(self):
+        global editor_listener_instances
+        registerEditorListener(self,'0')
+        
         %(code_nested)s
         return %(mainwidgetname)s
     
 """
 
-proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        "
+proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        registerEditorListener(%(varname)s,%(varname)s.attributes['id'])\n        "
 
 proto_attribute_setup = "%(varname)s.attributes['%(attrname)s'] = '%(attrvalue)s'\n        "
 

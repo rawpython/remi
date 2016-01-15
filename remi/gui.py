@@ -24,8 +24,9 @@ log = logging.getLogger('remi.gui')
 def decorate_set_on_listener(eventName, params):
     """ setup important informations for editor purpose """
     def add_annotation(function):
-        function._event_listener['prototype'] = params
+        function._event_listener = {}
         function._event_listener['eventName'] = eventName
+        function._event_listener['prototype'] = params
         return function
     return add_annotation
     

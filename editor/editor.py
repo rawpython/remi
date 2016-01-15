@@ -187,6 +187,30 @@ class Project(gui.Widget):
         for key in widget.attributes.keys():
             code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
         
+        """for all registered events, find the instance of the listener, 
+                                         the register function of this widget
+                                         the listener prototypes
+                                      then append the set_on register call to code_nested
+                                         append the listener prototype to the self.code_declared_classes[listener instance] class declaration 
+        """
+        for registered_event_name in widget.eventManager.listeners.keys():
+            listener = widget.eventManager.listeners[registered_event_name]['instance']
+            listenerFunctionName = widget.eventManager.listeners[registered_event_name]['funcname']
+            for (membername,membervalue) in inspect.getmembers(widget, predicate=inspect.ismethod):
+                print(membername)
+                #if the member is decorated by decorate_set_on_listener
+                if hasattr(membervalue, '_event_listener') and membervalue._event_listener['eventName']==registered_event_name:
+                    eventName = membervalue._event_listener['eventName']
+                    listenerPrototype = membervalue._event_listener['prototype']
+                    #proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
+                    code_nested += prototypes.proto_set_listener%{'sourcename':widgetVarName, 
+                                                                  'register_function': membername,
+                                                                  'listenername': 'editor_listener_instances[%s]'%listener.attributes['editor_listener_instances_id'],
+                                                                  'listener_function': listenerFunctionName}
+                    #proto_code_function = "    def %(funcname)s%(parameters)s:\n        pass\n\n"
+                    #self.code_declared_classes[listener.attributes['editor_varname']] += prototypes.proto_code_function%{'funcname': listenerFunctionName,
+                    #                                                                'parameters': listenerPrototype}
+                    
         if newClass:
             widgetVarName = 'self'
                 
