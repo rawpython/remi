@@ -1,12 +1,6 @@
 import remi.gui as gui
 from remi import start, App
 
-editor_listener_instances = {}
-
-def registerEditorListener(instance, key):
-    global editor_listener_instances
-    editor_listener_instances[key] = instance
-
 class example_project(App):
     def __init__(self, *args):
         super(example_project, self).__init__(*args)
@@ -14,20 +8,19 @@ class example_project(App):
     @staticmethod
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        registerEditorListener(self,'0')
-        
+        mainContainer = gui.Widget(120, 100, False, 10)
+        mainContainer.attributes['editor_varname'] = "mainContainer"
+        mainContainer.attributes['editor_newclass'] = "True"
+        mainContainer.attributes['editor_constructor'] = "(120, 100, False, 10)"
         wid = gui.Widget(120, 100, False, 10)
-        registerEditorListener(wid,str(id(wid)))
         wid.attributes['editor_varname'] = "wid"
         wid.attributes['editor_newclass'] = "True"
         wid.attributes['editor_constructor'] = "(120, 100, False, 10)"
         self.lbl = gui.Label(100, 30, 'Hello %s!' % name)
-        registerEditorListener(self.lbl,str(id(self.lbl)))
         self.lbl.attributes['editor_varname'] = "lbl"
         self.lbl.attributes['editor_newclass'] = "False"
         self.lbl.attributes['editor_constructor'] = "(100, 30, 'Hello %s!' % name)"
         self.bt = gui.Button(100, 30, 'Press me!')
-        registerEditorListener(self.bt,str(id(self.bt)))
         self.bt.attributes['editor_varname'] = "bt"
         self.bt.attributes['editor_newclass'] = "False"
         self.bt.attributes['editor_constructor'] = "(100, 30, 'Press me!')"
@@ -37,9 +30,9 @@ class example_project(App):
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)
         wid.append(self.bt)
-
+        mainContainer.append(wid)
         # returning the root widget
-        return wid
+        return mainContainer
 
     # listener function
     def on_button_pressed(self):

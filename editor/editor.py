@@ -13,6 +13,7 @@
 """
 
 import remi.gui as gui
+import remi.server
 from remi import start, App
 import imp
 import inspect
@@ -169,11 +170,44 @@ class Project(gui.Widget):
             #print(name + "    " + str(issubclass(value,App)) )
             if issubclass(value,App) and name!='App':
                 #self.append( _module.load_project(), "root" )
-                self.fake_app_instance = gui.Widget()
-                self.append(value.main(self.fake_app_instance), "root")
-                break
+                self.append(value.main(self), "root")
+                break                                             
+            
+    def check_pending_listeners(self, widget, widgetVarName, force=False):
+        code_nested_listener = ''
+        #checking if pending listeners code production can be solved
+        for w in self.pending_listener_registration.keys():
+            event = self.pending_listener_registration[w]
+            #print("widget: %s   source:%s    listener:%s"%(str(id(widget)),event['eventsource'].path_to_this_widget,event['eventlistener'].path_to_this_widget))
+            if force or (hasattr(event['eventsource'],'path_to_this_widget') and hasattr(event['eventlistener'],'path_to_this_widget')):
+                if (force or (str(id(widget)) in event['eventsource'].path_to_this_widget and str(id(widget)) in event['eventlistener'].path_to_this_widget)) and self.pending_listener_registration[w]['done']==False:
+                    #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
+                    self.pending_listener_registration[w]['done'] = True
+                    
+                    event['eventsource'].path_to_this_widget = list(set(event['eventsource'].path_to_this_widget) - set(widget.path_to_this_widget))
+                    event['eventlistener'].path_to_this_widget = list(set(event['eventlistener'].path_to_this_widget) - set(widget.path_to_this_widget))
+                    
+                    sourcename = "self.children['" + "'].children['".join(event['eventsource'].path_to_this_widget) + "']"
+                    listenername = "self.children['" + "'].children['".join(event['eventlistener'].path_to_this_widget) + "']"
+                    if event['eventlistener'] == widget:
+                        listenername = widgetVarName
+                    code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
+                                                'register_function':  event['setoneventfuncname'],
+                                                'listenername': listenername,
+                                                'listener_function': event['listenerfuncname']}                
+                    if not str(id(event['eventlistener'])) in self.code_declared_classes:
+                        self.code_declared_classes[str(id(event['eventlistener']))] = ''
+                    self.code_declared_classes[str(id(event['eventlistener']))] += event['listenerClassFunction']
+        return code_nested_listener
         
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
+        if hasattr(widget, 'path_to_this_widget'):
+            widget.path_to_this_widget.append( str(id(widget)) )
+        else:
+            widget.path_to_this_widget = [str(id(widget)),]
+        
+        print(widget.attributes['editor_varname'])
+        
         code_nested = '' #the code strings to return
         
         if not hasattr( widget, 'attributes' ):
@@ -188,32 +222,23 @@ class Project(gui.Widget):
         for key in widget.attributes.keys():
             code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
         
-        """for all registered events, find the instance of the listener, 
-                                         the register function of this widget
-                                         the listener prototypes
-                                      then append the set_on register call to code_nested
-                                         append the listener prototype to the self.code_declared_classes[listener instance] class declaration 
-        """
+        
+        #for all the events of this widget
         for registered_event_name in widget.eventManager.listeners.keys():
-            for (membername,membervalue) in inspect.getmembers(widget, predicate=inspect.ismethod):
-                #if the member is decorated by decorate_set_on_listener
-                if hasattr(membervalue, '_event_listener') and membervalue._event_listener['eventName']==registered_event_name:
-                    listenerPrototype = membervalue._event_listener['prototype']
-                    
+            #for all the function of this widget
+            for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget, predicate=inspect.ismethod):
+                #if the member is decorated by decorate_set_on_listener and the function is referred to this event
+                if hasattr(setOnEventListenerFunc, '_event_listener') and setOnEventListenerFunc._event_listener['eventName']==registered_event_name:
+                    listenerPrototype = setOnEventListenerFunc._event_listener['prototype']
                     listener = widget.eventManager.listeners[registered_event_name]['instance']
-                    listenerFunctionName = membervalue._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
+                    listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
                     
-                    #proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
-                    listener_id = str(id(listener)) if self.fake_app_instance!=listener else '0'
-                    self.code_listener_registration += prototypes.proto_set_listener%{'sourcename':"editor_listener_instances['%s']"%str(id(widget)), 
-                                                                  'register_function': membername,
-                                                                  'listenername': "editor_listener_instances['%s']"%listener_id,
-                                                                  'listener_function': listenerFunctionName}
-                    #proto_code_function = "    def %(funcname)s%(parameters)s:\n        pass\n\n"
-                    if not listener_id in self.code_declared_classes:
-                        self.code_declared_classes[listener_id] = '' 
-                    self.code_declared_classes[listener_id] += prototypes.proto_code_function%{'funcname': listenerFunctionName,
-                                                                                    'parameters': listenerPrototype}
+                    listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
+                                                                            'parameters': listenerPrototype}
+                    self.pending_listener_registration[widget] = {'done':False,'eventsource':widget, 'eventlistener':listener,
+                     'setoneventfuncname':setOnEventListenerFuncname,
+                     'listenerfuncname': listenerFunctionName,
+                     'listenerClassFunction':listenerClassFunction}
                     
         if newClass:
             widgetVarName = 'self'
@@ -224,38 +249,46 @@ class Project(gui.Widget):
             if type(child)==str:
                 children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
                 continue
-            ret = self.repr_widget_for_editor(child)
-            children_code_nested += ret
-            #code_classes = child_ret[0] + code_classes
-            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':child.attributes['editor_varname']}
+            child.path_to_this_widget = widget.path_to_this_widget[:]
+            children_code_nested += self.repr_widget_for_editor(child)
+            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"%s,'%s'"%(child.attributes['editor_varname'],str(id(child)))}
         
+        children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
+                        
         if newClass:# and not (classname in self.code_declared_classes.keys()):
             if not str(id(widget)) in self.code_declared_classes:
                 self.code_declared_classes[str(id(widget))] = ''
-            code_classes = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
-                                                        'nested_code': children_code_nested }
-            self.code_declared_classes[str(id(widget))] = code_classes + self.code_declared_classes[str(id(widget))]
+            self.code_declared_classes[str(id(widget))] = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
+                                                        'nested_code': children_code_nested } + self.code_declared_classes[str(id(widget))]
+        else:
+            code_nested = code_nested + children_code_nested
+        
         return code_nested
 
     def save(self, save_path_filename, rootchild=None): 
         self.code_resourcepath = "" #should be defined in the project configuration
         self.code_declared_classes = {}
-        self.code_listener_registration = ''
+        self.pending_listener_registration = {}
+
+        self.pending_signals_to_connect = list() #a list containing dicts {listener, emitter, register_function, listener_function}
         compiled_code = ''
         code_classes = ''
         
         ret = self.repr_widget_for_editor( self.children['root'] )
-        code_nested = ret + self.code_listener_registration
+        self.path_to_this_widget = []
+        code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
         main_code_class = prototypes.proto_code_main_class%{'classname':self.project_name,
                                                         'code_resourcepath':self.code_resourcepath,
                                                         'code_nested':code_nested, 
                                                         'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
-        if '0' in self.code_declared_classes.keys():
-            main_code_class += self.code_declared_classes['0']
-            del self.code_declared_classes['0'] 
-        
-        for code_class in self.code_declared_classes.values():
+        if str(id(self)) in self.code_declared_classes.keys():
+            main_code_class += self.code_declared_classes[str(id(self))]
+            del self.code_declared_classes[str(id(self))]
+            
+        for key in self.code_declared_classes.keys():
+            code_class = self.code_declared_classes[key]
+            code_listener_setting = ''
             code_classes += code_class
         
         code_classes += main_code_class
