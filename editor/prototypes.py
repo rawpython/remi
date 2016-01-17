@@ -39,7 +39,9 @@ class %(classname)s(App):
 
 proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        "
 
-proto_attribute_setup = "%(varname)s.attributes['%(attrname)s'] = '%(attrvalue)s'\n        "
+proto_attribute_setup = """%(varname)s.attributes['%(attrname)s'] = "%(attrvalue)s"\n        """
+
+proto_style_setup = """%(varname)s.style['%(attrname)s'] = "%(attrvalue)s"\n        """
 
 proto_layout_append = "%(parentname)s.append(%(varname)s)\n        "
 

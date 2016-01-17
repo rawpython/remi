@@ -226,6 +226,8 @@ class Project(gui.Widget):
         
         for key in widget.attributes.keys():
             code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
+        for key in widget.style.keys():
+            code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.style[key]}
         
         
         #for all the events of this widget
