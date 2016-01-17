@@ -26,7 +26,7 @@ class example_project(App):
         self.bt.attributes['editor_constructor'] = "(100, 30, 'Press me!')"
         
         self.bt.set_on_click_listener(self, 'on_button_pressed')
-
+        self.bt.set_on_contextmenu_listener(self, 'asd')
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)
         wid.append(self.bt)

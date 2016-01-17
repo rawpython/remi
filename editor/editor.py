@@ -176,19 +176,24 @@ class Project(gui.Widget):
     def check_pending_listeners(self, widget, widgetVarName, force=False):
         code_nested_listener = ''
         #checking if pending listeners code production can be solved
-        for w in self.pending_listener_registration.keys():
-            event = self.pending_listener_registration[w]
+        for event in self.pending_listener_registration:
             #print("widget: %s   source:%s    listener:%s"%(str(id(widget)),event['eventsource'].path_to_this_widget,event['eventlistener'].path_to_this_widget))
             if force or (hasattr(event['eventsource'],'path_to_this_widget') and hasattr(event['eventlistener'],'path_to_this_widget')):
-                if (force or (str(id(widget)) in event['eventsource'].path_to_this_widget and str(id(widget)) in event['eventlistener'].path_to_this_widget)) and self.pending_listener_registration[w]['done']==False:
+                if (force or (str(id(widget)) in event['eventsource'].path_to_this_widget and str(id(widget)) in event['eventlistener'].path_to_this_widget)) and event['done']==False:
                     #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
-                    self.pending_listener_registration[w]['done'] = True
+                    event['done'] = True
                     
-                    event['eventsource'].path_to_this_widget = list(set(event['eventsource'].path_to_this_widget) - set(widget.path_to_this_widget))
-                    event['eventlistener'].path_to_this_widget = list(set(event['eventlistener'].path_to_this_widget) - set(widget.path_to_this_widget))
+                    source_filtered_path=event['eventsource'].path_to_this_widget[:]
+                    listener_filtered_path=event['eventlistener'].path_to_this_widget[:]
+                    for v in widget.path_to_this_widget:
+                        if v in source_filtered_path:
+                            source_filtered_path.remove(v)
+                            listener_filtered_path.remove(v)
+                    event['eventsource'].path_to_this_widget = source_filtered_path
+                    event['eventlistener'].path_to_this_widget = listener_filtered_path
                     
-                    sourcename = "self.children['" + "'].children['".join(event['eventsource'].path_to_this_widget) + "']"
-                    listenername = "self.children['" + "'].children['".join(event['eventlistener'].path_to_this_widget) + "']"
+                    sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
+                    listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
                     if event['eventlistener'] == widget:
                         listenername = widgetVarName
                     code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
@@ -235,10 +240,10 @@ class Project(gui.Widget):
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
                                                                             'parameters': listenerPrototype}
-                    self.pending_listener_registration[widget] = {'done':False,'eventsource':widget, 'eventlistener':listener,
+                    self.pending_listener_registration.append({'done':False,'eventsource':widget, 'eventlistener':listener,
                      'setoneventfuncname':setOnEventListenerFuncname,
                      'listenerfuncname': listenerFunctionName,
-                     'listenerClassFunction':listenerClassFunction}
+                     'listenerClassFunction':listenerClassFunction})
                     
         if newClass:
             widgetVarName = 'self'
@@ -268,7 +273,7 @@ class Project(gui.Widget):
     def save(self, save_path_filename, rootchild=None): 
         self.code_resourcepath = "" #should be defined in the project configuration
         self.code_declared_classes = {}
-        self.pending_listener_registration = {}
+        self.pending_listener_registration = list()
 
         self.pending_signals_to_connect = list() #a list containing dicts {listener, emitter, register_function, listener_function}
         compiled_code = ''
