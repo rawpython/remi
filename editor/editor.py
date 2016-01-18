@@ -61,32 +61,33 @@ class WidgetHelper(gui.ListItem):
             func.__annotations__ {'a': 'parameter A', 'return': 'return value'}
         """
         self.appInstance = appInstance
-        param_as_string_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
+        self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list')
         self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput(200,30))
-        for param in param_as_string_list:
+        for param in self.constructor_parameters_list:
             note = ''#" (%s)"%param_annotation_dict[param] if param in param_annotation_dict.keys() else ""
             self.dialog.add_field_with_label(param, param + note, gui.TextInput(200,30))
+        self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox(30,30))
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
         
     def on_dialog_confirm(self):
-        param_as_string_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
-        for param in param_as_string_list:
+        for param in self.constructor_parameters_list:
             param_values.append(self.dialog.get_field(param).get_value())
             
-        print(param_as_string_list)
+        print(self.constructor_parameters_list)
         print(param_values)
-        constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
+        #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
+        constructor = '(%s)'%(','.join(map(lambda v: str(v), param_values)))
         #here we create and decorate the widget
         widget = self.widgetClass(*param_values)
         widget.attributes['editor_constructor'] = constructor
         widget.attributes['editor_varname'] = self.dialog.get_field('name').get_value()
         widget.attributes['editor_tag_type'] = 'widget'
-        widget.attributes['editor_newclass'] = 'false'
+        widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
         
         #drag properties
         widget.style['position'] = 'relative'
@@ -181,6 +182,8 @@ class Project(gui.Widget):
             if force or (hasattr(event['eventsource'],'path_to_this_widget') and hasattr(event['eventlistener'],'path_to_this_widget')):
                 if (force or (str(id(widget)) in event['eventsource'].path_to_this_widget and str(id(widget)) in event['eventlistener'].path_to_this_widget)) and event['done']==False:
                     #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
+                    if not event['eventsource'] in self.known_project_children or not event['eventlistener'] in self.known_project_children:
+                        continue
                     event['done'] = True
                     
                     source_filtered_path=event['eventsource'].path_to_this_widget[:]
@@ -206,6 +209,7 @@ class Project(gui.Widget):
         return code_nested_listener
         
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
+        self.known_project_children.append(widget)
         if hasattr(widget, 'path_to_this_widget'):
             widget.path_to_this_widget.append( str(id(widget)) )
         else:
@@ -265,18 +269,18 @@ class Project(gui.Widget):
         if newClass:# and not (classname in self.code_declared_classes.keys()):
             if not str(id(widget)) in self.code_declared_classes:
                 self.code_declared_classes[str(id(widget))] = ''
-            self.code_declared_classes[str(id(widget))] = prototypes.proto_code_class%{'classname': classname, 'superclassname': super(widget.__class__,widget).__class__.__name__,
+            self.code_declared_classes[str(id(widget))] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.__class__.__name__,
                                                         'nested_code': children_code_nested } + self.code_declared_classes[str(id(widget))]
         else:
             code_nested = code_nested + children_code_nested
         
         return code_nested
 
-    def save(self, save_path_filename, rootchild=None): 
+    def save(self, save_path_filename): 
         self.code_resourcepath = "" #should be defined in the project configuration
         self.code_declared_classes = {}
         self.pending_listener_registration = list()
-
+        self.known_project_children = [self,] #a list containing widgets that have been parsed and that are considered valid listeners 
         self.pending_signals_to_connect = list() #a list containing dicts {listener, emitter, register_function, listener_function}
         compiled_code = ''
         code_classes = ''

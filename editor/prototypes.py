@@ -4,6 +4,7 @@ internally_used_attrbutes = ('id','editor_newclass','editor_constructor','class'
 #main program code prototype
 proto_code_program = """
 import remi.gui as gui
+from remi.gui import *
 from remi import start, App
 
 %(code_classes)s
