@@ -32,14 +32,6 @@ class Dragable(gui.Widget):
         self.attributes['ondragstart'] = "this.style.cursor='move';this.style['left']=(event.clientX - parseInt(this.style.width)/2) + 'px'; this.style['top']=(event.clientY - parseInt(this.style.height)/2) + 'px';'"
         self.attributes['ondragover'] = "this.style.cursor='move';event.dataTransfer.dropEffect = 'move';"   
         self.attributes['ondragend'] = "this.style.cursor='default';this.style['left']=(event.clientX - parseInt(this.style.width)/2) + 'px'; this.style['top']=(event.clientY - parseInt(this.style.height)/2) + 'px';"  
-        
-
-class ResizerHelper(gui.Widget):
-    """ Allows to resize the widget to which it refers.
-        Four grippers at four corners resizes the widget by dragging
-    """
-    def __init__(self):
-        pass
 
 
 class WidgetHelper(gui.ListItem):

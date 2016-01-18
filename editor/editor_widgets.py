@@ -15,6 +15,39 @@
 import remi.gui as gui
 import html_helper
 
+
+class ProjectConfigurationDialog(gui.GenericDialog):
+    def __init__(self, width=500, height=80, title='', message=''):
+        super(ProjectConfigurationDialog, self).__init__(width, height, 'Project Configuration', 'Here are the configuration options of the project.')
+        #standard configuration
+        self.configuration['Project Name'] = 'untitled'
+        self.configuration['IP address'] = '0.0.0.0'
+        self.configuration['Listen port'] = 8081
+        self.configuration['Use single App instance for multiple users'] = True
+        self.configuration['Enable file caching'] = True
+        self.configuration['Start browser automatically'] = True
+        self.configuration['Additional resource path'] = "./res/"
+        w = 100
+        h = 30
+        self.add_field_with_label( 'Project Name', 'Project Name', gui.TextInput(w, h) )
+        self.add_field_with_label( 'IP address', 'IP address', gui.TextInput(w, h) )
+        self.add_field_with_label( 'Listen port', 'Listen port', gui.SpinBox(w, h, 0, 65536, 8081) )
+        self.add_field_with_label( 'Use single App instance for multiple users', 'Use single App instance for multiple users', gui.CheckBox(w, h, True) )
+        self.add_field_with_label( 'Enable file caching', 'Enable file caching', gui.CheckBox(w, h, True) )
+        self.add_field_with_label( 'Start browser automatically', 'Start browser automatically', gui.CheckBox(w, h, True) )
+        self.add_field_with_label( 'Additional resource path', 'Additional resource path', gui.TextInput(w, h) )
+        self.from_dict_to_fields(self.configuration)
+    
+    def from_dict_to_fields(self, dictionary):
+        for key in self.inputs.keys():
+            if key in dictionary.keys():
+                self.get_field(key).set_value(dictionary[key])
+        
+    def from_fields_to_dict(self):
+        for key in self.inputs.keys():
+            self.configuration[key] = self.get_field(key).get_value()
+            
+
 class EditorFileSelectionDialog(gui.FileSelectionDialog):
     def __init__(self, width = 600, fileFolderNavigatorHeight=210, title='File dialog',
                  message='Select files and folders', multiple_selection=True, selection_folder='.', 
