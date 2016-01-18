@@ -27,12 +27,24 @@ class Dragable(gui.Widget):
     def __init__(self, w, h):
         super(Dragable, self).__init__(w, h)
         self.style['position'] = 'relative'
-        self.style['user-select'] = 'none'
+        self.style['left']='0px'
+        self.style['top']='0px'
         self.attributes['draggable'] = 'true'
-        self.attributes['ondragstart'] = "this.style.cursor='move';this.style['left']=(event.clientX - parseInt(this.style.width)/2) + 'px'; this.style['top']=(event.clientY - parseInt(this.style.height)/2) + 'px';'"
-        self.attributes['ondragover'] = "this.style.cursor='move';event.dataTransfer.dropEffect = 'move';"   
-        self.attributes['ondragend'] = "this.style.cursor='default';this.style['left']=(event.clientX - parseInt(this.style.width)/2) + 'px'; this.style['top']=(event.clientY - parseInt(this.style.height)/2) + 'px';"  
-
+        self.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
+        self.attributes['ondragover'] = "event.preventDefault();"   
+        self.attributes['ondrop'] = """event.preventDefault();return false;"""
+        self.parent = None
+    
+    def set_parent(self, newParent):
+        if self.parent:
+            self.parent.remove_child(self)
+        self.parent = newParent
+        self.parent.append(self)
+    
+    def on_dropped(self, left, top):
+        self.style['left']=left
+        self.style['top']=top
+    
 
 class WidgetHelper(gui.ListItem):
     """ Allocates the Widget to which it refers, 
@@ -85,6 +97,8 @@ class WidgetHelper(gui.ListItem):
         widget.style['position'] = 'relative'
         widget.style['left'] = '0px'
         widget.style['top'] = '0px'
+        widget.style['resize'] = 'both'
+        widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
         widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
         widget.attributes['ondragover'] = "event.preventDefault();"   
