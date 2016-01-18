@@ -411,13 +411,13 @@ class Editor(App):
         
         widget.__class__.on_dropped = on_dropped
 
-        widget.attributes['contentEditable']='true';
+        #widget.attributes['contentEditable']='true';
         widget.attributes['tabindex']=str(self.tabindex)
         self.tabindex += 1
     
     def add_widget_to_editor(self, widget):
         self.configure_widget_for_editing(widget)
-        key = "root" if self.selectedWidget==self.project else None
+        key = "root" if self.selectedWidget==self.project else str(id(widget))
         self.selectedWidget.append(widget,key)
         
     def on_attribute_change(self, attributeName, value):
