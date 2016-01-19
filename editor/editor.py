@@ -22,13 +22,13 @@ import os #for path handling
 import prototypes
 import editor_widgets
 
-"""
-class Dragable(gui.Widget):
+
+class ResizeHelper(gui.Widget):
     def __init__(self, w, h):
-        super(Dragable, self).__init__(w, h)
+        super(ResizeHelper, self).__init__(w, h)
         self.style['float'] = 'none'
-        self.style['background-color'] = 'red'
-        self.style['position'] = 'relative'
+        self.style['background-image'] = "url('res/resize.png')"
+        self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
         self.attributes['draggable'] = 'true'
@@ -46,15 +46,16 @@ class Dragable(gui.Widget):
         self.parent = newParent
         self.refWidget = refWidget
         self.parent.append(self)
-        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-10)
-        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-10)
-    
+        self.update_position()
+            
     def on_dropped(self, left, top):
         self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
         self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
-        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-10)
-        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-10)
-"""
+        self.update_position()
+        
+    def update_position(self):
+        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width']))
+        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height']))
 
 
 class WidgetHelper(gui.ListItem):
@@ -105,10 +106,10 @@ class WidgetHelper(gui.ListItem):
         widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
         
         #drag properties
-        widget.style['position'] = 'relative'
+        widget.style['position'] = 'absolute'
         widget.style['left'] = '0px'
         widget.style['top'] = '0px'
-        widget.style['resize'] = 'both'
+        #widget.style['resize'] = 'both'
         widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
         widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
@@ -165,7 +166,8 @@ class Project(gui.Widget):
         super(Project, self).__init__(w, h, True, 0)
         
         self.project_name = project_name
-        
+    
+        self.style['position'] = 'relative'    
         self.style['overflow'] = 'scroll'
         self.style['background-color'] = 'gray'
         self.style['background-image'] = "url( '/res/bg.png' );"
@@ -331,7 +333,7 @@ class Project(gui.Widget):
         
 class Editor(App):
     def __init__(self, *args):
-        super(Editor, self).__init__(*args)
+        super(Editor, self).__init__(*args,static_paths=('./res/',))
 
     def main(self):
         self.mainContainer = gui.Widget(970, 700, gui.Widget.LAYOUT_VERTICAL, 0)
@@ -424,6 +426,8 @@ class Editor(App):
         
         self.selectedWidget = self.project
         
+        self.resizeHelper = ResizeHelper(24, 24)
+        
         self.project.new()
         
         self.projectPathFilename = ''
@@ -438,8 +442,10 @@ class Editor(App):
     
     def configure_widget_for_editing(self, widget):
         typefunc = type(widget.onfocus)
-        widget.onfocus = typefunc(onfocus_with_instance, widget)
-        widget.set_on_focus_listener(self, "on_widget_selection")
+        #widget.onfocus = typefunc(onfocus_with_instance, widget)
+        #widget.set_on_focus_listener(self, "on_widget_selection")
+        widget.onclick = typefunc(onclick_with_instance, widget)
+        widget.set_on_click_listener(self, "on_widget_selection")
         
         widget.__class__.on_dropped = on_dropped
 
@@ -458,7 +464,9 @@ class Editor(App):
     def on_widget_selection(self, widget):
         self.selectedWidget = widget
         self.attributeEditor.set_widget( self.selectedWidget )
-
+        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        self.resizeHelper.setup(widget,parent)
+        
     def menu_new_clicked(self):
         self.project.new()
 
@@ -480,8 +488,12 @@ class Editor(App):
             self.project.save(self.projectPathFilename)
             
     def menu_cut_selection_clicked(self):
-        #self.project.soup = BeautifulSoup(str(self.project.soup),'html.parser')
-        self.editCuttedWidget = self.project.soup.find(id=self.selectedWidget).extract()
+        if self.selectedWidget==self.project:
+            return
+        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        self.editCuttedWidget = self.selectedWidget
+        self.selectedWidget = parent
+        parent.remove_child(self.selectedWidget)
         print("tag cutted:" + str(id(self.editCuttedWidget)))
 
     def menu_paste_selection_clicked(self):
@@ -492,10 +504,11 @@ class Editor(App):
 
 #function overload for widgets that have to be editable
 #the normal onfocus function does not returns the widget instance
-def onfocus_with_instance(self):
-    return self.eventManager.propagate(self.EVENT_ONFOCUS, [self])
-#def onclick_with_instance(self):
-#    return self.eventManager.propagate(self.EVENT_ONCLICK, [str(id(self))])
+#def onfocus_with_instance(self):
+#    return self.eventManager.propagate(self.EVENT_ONFOCUS, [self])
+def onclick_with_instance(self):
+    return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+    
 def on_dropped(self, left, top):
     self.style['left']=left
     self.style['top']=top
