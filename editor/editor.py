@@ -72,13 +72,7 @@ class WidgetHelper(gui.ListItem):
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__(w, h, self.widgetClass.__name__)
             
-    def allocate(self, appInstance):
-        """ Here the widget is allocated and it is performed the setup to allow the
-            selection and editing
-            
-            def func(a:'parameter A') -> 'return value':
-            func.__annotations__ {'a': 'parameter A', 'return': 'return value'}
-        """
+    def prompt_new_widget(self, appInstance):
         self.appInstance = appInstance
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
@@ -92,6 +86,8 @@ class WidgetHelper(gui.ListItem):
         self.dialog.show(self.appInstance)
         
     def on_dialog_confirm(self):
+        """ Here the widget is allocated
+        """
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
         for param in self.constructor_parameters_list:
@@ -434,7 +430,7 @@ class Editor(App):
             It informs here that it is clicked by the user and the EditorApp starts the allocation
             sending its instance in order to show a dialog 
         """ 
-        helperInstance.allocate(self)
+        helperInstance.prompt_new_widget(self)
     
     def configure_widget_for_editing(self, widget):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 

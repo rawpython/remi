@@ -30,6 +30,12 @@ def decorate_set_on_listener(eventName, params):
         return function
     return add_annotation
     
+def decorate_constructor_parameter_types(typeList):
+    def add_annotation(function):
+        function._constructor_types = typeList
+        return function
+    return add_annotation
+    
     
 def to_pix(x):
     return str(x) + 'px'
@@ -158,7 +164,7 @@ class Widget(Tag):
     #constants
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
-
+    @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, w=1, h=1, layout_orientation=LAYOUT_HORIZONTAL, widget_spacing=0):
         """w = numeric with
         h = numeric height
@@ -376,7 +382,7 @@ class Widget(Tag):
 
 
 class Button(Widget):
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, text=''):
         super(Button, self).__init__(w, h)
         self.type = 'button'
@@ -390,7 +396,7 @@ class Button(Widget):
 class TextInput(Widget):
 
     """multiline text area widget"""
-
+    @decorate_constructor_parameter_types([int, int, bool])
     def __init__(self, w, h, single_line=True):
         super(TextInput, self).__init__(w, h)
         self.type = 'textarea'
@@ -460,7 +466,7 @@ class TextInput(Widget):
 
 
 class Label(Widget):
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, text):
         super(Label, self).__init__(w, h)
         self.type = 'p'
@@ -477,7 +483,7 @@ class GenericDialog(Widget):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-
+    @decorate_constructor_parameter_types([int, int, str, str])
     def __init__(self, width=500, height=80, title='', message=''):
         self.width = width
         self.height = height
@@ -570,7 +576,7 @@ class InputDialog(GenericDialog):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-
+    @decorate_constructor_parameter_types([int, int, str, str, str])
     def __init__(self, width=500, height=160, title='Title', message='Message',
                     initial_value=''):
         super(InputDialog, self).__init__(width, height, title, message)
@@ -605,7 +611,7 @@ class InputDialog(GenericDialog):
 class ListView(Widget):
 
     """list widget it can contain ListItems."""
-
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, w, h):
         super(ListView, self).__init__(w, h, layout_orientation=Widget.LAYOUT_VERTICAL)
         self.type = 'ul'
@@ -703,7 +709,7 @@ class ListView(Widget):
 class ListItem(Widget):
 
     """item widget for the ListView"""
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, text):
         super(ListItem, self).__init__(w, h)
         self.type = 'li'
@@ -728,7 +734,7 @@ class DropDown(Widget):
 
     """combo box widget implements the onchange event.
     """
-
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, w, h):
         super(DropDown, self).__init__(w, h)
         self.type = 'select'
@@ -791,7 +797,7 @@ class DropDown(Widget):
 class DropDownItem(Widget):
 
     """item widget for the DropDown"""
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, text):
         super(DropDownItem, self).__init__(w, h)
         self.type = 'option'
@@ -815,7 +821,7 @@ class DropDownItem(Widget):
 class Image(Widget):
 
     """image widget."""
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, filename):
         """filename should be an URL."""
         super(Image, self).__init__(w, h)
@@ -828,7 +834,7 @@ class Table(Widget):
     """
     table widget - it will contains TableRow
     """
-
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, w, h):
         super(Table, self).__init__(w, h)
         self.type = 'table'
@@ -859,7 +865,7 @@ class TableRow(Widget):
     """
     row widget for the Table - it will contains TableItem
     """
-
+    @decorate_constructor_parameter_types([])
     def __init__(self):
         super(TableRow, self).__init__(-1, -1)
         self.type = 'tr'
@@ -869,7 +875,7 @@ class TableRow(Widget):
 class TableItem(Widget):
 
     """item widget for the TableRow."""
-
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text=''):
         super(TableItem, self).__init__(-1, -1)
         self.type = 'td'
@@ -880,7 +886,7 @@ class TableItem(Widget):
 class TableTitle(Widget):
 
     """title widget for the table."""
-
+    @decorate_constructor_parameter_types([str])
     def __init__(self, title=''):
         super(TableTitle, self).__init__(-1, -1)
         self.type = 'th'
@@ -889,7 +895,7 @@ class TableTitle(Widget):
 
 
 class Input(Widget):
-
+    @decorate_constructor_parameter_types([int, int, str, str])
     def __init__(self, w, h, _type='', defaultValue=''):
         super(Input, self).__init__(w, h)
         self.type = 'input'
@@ -921,6 +927,7 @@ class Input(Widget):
 
 
 class CheckBoxLabel(Widget):
+    @decorate_constructor_parameter_types([int, int, str, bool, str])
     def __init__(self, w, h, label='', checked=False, user_data=''):
 
         super(CheckBoxLabel, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
@@ -943,7 +950,7 @@ class CheckBox(Input):
     """check box widget usefull as numeric input field implements the onchange
     event.
     """
-
+    @decorate_constructor_parameter_types([int, int, bool, str])
     def __init__(self, w, h, checked=False, user_data=''):
         super(CheckBox, self).__init__(w, h, 'checkbox', user_data)
         self.attributes[self.EVENT_ONCHANGE] = \
@@ -973,7 +980,7 @@ class SpinBox(Input):
     """spin box widget usefull as numeric input field implements the onchange
     event.
     """
-
+    @decorate_constructor_parameter_types([int, int, str, int, int, int])
     def __init__(self, w, h, defaultValue='100', min=100, max=5000, step=1):
         super(SpinBox, self).__init__(w, h, 'number', defaultValue)
         self.attributes['min'] = str(min)
@@ -983,7 +990,7 @@ class SpinBox(Input):
 
 
 class Slider(Input):
-
+    @decorate_constructor_parameter_types([int, int, str, int, int, int])
     def __init__(self, w, h, defaultValue='', min=0, max=10000, step=1):
         super(Slider, self).__init__(w, h, 'range', defaultValue)
         self.attributes['min'] = str(min)
@@ -1003,13 +1010,13 @@ class Slider(Input):
 
 
 class ColorPicker(Input):
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, defaultValue='#995500'):
         super(ColorPicker, self).__init__(w, h, 'color', defaultValue)
 
 
 class Date(Input):
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, defaultValue='2015-04-13'):
         super(Date, self).__init__(w, h, 'date', defaultValue)
         
@@ -1019,7 +1026,7 @@ class GenericObject(Widget):
     """
     GenericObject widget - allows to show embedded object like pdf,swf..
     """
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, filename):
         """filename should be an URL."""
         super(GenericObject, self).__init__(w, h)
@@ -1030,7 +1037,7 @@ class GenericObject(Widget):
 class FileFolderNavigator(Widget):
 
     """FileFolderNavigator widget."""
-
+    @decorate_constructor_parameter_types([int, int, bool, str, bool, bool])
     def __init__(self, w, h, multiple_selection,selection_folder,allow_file_selection, 
                                                        allow_folder_selection):
         super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
@@ -1175,7 +1182,7 @@ class FileFolderNavigator(Widget):
 class FileFolderItem(Widget):
 
     """FileFolderItem widget for the FileFolderNavigator"""
-
+    @decorate_constructor_parameter_types([int, int, str, bool])
     def __init__(self, w, h, text, isFolder=False):
         super(FileFolderItem, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.isFolder = isFolder
@@ -1225,7 +1232,7 @@ class FileSelectionDialog(GenericDialog):
 
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-
+    @decorate_constructor_parameter_types([int, int, str, str, bool, str, bool, bool])
     def __init__(self, width = 600, fileFolderNavigatorHeight=210, title='File dialog',
                  message='Select files and folders', multiple_selection=True, selection_folder='.', 
                  allow_file_selection=True, allow_folder_selection=True):
@@ -1252,6 +1259,7 @@ class FileSelectionDialog(GenericDialog):
 
 
 class MenuBar(Widget):
+    @decorate_constructor_parameter_types([int, int, int,])
     def __init__(self, w, h, orientation=Widget.LAYOUT_HORIZONTAL):
         super(MenuBar, self).__init__(w, h, orientation)
         self.type = 'nav'
@@ -1260,7 +1268,7 @@ class MenuBar(Widget):
 class Menu(Widget):
 
     """Menu widget can contain MenuItem."""
-
+    @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, w, h, orientation=Widget.LAYOUT_HORIZONTAL):
         super(Menu, self).__init__(w, h, orientation)
         self.type = 'ul'
@@ -1269,7 +1277,7 @@ class Menu(Widget):
 class MenuItem(Widget):
 
     """MenuItem widget can contain other MenuItem."""
-
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, w, h, text):
         super(MenuItem, self).__init__(w, h)
         self.w = w
@@ -1299,7 +1307,7 @@ class FileUploader(Widget):
         allows to upload multiple files to a specified folder.
         implements the onsuccess and onfailed events.
     """
-
+    @decorate_constructor_parameter_types([int, int, str, bool])
     def __init__(self, w, h, savepath='./', multiple_selection_allowed=False):
         super(FileUploader, self).__init__(w, h)
         self._savepath = savepath
@@ -1339,7 +1347,7 @@ class FileUploader(Widget):
 class FileDownloader(Widget):
 
     """FileDownloader widget. Allows to start a file download."""
-
+    @decorate_constructor_parameter_types([int, int, str, str, str])
     def __init__(self, w, h, text, filename, path_separator='/'):
         super(FileDownloader, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.type = 'a'
@@ -1361,7 +1369,7 @@ class FileDownloader(Widget):
 
 
 class Link(Widget):
-
+    @decorate_constructor_parameter_types([int, int, str, str, bool])
     def __init__(self, w, h, url, text, open_new_window=True):
         super(Link, self).__init__(w, h)
         self.type = 'a'
@@ -1381,7 +1389,7 @@ class Link(Widget):
 
 
 class VideoPlayer(Widget):
-
+    @decorate_constructor_parameter_types([int, int, str, str])
     def __init__(self, w, h, video, poster=None):
         super(VideoPlayer, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
         self.type = 'video'
@@ -1392,6 +1400,7 @@ class VideoPlayer(Widget):
 
 
 class Svg(Widget):
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height):
         super(Svg, self).__init__(width, height)
         self.attributes['width'] = width
@@ -1404,6 +1413,7 @@ class Svg(Widget):
 
 
 class SvgCircle(Widget):
+    @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, radix):
         super(SvgCircle, self).__init__(0, 0)
         self.set_position(x, y)
@@ -1427,6 +1437,7 @@ class SvgCircle(Widget):
 
 
 class SvgLine(Widget):
+    @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x1, y1, x2, y2):
         super(SvgLine, self).__init__(0, 0)
         self.set_coords(x1, y1, x2, y2)
@@ -1451,6 +1462,7 @@ class SvgLine(Widget):
 
 
 class SvgPolyline(Widget):
+    @decorate_constructor_parameter_types([int,])
     def __init__(self, _maxlen=None):
         super(SvgPolyline, self).__init__(0, 0)
         self.set_stroke()
@@ -1477,6 +1489,7 @@ class SvgPolyline(Widget):
 
 
 class SvgText(Widget):
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text):
         super(SvgText, self).__init__(0, 0)
         self.type = 'text'
