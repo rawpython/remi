@@ -78,9 +78,19 @@ class WidgetHelper(gui.ListItem):
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list')
         self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput(200,30))
-        for param in self.constructor_parameters_list:
-            note = ''#" (%s)"%param_annotation_dict[param] if param in param_annotation_dict.keys() else ""
-            self.dialog.add_field_with_label(param, param + note, gui.TextInput(200,30))
+        #for param in self.constructor_parameters_list:
+        for index in range(0,len(self.constructor_parameters_list)):
+            param = self.constructor_parameters_list[index]
+            _typ = self.widgetClass.__init__._constructor_types[index]
+            note = ' (%s)'%_typ.__name__
+            editWidget = None
+            if _typ==int:
+                editWidget = gui.SpinBox(200,30,'0',-65536,65535)
+            elif _typ==bool:
+                editWidget = gui.CheckBox(30,30)
+            else:
+                editWidget = gui.TextInput(200,30)
+            self.dialog.add_field_with_label(param, param + note, editWidget)
         self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox(30,30))
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
@@ -90,13 +100,21 @@ class WidgetHelper(gui.ListItem):
         """
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
-        for param in self.constructor_parameters_list:
+        param_for_constructor = []
+        for index in range(0,len(self.constructor_parameters_list)):
+            param = self.constructor_parameters_list[index]
+            _typ = self.widgetClass.__init__._constructor_types[index]
+            if _typ==int:
+                param_for_constructor.append(self.dialog.get_field(param).get_value())
+            elif _typ==bool:
+                param_for_constructor.append(self.dialog.get_field(param).get_value())
+            else:
+                param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
             param_values.append(self.dialog.get_field(param).get_value())
-            
         print(self.constructor_parameters_list)
         print(param_values)
         #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
-        constructor = '(%s)'%(','.join(map(lambda v: str(v), param_values)))
+        constructor = '(%s)'%(','.join(map(lambda v: str(v), param_for_constructor)))
         #here we create and decorate the widget
         widget = self.widgetClass(*param_values)
         widget.attributes['editor_constructor'] = constructor
