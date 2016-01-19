@@ -22,29 +22,40 @@ import os #for path handling
 import prototypes
 import editor_widgets
 
-
+"""
 class Dragable(gui.Widget):
     def __init__(self, w, h):
         super(Dragable, self).__init__(w, h)
+        self.style['float'] = 'none'
+        self.style['background-color'] = 'red'
         self.style['position'] = 'relative'
         self.style['left']='0px'
         self.style['top']='0px'
         self.attributes['draggable'] = 'true'
-        self.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
+        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
         self.attributes['ondragover'] = "event.preventDefault();"   
-        self.attributes['ondrop'] = """event.preventDefault();return false;"""
+        self.attributes['ondrop'] = "event.preventDefault();return false;"
         self.parent = None
-    
-    def set_parent(self, newParent):
+        self.refWidget = None
+        
+    def setup(self, refWidget, newParent):
+        #refWidget is the target widget that will be resized
+        #newParent is the container
         if self.parent:
             self.parent.remove_child(self)
         self.parent = newParent
+        self.refWidget = refWidget
         self.parent.append(self)
+        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-10)
+        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-10)
     
     def on_dropped(self, left, top):
-        self.style['left']=left
-        self.style['top']=top
-    
+        self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
+        self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
+        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-10)
+        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-10)
+"""
+
 
 class WidgetHelper(gui.ListItem):
     """ Allocates the Widget to which it refers, 
@@ -136,7 +147,6 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.CheckBox)
         self.add_widget_to_collection(gui.SpinBox)
         self.add_widget_to_collection(gui.Slider)
-        self.add_widget_to_collection(Dragable)
         
     def add_widget_to_collection(self, widgetClass):
         #create an helper that will be created on click
@@ -385,6 +395,22 @@ class Editor(App):
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
                 
+        #javascript_code = gui.Tag()
+        #javascript_code.type = 'script'
+        #javascript_code.attributes['type'] = 'text/javascript'
+        #javascript_code.add_child('code', """
+        #    var MutationObsertver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+        #    var target = document;
+        #    var config = { attributes: true, childList: true, subtree: true, characterData: true };
+        #    var observer = new MutationObserver(function(mutations) {
+        #        var obj = document.getElementById("%(id)s");
+        #        obj.scrollTop = obj.scrollHeight;
+        #    });
+        #    observer.observe(target, config);
+        #    """ % {'id': id(self.txt),})
+        ## appending a widget to another, the first argument is a string key
+        #self.mainContainer.add_child('javascript',javascript_code)
+        
         self.attributeEditor = editor_widgets.EditorAttributes(180, 600)
         self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
         self.mainContainer.append(menu)

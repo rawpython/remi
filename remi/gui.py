@@ -136,6 +136,8 @@ class Tag(object):
             self._render_children_list.remove(child)
             for k in self.children.keys():
                 if str(id(self.children[k])) == str(id(child)):
+                    if k in self._render_children_list:
+                        self._render_children_list.remove(self.children[k])
                     self.children.pop(k)
                     # when the child is removed we stop the iteration
                     # this implies that a child replication should not be allowed
