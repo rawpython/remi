@@ -43,6 +43,8 @@ class ResizeHelper(gui.Widget):
         #newParent is the container
         if self.parent:
             self.parent.remove_child(self)
+        if newParent==None:
+            return
         self.parent = newParent
         self.refWidget = refWidget
         self.parent.append(self)
@@ -104,18 +106,6 @@ class WidgetHelper(gui.ListItem):
         widget.attributes['editor_varname'] = self.dialog.get_field('name').get_value()
         widget.attributes['editor_tag_type'] = 'widget'
         widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
-        
-        #drag properties
-        widget.style['position'] = 'absolute'
-        widget.style['left'] = '0px'
-        widget.style['top'] = '0px'
-        #widget.style['resize'] = 'both'
-        widget.style['overflow'] = 'auto'
-        widget.attributes['draggable'] = 'true'
-        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
-        widget.attributes['ondragover'] = "event.preventDefault();"   
-        widget.attributes['ondrop'] = """event.preventDefault();return false;"""
-        
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
         
         self.appInstance.add_widget_to_editor(widget)
@@ -186,11 +176,9 @@ class Project(gui.Widget):
         #finding App class
         clsmembers = inspect.getmembers(_module, inspect.isclass)
         for (name, value) in clsmembers:
-            #print(name + "    " + str(issubclass(value,App)) )
             if issubclass(value,App) and name!='App':
-                #self.append( _module.load_project(), "root" )
-                self.append(value.main(self), "root")
-                break                                             
+                return value.main(self)
+        return None                                           
             
     def check_pending_listeners(self, widget, widgetVarName, force=False):
         code_nested_listener = ''
@@ -438,9 +426,16 @@ class Editor(App):
 
     # listener function
     def widget_helper_clicked(self, helperInstance):
+        """ The widgetHelper is a class that allocates a widget, calling its constructor
+            It informs here that it is clicked by the user and the EditorApp starts the allocation
+            sending its instance in order to show a dialog 
+        """ 
         helperInstance.allocate(self)
     
     def configure_widget_for_editing(self, widget):
+        """ A widget have to be added to the editor, it is configured here in order to be conformant 
+            to the editor
+        """
         typefunc = type(widget.onfocus)
         #widget.onfocus = typefunc(onfocus_with_instance, widget)
         #widget.set_on_focus_listener(self, "on_widget_selection")
@@ -449,14 +444,29 @@ class Editor(App):
         
         widget.__class__.on_dropped = on_dropped
 
-        #widget.attributes['contentEditable']='true';
+        #drag properties
+        widget.style['position'] = 'absolute'
+        widget.style['left'] = '0px'
+        widget.style['top'] = '0px'
+        #widget.style['resize'] = 'both'
+        widget.style['overflow'] = 'auto'
+        widget.attributes['draggable'] = 'true'
+        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
+        widget.attributes['ondragover'] = "event.preventDefault();"   
+        widget.attributes['ondrop'] = """event.preventDefault();return false;"""
         widget.attributes['tabindex']=str(self.tabindex)
         self.tabindex += 1
-    
-    def add_widget_to_editor(self, widget):
+        
+    def add_widget_to_editor(self, widget, parent = None):
+        if parent == None:
+            parent = self.selectedWidget
         self.configure_widget_for_editing(widget)
-        key = "root" if self.selectedWidget==self.project else str(id(widget))
-        self.selectedWidget.append(widget,key)
+        key = "root" if parent==self.project else str(id(widget))
+        parent.append(widget,key)
+        for child in widget.children.values():
+            if type(child) == str:
+                continue
+            self.add_widget_to_editor(child, widget)
         
     def on_attribute_change(self, attributeName, value):
         self.selectedWidget.attributes[attributeName] = value
@@ -472,16 +482,22 @@ class Editor(App):
 
     def on_open_dialog_confirm(self, filelist):
         if len(filelist):
-            self.project.load(filelist[0])
+            widgetTree = self.project.load(filelist[0])
+            if widgetTree!=None:
+                self.add_widget_to_editor( widgetTree )
             self.projectPathFilename = filelist[0]
         
     def menu_save_clicked(self):
+        #the resizeHelper have to be removed
+        self.resizeHelper.setup(None, None)
         if self.projectPathFilename == '':
             self.fileSaveAsDialog.show()
         else:
             self.project.save(self.projectPathFilename)
         
     def on_saveas_dialog_confirm(self, path):
+        #the resizeHelper have to be removed
+        self.resizeHelper.setup(None, None)
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
             print("file:%s"%self.projectPathFilename)
@@ -490,6 +506,7 @@ class Editor(App):
     def menu_cut_selection_clicked(self):
         if self.selectedWidget==self.project:
             return
+        self.resizeHelper.setup(None, None)
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.editCuttedWidget = self.selectedWidget
         self.selectedWidget = parent
@@ -515,7 +532,8 @@ def on_dropped(self, left, top):
 
 if __name__ == "__main__":
     p = Project(0,0)
-    p.load('./example_project.py')
+    root = p.load('./example_project.py')
+    p.append(root, "root")
     p.save(None)
     # starts the webserver
     # optional parameters
