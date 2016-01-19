@@ -156,7 +156,7 @@ class EditorAttributeInput(gui.Widget):
         self.append(self.inputWidget)
     
     def hide_if_not_applies(self, tagname):
-        print("selected tag name: %s == %s"%(tagname,self.tagname))
+        #print("selected tag name: %s == %s"%(tagname,self.tagname))
         if tagname == self.tagname or self.tagname=='all':
             self.style['display'] = 'block'
         else:

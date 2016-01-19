@@ -21,6 +21,7 @@ import sys
 import os #for path handling
 import prototypes
 import editor_widgets
+import html_helper
 
 
 class ResizeHelper(gui.Widget):
@@ -107,7 +108,9 @@ class WidgetHelper(gui.ListItem):
         widget.attributes['editor_tag_type'] = 'widget'
         widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
-        
+        widget.style['position'] = 'absolute'
+        widget.style['left'] = '0px'
+        widget.style['top'] = '0px'
         self.appInstance.add_widget_to_editor(widget)
         
 
@@ -177,7 +180,7 @@ class Project(gui.Widget):
         clsmembers = inspect.getmembers(_module, inspect.isclass)
         for (name, value) in clsmembers:
             if issubclass(value,App) and name!='App':
-                return value.main(self)
+                return value.construct_ui()
         return None                                           
             
     def check_pending_listeners(self, widget, widgetVarName, force=False):
@@ -235,7 +238,8 @@ class Project(gui.Widget):
         code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':str(id(widget))}
         
         for key in widget.attributes.keys():
-            code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
+            if key not in html_helper.htmlInternallyUsedTags:
+                code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
         for key in widget.style.keys():
             code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.style[key]}
         
@@ -264,7 +268,7 @@ class Project(gui.Widget):
         for child_key in widget.children.keys():
             child = widget.children[child_key]
             if type(child)==str:
-                children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
+                #children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
                 continue
             child.path_to_this_widget = widget.path_to_this_widget[:]
             children_code_nested += self.repr_widget_for_editor(child)
@@ -445,9 +449,6 @@ class Editor(App):
         widget.__class__.on_dropped = on_dropped
 
         #drag properties
-        widget.style['position'] = 'absolute'
-        widget.style['left'] = '0px'
-        widget.style['top'] = '0px'
         #widget.style['resize'] = 'both'
         widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
@@ -457,16 +458,17 @@ class Editor(App):
         widget.attributes['tabindex']=str(self.tabindex)
         self.tabindex += 1
         
-    def add_widget_to_editor(self, widget, parent = None):
+    def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):
         if parent == None:
             parent = self.selectedWidget
         self.configure_widget_for_editing(widget)
         key = "root" if parent==self.project else str(id(widget))
-        parent.append(widget,key)
+        if root_tree_node:
+            parent.append(widget,key)
         for child in widget.children.values():
             if type(child) == str:
                 continue
-            self.add_widget_to_editor(child, widget)
+            self.add_widget_to_editor(child, widget, False)
         
     def on_attribute_change(self, attributeName, value):
         self.selectedWidget.attributes[attributeName] = value
@@ -476,6 +478,7 @@ class Editor(App):
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.resizeHelper.setup(widget,parent)
+        print("selected widget: " + str(id(widget)))
         
     def menu_new_clicked(self):
         self.project.new()

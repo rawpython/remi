@@ -31,8 +31,11 @@ class %(classname)s(App):
     def __init__(self, *args):
         super(%(classname)s, self).__init__(*args, static_paths=('%(code_resourcepath)s',))
     
-    @staticmethod
     def main(self):
+        return %(classname)s.construct_ui()
+        
+    @staticmethod
+    def construct_ui():
         %(code_nested)s
         return %(mainwidgetname)s
     

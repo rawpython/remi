@@ -1,47 +1,65 @@
+
 import remi.gui as gui
+from remi.gui import *
 from remi import start, App
 
-class example_project(App):
+
+class untitled(App):
     def __init__(self, *args):
-        super(example_project, self).__init__(*args)
-
-    @staticmethod
-    def main(self, name='world'):
-        # the arguments are	width - height - layoutOrientationOrizontal
-        mainContainer = gui.Widget(120, 100, False, 10)
-        mainContainer.attributes['editor_varname'] = "mainContainer"
-        mainContainer.attributes['editor_newclass'] = "True"
-        mainContainer.attributes['editor_constructor'] = "(120, 100, False, 10)"
-        wid = gui.Widget(120, 100, False, 10)
-        wid.attributes['editor_varname'] = "wid"
-        wid.attributes['editor_newclass'] = "True"
-        wid.attributes['editor_constructor'] = "(120, 100, False, 10)"
-        self.lbl = gui.Label(100, 30, 'Hello %s!' % name)
-        self.lbl.attributes['editor_varname'] = "lbl"
-        self.lbl.attributes['editor_newclass'] = "False"
-        self.lbl.attributes['editor_constructor'] = "(100, 30, 'Hello %s!' % name)"
-        self.bt = gui.Button(100, 30, 'Press me!')
-        self.bt.attributes['editor_varname'] = "bt"
-        self.bt.attributes['editor_newclass'] = "False"
-        self.bt.attributes['editor_constructor'] = "(100, 30, 'Press me!')"
+        super(untitled, self).__init__(*args, static_paths=('',))
+    
+    def main(self):
+        return untitled.construct_ui()
         
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
-        self.bt.set_on_contextmenu_listener(self, 'asd')
-        # appending a widget to another, the first argument is a string key
-        wid.append(self.lbl)
-        wid.append(self.bt)
-        mainContainer.append(wid)
-        # returning the root widget
+    @staticmethod
+    def construct_ui():
+        mainContainer = Widget(300,300,0,0)
+        mainContainer.attributes['style'] = "top:52px;float:left;height:262px;width:300px;position:absolute;overflow:auto;margin:0px 0px;left:120px"
+        mainContainer.attributes['editor_newclass'] = "False"
+        mainContainer.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
+        mainContainer.attributes['ondragover'] = "event.preventDefault();"
+        mainContainer.attributes['ondrop'] = "event.preventDefault();return false;"
+        mainContainer.attributes['editor_constructor'] = "(300,300,0,0)"
+        mainContainer.attributes['class'] = "Widget"
+        mainContainer.attributes['draggable'] = "true"
+        mainContainer.attributes['editor_tag_type'] = "widget"
+        mainContainer.attributes['onclick'] = "sendCallback('99238288','onclick');event.stopPropagation();event.preventDefault();"
+        mainContainer.attributes['editor_varname'] = "mainContainer"
+        mainContainer.attributes['tabindex'] = "0"
+        mainContainer.style['top'] = "52px"
+        mainContainer.style['float'] = "left"
+        mainContainer.style['height'] = "262px"
+        mainContainer.style['width'] = "300px"
+        mainContainer.style['position'] = "absolute"
+        mainContainer.style['overflow'] = "auto"
+        mainContainer.style['margin'] = "0px 0px"
+        mainContainer.style['left'] = "120px"
+        button = Button(200,30,'button')
+        button.attributes['style'] = "top:84px;height:106px;width:206px;position:absolute;overflow:auto;margin:0px 0px;left:52px"
+        button.attributes['editor_newclass'] = "False"
+        button.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
+        button.attributes['ondragover'] = "event.preventDefault();"
+        button.attributes['ondrop'] = "event.preventDefault();return false;"
+        button.attributes['editor_constructor'] = "(200,30,'button')"
+        button.attributes['class'] = "Button"
+        button.attributes['draggable'] = "true"
+        button.attributes['editor_tag_type'] = "widget"
+        button.attributes['onclick'] = "sendCallback('99241584','onclick');event.stopPropagation();event.preventDefault();"
+        button.attributes['editor_varname'] = "button"
+        button.attributes['tabindex'] = "1"
+        button.style['top'] = "84px"
+        button.style['height'] = "106px"
+        button.style['width'] = "206px"
+        button.style['position'] = "absolute"
+        button.style['overflow'] = "auto"
+        button.style['margin'] = "0px 0px"
+        button.style['left'] = "52px"
+        mainContainer.append(button,'99241584')
+        
         return mainContainer
+    
 
-    # listener function
-    def on_button_pressed(self):
-        self.lbl.set_text('Button pressed')
-        self.bt.set_text('Hi!')
-
-
+    
 if __name__ == "__main__":
-    # starts the webserver
-    # optional parameters
-    # start(example_project,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(example_project, debug=False)
+    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
+    start(untitled, debug=False)

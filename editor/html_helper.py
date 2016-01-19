@@ -3,6 +3,9 @@ import csv
 #the following list contains all html standard attributes with description and a list of applicable html tags
 #source http://www.w3.org/html/wg/drafts/html/master/index.html#attributes-1
 
+#these tags will to be not written into the saved project because created at runtime
+htmlInternallyUsedTags = ('id','parent_widget','children_list')
+
 htmlCsvAttributeData = """Attribute;Element(s);Description;Value
 abbr;th;Alternative label to use for the header cell when referencing the cell in other contexts;str
 accept;input;Hint for expected file type in file upload controls;Set of comma-separated tokens consisting of valid MIME types with no parameters or audio/, video/, or image/
