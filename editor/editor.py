@@ -259,8 +259,8 @@ class Editor(App):
         m10.set_size(100, 30)
         m11 = gui.MenuItem('Open')
         m11.set_size(100, 30)
-        m12 = gui.MenuItem('Save')
-        m12.set_size(100, 30)
+        m12 = gui.MenuItem('Save Your App')
+        m12.set_size(150, 30)
         #m12.style['visibility'] = 'hidden'
         m121 = gui.MenuItem('Save')
         m121.set_size(100, 30)
@@ -455,8 +455,8 @@ class Editor(App):
         self.resizeHelper.setup(None, None)
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.editCuttedWidget = self.selectedWidget
-        self.selectedWidget = parent
         parent.remove_child(self.selectedWidget)
+        self.selectedWidget = parent
         print("tag cutted:" + str(id(self.editCuttedWidget)))
 
     def menu_paste_selection_clicked(self):
