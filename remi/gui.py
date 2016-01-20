@@ -492,9 +492,6 @@ class GenericDialog(Widget):
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'auto'
-        #self.width = 500
-        #self.height = 80
-        #super(GenericDialog, self).set_size(self.width, self.height)
         
         self.EVENT_ONCONFIRM = 'confirm_dialog'
         self.EVENT_ONCANCEL = 'cancel_dialog'
@@ -541,13 +538,11 @@ class GenericDialog(Widget):
         self.inputs[key] = field
         label = Label(labelDescription )
         label.style['margin'] = '0px 5px'
-        #label.style['width'] = '40%'
         container = Widget()
         container.style['display'] = 'block'
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
         container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
-        #container.style['width'] = '100%'
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)

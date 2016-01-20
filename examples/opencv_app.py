@@ -22,8 +22,8 @@ from remi import start, App
 
 class OpencvVideoWidget(gui.Image):
     def __init__(self, width, height, video_source=0, fps=5):
-        super(OpencvVideoWidget, self).__init__(width, height, "/%s/get_image_data" % id(self))
-
+        super(OpencvVideoWidget, self).__init__("/%s/get_image_data" % id(self))
+        self.set_size(width, height)
         self.fps = fps
         self.capture = cv2.VideoCapture(video_source)
 
@@ -76,13 +76,18 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(640, 600, False, 10)
+        wid = gui.Widget()
+        wid.set_size(640, 600)
         self.opencvideo_widget = OpencvVideoWidget(620, 530, 0, 10)
-
-        menu = gui.Menu(620, 30)
-        m1 = gui.MenuItem(100, 30, 'Video')
-        m11 = gui.MenuItem(100, 30, 'Play')
-        m12 = gui.MenuItem(100, 30, 'Stop')
+        self.opencvideo_widget.style['margin'] = '10px'
+        menu = gui.Menu()
+        menu.set_size(620, 30)
+        m1 = gui.MenuItem('Video')
+        m1.set_size(100, 30)
+        m11 = gui.MenuItem('Play')
+        m11.set_size(100, 30)
+        m12 = gui.MenuItem('Stop')
+        m12.set_size(100, 30)
         m11.set_on_click_listener(self, 'menu_play_clicked')
         m12.set_on_click_listener(self, 'menu_stop_clicked')
 
