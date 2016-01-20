@@ -309,19 +309,23 @@ class Editor(App):
         m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
         
         self.subContainer = gui.Widget()
-        self.subContainer.set_size('100%', 700)
+        self.subContainer.style['width']='100%'
+        self.subContainer.style['display']='block'
         self.subContainer.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style['background-color'] = 'transparent'
         self.subContainer.style['position'] = 'relative'
+        self.subContainer.style['overflow']='auto'
                 
         #here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(self)
-        self.widgetsCollection.set_size('18%', 600)
+        self.widgetsCollection.style['width']='18%'
+        self.widgetsCollection.style['height']='600px'
         self.widgetsCollection.style['position'] = 'relative'
         self.widgetsCollection.style['left'] = '0px'
         
         self.project = Project()
-        self.project.set_size('60%', 600)
+        self.project.style['width']='60%'
+        self.project.style['height']='600px'
         self.project.attributes['ondragover'] = "event.preventDefault();"
         self.EVENT_ONDROPPPED = "on_dropped"
         self.project.attributes['ondrop'] = """event.preventDefault();
@@ -353,7 +357,8 @@ class Editor(App):
         
         self.attributeEditor = editor_widgets.EditorAttributes()
         self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
-        self.attributeEditor.set_size('18%', 600)
+        #self.attributeEditor.style['width']='18%'
+        self.attributeEditor.style['height']='600px'
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
         

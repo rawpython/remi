@@ -234,12 +234,16 @@ class EditorAttributeInput(gui.Widget):
     def __init__(self, tagname, attributeName, attributeDict, defaultValue=''):
         super(EditorAttributeInput, self).__init__()
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'auto'
+        self.style['margin'] = '2px'
         self.tagname = tagname
         self.attributeName = attributeName
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         
         label = gui.Label(attributeName)
-        label.set_size('50%','30px')
+        label.style['height'] = '30px'
+        label.style['margin'] = '0px 10px'
         self.append(label)
         self.inputWidget = None
         if len(attributeDict['type']) == 1:
@@ -260,6 +264,7 @@ class EditorAttributeInput(gui.Widget):
         label.attributes['title'] = attributeDict['description']
         self.inputWidget.set_on_change_listener(self,"on_attribute_changed")
         self.append(self.inputWidget)
+        self.inputWidget.style['float'] = 'right'
     
     def hide_if_not_applies(self, tagname):
         #print("selected tag name: %s == %s"%(tagname,self.tagname))
