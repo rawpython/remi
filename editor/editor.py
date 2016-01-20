@@ -29,6 +29,7 @@ class ResizeHelper(gui.Widget):
         super(ResizeHelper, self).__init__()
         self.style['float'] = 'none'
         self.style['background-image'] = "url('res/resize.png')"
+        self.style['background-color'] = "rgba(255,255,255,0.5)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
@@ -59,8 +60,8 @@ class ResizeHelper(gui.Widget):
     def update_position(self):
         if self.refWidget == None:
             return
-        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width']))
-        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height']))
+        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
+        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
 
 
 class Project(gui.Widget):
@@ -368,7 +369,7 @@ class Editor(App):
         self.selectedWidget = self.project
         
         self.resizeHelper = ResizeHelper()
-        self.resizeHelper.set_size(24, 24)
+        self.resizeHelper.set_size(16, 16)
         
         self.project.new()
         
@@ -405,20 +406,18 @@ class Editor(App):
         widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
         widget.attributes['ondragover'] = "event.preventDefault();"   
         widget.attributes['ondrop'] = """event.preventDefault();return false;"""
-        widget.set_size(100,100)
-        widget.style['display'] = 'block'
         widget.attributes['tabindex']=str(self.tabindex)
         self.tabindex += 1
         
     def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):
         if parent == None:
             parent = self.selectedWidget
-            if self.selectedWidget == self.project:
-                self.selectedWidget = widget
         self.configure_widget_for_editing(widget)
         key = "root" if parent==self.project else str(id(widget))
         if root_tree_node:
             parent.append(widget,key)
+            if self.selectedWidget == self.project:
+                self.on_widget_selection( widget )
         for child in widget.children.values():
             if type(child) == str:
                 continue
