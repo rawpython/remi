@@ -25,8 +25,8 @@ import html_helper
 
 
 class ResizeHelper(gui.Widget):
-    def __init__(self, w, h):
-        super(ResizeHelper, self).__init__(w, h)
+    def __init__(self):
+        super(ResizeHelper, self).__init__()
         self.style['float'] = 'none'
         self.style['background-image'] = "url('res/resize.png')"
         self.style['position'] = 'absolute'
@@ -57,111 +57,10 @@ class ResizeHelper(gui.Widget):
         self.update_position()
         
     def update_position(self):
+        if self.refWidget == None:
+            return
         self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width']))
         self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height']))
-
-
-class WidgetHelper(gui.ListItem):
-    """ Allocates the Widget to which it refers, 
-        interfacing to the user in order to obtain the necessary attribute values
-        obtains the constructor parameters, asks for them in a dialog
-        puts the values in an attribute called constructor
-    """
-
-    def __init__(self, w, h, widgetClass):
-        self.widgetClass = widgetClass
-        super(WidgetHelper, self).__init__(w, h, self.widgetClass.__name__)
-            
-    def prompt_new_widget(self, appInstance):
-        self.appInstance = appInstance
-        self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
-        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
-        self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list')
-        self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput(200,30))
-        #for param in self.constructor_parameters_list:
-        for index in range(0,len(self.constructor_parameters_list)):
-            param = self.constructor_parameters_list[index]
-            _typ = self.widgetClass.__init__._constructor_types[index]
-            note = ' (%s)'%_typ.__name__
-            editWidget = None
-            if _typ==int:
-                editWidget = gui.SpinBox(200,30,'0',-65536,65535)
-            elif _typ==bool:
-                editWidget = gui.CheckBox(30,30)
-            else:
-                editWidget = gui.TextInput(200,30)
-            self.dialog.add_field_with_label(param, param + note, editWidget)
-        self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox(30,30))
-        self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
-        self.dialog.show(self.appInstance)
-        
-    def on_dialog_confirm(self):
-        """ Here the widget is allocated
-        """
-        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
-        param_values = []
-        param_for_constructor = []
-        for index in range(0,len(self.constructor_parameters_list)):
-            param = self.constructor_parameters_list[index]
-            _typ = self.widgetClass.__init__._constructor_types[index]
-            if _typ==int:
-                param_for_constructor.append(self.dialog.get_field(param).get_value())
-            elif _typ==bool:
-                param_for_constructor.append(self.dialog.get_field(param).get_value())
-            else:
-                param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
-            param_values.append(self.dialog.get_field(param).get_value())
-        print(self.constructor_parameters_list)
-        print(param_values)
-        #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
-        constructor = '(%s)'%(','.join(map(lambda v: str(v), param_for_constructor)))
-        #here we create and decorate the widget
-        widget = self.widgetClass(*param_values)
-        widget.attributes['editor_constructor'] = constructor
-        widget.attributes['editor_varname'] = self.dialog.get_field('name').get_value()
-        widget.attributes['editor_tag_type'] = 'widget'
-        widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
-        #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
-        widget.style['position'] = 'absolute'
-        widget.style['left'] = '0px'
-        widget.style['top'] = '0px'
-        self.appInstance.add_widget_to_editor(widget)
-        
-
-class WidgetCollection(gui.Widget):
-    def __init__(self, w, h, appInstance):
-        self.w = w
-        self.h = h
-        self.appInstance = appInstance
-        super(WidgetCollection, self).__init__(w, h, gui.Widget.LAYOUT_VERTICAL, 0)
-        
-        self.lblTitle = gui.Label(self.w, 30, "Widgets Toolbox")
-        self.listWidgets = gui.ListView(self.w, self.h-30)
-        
-        self.append(self.lblTitle)
-        self.append(self.listWidgets)
-        
-        #load all widgets
-        self.add_widget_to_collection(gui.Widget)
-        self.add_widget_to_collection(gui.Button)
-        self.add_widget_to_collection(gui.TextInput)
-        self.add_widget_to_collection(gui.Label)
-        self.add_widget_to_collection(gui.ListView)
-        self.add_widget_to_collection(gui.ListItem)
-        self.add_widget_to_collection(gui.DropDown)
-        self.add_widget_to_collection(gui.DropDownItem)
-        self.add_widget_to_collection(gui.Image)
-        self.add_widget_to_collection(gui.CheckBoxLabel)
-        self.add_widget_to_collection(gui.CheckBox)
-        self.add_widget_to_collection(gui.SpinBox)
-        self.add_widget_to_collection(gui.Slider)
-        
-    def add_widget_to_collection(self, widgetClass):
-        #create an helper that will be created on click
-        #the helper have to search for function that have 'return' annotation 'event_listener_setter'
-        helper = WidgetHelper(self.w, 30, widgetClass)
-        self.listWidgets.append( helper )
-        helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")
 
 
 class Project(gui.Widget):
@@ -169,8 +68,8 @@ class Project(gui.Widget):
         This class loads and save the project file, 
         and also compiles a project in python code.
     """
-    def __init__(self, w, h, project_name='untitled'):
-        super(Project, self).__init__(w, h, True, 0)
+    def __init__(self, project_name='untitled'):
+        super(Project, self).__init__()
         
         self.project_name = project_name
     
@@ -341,38 +240,54 @@ class Editor(App):
     def __init__(self, *args):
         super(Editor, self).__init__(*args,static_paths=('./res/',))
 
+    def idle(self):
+        self.resizeHelper.update_position()
+
     def main(self):
-        self.mainContainer = gui.Widget(970, 700, gui.Widget.LAYOUT_VERTICAL, 0)
+        self.mainContainer = gui.Widget()
+        self.mainContainer.style['width'] = '100%'
+        self.mainContainer.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
         self.mainContainer.style['background-color'] = 'white'
         self.mainContainer.style['border'] = 'none'
         
-        menu = gui.Menu(950, 30)
-        m1 = gui.MenuItem(100, 30, 'File')
-        m10 = gui.MenuItem(100, 30, 'New')
-        m11 = gui.MenuItem(100, 30, 'Open')
-        m12 = gui.MenuItem(100, 30, 'Save')
+        menu = gui.Menu()
+        menu.set_size('100%','30px')
+        menu.style['z-index'] = '1'
+        m1 = gui.MenuItem('File')
+        m1.set_size(100, 30)
+        m10 = gui.MenuItem('New')
+        m10.set_size(100, 30)
+        m11 = gui.MenuItem('Open')
+        m11.set_size(100, 30)
+        m12 = gui.MenuItem('Save')
+        m12.set_size(100, 30)
         #m12.style['visibility'] = 'hidden'
-        m121 = gui.MenuItem(100, 30, 'Save')
-        m122 = gui.MenuItem(100, 30, 'Save as')
+        m121 = gui.MenuItem('Save')
+        m121.set_size(100, 30)
+        m122 = gui.MenuItem('Save as')
+        m122.set_size(100, 30)
         m1.append(m10)
         m1.append(m11)
         m1.append(m12)
         m12.append(m121)
         m12.append(m122)
         
-        m2 = gui.MenuItem(100, 30, 'Edit')
-        m21 = gui.MenuItem(100, 30, 'Cut')
-        m22 = gui.MenuItem(100, 30, 'Paste')
+        m2 = gui.MenuItem('Edit')
+        m2.set_size(100, 30)
+        m21 = gui.MenuItem('Cut')
+        m21.set_size(100, 30)
+        m22 = gui.MenuItem('Paste')
+        m22.set_size(100, 30)
         m2.append(m21)
         m2.append(m22)
         
         menu.append(m1)
         menu.append(m2)
         
-        self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog(600, 310, 'Open Project', 'Select the project file', False, '.', True, False, self)
+        self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file', False, '.', True, False, self)
         self.fileOpenDialog.set_on_confirm_value_listener(self, 'on_open_dialog_confirm')
         
-        self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog(600, 310, 'Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
+        self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog('Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
         self.fileSaveAsDialog.add_fileinput_field('untitled.py')
         self.fileSaveAsDialog.set_on_confirm_value_listener(self, 'on_saveas_dialog_confirm')        
 
@@ -383,14 +298,21 @@ class Editor(App):
         m21.set_on_click_listener(self, 'menu_cut_selection_clicked')
         m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
         
-        self.subContainer = gui.Widget(970, 700, gui.Widget.LAYOUT_HORIZONTAL, 5)
+        self.subContainer = gui.Widget()
+        self.subContainer.set_size('100%', 700)
+        self.subContainer.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style['background-color'] = 'transparent'
-        
+        self.subContainer.style['position'] = 'relative'
+                
         #here are contained the widgets
-        self.widgetsCollection = WidgetCollection(180, 600, self)
-        self.project = Project(580, 600)
-        self.project.attributes['ondragover'] = "event.preventDefault();"
+        self.widgetsCollection = editor_widgets.WidgetCollection(self)
+        self.widgetsCollection.set_size('18%', 600)
+        self.widgetsCollection.style['position'] = 'relative'
+        self.widgetsCollection.style['left'] = '0px'
         
+        self.project = Project()
+        self.project.set_size('60%', 600)
+        self.project.attributes['ondragover'] = "event.preventDefault();"
         self.EVENT_ONDROPPPED = "on_dropped"
         self.project.attributes['ondrop'] = """event.preventDefault();
                 var data = JSON.parse(event.dataTransfer.getData('application/json'));
@@ -419,8 +341,12 @@ class Editor(App):
         ## appending a widget to another, the first argument is a string key
         #self.mainContainer.add_child('javascript',javascript_code)
         
-        self.attributeEditor = editor_widgets.EditorAttributes(180, 600)
+        self.attributeEditor = editor_widgets.EditorAttributes()
         self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
+        self.attributeEditor.set_size('18%', 600)
+        self.attributeEditor.style['position'] = 'absolute'
+        self.attributeEditor.style['right'] = '0px'
+        
         self.mainContainer.append(menu)
         self.mainContainer.append(self.subContainer)
         
@@ -432,7 +358,8 @@ class Editor(App):
         
         self.selectedWidget = self.project
         
-        self.resizeHelper = ResizeHelper(24, 24)
+        self.resizeHelper = ResizeHelper()
+        self.resizeHelper.set_size(24, 24)
         
         self.project.new()
         
@@ -469,6 +396,8 @@ class Editor(App):
         widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
         widget.attributes['ondragover'] = "event.preventDefault();"   
         widget.attributes['ondrop'] = """event.preventDefault();return false;"""
+        widget.set_size(100,100)
+        widget.style['display'] = 'block'
         widget.attributes['tabindex']=str(self.tabindex)
         self.tabindex += 1
         
@@ -548,7 +477,7 @@ def on_dropped(self, left, top):
     self.style['top']=top
 
 if __name__ == "__main__":
-    p = Project(0,0)
+    p = Project()
     root = p.load('./example_project.py')
     p.append(root, "root")
     p.save(None)

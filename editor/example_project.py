@@ -13,7 +13,7 @@ class untitled(App):
         
     @staticmethod
     def construct_ui():
-        button = Widget(200,200,0,0)
+        button = Widget()
         button.attributes['editor_newclass'] = "False"
         button.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
         button.attributes['ondragover'] = "event.preventDefault();"
@@ -34,7 +34,7 @@ class untitled(App):
         button.style['overflow'] = "auto"
         button.style['margin'] = "0px 0px"
         button.style['left'] = "177px"
-        bt = Button(150,70,'pulsante')
+        bt = Button('pulsante')
         bt.attributes['editor_newclass'] = "False"
         bt.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
         bt.attributes['ondragover'] = "event.preventDefault();"
