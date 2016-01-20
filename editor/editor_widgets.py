@@ -154,8 +154,6 @@ class WidgetHelper(gui.ListItem):
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
         widget.style['position'] = 'absolute'
         widget.style['display'] = 'block'
-        widget.style['left'] = '1px'
-        widget.style['top'] = '1px'
         widget.set_size(100,100)
         self.appInstance.add_widget_to_editor(widget)
 

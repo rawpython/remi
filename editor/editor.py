@@ -210,7 +210,7 @@ class Project(gui.Widget):
         code_classes = ''
         
         #the root widget have to appear at the center of the screen, regardless of the user positioning
-        backupRootNodeStyle = self.children['root'].style
+        backupRootNodeStyle = dict(self.children['root'].style)
         self.children['root'].style['position'] = 'relative'
         del self.children['root'].style['left']
         del self.children['root'].style['top']
@@ -407,6 +407,11 @@ class Editor(App):
         widget.attributes['ondragover'] = "event.preventDefault();"   
         widget.attributes['ondrop'] = """event.preventDefault();return false;"""
         widget.attributes['tabindex']=str(self.tabindex)
+        widget.style['position'] = 'absolute'
+        if not 'left' in widget.style.keys():
+            widget.style['left'] = '1px'
+        if not 'top' in widget.style.keys():
+            widget.style['top'] = '1px'
         self.tabindex += 1
         
     def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):
@@ -487,10 +492,11 @@ def on_dropped(self, left, top):
     self.style['top']=top
 
 if __name__ == "__main__":
-    p = Project()
-    root = p.load('./example_project.py')
-    p.append(root, "root")
-    p.save(None)
+    #p = Project()
+    #root = p.load('./example_project.py')
+    #p.append(root, "root")
+    #p.save(None)
+    
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)

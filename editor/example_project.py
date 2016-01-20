@@ -13,50 +13,49 @@ class untitled(App):
         
     @staticmethod
     def construct_ui():
-        button = Widget()
+        widget = Widget()
+        widget.attributes['style'] = "top:197px;height:229px;width:271px;position:absolute;overflow:auto;margin:0px auto;display:block;left:230px"
+        widget.attributes['editor_newclass'] = "False"
+        widget.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
+        widget.attributes['ondragover'] = "event.preventDefault();"
+        widget.attributes['ondrop'] = "event.preventDefault();return false;"
+        widget.attributes['editor_constructor'] = "()"
+        widget.attributes['class'] = "Widget"
+        widget.attributes['draggable'] = "true"
+        widget.attributes['editor_tag_type'] = "widget"
+        widget.attributes['onclick'] = "sendCallback('74473200','onclick');event.stopPropagation();event.preventDefault();"
+        widget.attributes['editor_varname'] = "widget"
+        widget.attributes['tabindex'] = "0"
+        widget.style['height'] = "229px"
+        widget.style['width'] = "271px"
+        widget.style['position'] = "relative"
+        widget.style['overflow'] = "auto"
+        widget.style['margin'] = "0px auto"
+        widget.style['display'] = "block"
+        button = Button('button')
+        button.attributes['style'] = "top:108px;height:100px;width:100px;position:absolute;overflow:auto;margin:0px auto;display:block;left:87px"
         button.attributes['editor_newclass'] = "False"
         button.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
         button.attributes['ondragover'] = "event.preventDefault();"
         button.attributes['ondrop'] = "event.preventDefault();return false;"
-        button.attributes['editor_constructor'] = "(200,200,0,0)"
-        button.attributes['style'] = "top:130px;float:left;height:200px;width:200px;position:absolute;overflow:auto;margin:0px 0px;left:177px"
-        button.attributes['class'] = "Widget"
+        button.attributes['editor_constructor'] = "('button')"
+        button.attributes['class'] = "Button"
         button.attributes['draggable'] = "true"
         button.attributes['editor_tag_type'] = "widget"
-        button.attributes['onclick'] = "sendCallback('81881968','onclick');event.stopPropagation();event.preventDefault();"
+        button.attributes['onclick'] = "sendCallback('73512080','onclick');event.stopPropagation();event.preventDefault();"
         button.attributes['editor_varname'] = "button"
-        button.attributes['tabindex'] = "0"
-        button.style['top'] = "130px"
-        button.style['float'] = "left"
-        button.style['height'] = "200px"
-        button.style['width'] = "200px"
+        button.attributes['tabindex'] = "1"
+        button.style['top'] = "108px"
+        button.style['height'] = "100px"
+        button.style['width'] = "100px"
         button.style['position'] = "absolute"
         button.style['overflow'] = "auto"
-        button.style['margin'] = "0px 0px"
-        button.style['left'] = "177px"
-        bt = Button('pulsante')
-        bt.attributes['editor_newclass'] = "False"
-        bt.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
-        bt.attributes['ondragover'] = "event.preventDefault();"
-        bt.attributes['ondrop'] = "event.preventDefault();return false;"
-        bt.attributes['editor_constructor'] = "(150,70,'pulsante')"
-        bt.attributes['style'] = "top:103px;height:88px;width:113px;position:absolute;overflow:auto;margin:0px 0px;left:31px"
-        bt.attributes['class'] = "Button"
-        bt.attributes['draggable'] = "true"
-        bt.attributes['editor_tag_type'] = "widget"
-        bt.attributes['onclick'] = "sendCallback('35278096','onclick');event.stopPropagation();event.preventDefault();"
-        bt.attributes['editor_varname'] = "bt"
-        bt.attributes['tabindex'] = "1"
-        bt.style['top'] = "103px"
-        bt.style['height'] = "88px"
-        bt.style['width'] = "113px"
-        bt.style['position'] = "absolute"
-        bt.style['overflow'] = "auto"
-        bt.style['margin'] = "0px 0px"
-        bt.style['left'] = "31px"
-        button.append(bt,'35278096')
+        button.style['margin'] = "0px auto"
+        button.style['display'] = "block"
+        button.style['left'] = "87px"
+        widget.append(button,'73512080')
         
-        return button
+        return widget
     
 
     
