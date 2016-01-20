@@ -942,7 +942,8 @@ class CheckBoxLabel(Widget):
     @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data=''):
 
-        super(CheckBoxLabel, self).__init__(Widget.LAYOUT_HORIZONTAL)
+        super(CheckBoxLabel, self).__init__()
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self._checkbox = CheckBox(checked, user_data)
         self._label = Label(label)
         self.append(self._checkbox, key='checkbox')

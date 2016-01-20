@@ -26,7 +26,8 @@ class Cell(gui.Widget):
     """
 
     def __init__(self, width, height, x, y, game):
-        super(Cell, self).__init__(width, height)
+        super(Cell, self).__init__()
+        self.set_size(width, height)
         self.x = x
         self.y = y
         self.has_mine = False
@@ -94,30 +95,48 @@ class MyApp(App):
         threading.Timer(1, self.display_time).start()
 
     def main(self):
-        # the arguments are	width - height - layoutOrientationOrizontal
-        self.main_container = gui.Widget(1020, 600, False, 10)
-
-        self.title = gui.Label(1000, 30, 'Mine Field GAME')
+        # the arguments are    width - height - layoutOrientationOrizontal
+        self.main_container = gui.Widget()
+        self.main_container.set_size(1020, 600)
+        self.main_container.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
+        
+        self.title = gui.Label('Mine Field GAME')
+        self.title.set_size(1000, 30)
+        self.title.style['margin'] = '10px'
         self.title.style['font-size'] = '25px'
         self.title.style['font-weight'] = 'bold'
 
-        self.info = gui.Label(400, 30, 'Collaborative minefiled game. Enjoy.')
+        self.info = gui.Label('Collaborative minefiled game. Enjoy.')
+        self.info.set_size(400, 30)
+        self.info.style['margin'] = '10px'
         self.info.style['font-size'] = '20px'
 
-        self.lblMineCount = gui.Label(100, 30, 'Mines')
-        self.lblFlagCount = gui.Label(100, 30, 'Flags')
+        self.lblMineCount = gui.Label('Mines')
+        self.lblMineCount.set_size(100, 30)
+        self.lblFlagCount = gui.Label('Flags')
+        self.lblFlagCount.set_size(100, 30)
 
         self.time_count = 0
-        self.lblTime = gui.Label(100, 30, 'Time')
+        self.lblTime = gui.Label('Time')
+        self.lblTime.set_size(100, 30)
 
-        self.btReset = gui.Button(100, 30, 'Restart')
+        self.btReset = gui.Button('Restart')
+        self.btReset.set_size(100, 30)
         self.btReset.set_on_click_listener(self, "new_game")
 
-        self.horizontal_container = gui.Widget(1000, 30, True, 0)
+        self.horizontal_container = gui.Widget()
+        self.horizontal_container.style['display'] = 'block'
+        self.horizontal_container.style['overflow'] = 'auto'
+        self.horizontal_container.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.horizontal_container.style['margin'] = '10px'
         self.horizontal_container.append(self.info)
-        self.horizontal_container.append(gui.Image(30, 30, '/res/mine.png'))
+        imgMine = gui.Image('/res/mine.png')
+        imgMine.set_size(30, 30)
+        self.horizontal_container.append(imgMine)
         self.horizontal_container.append(self.lblMineCount)
-        self.horizontal_container.append(gui.Image(30, 30, '/res/flag.png'))
+        imgFlag = gui.Image('/res/flag.png')
+        imgFlag.set_size(30, 30)
+        self.horizontal_container.append(imgFlag)
         self.horizontal_container.append(self.lblFlagCount)
         self.horizontal_container.append(self.lblTime)
         self.horizontal_container.append(self.btReset)
@@ -125,9 +144,11 @@ class MyApp(App):
         self.minecount = 0  # mine number in the map
         self.flagcount = 0  # flag placed by the players
 
-        self.link = gui.Link(1000, 20, "https://github.com/dddomodossola/remi",
+        self.link = gui.Link("https://github.com/dddomodossola/remi",
                              "This is an example of REMI gui library.")
-
+        self.link.set_size(1000, 20)
+        self.link.style['margin'] = '10px'
+        
         self.main_container.append(self.title)
         self.main_container.append(self.horizontal_container)
         self.main_container.append(self.link)
@@ -145,7 +166,7 @@ class MyApp(App):
 
     def new_game(self):
         self.time_count = 0
-        self.mine_table = gui.Table(900, 450)
+        self.mine_table = gui.Table()#900, 450
         self.mine_matrix = self.build_mine_matrix(30, 15, 60)
         self.mine_table.from_2d_matrix(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
@@ -214,7 +235,7 @@ class MyApp(App):
 
     def explosion(self, cell):
         print("explosion")
-        self.mine_table = gui.Table(900, 450)
+        self.mine_table = gui.Table()
         self.main_container.append(self.mine_table, key="mine_table")
         for x in range(0, len(self.mine_matrix[0])):
             for y in range(0, len(self.mine_matrix)):

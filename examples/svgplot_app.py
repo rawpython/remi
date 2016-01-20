@@ -126,9 +126,11 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        self.wid = gui.Widget(620, 620, False, 10)
+        self.wid = gui.Widget()
+        self.wid.set_size(620, 620)
 
         self.svgplot = SvgPlot(600, 600)
+        self.svgplot.style['margin'] = '10px'
         self.plotData1 = gui.SvgPolyline(500)
         self.plotData1.set_stroke(2.0, 'rgba(255,0,0,0.8)')
         self.plotData2 = gui.SvgPolyline(500)
