@@ -208,6 +208,12 @@ class Project(gui.Widget):
         compiled_code = ''
         code_classes = ''
         
+        #the root widget have to appear at the center of the screen, regardless of the user positioning
+        backupRootNodeStyle = self.children['root'].style
+        self.children['root'].style['position'] = 'relative'
+        del self.children['root'].style['left']
+        del self.children['root'].style['top']
+        
         ret = self.repr_widget_for_editor( self.children['root'] )
         self.path_to_this_widget = []
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
@@ -230,6 +236,9 @@ class Project(gui.Widget):
                                                        'classname':self.project_name}
         
         print(compiled_code)
+        
+        self.children['root'].style = backupRootNodeStyle
+        
         if save_path_filename!=None:
             f = open(save_path_filename, "w")
             f.write(compiled_code)
@@ -284,7 +293,7 @@ class Editor(App):
         menu.append(m1)
         menu.append(m2)
         
-        self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file', False, '.', True, False, self)
+        self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
         self.fileOpenDialog.set_on_confirm_value_listener(self, 'on_open_dialog_confirm')
         
         self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog('Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
@@ -404,6 +413,8 @@ class Editor(App):
     def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):
         if parent == None:
             parent = self.selectedWidget
+            if self.selectedWidget == self.project:
+                self.selectedWidget = widget
         self.configure_widget_for_editing(widget)
         key = "root" if parent==self.project else str(id(widget))
         if root_tree_node:
