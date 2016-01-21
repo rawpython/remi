@@ -118,6 +118,8 @@ class WidgetHelper(gui.ListItem):
                 editWidget = gui.SpinBox('0',-65536,65535)
             elif _typ==bool:
                 editWidget = gui.CheckBox()
+            elif _typ==str:
+                editWidget = gui.TextInput()
             else:
                 editWidget = gui.TextInput()
             self.dialog.add_field_with_label(param, param + note, editWidget)
@@ -138,8 +140,10 @@ class WidgetHelper(gui.ListItem):
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
             elif _typ==bool:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
-            else:
+            elif _typ==str:
                 param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
+            else:
+                param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
             param_values.append(self.dialog.get_field(param).get_value())
         print(self.constructor_parameters_list)
         print(param_values)
