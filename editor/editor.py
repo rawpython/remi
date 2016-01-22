@@ -339,7 +339,7 @@ class Editor(App):
         ## appending a widget to another, the first argument is a string key
         #self.mainContainer.add_child('javascript',javascript_code)
         
-        self.attributeEditor = editor_widgets.EditorAttributes(width='24%',height='100%')
+        self.attributeEditor = editor_widgets.EditorAttributes(self, width='24%', height='100%')
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
         

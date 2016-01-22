@@ -201,15 +201,25 @@ class WidgetCollection(gui.Widget):
 class EditorAttributes(gui.Widget):
     """ Contains EditorAttributeInput each one of which notify a new value with an event
     """
-    def __init__(self, **kwargs):
+    def __init__(self, appInstance, **kwargs):
         super(EditorAttributes, self).__init__(**kwargs)
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         self.style['overflow-y'] = 'scroll'
+        
+        self.titleLabel = gui.Label('Attributes editor')
+        self.infoLabel = gui.Label('Selected widget: None')
+        self.append(self.titleLabel)
+        self.append(self.infoLabel)
+        
+        self.attributesInputs = list()
         #load editable attributes
+        self.append(self.titleLabel)
         for attributeName in html_helper.editorAttributeDictionary.keys():
-            attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName])
+            attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], '', appInstance)
             attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
+            attributeEditor.style['display'] = 'none'
             self.append(attributeEditor)
+            self.attributesInputs.append(attributeEditor)
     
     #this function is called by an EditorAttributeInput change event and propagates to the listeners 
     #adding as first parameter the tag to which it refers
@@ -220,14 +230,54 @@ class EditorAttributes(gui.Widget):
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [widgetAttributeMember, attributeName, newValue])
         
     def set_widget(self, widget):
+        self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
         self.attributes['selected_widget_id'] = str(id(widget))
         self.targetWidget = widget
+        for w in self.attributesInputs:
+            w.style['display'] = 'block'
 
+
+class UrlPathInput(gui.Widget):
+    def __init__(self, appInstance, **kwargs):
+        super(UrlPathInput, self).__init__(**kwargs)
+        self.appInstance = appInstance
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'auto'
+        
+        self.txtInput = gui.TextInput(True, width='80%', height='100%')
+        self.txtInput.style['float'] = 'left'
+        self.txtInput.set_on_change_listener(self, "on_txt_changed")
+        self.append(self.txtInput)
+        
+        self.btFileFolderSelection = gui.Widget(width=30, height='100%')
+        self.btFileFolderSelection.style['background-image'] = "url('/res/folder.png')"
+        self.btFileFolderSelection.style['background-color'] = 'transparent'
+        self.append(self.btFileFolderSelection)
+        self.btFileFolderSelection.set_on_click_listener(self, 'on_file_selection_bt_pressed')
+        
+        self.selectionDialog = gui.FileSelectionDialog('Select a file', '', False, './', True, False)
+        self.selectionDialog.set_on_confirm_value_listener(self, 'file_dialog_confirmed')
+    
+    def on_txt_changed(self,value):
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+    
+    def on_file_selection_bt_pressed(self):
+        self.selectionDialog.show(self.appInstance)
+        
+    def file_dialog_confirmed(self, fileList):
+        if len(fileList)>0:
+            self.txtInput.set_value("url('/res/" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
+            return self.eventManager.propagate(self.EVENT_ONCHANGE, [self.txtInput.get_value()])
+            
+    def set_on_change_listener(self, listener, funcname):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        
 
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
 class EditorAttributeInput(gui.Widget):
-    def __init__(self, attributeName, attributeDict, defaultValue=''):
+    def __init__(self, attributeName, attributeDict, defaultValue='', appInstance=None):
         super(EditorAttributeInput, self).__init__()
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
@@ -244,7 +294,7 @@ class EditorAttributeInput(gui.Widget):
         self.inputWidget = None
 
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'affected_widget_attribute':'style', 'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-        if attributeDict['type'] in (bool,int,gui.ColorPicker,gui.DropDown):
+        if attributeDict['type'] in (bool,int,gui.ColorPicker,gui.DropDown,gui.FileSelectionDialog):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox(defaultValue=='checked')
             if attributeDict['type'] == int:
@@ -255,6 +305,8 @@ class EditorAttributeInput(gui.Widget):
                 self.inputWidget = gui.DropDown()
                 for value in attributeDict['additional_data']['possible_values']:
                     self.inputWidget.append(gui.DropDownItem(value),value)
+            if attributeDict['type'] == gui.FileSelectionDialog:
+                self.inputWidget = UrlPathInput(appInstance)
                 
         else: #default editor is string
             self.inputWidget = gui.TextInput()
