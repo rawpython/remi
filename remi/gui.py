@@ -550,6 +550,7 @@ class GenericDialog(Widget):
         container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
+        self.inputs[key].style['float'] = 'right'
         self.container.append(container, key=key)
 
     def add_field(self, key, field):

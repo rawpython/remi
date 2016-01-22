@@ -106,7 +106,7 @@ class WidgetHelper(gui.ListItem):
         self.appInstance = appInstance
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
-        self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list')
+        self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list', width='40%')
         self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput())
         #for param in self.constructor_parameters_list:
         for index in range(0,len(self.widgetClass.__init__._constructor_types)):
@@ -243,14 +243,15 @@ class UrlPathInput(gui.Widget):
         self.appInstance = appInstance
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
-        self.style['overflow'] = 'auto'
+        self.style['overflow'] = 'hidden'
         
         self.txtInput = gui.TextInput(True, width='80%', height='100%')
         self.txtInput.style['float'] = 'left'
         self.txtInput.set_on_change_listener(self, "on_txt_changed")
         self.append(self.txtInput)
         
-        self.btFileFolderSelection = gui.Widget(width=30, height='100%')
+        self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
+        self.btFileFolderSelection.style['background-repeat'] = 'round'
         self.btFileFolderSelection.style['background-image'] = "url('/res/folder.png')"
         self.btFileFolderSelection.style['background-color'] = 'transparent'
         self.append(self.btFileFolderSelection)

@@ -10,7 +10,7 @@ editorAttributeDictionary = {
     'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget','additional_data':{'affected_widget_attribute':'style'}},
     'background-image':{'type':gui.FileSelectionDialog, 'description':'An optional background image','additional_data':{'affected_widget_attribute':'style'}},
     'background-position':{'type':str, 'description':'The position of an optional background in the form 0% 0%','additional_data':{'affected_widget_attribute':'style'}},
-    'background-repeat':{'type':gui.DropDown, 'description':'The repeat behaviour of an optional background image', 'additional_data':{'affected_widget_attribute':'style', 'possible_values':('repeat','repeat-x','repeat-y','no-repeat','inherit')}},
+    'background-repeat':{'type':gui.DropDown, 'description':'The repeat behaviour of an optional background image', 'additional_data':{'affected_widget_attribute':'style', 'possible_values':('repeat','repeat-x','repeat-y','no-repeat','round','inherit')}},
     'border-color':{'type':gui.ColorPicker, 'description':'Border color', 'additional_data':{'affected_widget_attribute':'style'}},
     'border-width':{'type':str, 'description':'Border thickness', 'additional_data':{'affected_widget_attribute':'style'}},
     'border-style':{'type':gui.DropDown, 'description':'Border thickness', 'additional_data':{'affected_widget_attribute':'style', 'possible_values':('none','solid','dotted','dashed')}},
