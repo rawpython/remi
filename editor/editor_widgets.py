@@ -208,13 +208,19 @@ class EditorAttributesGroup(gui.Widget):
         self.style['overflow'] = 'auto'
         self.opened = True
         self.title = gui.Label(title)
+        self.title.style['padding-left'] = '32px'
+        self.title.style['background-image'] = "url('/res/minus.png')"
         self.title.style['font-weight'] = 'bold'
         self.title.style['background-color'] = 'lightgray'
+        self.title.style['background-repeat'] = 'no-repeat'
+        self.title.style['background-position'] = '5px'
         self.title.set_on_click_listener(self, 'openClose')
         self.append(self.title, '0')
         
     def openClose(self):
         self.opened = not self.opened
+        backgroundImage = "url('/res/minus.png')" if self.opened else "url('/res/plus.png')"
+        self.title.style['background-image'] = backgroundImage
         display = 'block' if self.opened else 'none'
         for widget in self.children.values():
             if widget!=self.title and type(widget)!=str:
@@ -241,7 +247,7 @@ class EditorAttributes(gui.Widget):
         for attributeName in html_helper.editorAttributeDictionary.keys():
             attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], '', appInstance)
             attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
-            attributeEditor.style['display'] = 'none'
+            #attributeEditor.style['display'] = 'none'
             if not html_helper.editorAttributeDictionary[attributeName]['group'] in self.attributeGroups.keys():
                 groupContainer = EditorAttributesGroup(html_helper.editorAttributeDictionary[attributeName]['group'])
                 self.attributeGroups[html_helper.editorAttributeDictionary[attributeName]['group']] = groupContainer
@@ -262,7 +268,7 @@ class EditorAttributes(gui.Widget):
         self.attributes['selected_widget_id'] = str(id(widget))
         self.targetWidget = widget
         for w in self.attributesInputs:
-            w.style['display'] = 'block'
+            #w.style['display'] = 'block'
             w.set_widget(widget)
 
 
@@ -305,8 +311,7 @@ class UrlPathInput(gui.Widget):
     
     def set_value(self, value):
         self.txtInput.set_value(value)
-    
-        
+
 
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
@@ -368,3 +373,4 @@ class EditorAttributeInput(gui.Widget):
         
     def set_on_attribute_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, listener, funcname)
+        
