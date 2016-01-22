@@ -19,7 +19,30 @@ editorAttributeDictionary = {
     'font-size':{'type':str, 'description':'Font size', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}},
     'font-style':{'type':gui.DropDown, 'description':'Style', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','italic','oblique','inherit')}},
     'font-weight':{'type':gui.DropDown, 'description':'Style', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','bold','bolder','lighter','100','200','300','400','500','600','700','800','900','inherit')}},
-
+    'flex-direction':{'type':gui.DropDown, 'description':'The flex-direction property specifies the direction of the flexible items. Note: If the element is not a flexible item, the flex-direction property has no effect.'
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('row','row-reverse','column','column-reverse','initial','inherit')}},
+    'display':{'type':gui.DropDown, 'description':'The display property specifies the type of box used for an HTML element'
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('inline','block','flex','inline-block','inline-flex','inline-table','list-item','run-in','none','inherit')}},
+    'justify-content':{'type':gui.DropDown, 'description':"The justify-content property aligns the flexible container's items when the items do not use all available space on the main-axis (horizontally)"
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('flex-start','flex-end','center','space-between','space-around','initial','inherit')}},
+    'align-items':{'type':gui.DropDown, 'description':'The align-items property specifies the default alignment for items inside the flexible container'
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('stretch','center','flex-start','flex-end','baseline','initial','inherit')}},
+    'flex-wrap':{'type':gui.DropDown, 'description':"The flex-wrap property specifies whether the flexible items should wrap or not. Note: If the elements are not flexible items, the flex-wrap property has no effect"
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('nowrap','wrap','wrap-reverse','initial','inherit')}},
+    'align-content':{'type':gui.DropDown, 'description':"The align-content property modifies the behavior of the flex-wrap property.\nIt is similar to align-items, but instead of aligning flex items, it aligns flex lines. Tip: Use the justify-content property to align the items on the main-axis (horizontally).Note: There must be multiple lines of items for this property to have any effect."
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('stretch','center','flex-start','flex-end','space-between','space-around','initial','inherit')}},
+    'flex-flow':{'type':gui.DropDown, 'description':"The flex-flow property is a shorthand property for the flex-direction and the flex-wrap properties. The flex-direction property specifies the direction of the flexible items."
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('flex-direction','flex-wrap','initial','inherit')}},
+    'order':{'type':int, 'description':"The order property specifies the order of a flexible item relative to the rest of the flexible items inside the same container. Note: If the element is not a flexible item, the order property has no effect."
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
+    'align-self':{'type':gui.DropDown, 'description':"The align-self property specifies the alignment for the selected item inside the flexible container. Note: The align-self property overrides the flexible container's align-items property"
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('auto','stretch','center','flex-start','flex-end','baseline','initial','inherit')}},
+    'flex':{'type':int, 'description':"The flex property specifies the length of the item, relative to the rest of the flexible items inside the same container. The flex property is a shorthand for the flex-grow, flex-shrink, and the flex-basis properties. Note: If the element is not a flexible item, the flex property has no effect."
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
+    'position':{'type':gui.DropDown, 'description':'The position property specifies the type of positioning method used for an element.'
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('static','absolute','fixed','relative','initial','inherit')}},
+    #:{'type':, 'description':'', 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
+    
     #'disabled':{'type':bool, 'description':'Whether the form control is disabled', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
     #'hidden':{'type':bool, 'description':'Whether the element is relevant', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
     'title':{'type':str, 'description':'Advisory information for the element', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}},
