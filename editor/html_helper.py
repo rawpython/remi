@@ -11,6 +11,9 @@ editorAttributeDictionary = {
     'background-image':{'type':gui.FileSelectionDialog, 'description':'An optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
     'background-position':{'type':str, 'description':'The position of an optional background in the form 0% 0%', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
     'background-repeat':{'type':gui.DropDown, 'description':'The repeat behaviour of an optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{'possible_values':('repeat','repeat-x','repeat-y','no-repeat','round','inherit')}},
+    'opacity':{'type':float, 'description':"The opacity property sets the opacity level for an element.\nThe opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 0 is completely transparent."
+                           , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':'', 'min':0.0, 'max':1.0, 'default':1.0}},
+    
     'border-color':{'type':gui.ColorPicker, 'description':'Border color', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}},
     'border-width':{'type':str, 'description':'Border thickness', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}},
     'border-style':{'type':gui.DropDown, 'description':'Border thickness', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{'possible_values':('none','solid','dotted','dashed')}},
@@ -34,11 +37,11 @@ editorAttributeDictionary = {
     'flex-flow':{'type':gui.DropDown, 'description':"The flex-flow property is a shorthand property for the flex-direction and the flex-wrap properties. The flex-direction property specifies the direction of the flexible items."
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('flex-direction','flex-wrap','initial','inherit')}},
     'order':{'type':int, 'description':"The order property specifies the order of a flexible item relative to the rest of the flexible items inside the same container. Note: If the element is not a flexible item, the order property has no effect."
-                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':'', 'min':-10000, 'max':10000, 'default':1}},
     'align-self':{'type':gui.DropDown, 'description':"The align-self property specifies the alignment for the selected item inside the flexible container. Note: The align-self property overrides the flexible container's align-items property"
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('auto','stretch','center','flex-start','flex-end','baseline','initial','inherit')}},
     'flex':{'type':int, 'description':"The flex property specifies the length of the item, relative to the rest of the flexible items inside the same container. The flex property is a shorthand for the flex-grow, flex-shrink, and the flex-basis properties. Note: If the element is not a flexible item, the flex property has no effect."
-                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':'', 'min':-10000, 'max':10000, 'default':1}},
     'position':{'type':gui.DropDown, 'description':'The position property specifies the type of positioning method used for an element.'
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('static','absolute','fixed','relative','initial','inherit')}},
     #:{'type':, 'description':'', 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},

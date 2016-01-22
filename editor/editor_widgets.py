@@ -245,7 +245,7 @@ class EditorAttributes(gui.Widget):
         self.append(self.titleLabel)
         self.attributeGroups = {}
         for attributeName in html_helper.editorAttributeDictionary.keys():
-            attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], '', appInstance)
+            attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], appInstance)
             attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
             #attributeEditor.style['display'] = 'none'
             if not html_helper.editorAttributeDictionary[attributeName]['group'] in self.attributeGroups.keys():
@@ -316,7 +316,7 @@ class UrlPathInput(gui.Widget):
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
 class EditorAttributeInput(gui.Widget):
-    def __init__(self, attributeName, attributeDict, defaultValue='', appInstance=None):
+    def __init__(self, attributeName, attributeDict, appInstance=None):
         super(EditorAttributeInput, self).__init__()
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
@@ -333,13 +333,13 @@ class EditorAttributeInput(gui.Widget):
         self.inputWidget = None
 
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'affected_widget_attribute':'style', 'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-        if attributeDict['type'] in (bool,int,gui.ColorPicker,gui.DropDown,gui.FileSelectionDialog):
+        if attributeDict['type'] in (bool,int,float,gui.ColorPicker,gui.DropDown,gui.FileSelectionDialog):
             if attributeDict['type'] == bool:
-                self.inputWidget = gui.CheckBox(defaultValue=='checked')
-            if attributeDict['type'] == int:
-                self.inputWidget = gui.SpinBox(-65535, 65535, defaultValue)
+                self.inputWidget = gui.CheckBox('checked')
+            if attributeDict['type'] == int or attributeDict['type'] == float:
+                self.inputWidget = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'])
             if attributeDict['type'] == gui.ColorPicker:
-                self.inputWidget = gui.ColorPicker(defaultValue)
+                self.inputWidget = gui.ColorPicker()
             if attributeDict['type'] == gui.DropDown:
                 self.inputWidget = gui.DropDown()
                 for value in attributeDict['additional_data']['possible_values']:
