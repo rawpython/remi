@@ -1,0 +1,157 @@
+
+/* latin */
+@font-face {
+  font-family: 'Hind';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Hind Regular'), local('Hind-Regular'), url(/res/font.woff) format('woff');
+}
+
+html {
+	height:100%;
+    margin:0px;
+    padding:0px;
+}
+
+body {
+	background-image: url( '/res/bg.png' );
+	font-family: 'Hind';
+    height:100%;
+    margin:0px;
+    padding:0px;
+}
+
+body > div {
+	border: 3px solid rgb(  50,50,50 );
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+}
+
+div {
+	background-color: rgb(240, 240, 240);
+}
+
+.ListView {
+	border: none;
+	padding: 0;
+	background-color: white;
+	cursor: default;
+	overflow: scroll;
+	list-style: none;
+}
+
+.ListItem {
+	padding: 2px;
+}
+
+.ListItem[selected='True'] {
+	background-color: rgb(215,215,215)
+}
+
+.ListItem:hover {
+	background: linear-gradient( rgb(230,230,230) , rgb( 215,215,215 ) );
+}
+
+input,button,textarea,select {
+	font-family: 'Hind';
+	padding: 0px;
+	border: none;
+}
+
+button,th {
+	border: 1px solid rgb( 73,73,73 );
+	color: white;
+	background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
+	font-weight: normal;
+	cursor: default;
+}
+
+button:hover,th:hover {
+	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
+}
+
+.date, .number, .TextInput, .ListView, table, select {
+	border: none;
+	outline: 1px solid rgb( 210,210,210 );
+}
+
+table {
+	border-spacing: 0;
+	overflow: scroll;
+	border-collapse: collapse;
+	text-align: center;
+}
+
+.TableItem {
+	padding: 0px;
+	border: none;
+	outline: 1px solid lightgray;
+}
+
+td {
+	border: 1px solid rgb(218,218,218);
+	background-color: white;
+}
+
+
+nav > ul.Menu {
+	background: linear-gradient( rgb(110,110,110) , rgb( 70,70,70 ) );
+	border: 1px solid rgb( 73,73,73 );
+	color: white;
+}
+
+ul.Menu {
+	list-style-type: none;
+	padding: 0;
+	position: relative;
+}
+
+ .MenuItem {
+	cursor: default;
+	text-align: center;
+	position: relative;
+}
+
+
+.Menu .Menu {
+	position: absolute;
+}
+
+.Menu .Menu .Menu {
+	top: 5%;
+	left: 95%;
+	position: absolute;
+}
+
+
+ .MenuItem .Menu {
+	display: none;
+	background-color: white;
+	border: 1px solid #9C9B9B;
+	color: black;
+	height: auto !important;
+	position: absolute;
+	top: 100%;
+}
+
+
+.Menu > .MenuItem:hover {
+	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
+}
+
+
+.MenuItem .MenuItem:hover {
+	background: -webkit-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+	background: -o-linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+	background: linear-gradient(rgb(255, 255, 255), rgb(228, 228, 228));
+ }
+
+
+.Menu::after {
+	content: "";
+	clear: both;
+}
+
+.MenuItem:hover > .Menu {
+	display: block;
+}
