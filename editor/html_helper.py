@@ -7,18 +7,23 @@ import remi.gui as gui
 htmlInternallyUsedTags = ('id','parent_widget','children_list')
 
 editorAttributeDictionary = {
-    'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget','additional_data':{'affected_widget_attribute':'style'}},
-    'background-image':{'type':gui.FileSelectionDialog, 'description':'An optional background image','additional_data':{'affected_widget_attribute':'style'}},
-    'background-position':{'type':str, 'description':'The position of an optional background in the form 0% 0%','additional_data':{'affected_widget_attribute':'style'}},
-    'background-repeat':{'type':gui.DropDown, 'description':'The repeat behaviour of an optional background image', 'additional_data':{'affected_widget_attribute':'style', 'possible_values':('repeat','repeat-x','repeat-y','no-repeat','round','inherit')}},
-    'border-color':{'type':gui.ColorPicker, 'description':'Border color', 'additional_data':{'affected_widget_attribute':'style'}},
-    'border-width':{'type':str, 'description':'Border thickness', 'additional_data':{'affected_widget_attribute':'style'}},
-    'border-style':{'type':gui.DropDown, 'description':'Border thickness', 'additional_data':{'affected_widget_attribute':'style', 'possible_values':('none','solid','dotted','dashed')}},
-    'color':{'type':gui.ColorPicker, 'description':'Text color', 'additional_data':{'affected_widget_attribute':'style'}},
+    'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
+    'background-image':{'type':gui.FileSelectionDialog, 'description':'An optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
+    'background-position':{'type':str, 'description':'The position of an optional background in the form 0% 0%', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
+    'background-repeat':{'type':gui.DropDown, 'description':'The repeat behaviour of an optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{'possible_values':('repeat','repeat-x','repeat-y','no-repeat','round','inherit')}},
+    'border-color':{'type':gui.ColorPicker, 'description':'Border color', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}},
+    'border-width':{'type':str, 'description':'Border thickness', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}},
+    'border-style':{'type':gui.DropDown, 'description':'Border thickness', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{'possible_values':('none','solid','dotted','dashed')}},
+    'color':{'type':gui.ColorPicker, 'description':'Text color', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}},
+    'font-family':{'type':str, 'description':'Font family name', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}},
+    'font-size':{'type':str, 'description':'Font size', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}},
+    'font-style':{'type':gui.DropDown, 'description':'Style', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','italic','oblique','inherit')}},
+    'font-weight':{'type':gui.DropDown, 'description':'Style', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','bold','bolder','lighter','100','200','300','400','500','600','700','800','900','inherit')}},
 
-    'disabled':{'type':bool, 'description':'Whether the form control is disabled', 'additional_data':{'affected_widget_attribute':'attributes'}},
-    'hidden':{'type':bool, 'description':'Whether the element is relevant', 'additional_data':{'affected_widget_attribute':'attributes'}},
-    'title':{'type':str, 'description':'Advisory information for the element', 'additional_data':{'affected_widget_attribute':'attributes'}}
+    #'disabled':{'type':bool, 'description':'Whether the form control is disabled', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
+    #'hidden':{'type':bool, 'description':'Whether the element is relevant', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
+    'title':{'type':str, 'description':'Advisory information for the element', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}},
+    'editor_varname':{'type':str, 'description':'Variable name', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}}
 }
 
 #future use

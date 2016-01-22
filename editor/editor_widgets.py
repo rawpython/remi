@@ -325,7 +325,7 @@ class EditorAttributeInput(gui.Widget):
         self.inputWidget.set_value(value)
     
     def on_attribute_changed(self, value):
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self.attributeDict['additional_data']['affected_widget_attribute'], self.attributeName, value])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self.attributeDict['affected_widget_attribute'], self.attributeName, value])
         
     def set_on_attribute_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, listener, funcname)
