@@ -109,7 +109,7 @@ class WidgetHelper(gui.ListItem):
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list')
         self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput())
         #for param in self.constructor_parameters_list:
-        for index in range(0,len(self.constructor_parameters_list)):
+        for index in range(0,len(self.widgetClass.__init__._constructor_types)):
             param = self.constructor_parameters_list[index]
             _typ = self.widgetClass.__init__._constructor_types[index]
             note = ' (%s)'%_typ.__name__
@@ -118,10 +118,10 @@ class WidgetHelper(gui.ListItem):
                 editWidget = gui.SpinBox('0',-65536,65535)
             elif _typ==bool:
                 editWidget = gui.CheckBox()
-            elif _typ==str:
+            else:#if _typ==str:
                 editWidget = gui.TextInput()
-            else:
-                editWidget = gui.TextInput()
+            #else:
+            #    editWidget = gui.TextInput()
             self.dialog.add_field_with_label(param, param + note, editWidget)
         self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
@@ -133,17 +133,17 @@ class WidgetHelper(gui.ListItem):
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
         param_for_constructor = []
-        for index in range(0,len(self.constructor_parameters_list)):
+        for index in range(0,len(self.widgetClass.__init__._constructor_types)):
             param = self.constructor_parameters_list[index]
             _typ = self.widgetClass.__init__._constructor_types[index]
             if _typ==int:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
             elif _typ==bool:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
-            elif _typ==str:
+            else:#if _typ==str:
                 param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
-            else:
-                param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
+            #else:
+            #    param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
             param_values.append(self.dialog.get_field(param).get_value())
         print(self.constructor_parameters_list)
         print(param_values)
@@ -163,9 +163,9 @@ class WidgetHelper(gui.ListItem):
 
 
 class WidgetCollection(gui.Widget):
-    def __init__(self, appInstance):
+    def __init__(self, appInstance, **kwargs):
         self.appInstance = appInstance
-        super(WidgetCollection, self).__init__()
+        super(WidgetCollection, self).__init__(**kwargs)
         
         self.lblTitle = gui.Label("Widgets Toolbox")
         self.listWidgets = gui.ListView()
@@ -201,8 +201,8 @@ class WidgetCollection(gui.Widget):
 class EditorAttributes(gui.Widget):
     """ Contains EditorAttributeInput each one of which notify a new value with an event
     """
-    def __init__(self):
-        super(EditorAttributes, self).__init__()
+    def __init__(self, **kwargs):
+        super(EditorAttributes, self).__init__(**kwargs)
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         self.style['overflow-y'] = 'scroll'
         #load attributes

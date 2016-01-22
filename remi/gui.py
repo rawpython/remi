@@ -165,7 +165,7 @@ class Widget(Tag):
     #constants
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """w = numeric with
         h = numeric height
@@ -390,7 +390,7 @@ class Widget(Tag):
 
 
 class Button(Widget):
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
         super(Button, self).__init__(**kwargs)
         self.type = 'button'
@@ -404,7 +404,7 @@ class Button(Widget):
 class TextInput(Widget):
 
     """multiline text area widget"""
-    @decorate_constructor_parameter_types([bool,dict])
+    @decorate_constructor_parameter_types([bool])
     def __init__(self, single_line=True, **kwargs):
         super(TextInput, self).__init__(**kwargs)
         self.type = 'textarea'
@@ -474,7 +474,7 @@ class TextInput(Widget):
 
 
 class Label(Widget):
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         super(Label, self).__init__(**kwargs)
         self.type = 'p'
@@ -491,7 +491,7 @@ class GenericDialog(Widget):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-    @decorate_constructor_parameter_types([str, str,dict])
+    @decorate_constructor_parameter_types([str, str])
     def __init__(self, title='', message='', **kwargs):
         super(GenericDialog, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
@@ -588,7 +588,7 @@ class InputDialog(GenericDialog):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-    @decorate_constructor_parameter_types([str, str, str,dict])
+    @decorate_constructor_parameter_types([str, str, str])
     def __init__(self,title='Title', message='Message',
                     initial_value='', **kwargs):
         super(InputDialog, self).__init__(title, message, **kwargs)
@@ -623,7 +623,7 @@ class InputDialog(GenericDialog):
 class ListView(Widget):
 
     """list widget it can contain ListItems."""
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(ListView, self).__init__(**kwargs)
         self.type = 'ul'
@@ -721,7 +721,7 @@ class ListView(Widget):
 class ListItem(Widget):
 
     """item widget for the ListView"""
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         super(ListItem, self).__init__(**kwargs)
         self.type = 'li'
@@ -746,7 +746,7 @@ class DropDown(Widget):
 
     """combo box widget implements the onchange event.
     """
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(DropDown, self).__init__(**kwargs)
         self.type = 'select'
@@ -809,7 +809,7 @@ class DropDown(Widget):
 class DropDownItem(Widget):
 
     """item widget for the DropDown"""
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         super(DropDownItem, self).__init__(**kwargs)
         self.type = 'option'
@@ -833,7 +833,7 @@ class DropDownItem(Widget):
 class Image(Widget):
 
     """image widget."""
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """filename should be an URL."""
         super(Image, self).__init__(**kwargs)
@@ -846,7 +846,7 @@ class Table(Widget):
     """
     table widget - it will contains TableRow
     """
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(Table, self).__init__(**kwargs)
         self.type = 'table'
@@ -877,7 +877,7 @@ class TableRow(Widget):
     """
     row widget for the Table - it will contains TableItem
     """
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(TableRow, self).__init__(**kwargs)
         self.type = 'tr'
@@ -887,7 +887,7 @@ class TableRow(Widget):
 class TableItem(Widget):
 
     """item widget for the TableRow."""
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
@@ -898,7 +898,7 @@ class TableItem(Widget):
 class TableTitle(Widget):
 
     """title widget for the table."""
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, title='', **kwargs):
         super(TableTitle, self).__init__(**kwargs)
         self.type = 'th'
@@ -907,7 +907,7 @@ class TableTitle(Widget):
 
 
 class Input(Widget):
-    @decorate_constructor_parameter_types([str, str,dict])
+    @decorate_constructor_parameter_types([str, str])
     def __init__(self, _type='', defaultValue='', **kwargs):
         super(Input, self).__init__(**kwargs)
         self.type = 'input'
@@ -939,7 +939,7 @@ class Input(Widget):
 
 
 class CheckBoxLabel(Widget):
-    @decorate_constructor_parameter_types([str, bool, str,dict])
+    @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data='', **kwargs):
 
         super(CheckBoxLabel, self).__init__(**kwargs)
@@ -960,7 +960,7 @@ class CheckBox(Input):
     """check box widget usefull as numeric input field implements the onchange
     event.
     """
-    @decorate_constructor_parameter_types([bool, str,dict])
+    @decorate_constructor_parameter_types([bool, str])
     def __init__(self, checked=False, user_data='', **kwargs):
         super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
@@ -990,7 +990,7 @@ class SpinBox(Input):
     """spin box widget usefull as numeric input field implements the onchange
     event.
     """
-    @decorate_constructor_parameter_types([str, int, int, int,dict])
+    @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, defaultValue='100', min=100, max=5000, step=1, **kwargs):
         super(SpinBox, self).__init__('number', defaultValue, **kwargs)
         self.attributes['min'] = str(min)
@@ -1000,7 +1000,7 @@ class SpinBox(Input):
 
 
 class Slider(Input):
-    @decorate_constructor_parameter_types([str, int, int, int,dict])
+    @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, defaultValue='', min=0, max=10000, step=1, **kwargs):
         super(Slider, self).__init__('range', defaultValue, **kwargs)
         self.attributes['min'] = str(min)
@@ -1020,13 +1020,13 @@ class Slider(Input):
 
 
 class ColorPicker(Input):
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, defaultValue='#995500', **kwargs):
         super(ColorPicker, self).__init__('color', defaultValue, **kwargs)
 
 
 class Date(Input):
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, defaultValue='2015-04-13', **kwargs):
         super(Date, self).__init__('date', defaultValue, **kwargs)
         
@@ -1036,7 +1036,7 @@ class GenericObject(Widget):
     """
     GenericObject widget - allows to show embedded object like pdf,swf..
     """
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """filename should be an URL."""
         super(GenericObject, self).__init__(**kwargs)
@@ -1047,7 +1047,7 @@ class GenericObject(Widget):
 class FileFolderNavigator(Widget):
 
     """FileFolderNavigator widget."""
-    @decorate_constructor_parameter_types([bool, str, bool, bool,dict])
+    @decorate_constructor_parameter_types([bool, str, bool, bool])
     def __init__(self, multiple_selection,selection_folder,allow_file_selection, 
                                                 allow_folder_selection, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
@@ -1201,7 +1201,7 @@ class FileFolderNavigator(Widget):
 class FileFolderItem(Widget):
 
     """FileFolderItem widget for the FileFolderNavigator"""
-    @decorate_constructor_parameter_types([str, bool,dict])
+    @decorate_constructor_parameter_types([str, bool])
     def __init__(self, text, isFolder=False, **kwargs):
         super(FileFolderItem, self).__init__(**kwargs)
         super(FileFolderItem, self).set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
@@ -1255,7 +1255,7 @@ class FileSelectionDialog(GenericDialog):
 
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-    @decorate_constructor_parameter_types([str, str, bool, str, bool, bool,dict])
+    @decorate_constructor_parameter_types([str, str, bool, str, bool, bool])
     def __init__(self, title='File dialog', message='Select files and folders', 
                  multiple_selection=True, selection_folder='.', 
                  allow_file_selection=True, allow_folder_selection=True, **kwargs):
@@ -1283,7 +1283,7 @@ class FileSelectionDialog(GenericDialog):
 
 
 class MenuBar(Widget):
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(MenuBar, self).__init__(**kwargs)
         self.type = 'nav'
@@ -1293,7 +1293,7 @@ class MenuBar(Widget):
 class Menu(Widget):
 
     """Menu widget can contain MenuItem."""
-    @decorate_constructor_parameter_types([dict])
+    @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(Menu, self).__init__(**kwargs)
         self.type = 'ul'
@@ -1303,7 +1303,7 @@ class Menu(Widget):
 class MenuItem(Widget):
 
     """MenuItem widget can contain other MenuItem."""
-    @decorate_constructor_parameter_types([str,dict])
+    @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         super(MenuItem, self).__init__(**kwargs)
         self.sub_container = None
@@ -1331,7 +1331,7 @@ class FileUploader(Widget):
         allows to upload multiple files to a specified folder.
         implements the onsuccess and onfailed events.
     """
-    @decorate_constructor_parameter_types([str, bool,dict])
+    @decorate_constructor_parameter_types([str, bool])
     def __init__(self, savepath='./', multiple_selection_allowed=False, **kwargs):
         super(FileUploader, self).__init__(**kwargs)
         self._savepath = savepath
@@ -1371,7 +1371,7 @@ class FileUploader(Widget):
 class FileDownloader(Widget):
 
     """FileDownloader widget. Allows to start a file download."""
-    @decorate_constructor_parameter_types([str, str, str,dict])
+    @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, text, filename, path_separator='/', **kwargs):
         super(FileDownloader, self).__init__(**kwargs)
         self.type = 'a'
@@ -1393,7 +1393,7 @@ class FileDownloader(Widget):
 
 
 class Link(Widget):
-    @decorate_constructor_parameter_types([str, str, bool,dict])
+    @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
         super(Link, self).__init__(**kwargs)
         self.type = 'a'
@@ -1413,7 +1413,7 @@ class Link(Widget):
 
 
 class VideoPlayer(Widget):
-    @decorate_constructor_parameter_types([str, str,dict])
+    @decorate_constructor_parameter_types([str, str])
     def __init__(self, video, poster=None, **kwargs):
         super(VideoPlayer, self).__init__(**kwargs)
         self.type = 'video'
@@ -1424,7 +1424,7 @@ class VideoPlayer(Widget):
 
 
 class Svg(Widget):
-    @decorate_constructor_parameter_types([int, int,dict])
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, **kwargs):
         super(Svg, self).__init__(**kwargs)
         self.set_size(width, height)
@@ -1438,7 +1438,7 @@ class Svg(Widget):
 
 
 class SvgCircle(Widget):
-    @decorate_constructor_parameter_types([int, int, int,dict])
+    @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, radix, **kwargs):
         super(SvgCircle, self).__init__(**kwargs)
         self.set_position(x, y)
@@ -1462,7 +1462,7 @@ class SvgCircle(Widget):
 
 
 class SvgLine(Widget):
-    @decorate_constructor_parameter_types([int, int, int, int,dict])
+    @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x1, y1, x2, y2, **kwargs):
         super(SvgLine, self).__init__(**kwargs)
         self.set_coords(x1, y1, x2, y2)
@@ -1487,7 +1487,7 @@ class SvgLine(Widget):
 
 
 class SvgPolyline(Widget):
-    @decorate_constructor_parameter_types([int,dict])
+    @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
         super(SvgPolyline, self).__init__(**kwargs)
         self.set_stroke()
@@ -1514,7 +1514,7 @@ class SvgPolyline(Widget):
 
 
 class SvgText(Widget):
-    @decorate_constructor_parameter_types([int, int, str,dict])
+    @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
         super(SvgText, self).__init__(**kwargs)
         self.type = 'text'

@@ -25,8 +25,8 @@ import html_helper
 
 
 class ResizeHelper(gui.Widget):
-    def __init__(self):
-        super(ResizeHelper, self).__init__()
+    def __init__(self, **kwargs):
+        super(ResizeHelper, self).__init__(**kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('res/resize.png')"
         self.style['background-color'] = "rgba(255,255,255,0.5)"
@@ -69,8 +69,8 @@ class Project(gui.Widget):
         This class loads and save the project file, 
         and also compiles a project in python code.
     """
-    def __init__(self, project_name='untitled'):
-        super(Project, self).__init__()
+    def __init__(self, project_name='untitled', **kwargs):
+        super(Project, self).__init__(**kwargs)
         
         self.project_name = project_name
     
@@ -254,40 +254,29 @@ class Editor(App):
         self.resizeHelper.update_position()
 
     def main(self):
-        self.mainContainer = gui.Widget()
-        self.mainContainer.style['width'] = '100%'
+        self.mainContainer = gui.Widget(width='100%', height='100%')
         self.mainContainer.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
         self.mainContainer.style['background-color'] = 'white'
         self.mainContainer.style['border'] = 'none'
         
-        menu = gui.Menu()
-        menu.set_size('100%','30px')
+        menu = gui.Menu(width='100%',height='5%')
         menu.style['z-index'] = '1'
-        m1 = gui.MenuItem('File')
-        m1.set_size(100, 30)
-        m10 = gui.MenuItem('New')
-        m10.set_size(100, 30)
-        m11 = gui.MenuItem('Open')
-        m11.set_size(100, 30)
-        m12 = gui.MenuItem('Save Your App')
-        m12.set_size(150, 30)
+        m1 = gui.MenuItem('File', width=100)
+        m10 = gui.MenuItem('New', width=100, height=30)
+        m11 = gui.MenuItem('Open', width=100, height=30)
+        m12 = gui.MenuItem('Save Your App', width=150, height=30)
         #m12.style['visibility'] = 'hidden'
-        m121 = gui.MenuItem('Save')
-        m121.set_size(100, 30)
-        m122 = gui.MenuItem('Save as')
-        m122.set_size(100, 30)
+        m121 = gui.MenuItem('Save', width=100, height=30)
+        m122 = gui.MenuItem('Save as', width=100, height=30)
         m1.append(m10)
         m1.append(m11)
         m1.append(m12)
         m12.append(m121)
         m12.append(m122)
         
-        m2 = gui.MenuItem('Edit')
-        m2.set_size(100, 30)
-        m21 = gui.MenuItem('Cut')
-        m21.set_size(100, 30)
-        m22 = gui.MenuItem('Paste')
-        m22.set_size(100, 30)
+        m2 = gui.MenuItem('Edit', width=100)
+        m21 = gui.MenuItem('Cut', width=100, height=30)
+        m22 = gui.MenuItem('Paste', width=100, height=30)
         m2.append(m21)
         m2.append(m22)
         
@@ -308,8 +297,7 @@ class Editor(App):
         m21.set_on_click_listener(self, 'menu_cut_selection_clicked')
         m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
         
-        self.subContainer = gui.Widget()
-        self.subContainer.style['width']='100%'
+        self.subContainer = gui.Widget(width='100%', height='95%')
         self.subContainer.style['display']='block'
         self.subContainer.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style['background-color'] = 'transparent'
@@ -317,15 +305,11 @@ class Editor(App):
         self.subContainer.style['overflow']='auto'
                 
         #here are contained the widgets
-        self.widgetsCollection = editor_widgets.WidgetCollection(self)
-        self.widgetsCollection.style['width']='18%'
-        self.widgetsCollection.style['height']='600px'
+        self.widgetsCollection = editor_widgets.WidgetCollection(self, width='20%', height='100%')
         self.widgetsCollection.style['position'] = 'relative'
         self.widgetsCollection.style['left'] = '0px'
         
-        self.project = Project()
-        self.project.style['width']='60%'
-        self.project.style['height']='600px'
+        self.project = Project(width='60%', height='100%')
         self.project.attributes['ondragover'] = "event.preventDefault();"
         self.EVENT_ONDROPPPED = "on_dropped"
         self.project.attributes['ondrop'] = """event.preventDefault();
@@ -355,10 +339,8 @@ class Editor(App):
         ## appending a widget to another, the first argument is a string key
         #self.mainContainer.add_child('javascript',javascript_code)
         
-        self.attributeEditor = editor_widgets.EditorAttributes()
+        self.attributeEditor = editor_widgets.EditorAttributes(width='20%',height='100%')
         self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
-        #self.attributeEditor.style['width']='18%'
-        self.attributeEditor.style['height']='600px'
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
         
@@ -373,8 +355,7 @@ class Editor(App):
         
         self.selectedWidget = self.project
         
-        self.resizeHelper = ResizeHelper()
-        self.resizeHelper.set_size(16, 16)
+        self.resizeHelper = ResizeHelper(width=16, height=16)
         
         self.project.new()
         
