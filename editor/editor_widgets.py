@@ -205,64 +205,60 @@ class EditorAttributes(gui.Widget):
         super(EditorAttributes, self).__init__(**kwargs)
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         self.style['overflow-y'] = 'scroll'
-        #load attributes
-        #dictionary {tagname:{attributename:{type:'',description:''}}}
-        self.attributesDict = html_helper.getTagAttributesDictionary()
-        for tagname in self.attributesDict.keys():
-            for attributeName in self.attributesDict[tagname].keys():
-                attributeEditor = EditorAttributeInput(tagname, attributeName, self.attributesDict[tagname][attributeName])
-                attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
-                self.append(attributeEditor)
+        #load editable attributes
+        for attributeName in html_helper.editorAttributeDictionary.keys():
+            attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName])
+            attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
+            self.append(attributeEditor)
     
     #this function is called by an EditorAttributeInput change event and propagates to the listeners 
     #adding as first parameter the tag to which it refers
-    def onattribute_changed(self, attributeName, newValue):
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [attributeName, newValue])
-        
-    def set_on_attribute_change_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, listener, funcname)
+    #widgetAttributeMember can be 'style' or 'attributes'
+    def onattribute_changed(self, widgetAttributeMember, attributeName, newValue):
+        print("setting attribute name: %s    value: %s    attributeMember: %s"%(attributeName, newValue, widgetAttributeMember))
+        getattr(self.targetWidget, widgetAttributeMember)[attributeName] = str(newValue)
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [widgetAttributeMember, attributeName, newValue])
         
     def set_widget(self, widget):
         self.attributes['selected_widget_id'] = str(id(widget))
         self.targetWidget = widget
-        #filter the attributes checking if them applies to tag type
-        #update the values of the editors checking if there is an actual value
-        for child in self.children.values():
-            if type(child) == EditorAttributeInput:
-                child.hide_if_not_applies(self.targetWidget.type)
 
 
-#widget that allows to edit a specific html attribute
-#   it has a descriptive label, an edit widget (TextInput, SpinBox) based on the 'type' and a title 
+#widget that allows to edit a specific html and css attributes
+#   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
 class EditorAttributeInput(gui.Widget):
-    def __init__(self, tagname, attributeName, attributeDict, defaultValue=''):
+    def __init__(self, attributeName, attributeDict, defaultValue=''):
         super(EditorAttributeInput, self).__init__()
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'auto'
         self.style['margin'] = '2px'
-        self.tagname = tagname
         self.attributeName = attributeName
+        self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         
-        label = gui.Label(attributeName)
-        label.style['height'] = '30px'
-        label.style['margin'] = '0px 10px'
+        label = gui.Label(attributeName, width='50%', height=30)
+        label.style['margin'] = '0px'
+        label.style['overflow'] = 'hidden'
         self.append(label)
         self.inputWidget = None
-        if len(attributeDict['type']) == 1:
-            if attributeDict['type'][0] in ('bool','int'):
-                if attributeDict['type'][0] == 'bool':
-                    self.inputWidget = gui.CheckBox(defaultValue=='checked')
-                if attributeDict['type'][0] == 'int':
-                    self.inputWidget = gui.SpinBox(-65535, 65535, defaultValue)
-            else: #default editor is string
-                self.inputWidget = gui.TextInput()
-        else:
-            self.inputWidget = gui.DropDown()
-            for typ in attributeDict['type']:
-                item = gui.DropDownItem(typ)
-                self.inputWidget.append(item)
+
+        #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'affected_widget_attribute':'style', 'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
+        if attributeDict['type'] in (bool,int,gui.ColorPicker,gui.DropDown):
+            if attributeDict['type'] == bool:
+                self.inputWidget = gui.CheckBox(defaultValue=='checked')
+            if attributeDict['type'] == int:
+                self.inputWidget = gui.SpinBox(-65535, 65535, defaultValue)
+            if attributeDict['type'] == gui.ColorPicker:
+                self.inputWidget = gui.ColorPicker(defaultValue)
+            if attributeDict['type'] == gui.DropDown:
+                self.inputWidget = gui.DropDown()
+                for value in attributeDict['additional_data']['possible_values']:
+                    self.inputWidget.append(gui.DropDownItem(value),value)
+                
+        else: #default editor is string
+            self.inputWidget = gui.TextInput()
+ 
         self.inputWidget.set_size('50%','30px')
         self.inputWidget.attributes['title'] = attributeDict['description']
         label.attributes['title'] = attributeDict['description']
@@ -270,18 +266,13 @@ class EditorAttributeInput(gui.Widget):
         self.append(self.inputWidget)
         self.inputWidget.style['float'] = 'right'
     
-    def hide_if_not_applies(self, tagname):
-        #print("selected tag name: %s == %s"%(tagname,self.tagname))
-        if tagname == self.tagname or self.tagname=='all':
-            self.style['display'] = 'block'
-        else:
-            self.style['display'] = 'none'
+        self.style['display'] = 'block'
     
     def set_value(self, value):
         self.inputWidget.set_value(value)
     
     def on_attribute_changed(self, value):
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self.attributeName, value])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self.attributeDict['additional_data']['affected_widget_attribute'], self.attributeName, value])
         
     def set_on_attribute_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, listener, funcname)

@@ -309,7 +309,7 @@ class Editor(App):
         self.widgetsCollection.style['position'] = 'relative'
         self.widgetsCollection.style['left'] = '0px'
         
-        self.project = Project(width='60%', height='100%')
+        self.project = Project(width='56%', height='100%')
         self.project.attributes['ondragover'] = "event.preventDefault();"
         self.EVENT_ONDROPPPED = "on_dropped"
         self.project.attributes['ondrop'] = """event.preventDefault();
@@ -339,8 +339,7 @@ class Editor(App):
         ## appending a widget to another, the first argument is a string key
         #self.mainContainer.add_child('javascript',javascript_code)
         
-        self.attributeEditor = editor_widgets.EditorAttributes(width='20%',height='100%')
-        self.attributeEditor.set_on_attribute_change_listener(self, "on_attribute_change")
+        self.attributeEditor = editor_widgets.EditorAttributes(width='24%',height='100%')
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
         
@@ -413,9 +412,6 @@ class Editor(App):
             if type(child) == str:
                 continue
             self.add_widget_to_editor(child, widget, False)
-        
-    def on_attribute_change(self, attributeName, value):
-        self.selectedWidget.attributes[attributeName] = value
     
     def on_widget_selection(self, widget):
         self.selectedWidget = widget
