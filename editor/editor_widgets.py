@@ -198,6 +198,29 @@ class WidgetCollection(gui.Widget):
         helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")
 
 
+class EditorAttributesGroup(gui.Widget):
+    """ Contains a title and widgets. When the title is clicked, the contained widgets are hidden.
+        Its scope is to provide a foldable group
+    """
+    def __init__(self, title, **kwargs):
+        super(EditorAttributesGroup, self).__init__(**kwargs)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'auto'
+        self.opened = True
+        self.title = gui.Label(title)
+        self.title.style['font-weight'] = 'bold'
+        self.title.style['background-color'] = 'lightgray'
+        self.title.set_on_click_listener(self, 'openClose')
+        self.append(self.title, '0')
+        
+    def openClose(self):
+        self.opened = not self.opened
+        display = 'block' if self.opened else 'none'
+        for widget in self.children.values():
+            if widget!=self.title and type(widget)!=str:
+                widget.style['display'] = display
+        
+        
 class EditorAttributes(gui.Widget):
     """ Contains EditorAttributeInput each one of which notify a new value with an event
     """
@@ -214,11 +237,16 @@ class EditorAttributes(gui.Widget):
         self.attributesInputs = list()
         #load editable attributes
         self.append(self.titleLabel)
+        self.attributeGroups = {}
         for attributeName in html_helper.editorAttributeDictionary.keys():
             attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], '', appInstance)
             attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
             attributeEditor.style['display'] = 'none'
-            self.append(attributeEditor)
+            if not html_helper.editorAttributeDictionary[attributeName]['group'] in self.attributeGroups.keys():
+                groupContainer = EditorAttributesGroup(html_helper.editorAttributeDictionary[attributeName]['group'])
+                self.attributeGroups[html_helper.editorAttributeDictionary[attributeName]['group']] = groupContainer
+                self.append(groupContainer)
+            self.attributeGroups[html_helper.editorAttributeDictionary[attributeName]['group']].append(attributeEditor)
             self.attributesInputs.append(attributeEditor)
     
     #this function is called by an EditorAttributeInput change event and propagates to the listeners 
@@ -235,6 +263,7 @@ class EditorAttributes(gui.Widget):
         self.targetWidget = widget
         for w in self.attributesInputs:
             w.style['display'] = 'block'
+            w.set_widget(widget)
 
 
 class UrlPathInput(gui.Widget):
@@ -273,6 +302,10 @@ class UrlPathInput(gui.Widget):
             
     def set_on_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+    
+    def set_value(self, value):
+        self.txtInput.set_value(value)
+    
         
 
 #widget that allows to edit a specific html and css attributes
@@ -320,6 +353,12 @@ class EditorAttributeInput(gui.Widget):
         self.inputWidget.style['float'] = 'right'
     
         self.style['display'] = 'block'
+    
+    def set_widget(self, widget):
+        self.inputWidget.set_value('')
+        dictionary = getattr(widget,self.attributeDict['affected_widget_attribute'])
+        if self.attributeName in dictionary:
+            self.inputWidget.set_value(dictionary[self.attributeName])
     
     def set_value(self, value):
         self.inputWidget.set_value(value)
