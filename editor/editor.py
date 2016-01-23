@@ -73,10 +73,8 @@ class Project(gui.Widget):
         This class loads and save the project file, 
         and also compiles a project in python code.
     """
-    def __init__(self, project_name='untitled', **kwargs):
+    def __init__(self, **kwargs):
         super(Project, self).__init__(**kwargs)
-        
-        self.project_name = project_name
     
         self.style['position'] = 'relative'    
         self.style['overflow'] = 'scroll'
@@ -87,12 +85,12 @@ class Project(gui.Widget):
         #remove the main widget
         pass
             
-    def load(self, ifile):
+    def load(self, ifile, configuration):
         self.ifile = ifile
-        #print("project name:%s"%os.path.basename(self.ifile))
-        self.project_name = os.path.basename(self.ifile).replace('.py','')
         
         _module = imp.load_source('project', self.ifile) #imp.load_source('module.name', '/path/to/file.py')
+        
+        configuration.configDict = _module.configuration
         
         #finding App class
         clsmembers = inspect.getmembers(_module, inspect.isclass)
@@ -197,15 +195,14 @@ class Project(gui.Widget):
         if newClass:# and not (classname in self.code_declared_classes.keys()):
             if not str(id(widget)) in self.code_declared_classes:
                 self.code_declared_classes[str(id(widget))] = ''
-            self.code_declared_classes[str(id(widget))] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.__class__.__name__,
+            self.code_declared_classes[str(id(widget))] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.attributes['editor_baseclass'],
                                                         'nested_code': children_code_nested } + self.code_declared_classes[str(id(widget))]
         else:
             code_nested = code_nested + children_code_nested
         
         return code_nested
 
-    def save(self, save_path_filename): 
-        self.code_resourcepath = "" #should be defined in the project configuration
+    def save(self, save_path_filename, configuration): 
         self.code_declared_classes = {}
         self.pending_listener_registration = list()
         self.known_project_children = [self,] #a list containing widgets that have been parsed and that are considered valid listeners 
@@ -222,8 +219,8 @@ class Project(gui.Widget):
         ret = self.repr_widget_for_editor( self.children['root'] )
         self.path_to_this_widget = []
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
-        main_code_class = prototypes.proto_code_main_class%{'classname':self.project_name,
-                                                        'code_resourcepath':self.code_resourcepath,
+        main_code_class = prototypes.proto_code_main_class%{'classname':configuration.configDict['config_project_name'],
+                                                        'config_resourcepath':configuration.configDict['config_resourcepath'],
                                                         'code_nested':code_nested, 
                                                         'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
@@ -237,8 +234,10 @@ class Project(gui.Widget):
             code_classes += code_class
         
         code_classes += main_code_class
-        compiled_code = prototypes.proto_code_program%{'code_classes':code_classes,
-                                                       'classname':self.project_name}
+        compiled_code = prototypes.proto_code_program%{ 'code_classes':code_classes,
+                                                        'classname':configuration.configDict['config_project_name'],
+                                                        'configuration':configuration.configDict
+                                                       }
         
         print(compiled_code)
         
@@ -284,8 +283,11 @@ class Editor(App):
         m2.append(m21)
         m2.append(m22)
         
+        m3 = gui.MenuItem('Project Config', width=200)
+        
         menu.append(m1)
         menu.append(m2)
+        menu.append(m3)
         
         self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
         self.fileOpenDialog.set_on_confirm_value_listener(self, 'on_open_dialog_confirm')
@@ -300,6 +302,8 @@ class Editor(App):
         m122.set_on_click_listener(self.fileSaveAsDialog, 'show')
         m21.set_on_click_listener(self, 'menu_cut_selection_clicked')
         m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
+        
+        m3.set_on_click_listener(self, 'menu_project_config_clicked')
         
         self.subContainer = gui.Widget(width='100%', height='95%')
         self.subContainer.style['display']='block'
@@ -326,7 +330,9 @@ class Editor(App):
                 sendCallbackParam(data[0],'%(evt)s',params);
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
-                
+        
+        self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
+        
         #javascript_code = gui.Tag()
         #javascript_code.type = 'script'
         #javascript_code.attributes['type'] = 'text/javascript'
@@ -429,7 +435,7 @@ class Editor(App):
 
     def on_open_dialog_confirm(self, filelist):
         if len(filelist):
-            widgetTree = self.project.load(filelist[0])
+            widgetTree = self.project.load(filelist[0], self.projectConfiguration)
             if widgetTree!=None:
                 self.add_widget_to_editor( widgetTree )
             self.projectPathFilename = filelist[0]
@@ -440,7 +446,7 @@ class Editor(App):
         if self.projectPathFilename == '':
             self.fileSaveAsDialog.show()
         else:
-            self.project.save(self.projectPathFilename)
+            self.project.save(self.projectPathFilename, self.projectConfiguration)
         
     def on_saveas_dialog_confirm(self, path):
         #the resizeHelper have to be removed
@@ -448,7 +454,7 @@ class Editor(App):
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
             print("file:%s"%self.projectPathFilename)
-            self.project.save(self.projectPathFilename)
+            self.project.save(self.projectPathFilename, self.projectConfiguration)
             
     def menu_cut_selection_clicked(self):
         if self.selectedWidget==self.project:
@@ -465,6 +471,9 @@ class Editor(App):
             self.selectedWidget.append(self.editCuttedWidget)
             self.editCuttedWidget = None
 
+    def menu_project_config_clicked(self):
+        self.projectConfiguration.show(self)
+        
 
 #function overload for widgets that have to be editable
 #the normal onfocus function does not returns the widget instance

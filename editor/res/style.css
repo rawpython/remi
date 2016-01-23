@@ -54,8 +54,8 @@ div {
 
 input,button,textarea,select {
 	font-family: 'Hind';
-	padding: 0px;
 	border: none;
+    padding: 0px;
 }
 
 button,th {

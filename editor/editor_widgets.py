@@ -18,24 +18,25 @@ import html_helper
 
 class ProjectConfigurationDialog(gui.GenericDialog):
     def __init__(self, title='', message=''):
-        super(ProjectConfigurationDialog, self).__init__('Project Configuration', 'Here are the configuration options of the project.')
+        super(ProjectConfigurationDialog, self).__init__('Project Configuration', 'Here are the configuration options of the project.', width=500)
         #standard configuration
-        self.configuration['Project Name'] = 'untitled'
-        self.configuration['IP address'] = '0.0.0.0'
-        self.configuration['Listen port'] = 8081
-        self.configuration['Use single App instance for multiple users'] = True
-        self.configuration['Enable file caching'] = True
-        self.configuration['Start browser automatically'] = True
-        self.configuration['Additional resource path'] = "./res/"
+        self.configDict = {}
+        self.configDict['config_project_name'] = 'untitled'
+        self.configDict['config_address'] = '0.0.0.0'
+        self.configDict['config_port'] = 8081
+        self.configDict['config_multiple_instance'] = True
+        self.configDict['config_enable_file_cache'] = True
+        self.configDict['config_start_browser'] = True
+        self.configDict['config_resourcepath'] = "./res/"
 
-        self.add_field_with_label( 'Project Name', 'Project Name', gui.TextInput() )
-        self.add_field_with_label( 'IP address', 'IP address', gui.TextInput() )
-        self.add_field_with_label( 'Listen port', 'Listen port', gui.SpinBox(0, 65536, 8081) )
-        self.add_field_with_label( 'Use single App instance for multiple users', 'Use single App instance for multiple users', gui.CheckBox(True) )
-        self.add_field_with_label( 'Enable file caching', 'Enable file caching', gui.CheckBox(True) )
-        self.add_field_with_label( 'Start browser automatically', 'Start browser automatically', gui.CheckBox(True) )
-        self.add_field_with_label( 'Additional resource path', 'Additional resource path', gui.TextInput() )
-        self.from_dict_to_fields(self.configuration)
+        self.add_field_with_label( 'config_project_name', 'Project Name', gui.TextInput() )
+        self.add_field_with_label( 'config_address', 'IP address', gui.TextInput() )
+        self.add_field_with_label( 'config_port', 'Listen port', gui.SpinBox(8082, 1025, 65535) )
+        self.add_field_with_label( 'config_multiple_instance', 'Use single App instance for multiple users', gui.CheckBox(True) )
+        self.add_field_with_label( 'config_enable_file_cache', 'Enable file caching', gui.CheckBox(True) )
+        self.add_field_with_label( 'config_start_browser', 'Start browser automatically', gui.CheckBox(True) )
+        self.add_field_with_label( 'config_resourcepath', 'Additional resource path', gui.TextInput() )
+        self.from_dict_to_fields(self.configDict)
     
     def from_dict_to_fields(self, dictionary):
         for key in self.inputs.keys():
@@ -44,7 +45,19 @@ class ProjectConfigurationDialog(gui.GenericDialog):
         
     def from_fields_to_dict(self):
         for key in self.inputs.keys():
-            self.configuration[key] = self.get_field(key).get_value()
+            self.configDict[key] = self.get_field(key).get_value()
+            
+    def confirm_dialog(self):
+        """event called pressing on OK button.
+        """
+        #here the user input is transferred to the dict, ready to use
+        self.from_fields_to_dict()
+        super(ProjectConfigurationDialog,self).confirm_dialog()
+
+    def show(self, baseAppInstance):
+        """Allows to show the widget as root window"""
+        self.from_dict_to_fields(self.configDict)
+        super(ProjectConfigurationDialog, self).show(baseAppInstance)
             
 
 class EditorFileSelectionDialog(gui.FileSelectionDialog):
@@ -159,6 +172,7 @@ class WidgetHelper(gui.ListItem):
         widget.attributes['editor_varname'] = self.dialog.get_field('name').get_value()
         widget.attributes['editor_tag_type'] = 'widget'
         widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
+        widget.attributes['editor_baseclass'] = widget.__class__.__name__ #__class__.__bases__[0].__name__
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
         widget.style['position'] = 'absolute'
         widget.style['display'] = 'block'
@@ -273,7 +287,7 @@ class EditorAttributes(gui.Widget):
         self.targetWidget = widget
         for w in self.attributesInputs:
             #w.style['display'] = 'block'
-            w.set_widget(widget)
+            w.set_from_dict(getattr(widget, w.attributeDict['affected_widget_attribute']))
 
 
 class UrlPathInput(gui.Widget):
@@ -363,9 +377,8 @@ class EditorAttributeInput(gui.Widget):
     
         self.style['display'] = 'block'
     
-    def set_widget(self, widget):
+    def set_from_dict(self, dictionary):
         self.inputWidget.set_value('')
-        dictionary = getattr(widget,self.attributeDict['affected_widget_attribute'])
         if self.attributeName in dictionary:
             self.inputWidget.set_value(dictionary[self.attributeName])
     
