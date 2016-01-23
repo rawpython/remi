@@ -107,7 +107,10 @@ class WidgetHelper(gui.ListItem):
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list', width='40%')
-        self.dialog.add_field_with_label('name', 'Variable name', gui.TextInput())
+        varNameTextInput = gui.TextInput()
+        varNameTextInput.attributes['tabindex'] = '1'
+        varNameTextInput.attributes['autofocus'] = 'autofocus'
+        self.dialog.add_field_with_label('name', 'Variable name', varNameTextInput)
         #for param in self.constructor_parameters_list:
         for index in range(0,len(self.widgetClass.__init__._constructor_types)):
             param = self.constructor_parameters_list[index]
@@ -118,11 +121,12 @@ class WidgetHelper(gui.ListItem):
                 editWidget = gui.SpinBox('0',-65536,65535)
             elif _typ==bool:
                 editWidget = gui.CheckBox()
-            else:#if _typ==str:
+            else:
                 editWidget = gui.TextInput()
-            #else:
-            #    editWidget = gui.TextInput()
+
+            editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
+            
         self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
