@@ -379,7 +379,7 @@ class EditorAttributeInput(gui.Widget):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked')
             if attributeDict['type'] == int or attributeDict['type'] == float:
-                self.inputWidget = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'])
+                self.inputWidget = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
             if attributeDict['type'] == gui.ColorPicker:
                 self.inputWidget = gui.ColorPicker()
             if attributeDict['type'] == gui.DropDown:
