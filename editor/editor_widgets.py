@@ -219,6 +219,7 @@ class WidgetCollection(gui.Widget):
         #create an helper that will be created on click
         #the helper have to search for function that have 'return' annotation 'event_listener_setter'
         helper = WidgetHelper(widgetClass)
+        helper.attributes['title'] = widgetClass.__doc__
         helper.style['width'] = '100%'
         self.listWidgets.append( helper )
         helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")

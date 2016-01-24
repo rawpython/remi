@@ -156,10 +156,10 @@ class Widget(Tag):
     """base class for gui widgets.
 
     In html, it is a DIV tag    
-    the "self.type" attribute specifies the HTML tag representation    
-    the "self.attributes[]" attribute specifies the HTML attributes like "style" "class" "id" 
-    the "self.style[]" attribute specifies the CSS style content like "font" "color". 
-    It will be packet togheter with "self.attributes"
+    the self.type attribute specifies the HTML tag representation    
+    the self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id' 
+    the self.style[] attribute specifies the CSS style content like 'font' 'color'. 
+    It will be packet togheter with 'self.attributes'
 
     """
     #constants
@@ -390,6 +390,9 @@ class Widget(Tag):
         
 
 class HorizontalContainer(Widget):
+    """ It contains widget automatically aligning them vertically. 
+        Does not permit children abosulte positioning
+    """
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(HorizontalContainer, self).__init__(**kwargs)
@@ -439,6 +442,9 @@ class HorizontalContainer(Widget):
         
 
 class VerticalContainer(HorizontalContainer):
+    """ It contains widget automatically aligning them vertically. 
+        Does not permit children abosulte positioning
+    """
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(VerticalContainer, self).__init__(**kwargs)
@@ -458,8 +464,7 @@ class Button(Widget):
 
 
 class TextInput(Widget):
-
-    """multiline text area widget"""
+    """Editable multiline/single_line text area widget"""
     @decorate_constructor_parameter_types([bool])
     def __init__(self, single_line=True, **kwargs):
         super(TextInput, self).__init__(**kwargs)
