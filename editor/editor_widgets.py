@@ -102,7 +102,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         self.hide()
         params = [self.fileFolderNavigator.pathEditor.get_text()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
-
+        
         
 class WidgetHelper(gui.ListItem):
     """ Allocates the Widget to which it refers, 
@@ -174,8 +174,10 @@ class WidgetHelper(gui.ListItem):
         widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
         widget.attributes['editor_baseclass'] = widget.__class__.__name__ #__class__.__bases__[0].__name__
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
-        widget.style['position'] = 'absolute'
-        widget.style['display'] = 'block'
+        if not 'position' in widget.style:
+            widget.style['position'] = 'absolute'
+        if not 'display' in widget.style:
+            widget.style['display'] = 'block'
         widget.set_size(100,100)
         self.appInstance.add_widget_to_editor(widget)
 
@@ -193,6 +195,8 @@ class WidgetCollection(gui.Widget):
         self.append(self.listWidgets)
         
         #load all widgets
+        self.add_widget_to_collection(gui.HorizontalContainer)
+        self.add_widget_to_collection(gui.VerticalContainer)
         self.add_widget_to_collection(gui.Widget)
         self.add_widget_to_collection(gui.Button)
         self.add_widget_to_collection(gui.TextInput)
@@ -206,6 +210,10 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.CheckBox)
         self.add_widget_to_collection(gui.SpinBox)
         self.add_widget_to_collection(gui.Slider)
+        self.add_widget_to_collection(gui.ColorPicker)
+        self.add_widget_to_collection(gui.Date)
+        self.add_widget_to_collection(gui.Link)
+        self.add_widget_to_collection(gui.VideoPlayer)
         
     def add_widget_to_collection(self, widgetClass):
         #create an helper that will be created on click

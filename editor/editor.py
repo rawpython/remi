@@ -63,6 +63,7 @@ class ResizeHelper(gui.Widget):
         if self.refWidget.style['position'] != 'absolute':
             self.style['display'] = 'none'
             return
+        self.style['position'] = 'absolute'
         self.style['display'] = 'block'
         self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
         self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)

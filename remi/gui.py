@@ -387,8 +387,64 @@ class Widget(Tag):
     def set_on_touchcancel_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHCANCEL] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHCANCEL)
         self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
+        
 
+class HorizontalContainer(Widget):
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(HorizontalContainer, self).__init__(**kwargs)
+        self.style['display'] = 'flex'
+        self.style['-webkit-justify-content'] = 'space-around'
+        self.style['justify-content'] = 'space-around'
+        self.style['-webkit-align-items'] = 'center'
+        self.style['align-items'] = 'center'
+        self.style['flex-direction'] = 'row'
+        
+    def append(self, value, key='-1'):
+        """it allows to add child widgets to this.
 
+        The key allows to access the specific child in this way 'widget.children[key]'.
+        The key have to be numeric and determines the child order in the layout.
+        """
+        key = str(key)
+        if not isinstance(value, Widget):
+            raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
+
+        if 'left' in value.style.keys():
+            del value.style['left']
+        if 'right' in value.style.keys():
+            del value.style['right']
+        
+        value.style['position'] = 'static'
+        
+        value.style['-webkit-order'] = '-1'
+        value.style['order'] = '-1'
+        
+        #weight of the widget in the layout
+        #value.style['-webkit-flex'] = 
+        #value.style['-ms-flex'] = 
+        #value.style['flex'] = 
+        
+        key = str(id(value)) if key=='' else key
+        self.add_child(key, value)
+
+        if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
+            if 'float' in self.children[key].style.keys():
+                if not (self.children[key].style['float'] == 'none'):
+                    self.children[key].style['float'] = 'left'
+            else:
+                self.children[key].style['float'] = 'left'
+
+        return key
+        
+
+class VerticalContainer(HorizontalContainer):
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(VerticalContainer, self).__init__(**kwargs)
+        self.style['flex-direction'] = 'column';
+
+        
 class Button(Widget):
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
