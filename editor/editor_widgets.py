@@ -16,6 +16,21 @@ import remi.gui as gui
 import html_helper
 
 
+class ToolBar(gui.Widget):
+    def __init__(self, **kwargs):
+        super(ToolBar, self).__init__(**kwargs)
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['background-color'] = 'white'
+    
+    def add_command(self, imagePath, listener, listenerFunction, title):
+        icon = gui.Image(imagePath, height='90%')
+        icon.style['margin'] = '0px 1px'
+        icon.style['outline'] = '1px solid lightgray'
+        icon.set_on_click_listener(listener, listenerFunction)
+        icon.attributes['title'] = title
+        self.append(icon)
+
+
 class ProjectConfigurationDialog(gui.GenericDialog):
     def __init__(self, title='', message=''):
         super(ProjectConfigurationDialog, self).__init__('Project Configuration', 'Here are the configuration options of the project.', width=500)

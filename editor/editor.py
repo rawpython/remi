@@ -290,6 +290,12 @@ class Editor(App):
         menu.append(m2)
         menu.append(m3)
         
+        self.toolbar = editor_widgets.ToolBar(width='100%', height='5%')
+        self.toolbar.style['margin'] = '0px 20%'
+        self.toolbar.add_command('/res/delete.png', self, 'toolbar_delete_clicked', 'Delete Widget')
+        self.toolbar.add_command('/res/cut.png', self, 'menu_cut_selection_clicked', 'Cut Widget')
+        self.toolbar.add_command('/res/paste.png', self, 'menu_paste_selection_clicked', 'Paste Widget')
+        
         self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
         self.fileOpenDialog.set_on_confirm_value_listener(self, 'on_open_dialog_confirm')
         
@@ -306,7 +312,7 @@ class Editor(App):
         
         m3.set_on_click_listener(self, 'menu_project_config_clicked')
         
-        self.subContainer = gui.Widget(width='100%', height='95%')
+        self.subContainer = gui.Widget(width='100%', height='90%')
         self.subContainer.style['display']='block'
         self.subContainer.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style['background-color'] = 'transparent'
@@ -355,6 +361,7 @@ class Editor(App):
         self.attributeEditor.style['right'] = '0px'
         
         self.mainContainer.append(menu)
+        self.mainContainer.append(self.toolbar)
         self.mainContainer.append(self.subContainer)
         
         self.subContainer.append(self.widgetsCollection)
@@ -474,7 +481,15 @@ class Editor(App):
 
     def menu_project_config_clicked(self):
         self.projectConfiguration.show(self)
-        
+
+    def toolbar_delete_clicked(self):
+        if self.selectedWidget==self.project:
+            return
+        self.resizeHelper.setup(None, None)
+        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent.remove_child(self.selectedWidget)
+        self.selectedWidget = parent
+        print("tag deleted")
 
 #function overload for widgets that have to be editable
 #the normal onfocus function does not returns the widget instance
