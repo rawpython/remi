@@ -403,7 +403,7 @@ class HorizontalContainer(Widget):
         self.style['align-items'] = 'center'
         self.style['flex-direction'] = 'row'
         
-    def append(self, value, key='-1'):
+    def append(self, value, key=''):
         """it allows to add child widgets to this.
 
         The key allows to access the specific child in this way 'widget.children[key]'.

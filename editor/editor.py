@@ -320,9 +320,7 @@ class Editor(App):
         self.subContainer.style['overflow']='auto'
                 
         #here are contained the widgets
-        self.widgetsCollection = editor_widgets.WidgetCollection(self, width='20%', height='100%')
-        self.widgetsCollection.style['position'] = 'relative'
-        self.widgetsCollection.style['left'] = '0px'
+        self.widgetsCollection = editor_widgets.WidgetCollection(self, width='100%', height='50%')
         
         self.project = Project(width='56%', height='100%')
         self.project.attributes['ondragover'] = "event.preventDefault();"
@@ -360,11 +358,19 @@ class Editor(App):
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
         
+        self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%')
+        
         self.mainContainer.append(menu)
         self.mainContainer.append(self.toolbar)
         self.mainContainer.append(self.subContainer)
         
-        self.subContainer.append(self.widgetsCollection)
+        self.subContainerLeft = gui.Widget(width='20%', height='100%')
+        self.subContainerLeft.style['position'] = 'relative'
+        self.subContainerLeft.style['left'] = '0px'
+        self.subContainerLeft.append(self.widgetsCollection)
+        self.subContainerLeft.append(self.signalConnectionManager)
+        
+        self.subContainer.append(self.subContainerLeft)
         self.subContainer.append(self.project)
         self.subContainer.append(self.attributeEditor)
         
@@ -433,6 +439,7 @@ class Editor(App):
     
     def on_widget_selection(self, widget):
         self.selectedWidget = widget
+        self.signalConnectionManager.update(self.selectedWidget, None)
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.resizeHelper.setup(widget,parent)

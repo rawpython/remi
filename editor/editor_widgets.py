@@ -14,6 +14,7 @@
 
 import remi.gui as gui
 import html_helper
+import inspect
 
 
 class ToolBar(gui.Widget):
@@ -30,6 +31,37 @@ class ToolBar(gui.Widget):
         icon.attributes['title'] = title
         self.append(icon)
 
+        
+class SignalConnectionManager(gui.Widget):
+    """ This class allows to interconnect event signals """
+    def __init__(self, **kwargs):
+        super(SignalConnectionManager, self).__init__(**kwargs)
+        self.label = gui.Label('Signal connections')
+        self.append(self.label)
+        self.container = gui.VerticalContainer(width='100%')
+        self.container.style['overflow-y'] = 'scroll'
+        
+    def update(self, widget, tree):
+        """ for the selected widget are listed the relative signals
+            for each signal there is a dropdown containing all the widgets
+            the user will select the widget that have to listen a specific event
+        """
+        self.label.set_text(widget.attributes['editor_varname'])
+        del self.container
+        self.container = gui.VerticalContainer(width='100%')
+        self.container.style['overflow-y'] = 'scroll'
+        self.append(self.container, 'container')
+        ##for all the events of this widget
+        #for registered_event_name in widget.eventManager.listeners.keys():
+        #for all the function of this widget
+        for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget, predicate=inspect.ismethod):
+            #if the member is decorated by decorate_set_on_listener and the function is referred to this event
+            if hasattr(setOnEventListenerFunc, '_event_listener'):
+                print(setOnEventListenerFuncname)
+                #listener = widget.eventManager.listeners[registered_event_name]['instance']
+                #listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
+                self.container.append(gui.Label(setOnEventListenerFuncname),setOnEventListenerFuncname)#setOnEventListenerFunc._event_listener['eventName']))
+        
 
 class ProjectConfigurationDialog(gui.GenericDialog):
     def __init__(self, title='', message=''):
@@ -203,8 +235,9 @@ class WidgetCollection(gui.Widget):
         super(WidgetCollection, self).__init__(**kwargs)
         
         self.lblTitle = gui.Label("Widgets Toolbox")
-        self.listWidgets = gui.ListView()
-        self.listWidgets.style['width'] = '100%'
+        self.listWidgets = gui.ListView(width='100%', height='85%')
+        self.listWidgets.style['overflow-y'] = 'scroll'
+        self.listWidgets.style['overflow-x'] = 'hidden'
         
         self.append(self.lblTitle)
         self.append(self.listWidgets)
