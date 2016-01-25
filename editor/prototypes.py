@@ -37,6 +37,10 @@ class %(classname)s(App):
     def __init__(self, *args):
         super(%(classname)s, self).__init__(*args, static_paths=('%(config_resourcepath)s',))
     
+    def idle(self):
+        #idle function called every update cycle
+        pass
+    
     def main(self):
         return %(classname)s.construct_ui()
         

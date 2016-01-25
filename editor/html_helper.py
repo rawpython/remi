@@ -4,7 +4,7 @@
 #these tags will to be not written into the saved project because created at runtime
 import remi.gui as gui
 
-htmlInternallyUsedTags = ('id','parent_widget','children_list')
+htmlInternallyUsedTags = ('id','parent_widget','children_list', 'style')
 
 editorAttributeDictionary = {
     'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},

@@ -438,7 +438,9 @@ class Editor(App):
             self.add_widget_to_editor(child, widget, False)
     
     def on_widget_selection(self, widget):
+        self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
+        self.selectedWidget.style['box-shadow'] = '0 0 10px rgba(255, 120, 0, 1)'
         self.signalConnectionManager.update(self.selectedWidget, None)
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
@@ -461,7 +463,12 @@ class Editor(App):
         if self.projectPathFilename == '':
             self.fileSaveAsDialog.show()
         else:
+            self.remove_box_shadow_selected_widget()
             self.project.save(self.projectPathFilename, self.projectConfiguration)
+    
+    def remove_box_shadow_selected_widget(self):
+        if 'box-shadow' in self.selectedWidget.style.keys():
+            del self.selectedWidget.style['box-shadow']
         
     def on_saveas_dialog_confirm(self, path):
         #the resizeHelper have to be removed
@@ -469,6 +476,7 @@ class Editor(App):
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
             print("file:%s"%self.projectPathFilename)
+            self.remove_box_shadow_selected_widget()
             self.project.save(self.projectPathFilename, self.projectConfiguration)
             
     def menu_cut_selection_clicked(self):
