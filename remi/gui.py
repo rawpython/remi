@@ -389,13 +389,13 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
         
 
-class HorizontalContainer(Widget):
+class HBox(Widget):
     """ It contains widget automatically aligning them vertically. 
         Does not permit children abosulte positioning
     """
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
-        super(HorizontalContainer, self).__init__(**kwargs)
+        super(HBox, self).__init__(**kwargs)
         self.style['display'] = 'flex'
         self.style['-webkit-justify-content'] = 'space-around'
         self.style['justify-content'] = 'space-around'
@@ -441,13 +441,13 @@ class HorizontalContainer(Widget):
         return key
         
 
-class VerticalContainer(HorizontalContainer):
+class VBox(HBox):
     """ It contains widget automatically aligning them vertically. 
         Does not permit children abosulte positioning
     """
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
-        super(VerticalContainer, self).__init__(**kwargs)
+        super(VBox, self).__init__(**kwargs)
         self.style['flex-direction'] = 'column';
 
         

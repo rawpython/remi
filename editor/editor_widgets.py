@@ -38,7 +38,7 @@ class SignalConnectionManager(gui.Widget):
         super(SignalConnectionManager, self).__init__(**kwargs)
         self.label = gui.Label('Signal connections')
         self.append(self.label)
-        self.container = gui.VerticalContainer(width='100%')
+        self.container = gui.VBox(width='100%')
         self.container.style['overflow-y'] = 'scroll'
         
     def update(self, widget, tree):
@@ -48,7 +48,7 @@ class SignalConnectionManager(gui.Widget):
         """
         self.label.set_text(widget.attributes['editor_varname'])
         del self.container
-        self.container = gui.VerticalContainer(width='100%')
+        self.container = gui.VBox(width='100%')
         self.container.style['overflow-y'] = 'scroll'
         self.append(self.container, 'container')
         ##for all the events of this widget
@@ -243,8 +243,8 @@ class WidgetCollection(gui.Widget):
         self.append(self.listWidgets)
         
         #load all widgets
-        self.add_widget_to_collection(gui.HorizontalContainer)
-        self.add_widget_to_collection(gui.VerticalContainer)
+        self.add_widget_to_collection(gui.HBox)
+        self.add_widget_to_collection(gui.VBox)
         self.add_widget_to_collection(gui.Widget)
         self.add_widget_to_collection(gui.Button)
         self.add_widget_to_collection(gui.TextInput)
