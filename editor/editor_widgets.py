@@ -31,7 +31,42 @@ class ToolBar(gui.Widget):
         icon.attributes['title'] = title
         self.append(icon)
 
+
+class SignalConnection(gui.Widget):
+    def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
+        super(SignalConnection, self).__init__(**kwargs)
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['overflow'] = 'hidden'
+        self.label = gui.Label(eventConnectionFuncName, width='49%')
+        self.label.style['float'] = 'left'
+        self.label.style['font-size'] = '10px'
+        self.label.style['overflow'] = 'hidden'
         
+        self.dropdown = gui.DropDown(width='49%', height='100%')
+        self.dropdown.set_on_change_listener(self, "on_connection")
+        self.append(self.label)
+        self.append(self.dropdown)
+        self.dropdown.style['float'] = 'right'
+        
+        self.eventConnectionFunc = eventConnectionFunc
+        self.eventConnectionFuncName = eventConnectionFuncName
+        self.refWidget = widget
+        self.listenersList = listenersList
+        self.dropdown.append(gui.DropDownItem("None"))
+        for w in listenersList:
+            ddi = gui.DropDownItem(w.attributes['editor_varname'])
+            ddi.refWidget = w
+            self.dropdown.append(ddi)
+    
+    def on_connection(self, dropDownValue):
+        if self.dropdown.get_value()=='None':
+            del self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]
+            return
+        listener = self.dropdown.selected_item.refWidget
+        print("signal connection to:" + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
+        getattr(self.refWidget, self.eventConnectionFuncName)(listener, "function")
+
+
 class SignalConnectionManager(gui.Widget):
     """ This class allows to interconnect event signals """
     def __init__(self, **kwargs):
@@ -41,7 +76,7 @@ class SignalConnectionManager(gui.Widget):
         self.container = gui.VBox(width='100%')
         self.container.style['overflow-y'] = 'scroll'
         
-    def update(self, widget, tree):
+    def update(self, widget, listenersList):
         """ for the selected widget are listed the relative signals
             for each signal there is a dropdown containing all the widgets
             the user will select the widget that have to listen a specific event
@@ -60,8 +95,9 @@ class SignalConnectionManager(gui.Widget):
                 print(setOnEventListenerFuncname)
                 #listener = widget.eventManager.listeners[registered_event_name]['instance']
                 #listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
-                self.container.append(gui.Label(setOnEventListenerFuncname),setOnEventListenerFuncname)#setOnEventListenerFunc._event_listener['eventName']))
-        
+                #self.container.append(gui.Label(setOnEventListenerFuncname),setOnEventListenerFuncname)#setOnEventListenerFunc._event_listener['eventName']))
+                self.container.append( SignalConnection(widget, listenersList, setOnEventListenerFuncname, setOnEventListenerFunc, width='100%') )
+
 
 class ProjectConfigurationDialog(gui.GenericDialog):
     def __init__(self, title='', message=''):
