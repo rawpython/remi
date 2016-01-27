@@ -164,7 +164,7 @@ Parameters:
 You can change these values in order to make the gui accessible on other devices on the network.
 
 
-All widgets constructors accepts three standard **kwargs that are:
+All widgets constructors accepts two standard **kwargs that are:
 - width: can be expressed as int (and is interpreted as pixel) or as str (and you can specify the measure unit like '10%')
 - height: can be expressed as int (and is interpreted as pixel) or as str (and you can specify the measure unit like '10%')
 
