@@ -335,6 +335,7 @@ class Editor(App):
                 sendCallbackParam(data[0],'%(evt)s',params);
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
+        self.project.attributes['editor_varname'] = 'App'
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
@@ -386,6 +387,7 @@ class Editor(App):
         self.editCuttedWidget = None #cut operation, contains the cutted tag
         
         self.widgetList = list() #list of listeners for the signalConnectionManager
+        self.widgetList.append(self.project)
         
         # returning the root widget
         return self.mainContainer

@@ -55,16 +55,25 @@ class SignalConnection(gui.Widget):
         self.dropdown.append(gui.DropDownItem("None"))
         for w in listenersList:
             ddi = gui.DropDownItem(w.attributes['editor_varname'])
-            ddi.refWidget = w
+            ddi.listenerInstance = w
             self.dropdown.append(ddi)
+        #selecting in the dropdown the already connected varname
+        if self.eventConnectionFunc._event_listener['eventName'] in self.refWidget.eventManager.listeners.keys(): 
+            if self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['instance'] in self.listenersList:
+                connectedListenerName = self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['instance'].attributes['editor_varname']
+                self.dropdown.set_value( connectedListenerName )
+    
+    def fakeListenerFunc(self,*args):
+        print('event trap')
     
     def on_connection(self, dropDownValue):
         if self.dropdown.get_value()=='None':
             del self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]
             return
-        listener = self.dropdown.selected_item.refWidget
+        listener = self.dropdown.selected_item.listenerInstance
         print("signal connection to:" + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
-        getattr(self.refWidget, self.eventConnectionFuncName)(listener, "function")
+        listener.fakeListenerFunc = self.fakeListenerFunc
+        getattr(self.refWidget, self.eventConnectionFuncName)(listener, "fakeListenerFunc")
 
 
 class SignalConnectionManager(gui.Widget):
@@ -81,7 +90,7 @@ class SignalConnectionManager(gui.Widget):
             for each signal there is a dropdown containing all the widgets
             the user will select the widget that have to listen a specific event
         """
-        self.label.set_text(widget.attributes['editor_varname'])
+        self.label.set_text('Signal connections:' + widget.attributes['editor_varname'])
         del self.container
         self.container = gui.VBox(width='100%')
         self.container.style['overflow-y'] = 'scroll'
