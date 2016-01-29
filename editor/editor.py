@@ -339,22 +339,6 @@ class Editor(App):
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
-        #javascript_code = gui.Tag()
-        #javascript_code.type = 'script'
-        #javascript_code.attributes['type'] = 'text/javascript'
-        #javascript_code.add_child('code', """
-        #    var MutationObsertver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
-        #    var target = document;
-        #    var config = { attributes: true, childList: true, subtree: true, characterData: true };
-        #    var observer = new MutationObserver(function(mutations) {
-        #        var obj = document.getElementById("%(id)s");
-        #        obj.scrollTop = obj.scrollHeight;
-        #    });
-        #    observer.observe(target, config);
-        #    """ % {'id': id(self.txt),})
-        ## appending a widget to another, the first argument is a string key
-        #self.mainContainer.add_child('javascript',javascript_code)
-        
         self.attributeEditor = editor_widgets.EditorAttributes(self, width='24%', height='100%')
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
@@ -404,12 +388,15 @@ class Editor(App):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
             to the editor
         """
-        typefunc = type(widget.onfocus)
+        typefunc = type(widget.onclick)
         #widget.onfocus = typefunc(onfocus_with_instance, widget)
         #widget.set_on_focus_listener(self, "on_widget_selection")
         widget.onclick = typefunc(onclick_with_instance, widget)
-        widget.set_on_click_listener(self, "on_widget_selection")
-        
+        #widget.EVENT_ON_WIDGET_SELECTION = "on_widget_selection"
+        #widget.eventManager.register_listener(widget.EVENT_ON_WIDGET_SELECTION, self, widget.EVENT_ON_WIDGET_SELECTION)
+        #widget.set_on_click_listener(widget, widget.EVENT_ONCLICK)
+        widget.attributes[widget.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(widget), widget.EVENT_ONCLICK)
+        widget.editor = self
         widget.__class__.on_dropped = on_dropped
 
         #drag properties
@@ -519,7 +506,8 @@ class Editor(App):
 #def onfocus_with_instance(self):
 #    return self.eventManager.propagate(self.EVENT_ONFOCUS, [self])
 def onclick_with_instance(self):
-    return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+    #return self.eventManager.propagate(self.EVENT_ON_WIDGET_SELECTION, [self])
+    self.editor.on_widget_selection(self)
     
 def on_dropped(self, left, top):
     self.style['left']=left
