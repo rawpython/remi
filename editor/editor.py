@@ -388,15 +388,16 @@ class Editor(App):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
             to the editor
         """
+        
+        #here, the standard onclick function of the widget is overridden with a custom function
+        #this function redirect the onclick event to the editor App in order to manage the event
+        #detecting the widget selection
         typefunc = type(widget.onclick)
-        #widget.onfocus = typefunc(onfocus_with_instance, widget)
-        #widget.set_on_focus_listener(self, "on_widget_selection")
         widget.onclick = typefunc(onclick_with_instance, widget)
-        #widget.EVENT_ON_WIDGET_SELECTION = "on_widget_selection"
-        #widget.eventManager.register_listener(widget.EVENT_ON_WIDGET_SELECTION, self, widget.EVENT_ON_WIDGET_SELECTION)
-        #widget.set_on_click_listener(widget, widget.EVENT_ONCLICK)
         widget.attributes[widget.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(widget), widget.EVENT_ONCLICK)
         widget.editor = self
+        
+        #setup of the on_dropped function of the widget in order to manage the dragNdrop 
         widget.__class__.on_dropped = on_dropped
 
         #drag properties
