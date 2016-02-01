@@ -42,10 +42,10 @@ class %(classname)s(App):
         pass
     
     def main(self):
-        return %(classname)s.construct_ui()
+        return %(classname)s.construct_ui(self)
         
     @staticmethod
-    def construct_ui():
+    def construct_ui(self):
         %(code_nested)s
         return %(mainwidgetname)s
     
@@ -59,4 +59,4 @@ proto_style_setup = """%(varname)s.style['%(attrname)s'] = "%(attrvalue)s"\n    
 
 proto_layout_append = "%(parentname)s.append(%(varname)s)\n        "
 
-proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
+proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s,'%(listener_function)s')\n        "

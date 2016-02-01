@@ -97,7 +97,7 @@ class Project(gui.Widget):
         clsmembers = inspect.getmembers(_module, inspect.isclass)
         for (name, value) in clsmembers:
             if issubclass(value,App) and name!='App':
-                return value.construct_ui()
+                return value.construct_ui(self)
         return None                                           
             
     def check_pending_listeners(self, widget, widgetVarName, force=False):
@@ -120,9 +120,22 @@ class Project(gui.Widget):
                             listener_filtered_path.remove(v)
                     event['eventsource'].path_to_this_widget = source_filtered_path
                     event['eventlistener'].path_to_this_widget = listener_filtered_path
-                    
-                    sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
+
+                    sourcename = widgetVarName
+                    if len(source_filtered_path)>0:
+                        sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
+                    if force==True:
+                        if str(id(self.children['root'])) in source_filtered_path:
+                            source_filtered_path.remove(str(id(self.children['root'])))
+                        sourcename = self.children['root'].attributes['editor_varname']
+                        if len(source_filtered_path)>0:
+                            sourcename = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
+
                     listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
+                    if force==True:
+                        listenername = self.children['root'].attributes['editor_varname']
+                        if len(listener_filtered_path)>0:
+                            listenername = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
                     if event['eventlistener'] == widget:
                         listenername = widgetVarName
                     code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
