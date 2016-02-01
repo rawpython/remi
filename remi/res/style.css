@@ -61,6 +61,12 @@ button:hover,th:hover {
 	background: linear-gradient( rgb(120,120,120) , rgb( 70,70,70 ) );
 }
 
+button:disabled {
+	background-color: #ddd;
+	background: #ddd;
+	border: 1px solid #ddd;
+}
+
 .date, .number, .TextInput, .ListView, table, select {
 	border: none;
 	outline: 1px solid rgb( 210,210,210 );

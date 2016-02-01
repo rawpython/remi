@@ -527,6 +527,15 @@ class Button(Widget):
     def set_text(self, t):
         self.add_child('text', t)
 
+    def set_enabled(self, enabled):
+        if enabled:
+            try:
+                del self.attributes['disabled']
+            except KeyError:
+                pass
+        else:
+            self.attributes['disabled'] = None
+
 
 class TextInput(Widget):
     """Editable multiline/single_line text area widget"""
