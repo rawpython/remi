@@ -31,8 +31,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 class MatplotImage(gui.Image):
     ax = None
 
-    def __init__(self, width, height):
-        super(MatplotImage, self).__init__(width, height, "/%s/get_image_data?update_index=0" % id(self))
+    def __init__(self, **kwargs):
+        super(MatplotImage, self).__init__("/%s/get_image_data?update_index=0" % id(self), **kwargs)
         self._buf = None
         self._buflock = threading.Lock()
 
@@ -70,13 +70,16 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        wid = gui.Widget(320, 320, False, 10)
-
-        bt = gui.Button(100, 30, 'Data')
+        wid = gui.Widget(width=320, height=320)
+        wid.style['text-align'] = 'center'
+        
+        bt = gui.Button('Data', width=100, height=30)
+        bt.style['margin'] = '10px'
         bt.set_on_click_listener(self, 'on_button_pressed')
 
         self.plot_data = [0, 1]
-        self.mpl = MatplotImage(250, 250)
+        self.mpl = MatplotImage(width=250, height=250)
+        self.mpl.style['margin'] = '10px'
         self.mpl.ax.set_title("test")
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()

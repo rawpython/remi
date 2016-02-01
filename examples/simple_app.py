@@ -22,9 +22,12 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(120, 100, False, 10)
-        self.lbl = gui.Label(100, 30, 'Hello %s!' % name)
-        self.bt = gui.Button(100, 30, 'Press me!')
+        wid = gui.Widget(width=300, height=200)
+        wid.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
+        self.lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
+        self.lbl.style['margin'] = 'auto'
+        self.bt = gui.Button('Press me!', width=200, height=30)
+        self.bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
         self.npressed = 0

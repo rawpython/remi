@@ -21,7 +21,22 @@ from .server import runtimeInstances, update_event
 
 log = logging.getLogger('remi.gui')
 
-
+def decorate_set_on_listener(eventName, params):
+    """ setup important informations for editor purpose """
+    def add_annotation(function):
+        function._event_listener = {}
+        function._event_listener['eventName'] = eventName
+        function._event_listener['prototype'] = params
+        return function
+    return add_annotation
+    
+def decorate_constructor_parameter_types(typeList):
+    def add_annotation(function):
+        function._constructor_types = typeList
+        return function
+    return add_annotation
+    
+    
 def to_pix(x):
     return str(x) + 'px'
 
@@ -59,7 +74,8 @@ class EventManager(object):
 
 class Tag(object):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
         # we not callable
@@ -127,6 +143,8 @@ class Tag(object):
             self._render_children_list.remove(child)
             for k in self.children.keys():
                 if str(id(self.children[k])) == str(id(child)):
+                    if k in self._render_children_list:
+                        self._render_children_list.remove(self.children[k])
                     self.children.pop(k)
                     # when the child is removed we stop the iteration
                     # this implies that a child replication should not be allowed
@@ -138,29 +156,26 @@ class Widget(Tag):
     """base class for gui widgets.
 
     In html, it is a DIV tag    
-    the "self.type" attribute specifies the HTML tag representation    
-    the "self.attributes[]" attribute specifies the HTML attributes like "style" "class" "id" 
-    the "self.style[]" attribute specifies the CSS style content like "font" "color". 
-    It will be packet togheter with "self.attributes"
+    the self.type attribute specifies the HTML tag representation    
+    the self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id' 
+    the self.style[] attribute specifies the CSS style content like 'font' 'color'. 
+    It will be packet togheter with 'self.attributes'
 
     """
     #constants
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
-
-    def __init__(self, w=1, h=1, layout_orientation=LAYOUT_HORIZONTAL, widget_spacing=0):
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
         """w = numeric with
         h = numeric height
         layout_orientation = specifies the "float" css attribute
         widget_spacing = specifies the "margin" css attribute for the children"""
-        super(Widget,self).__init__()
+        super(Widget,self).__init__(**kwargs)
 
         self.style = {}
 
         self.type = 'div'
-
-        self.layout_orientation = layout_orientation
-        self.widget_spacing = widget_spacing
 
         # some constants for the events
         self.EVENT_ONCLICK = 'onclick'
@@ -186,15 +201,28 @@ class Widget(Tag):
         self.EVENT_ONCONTEXTMENU = "oncontextmenu"
         self.EVENT_ONUPDATE = 'onupdate'
 
-        if w > -1:
-            self.style['width'] = to_pix(w)
-        if h > -1:
-            self.style['height'] = to_pix(h)
         self.style['margin'] = '0px auto'
-
+        
+        self.layout_orientation = Widget.LAYOUT_VERTICAL
+        
         self.oldRootWidget = None  # used when hiding the widget
 
         self.eventManager = EventManager()
+        
+        self.set_size(kwargs.get('width'), kwargs.get('height'))
+
+    def set_size(self, width, height):
+        if type(width)==int:
+            width = to_pix(width)
+        if type(height)==int:
+            height = to_pix(height)
+        if width!=None:
+            self.style['width'] = width
+        if height!=None:
+            self.style['height'] = height
+
+    def set_layout_orientation(self, layout_orientation):
+        self.layout_orientation = layout_orientation
 
     def redraw(self):
         update_event.set()
@@ -218,17 +246,7 @@ class Widget(Tag):
         key = str(id(value)) if key=='' else key
         self.add_child(key, value)
 
-        spacing = to_pix(self.widget_spacing)
-        this_height = 0
-        this_width = 0
-        if 'height' in self.style.keys() and 'height' in self.children[key].style.keys():
-            this_height = from_pix(self.style['height']) - from_pix(self.children[key].style['height'])
-        if 'width' in self.style.keys() and 'width' in self.children[key].style.keys():
-            this_width = from_pix(self.style['width']) - from_pix(self.children[key].style['width'])
-        self.children[key].style['margin'] = spacing + " " + to_pix(this_width/2)
-
-        if self.layout_orientation:
-            self.children[key].style['margin'] = to_pix(this_height/2) + " " + spacing
+        if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
             if 'float' in self.children[key].style.keys():
                 if not (self.children[key].style['float'] == 'none'):
                     self.children[key].style['float'] = 'left'
@@ -240,13 +258,15 @@ class Widget(Tag):
     def onfocus(self):
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
+    @decorate_set_on_listener("onfocus","(self)")
     def set_on_focus_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONFOCUS] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONFOCUS)
         self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
         return self.eventManager.propagate(self.EVENT_ONBLUR, [])
-
+    
+    @decorate_set_on_listener("onblur","(self)")
     def set_on_blur_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONBLUR] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
@@ -267,6 +287,7 @@ class Widget(Tag):
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
+    @decorate_set_on_listener("onclick","(self)")
     def set_on_click_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
@@ -274,6 +295,7 @@ class Widget(Tag):
     def oncontextmenu(self):
         return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
 
+    @decorate_set_on_listener("oncontextmenu","(self)")
     def set_on_contextmenu_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONCONTEXTMENU] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONCONTEXTMENU)
         self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
@@ -281,6 +303,7 @@ class Widget(Tag):
     def onmousedown(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
 
+    @decorate_set_on_listener("onmousedown","(self,x,y)")
     def set_on_mousedown_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEDOWN] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEDOWN)
         self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
@@ -288,6 +311,7 @@ class Widget(Tag):
     def onmouseup(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
 
+    @decorate_set_on_listener("onmouseup","(self,x,y)")
     def set_on_mouseup_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEUP] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEUP)
         self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
@@ -295,6 +319,7 @@ class Widget(Tag):
     def onmouseout(self):
         return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
 
+    @decorate_set_on_listener("onmouseout","(self)")
     def set_on_mouseout_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEOUT] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEOUT)
         self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
@@ -302,6 +327,7 @@ class Widget(Tag):
     def onmouseleave(self):
         return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
 
+    @decorate_set_on_listener("onmouseleave","(self)")
     def set_on_mouseleave_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSELEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSELEAVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
@@ -309,6 +335,7 @@ class Widget(Tag):
     def onmousemove(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
 
+    @decorate_set_on_listener("onmousemove","(self,x,y)")
     def set_on_mousemove_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONMOUSEMOVE] = "var params={};params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONMOUSEMOVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
@@ -316,6 +343,7 @@ class Widget(Tag):
     def ontouchmove(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
 
+    @decorate_set_on_listener("ontouchmove","(self,x,y)")
     def set_on_touchmove_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHMOVE] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHMOVE)
         self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
@@ -323,6 +351,7 @@ class Widget(Tag):
     def ontouchstart(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
 
+    @decorate_set_on_listener("ontouchstart","(self,x,y)")
     def set_on_touchstart_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHSTART] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHSTART)
         self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
@@ -330,6 +359,7 @@ class Widget(Tag):
     def ontouchend(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
 
+    @decorate_set_on_listener("ontouchend","(self,x,y)")
     def set_on_touchend_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHEND] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHEND)
         self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
@@ -337,6 +367,7 @@ class Widget(Tag):
     def ontouchenter(self, x, y):
         return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
 
+    @decorate_set_on_listener("ontouchenter","(self,x,y)")
     def set_on_touchenter_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHENTER] = "var params={};params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop; sendCallbackParam('%s','%s',params);event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHENTER)
         self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
@@ -344,6 +375,7 @@ class Widget(Tag):
     def ontouchleave(self):
         return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
 
+    @decorate_set_on_listener("ontouchleave","(self)")
     def set_on_touchleave_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHLEAVE] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHLEAVE)
         self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
@@ -351,15 +383,78 @@ class Widget(Tag):
     def ontouchcancel(self):
         return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
 
+    @decorate_set_on_listener("ontouchcancel","(self)")
     def set_on_touchcancel_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONTOUCHCANCEL] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();return false;" % (id(self), self.EVENT_ONTOUCHCANCEL)
         self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
+        
 
+class HBox(Widget):
+    """ It contains widget automatically aligning them vertically. 
+        Does not permit children abosulte positioning
+    """
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(HBox, self).__init__(**kwargs)
+        self.style['display'] = 'flex'
+        self.style['-webkit-justify-content'] = 'space-around'
+        self.style['justify-content'] = 'space-around'
+        self.style['-webkit-align-items'] = 'center'
+        self.style['align-items'] = 'center'
+        self.style['flex-direction'] = 'row'
+        
+    def append(self, value, key=''):
+        """it allows to add child widgets to this.
 
+        The key allows to access the specific child in this way 'widget.children[key]'.
+        The key have to be numeric and determines the child order in the layout.
+        """
+        key = str(key)
+        if not isinstance(value, Widget):
+            raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
+
+        if 'left' in value.style.keys():
+            del value.style['left']
+        if 'right' in value.style.keys():
+            del value.style['right']
+        
+        value.style['position'] = 'static'
+        
+        value.style['-webkit-order'] = '-1'
+        value.style['order'] = '-1'
+        
+        #weight of the widget in the layout
+        #value.style['-webkit-flex'] = 
+        #value.style['-ms-flex'] = 
+        #value.style['flex'] = 
+        
+        key = str(id(value)) if key=='' else key
+        self.add_child(key, value)
+
+        if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
+            if 'float' in self.children[key].style.keys():
+                if not (self.children[key].style['float'] == 'none'):
+                    self.children[key].style['float'] = 'left'
+            else:
+                self.children[key].style['float'] = 'left'
+
+        return key
+        
+
+class VBox(HBox):
+    """ It contains widget automatically aligning them vertically. 
+        Does not permit children abosulte positioning
+    """
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(VBox, self).__init__(**kwargs)
+        self.style['flex-direction'] = 'column';
+
+        
 class Button(Widget):
-
-    def __init__(self, w, h, text=''):
-        super(Button, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text='', **kwargs):
+        super(Button, self).__init__(**kwargs)
         self.type = 'button'
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
         self.set_text(text)
@@ -369,11 +464,10 @@ class Button(Widget):
 
 
 class TextInput(Widget):
-
-    """multiline text area widget"""
-
-    def __init__(self, w, h, single_line=True):
-        super(TextInput, self).__init__(w, h)
+    """Editable multiline/single_line text area widget"""
+    @decorate_constructor_parameter_types([bool])
+    def __init__(self, single_line=True, **kwargs):
+        super(TextInput, self).__init__(**kwargs)
         self.type = 'textarea'
 
         self.EVENT_ONENTER = 'onenter'
@@ -406,6 +500,7 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
+    @decorate_set_on_listener("onchange","(self,newValue)")
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
@@ -415,6 +510,7 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, [newValue])
         
+    @decorate_set_on_listener("onkeydown","(self,newValue)")
     def set_on_key_down_listener(self,listener,funcname):
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
@@ -426,6 +522,7 @@ class TextInput(Widget):
         self.set_text(newValue)
         return self.eventManager.propagate(self.EVENT_ONENTER, [newValue])
 
+    @decorate_set_on_listener("onenter","(self,newValue)")
     def set_on_enter_listener(self,listener,funcname):
         self.attributes[self.EVENT_ONKEYDOWN] = """
             if (event.keyCode == 13) {
@@ -438,9 +535,9 @@ class TextInput(Widget):
 
 
 class Label(Widget):
-
-    def __init__(self, w, h, text):
-        super(Label, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text, **kwargs):
+        super(Label, self).__init__(**kwargs)
         self.type = 'p'
         self.set_text(text)
 
@@ -455,34 +552,39 @@ class GenericDialog(Widget):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-
-    def __init__(self, width=500, height=80, title='', message=''):
-        self.width = width
-        self.height = height
-        super(GenericDialog, self).__init__(self.width, self.height, Widget.LAYOUT_VERTICAL, 10)
-
+    @decorate_constructor_parameter_types([str, str])
+    def __init__(self, title='', message='', **kwargs):
+        super(GenericDialog, self).__init__(**kwargs)
+        self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'auto'
+        
         self.EVENT_ONCONFIRM = 'confirm_dialog'
         self.EVENT_ONCANCEL = 'cancel_dialog'
 
         if len(title) > 0:
-            t = Label(self.width - 20, 50, title)
-            t.style['font-size'] = '16px'
-            t.style['font-weight'] = 'bold'
+            t = Label(title)
+            t.style['margin'] = '5px'
             self.append(t)
-            self.height += 50
-            self.style['height'] = to_pix(from_pix(self.style['height']) + 50)
-
+            
         if len(message) > 0:
-            m = Label(self.width - 20, 30, message)
+            m = Label(message)
+            m.style['margin'] = '5px'
             self.append(m)
-            self.height += 30
-            self.style['height'] = to_pix(from_pix(self.style['height']) + 30)
-
-        self.container = Widget(self.width - 20,0, Widget.LAYOUT_VERTICAL, 0)
-        self.conf = Button(50, 30, 'Ok')
-        self.cancel = Button(50, 30, 'Cancel')
-
-        hlay = Widget(self.width - 20, 30)
+            
+        self.container = Widget()
+        self.container.style['display'] = 'block'
+        self.container.style['overflow'] = 'auto'
+        self.container.style['margin'] = '5px'
+        self.container.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.conf = Button('Ok')
+        self.conf.set_size( 100, 30 )
+        self.cancel = Button('Cancel')
+        self.cancel.set_size( 100, 30 )
+        hlay = Widget()
+        hlay.style['display'] = 'block'
+        hlay.style['overflow'] = 'auto'
+        hlay.style['margin'] = '3px'
         hlay.append(self.conf)
         hlay.append(self.cancel)
         self.conf.style['float'] = 'right'
@@ -499,26 +601,26 @@ class GenericDialog(Widget):
         self.baseAppInstance = None
 
     def add_field_with_label(self,key,labelDescription,field):
-        fields_spacing = 5
-        field_height = from_pix(field.style['height']) + fields_spacing*2
-        field_width = from_pix(field.style['width']) + fields_spacing*4
-        self.style['height'] = to_pix(from_pix(self.style['height']) + field_height)
-        self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
-        label = Label(self.width-20-field_width-1, 30, labelDescription )
-        container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
+        label = Label(labelDescription )
+        label.style['margin'] = '0px 5px'
+        container = Widget()
+        container.style['display'] = 'block'
+        container.style['overflow'] = 'auto'
+        container.style['padding'] = '3px'
+        container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
+        self.inputs[key].style['float'] = 'right'
         self.container.append(container, key=key)
 
     def add_field(self, key, field):
-        fields_spacing = 5
-        field_height = from_pix(field.style['height']) + fields_spacing*2
-        field_width = from_pix(field.style['width']) + fields_spacing*2
-        self.style['height'] = to_pix(from_pix(self.style['height']) + field_height)
-        self.container.style['height'] = to_pix(from_pix(self.container.style['height']) + field_height)
         self.inputs[key] = field
-        container = Widget(self.width-20, field_height, Widget.LAYOUT_HORIZONTAL, fields_spacing)
+        container = Widget()
+        container.style['display'] = 'block'
+        container.style['overflow'] = 'auto'
+        container.style['padding'] = '3px'
+        container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -531,6 +633,7 @@ class GenericDialog(Widget):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRM, [])
 
+    @decorate_set_on_listener("confirm_dialog","(self)")
     def set_on_confirm_dialog_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCONFIRM, listener, funcname)
 
@@ -538,6 +641,7 @@ class GenericDialog(Widget):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCANCEL, [])
 
+    @decorate_set_on_listener("cancel_dialog","(self)")
     def set_on_cancel_dialog_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, funcname)
 
@@ -546,12 +650,12 @@ class InputDialog(GenericDialog):
 
     """input dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
+    @decorate_constructor_parameter_types([str, str, str])
+    def __init__(self,title='Title', message='Message',
+                    initial_value='', **kwargs):
+        super(InputDialog, self).__init__(title, message, **kwargs)
 
-    def __init__(self, width=500, height=160, title='Title', message='Message',
-                    initial_value=''):
-        super(InputDialog, self).__init__(width, height, title, message)
-
-        self.inputText = TextInput(width - 20, 30)
+        self.inputText = TextInput()
         self.inputText.set_on_enter_listener(self,'on_text_enter_listener')
         self.add_field('textinput',self.inputText)
         self.inputText.set_text(initial_value)
@@ -573,6 +677,7 @@ class InputDialog(GenericDialog):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [self.inputText.get_text()])
 
+    @decorate_set_on_listener("confirm_value","(self,value)")
     def set_on_confirm_value_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
@@ -580,27 +685,27 @@ class InputDialog(GenericDialog):
 class ListView(Widget):
 
     """list widget it can contain ListItems."""
-
-    def __init__(self, w, h):
-        super(ListView, self).__init__(w, h, layout_orientation=Widget.LAYOUT_VERTICAL)
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(ListView, self).__init__(**kwargs)
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
         self.selected_item = None
         self.selected_key = None
 
     @classmethod
-    def new_from_list(cls, w, h, items):
+    def new_from_list(cls, items, **kwargs):
         """
             the items are appended with an string enumeration key
         """
-        obj = cls(w,h)
+        obj = cls(**kwargs)
         for key,item in enumerate(items):
             obj.append(item,str(key))
         return obj
 
     def append(self, item, key=''):
         if isinstance(item, type('')) or isinstance(item, type(u'')):
-            item = ListItem(-1,-1,item)
+            item = ListItem(item)
         elif not isinstance(item, ListItem):
             raise ValueError("item must be text or a ListItem instance")
         # if an event listener is already set for the added item, it will not generate a selection event
@@ -627,6 +732,7 @@ class ListView(Widget):
                 break
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
+    @decorate_set_on_listener("onselection","(self,selectedKey)")
     def set_on_selection_listener(self, listener, funcname):
         """The listener will receive the key of the selected item.
         If you add the element from an array, use a numeric incremental key
@@ -677,9 +783,9 @@ class ListView(Widget):
 class ListItem(Widget):
 
     """item widget for the ListView"""
-
-    def __init__(self, w, h, text):
-        super(ListItem, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text, **kwargs):
+        super(ListItem, self).__init__(**kwargs)
         self.type = 'li'
 
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -702,9 +808,9 @@ class DropDown(Widget):
 
     """combo box widget implements the onchange event.
     """
-
-    def __init__(self, w, h):
-        super(DropDown, self).__init__(w, h)
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(DropDown, self).__init__(**kwargs)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
@@ -757,6 +863,7 @@ class DropDown(Widget):
         self.set_value(newValue)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
+    @decorate_set_on_listener("onchange","(self,newValue)")
     def set_on_change_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
@@ -764,9 +871,9 @@ class DropDown(Widget):
 class DropDownItem(Widget):
 
     """item widget for the DropDown"""
-
-    def __init__(self, w, h, text):
-        super(DropDownItem, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text, **kwargs):
+        super(DropDownItem, self).__init__(**kwargs)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
@@ -788,10 +895,10 @@ class DropDownItem(Widget):
 class Image(Widget):
 
     """image widget."""
-
-    def __init__(self, w, h, filename):
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, filename, **kwargs):
         """filename should be an URL."""
-        super(Image, self).__init__(w, h)
+        super(Image, self).__init__(**kwargs)
         self.type = 'img'
         self.attributes['src'] = filename
 
@@ -801,9 +908,9 @@ class Table(Widget):
     """
     table widget - it will contains TableRow
     """
-
-    def __init__(self, w, h):
-        super(Table, self).__init__(w, h)
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(Table, self).__init__(**kwargs)
         self.type = 'table'
         self.style['float'] = 'none'
 
@@ -832,9 +939,9 @@ class TableRow(Widget):
     """
     row widget for the Table - it will contains TableItem
     """
-
-    def __init__(self):
-        super(TableRow, self).__init__(-1, -1)
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(TableRow, self).__init__(**kwargs)
         self.type = 'tr'
         self.style['float'] = 'none'
 
@@ -842,9 +949,9 @@ class TableRow(Widget):
 class TableItem(Widget):
 
     """item widget for the TableRow."""
-
-    def __init__(self, text=''):
-        super(TableItem, self).__init__(-1, -1)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text='', **kwargs):
+        super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
         self.style['float'] = 'none'
         self.add_child('text', text)
@@ -853,18 +960,18 @@ class TableItem(Widget):
 class TableTitle(Widget):
 
     """title widget for the table."""
-
-    def __init__(self, title=''):
-        super(TableTitle, self).__init__(-1, -1)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, title='', **kwargs):
+        super(TableTitle, self).__init__(**kwargs)
         self.type = 'th'
         self.style['float'] = 'none'
         self.add_child('text', title)
 
 
 class Input(Widget):
-
-    def __init__(self, w, h, _type='', defaultValue=''):
-        super(Input, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str, str])
+    def __init__(self, _type='', defaultValue='', **kwargs):
+        super(Input, self).__init__(**kwargs)
         self.type = 'input'
         self.attributes['class'] = _type
 
@@ -887,22 +994,22 @@ class Input(Widget):
         self.attributes['value'] = newValue
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [newValue])
 
+    @decorate_set_on_listener("onchange","(self,newValue)")
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
 class CheckBoxLabel(Widget):
-    def __init__(self, w, h, label='', checked=False, user_data=''):
+    @decorate_constructor_parameter_types([str, bool, str])
+    def __init__(self, label='', checked=False, user_data='', **kwargs):
 
-        super(CheckBoxLabel, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
-        inner_checkbox_width = 30
-        inner_label_padding_left = 10
-        self._checkbox = CheckBox(inner_checkbox_width, h, checked, user_data)
-        self._label = Label(w-inner_checkbox_width-inner_label_padding_left, h, label)
+        super(CheckBoxLabel, self).__init__(**kwargs)
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
+        self._checkbox = CheckBox(checked, user_data)
+        self._label = Label(label)
         self.append(self._checkbox, key='checkbox')
         self.append(self._label, key='label')
-        self._label.style['padding-left'] = to_pix(inner_label_padding_left)
 
         self.set_value = self._checkbox.set_value
         self.get_value = self._checkbox.get_value
@@ -915,9 +1022,9 @@ class CheckBox(Input):
     """check box widget usefull as numeric input field implements the onchange
     event.
     """
-
-    def __init__(self, w, h, checked=False, user_data=''):
-        super(CheckBox, self).__init__(w, h, 'checkbox', user_data)
+    @decorate_constructor_parameter_types([bool, str])
+    def __init__(self, checked=False, user_data='', **kwargs):
+        super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').checked;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
@@ -945,9 +1052,9 @@ class SpinBox(Input):
     """spin box widget usefull as numeric input field implements the onchange
     event.
     """
-
-    def __init__(self, w, h, defaultValue='100', min=100, max=5000, step=1):
-        super(SpinBox, self).__init__(w, h, 'number', defaultValue)
+    @decorate_constructor_parameter_types([str, int, int, int])
+    def __init__(self, defaultValue='100', min=100, max=5000, step=1, **kwargs):
+        super(SpinBox, self).__init__('number', defaultValue, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
@@ -955,9 +1062,9 @@ class SpinBox(Input):
 
 
 class Slider(Input):
-
-    def __init__(self, w, h, defaultValue='', min=0, max=10000, step=1):
-        super(Slider, self).__init__(w, h, 'range', defaultValue)
+    @decorate_constructor_parameter_types([str, int, int, int])
+    def __init__(self, defaultValue='', min=0, max=10000, step=1, **kwargs):
+        super(Slider, self).__init__('range', defaultValue, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
@@ -966,6 +1073,7 @@ class Slider(Input):
     def oninput(self, newValue):
         return self.eventManager.propagate(self.EVENT_ONINPUT, [newValue])
 
+    @decorate_set_on_listener("oninput","(self,newValue)")
     def set_oninput_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONINPUT] = \
             "var params={};params['newValue']=document.getElementById('%(id)s').value;"\
@@ -974,15 +1082,15 @@ class Slider(Input):
 
 
 class ColorPicker(Input):
-
-    def __init__(self, w, h, defaultValue='#995500'):
-        super(ColorPicker, self).__init__(w, h, 'color', defaultValue)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, defaultValue='#995500', **kwargs):
+        super(ColorPicker, self).__init__('color', defaultValue, **kwargs)
 
 
 class Date(Input):
-
-    def __init__(self, w, h, defaultValue='2015-04-13'):
-        super(Date, self).__init__(w, h, 'date', defaultValue)
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, defaultValue='2015-04-13', **kwargs):
+        super(Date, self).__init__('date', defaultValue, **kwargs)
         
         
 class GenericObject(Widget):
@@ -990,10 +1098,10 @@ class GenericObject(Widget):
     """
     GenericObject widget - allows to show embedded object like pdf,swf..
     """
-
-    def __init__(self, w, h, filename):
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, filename, **kwargs):
         """filename should be an URL."""
-        super(GenericObject, self).__init__(w, h)
+        super(GenericObject, self).__init__(**kwargs)
         self.type = 'object'
         self.attributes['data'] = filename
 
@@ -1001,32 +1109,36 @@ class GenericObject(Widget):
 class FileFolderNavigator(Widget):
 
     """FileFolderNavigator widget."""
-
-    def __init__(self, w, h, multiple_selection,selection_folder,allow_file_selection, 
-                                                       allow_folder_selection):
-        super(FileFolderNavigator, self).__init__(w, h, Widget.LAYOUT_VERTICAL)
-        self.w = w
-        self.h = h
+    @decorate_constructor_parameter_types([bool, str, bool, bool])
+    def __init__(self, multiple_selection,selection_folder,allow_file_selection, 
+                                                allow_folder_selection, **kwargs):
+        super(FileFolderNavigator, self).__init__(**kwargs)
+        self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        
         self.multiple_selection = multiple_selection
         self.allow_file_selection = allow_file_selection 
         self.allow_folder_selection = allow_folder_selection
         self.selectionlist = []
-        self.controlsContainer = Widget(w, 25, Widget.LAYOUT_HORIZONTAL)
-        self.controlBack = Button(45, 25, 'Up')
+        self.controlsContainer = Widget()
+        self.controlsContainer.set_size('100%', '30px')
+        self.controlsContainer.style['display'] = 'flex'
+        self.controlsContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.controlBack = Button('Up')
+        self.controlBack.set_size('10%', '100%')
         self.controlBack.set_on_click_listener(self, 'dir_go_back')
-        self.controlGo = Button(45, 25, 'Go >>')
+        self.controlGo = Button('Go >>')
+        self.controlGo.set_size('10%', '100%')
         self.controlGo.set_on_click_listener(self, 'dir_go')
-        self.pathEditor = TextInput(w-90, 25)
+        self.pathEditor = TextInput()
+        self.pathEditor.set_size('80%', '100%')
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
         self.controlsContainer.append(self.controlBack)
         self.controlsContainer.append(self.pathEditor)
         self.controlsContainer.append(self.controlGo)
 
-        self.itemContainer = Widget(w, h-25, Widget.LAYOUT_VERTICAL)
-        self.itemContainer.style['overflow-y'] = 'scroll'
-        self.itemContainer.style['overflow-x'] = 'hidden'
-
+        self.itemContainer = Widget()
+        
         self.append(self.controlsContainer)
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
 
@@ -1063,16 +1175,21 @@ class FileFolderNavigator(Widget):
         # this speeds up the navigation
         self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
-        self.itemContainer = Widget(self.w,self.h-25,Widget.LAYOUT_VERTICAL)
+        self.itemContainer = Widget()
+        self.itemContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
+        self.itemContainer.style['height'] = '300px'
+        self.itemContainer.style['display'] = 'block'
+        
 
         for i in l:
             full_path = os.path.join(directory, i)
             is_folder = not os.path.isfile(full_path)
             if not is_folder and (self.allow_file_selection == False):
                 continue
-            fi = FileFolderItem(self.w, 33, i, is_folder)
+            fi = FileFolderItem(i, is_folder)
+            fi.style['display'] = 'block'
             fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
             fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
             self.folderItems.append(fi)
@@ -1146,20 +1263,24 @@ class FileFolderNavigator(Widget):
 class FileFolderItem(Widget):
 
     """FileFolderItem widget for the FileFolderNavigator"""
-
-    def __init__(self, w, h, text, isFolder=False):
-        super(FileFolderItem, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
+    @decorate_constructor_parameter_types([str, bool])
+    def __init__(self, text, isFolder=False, **kwargs):
+        super(FileFolderItem, self).__init__(**kwargs)
+        super(FileFolderItem, self).set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
+        self.style['margin']='3px'
         self.isFolder = isFolder
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.icon = Widget(33, h)
+        self.icon = Widget()
+        self.icon.set_size(30,30)
         # the icon click activates the onselection event, that is propagates to registered listener
         if isFolder:
             self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
         self.icon.attributes['class'] = 'FileFolderItemIcon'
         icon_file = 'res/folder.png' if isFolder else 'res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
-        self.label = Label(w-33, h, text)
+        self.label = Label(text)
+        self.label.set_size(400,30)
         self.label.set_on_click_listener(self, self.EVENT_ONSELECTION)
         self.append(self.icon, key='icon')
         self.append(self.label, key='text')
@@ -1168,6 +1289,7 @@ class FileFolderItem(Widget):
     def onclick(self):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
+    @decorate_set_on_listener("onclick","(self,folderItemInstance)")
     def set_on_click_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
@@ -1179,6 +1301,7 @@ class FileFolderItem(Widget):
         self.set_selected(not self.selected)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self])
 
+    @decorate_set_on_listener("onselection","(self,folderItemInstance)")
     def set_on_selection_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
 
@@ -1194,13 +1317,14 @@ class FileSelectionDialog(GenericDialog):
 
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-
-    def __init__(self, width = 600, fileFolderNavigatorHeight=210, title='File dialog',
-                 message='Select files and folders', multiple_selection=True, selection_folder='.', 
-                 allow_file_selection=True, allow_folder_selection=True):
-        super(FileSelectionDialog, self).__init__(width, 80, title, message)
-        self.fileFolderNavigator = FileFolderNavigator(width-30, fileFolderNavigatorHeight,
-                                                       multiple_selection, selection_folder,
+    @decorate_constructor_parameter_types([str, str, bool, str, bool, bool])
+    def __init__(self, title='File dialog', message='Select files and folders', 
+                 multiple_selection=True, selection_folder='.', 
+                 allow_file_selection=True, allow_folder_selection=True, **kwargs):
+        super(FileSelectionDialog, self).__init__(title, message, **kwargs)
+        
+        self.style['width'] = '475px'
+        self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
                                                        allow_file_selection, 
                                                        allow_folder_selection)
         self.add_field('fileFolderNavigator',self.fileFolderNavigator)
@@ -1215,33 +1339,35 @@ class FileSelectionDialog(GenericDialog):
         params = [self.fileFolderNavigator.get_selection_list()]
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
+    @decorate_set_on_listener("confirm_value","(self,fileList)")
     def set_on_confirm_value_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
 class MenuBar(Widget):
-    def __init__(self, w, h, orientation=Widget.LAYOUT_HORIZONTAL):
-        super(MenuBar, self).__init__(w, h, orientation)
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(MenuBar, self).__init__(**kwargs)
         self.type = 'nav'
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
 
 class Menu(Widget):
 
     """Menu widget can contain MenuItem."""
-
-    def __init__(self, w, h, orientation=Widget.LAYOUT_HORIZONTAL):
-        super(Menu, self).__init__(w, h, orientation)
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(Menu, self).__init__(**kwargs)
         self.type = 'ul'
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
 
 class MenuItem(Widget):
 
     """MenuItem widget can contain other MenuItem."""
-
-    def __init__(self, w, h, text):
-        super(MenuItem, self).__init__(w, h)
-        self.w = w
-        self.h = h
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text, **kwargs):
+        super(MenuItem, self).__init__(**kwargs)
         self.sub_container = None
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -1249,7 +1375,7 @@ class MenuItem(Widget):
 
     def append(self, value, key=''):
         if self.sub_container is None:
-            self.sub_container = Menu(self.w, self.h, Widget.LAYOUT_VERTICAL)
+            self.sub_container = Menu()
             super(MenuItem, self).append(self.sub_container, key='subcontainer')
         self.sub_container.append(value, key=key)
 
@@ -1267,9 +1393,9 @@ class FileUploader(Widget):
         allows to upload multiple files to a specified folder.
         implements the onsuccess and onfailed events.
     """
-
-    def __init__(self, w, h, savepath='./', multiple_selection_allowed=False):
-        super(FileUploader, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str, bool])
+    def __init__(self, savepath='./', multiple_selection_allowed=False, **kwargs):
+        super(FileUploader, self).__init__(**kwargs)
         self._savepath = savepath
         self._multiple_selection_allowed = multiple_selection_allowed
         self.type = 'input'
@@ -1291,6 +1417,7 @@ class FileUploader(Widget):
     def onsuccess(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
 
+    @decorate_set_on_listener("onsuccess","(self,filename)")
     def set_on_success_listener(self, listener, funcname):
         self.eventManager.register_listener(
             self.EVENT_ON_SUCCESS, listener, funcname)
@@ -1298,6 +1425,7 @@ class FileUploader(Widget):
     def onfailed(self,filename):
         return self.eventManager.propagate(self.EVENT_ON_FAILED, [filename])
 
+    @decorate_set_on_listener("onfailed","(self,filename)")
     def set_on_failed_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, funcname)
         
@@ -1305,9 +1433,9 @@ class FileUploader(Widget):
 class FileDownloader(Widget):
 
     """FileDownloader widget. Allows to start a file download."""
-
-    def __init__(self, w, h, text, filename, path_separator='/'):
-        super(FileDownloader, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
+    @decorate_constructor_parameter_types([str, str, str])
+    def __init__(self, text, filename, path_separator='/', **kwargs):
+        super(FileDownloader, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['download'] = os.path.basename(filename)
         self.attributes['href'] = "/%s/download" % id(self)
@@ -1327,9 +1455,9 @@ class FileDownloader(Widget):
 
 
 class Link(Widget):
-
-    def __init__(self, w, h, url, text, open_new_window=True):
-        super(Link, self).__init__(w, h)
+    @decorate_constructor_parameter_types([str, str, bool])
+    def __init__(self, url, text, open_new_window=True, **kwargs):
+        super(Link, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['href'] = url
         if open_new_window:
@@ -1347,9 +1475,9 @@ class Link(Widget):
 
 
 class VideoPlayer(Widget):
-
-    def __init__(self, w, h, video, poster=None):
-        super(VideoPlayer, self).__init__(w, h, Widget.LAYOUT_HORIZONTAL)
+    @decorate_constructor_parameter_types([str, str])
+    def __init__(self, video, poster=None, **kwargs):
+        super(VideoPlayer, self).__init__(**kwargs)
         self.type = 'video'
         self.attributes['src'] = video
         self.attributes['preload'] = 'auto'
@@ -1358,8 +1486,10 @@ class VideoPlayer(Widget):
 
 
 class Svg(Widget):
-    def __init__(self, width, height):
-        super(Svg, self).__init__(width, height)
+    @decorate_constructor_parameter_types([int, int])
+    def __init__(self, width, height, **kwargs):
+        super(Svg, self).__init__(**kwargs)
+        self.set_size(width, height)
         self.attributes['width'] = width
         self.attributes['height'] = height
         self.type = 'svg'
@@ -1370,8 +1500,9 @@ class Svg(Widget):
 
 
 class SvgCircle(Widget):
-    def __init__(self, x, y, radix):
-        super(SvgCircle, self).__init__(0, 0)
+    @decorate_constructor_parameter_types([int, int, int])
+    def __init__(self, x, y, radix, **kwargs):
+        super(SvgCircle, self).__init__(**kwargs)
         self.set_position(x, y)
         self.set_radix(radix)
         self.set_stroke()
@@ -1393,8 +1524,9 @@ class SvgCircle(Widget):
 
 
 class SvgLine(Widget):
-    def __init__(self, x1, y1, x2, y2):
-        super(SvgLine, self).__init__(0, 0)
+    @decorate_constructor_parameter_types([int, int, int, int])
+    def __init__(self, x1, y1, x2, y2, **kwargs):
+        super(SvgLine, self).__init__(**kwargs)
         self.set_coords(x1, y1, x2, y2)
         self.set_stroke()
         self.type = 'line'
@@ -1417,8 +1549,9 @@ class SvgLine(Widget):
 
 
 class SvgPolyline(Widget):
-    def __init__(self, _maxlen=None):
-        super(SvgPolyline, self).__init__(0, 0)
+    @decorate_constructor_parameter_types([int])
+    def __init__(self, _maxlen=None, **kwargs):
+        super(SvgPolyline, self).__init__(**kwargs)
         self.set_stroke()
         self.style['fill'] = 'none'
         self.type = 'polyline'
@@ -1443,8 +1576,9 @@ class SvgPolyline(Widget):
 
 
 class SvgText(Widget):
-    def __init__(self, x, y, text):
-        super(SvgText, self).__init__(0, 0)
+    @decorate_constructor_parameter_types([int, int, str])
+    def __init__(self, x, y, text, **kwargs):
+        super(SvgText, self).__init__(**kwargs)
         self.type = 'text'
         self.set_position(x, y)
         self.set_fill()

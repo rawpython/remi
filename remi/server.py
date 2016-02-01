@@ -284,6 +284,20 @@ def parse_parametrs(p):
     return ret
 
 
+def gui_update_children_copy(client, leaf):
+    """ This function is called when a leaf is updated by gui_updater
+        and so, children does not need graphical update, it is only
+        required to update the memory copy of the children
+    """
+    if not hasattr(leaf, 'attributes'):
+        return False
+    __id = str(id(leaf))
+    client.old_runtime_widgets[__id] = leaf.repr(client,False)
+    
+    for subleaf in leaf.children.values():
+        gui_update_children_copy(client, subleaf)
+    
+    
 def gui_updater(client, leaf, no_update_because_new_subchild=False):
     if not hasattr(leaf, 'attributes'):
         return False
@@ -313,10 +327,6 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                 except:
                     client.websockets.remove(ws)
 
-    # checking if subwidgets changed
-    for subleaf in leaf.children.values():
-        gui_updater(client, subleaf, no_update_because_new_subchild)
-
     newhtml = leaf.repr(client,False)
     if newhtml != client.old_runtime_widgets[__id]:
         for ws in client.websockets:
@@ -326,8 +336,16 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                 ws.send_message('update_widget,' + __id + ',' + toWebsocket(html))
             except:
                 client.websockets.remove(ws)
-        client.old_runtime_widgets[__id] = newhtml
+        #client.old_runtime_widgets[__id] = newhtml
+        
+        #update children back copy in order to avoid nested updates
+        gui_update_children_copy(client, leaf)
         return True
+        
+    # checking if subwidgets changed
+    for subleaf in leaf.children.values():
+        gui_updater(client, subleaf, no_update_because_new_subchild)
+        
     # widget NOT changed
     return False
 

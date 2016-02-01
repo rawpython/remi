@@ -22,8 +22,8 @@ from remi import start, App
 
 
 class PILImageViewverWidget(gui.Image):
-    def __init__(self, width, height, pil_image=None):
-        super(PILImageViewverWidget, self).__init__(width, height, "/res/logo.png")
+    def __init__(self, pil_image=None, **kwargs):
+        super(PILImageViewverWidget, self).__init__("/res/logo.png", **kwargs)
         self._buf = None
 
     def load(self, file_path_name):
@@ -50,17 +50,18 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(640, 270, False, 10)
-        self.image_widget = PILImageViewverWidget(200, 200)
+        wid = gui.Widget(width=640, height=270)
+        wid.style['text-align'] = 'center'
+        self.image_widget = PILImageViewverWidget(width=200, height=200)
 
-        self.menu = gui.Menu(620, 30)
-        m1 = gui.MenuItem(100, 30, 'File')
-        m11 = gui.MenuItem(100, 30, 'Save')
-        m12 = gui.MenuItem(100, 30, 'Open')
+        self.menu = gui.Menu(width=620, height=30)
+        m1 = gui.MenuItem('File', width=100, height=30)
+        m11 = gui.MenuItem('Save', width=100, height=30)
+        m12 = gui.MenuItem('Open', width=100, height=30)
         m12.set_on_click_listener(self, 'menu_open_clicked')
-        m111 = gui.MenuItem(100, 30, 'Save')
+        m111 = gui.MenuItem('Save', width=100, height=30)
         m111.set_on_click_listener(self, 'menu_save_clicked')
-        m112 = gui.MenuItem(100, 30, 'Save as')
+        m112 = gui.MenuItem('Save as', width=100, height=30)
         m112.set_on_click_listener(self, 'menu_saveas_clicked')
 
         self.menu.append(m1)
@@ -76,8 +77,7 @@ class MyApp(App):
         return wid
 
     def menu_open_clicked(self):
-        self.fileselectionDialog = gui.FileSelectionDialog(600, 310,
-                                                           'File Selection Dialog', 'Select an image file', False, '.')
+        self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select an image file', False, '.')
         self.fileselectionDialog.set_on_confirm_value_listener(
             self, 'on_image_file_selected')
         # here is returned the Input Dialog widget, and it will be shown
