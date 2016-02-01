@@ -137,7 +137,7 @@ class Project(gui.Widget):
                             listener_filtered_path.remove(self.children['root'].attributes['editor_varname'])
                         listenername = self.children['root'].attributes['editor_varname']
                         if len(listener_filtered_path)>0:
-                            listenername = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
+                            listenername = ("%s.children['" + "'].children['".join(listener_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
                     if event['eventlistener'] == widget:
                         listenername = widgetVarName
                     code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
@@ -385,9 +385,6 @@ class Editor(App):
         self.projectPathFilename = ''
         self.editCuttedWidget = None #cut operation, contains the cutted tag
         
-        self.widgetList = list() #list of listeners for the signalConnectionManager
-        self.widgetList.append(self.project)
-        
         # returning the root widget
         return self.mainContainer
 
@@ -431,7 +428,6 @@ class Editor(App):
         self.tabindex += 1
         
     def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):
-        self.widgetList.append(widget)
         if parent == None:
             parent = self.selectedWidget
         self.configure_widget_for_editing(widget)
@@ -449,7 +445,7 @@ class Editor(App):
         self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgba(255, 120, 0, 1)'
-        self.signalConnectionManager.update(self.selectedWidget, self.widgetList)
+        self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.resizeHelper.setup(widget,parent)
@@ -493,14 +489,12 @@ class Editor(App):
         self.resizeHelper.setup(None, None)
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.editCuttedWidget = self.selectedWidget
-        self.widgetList.remove(self.editCuttedWidget)
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag cutted:" + str(id(self.editCuttedWidget)))
 
     def menu_paste_selection_clicked(self):
         if self.editCuttedWidget != None:
-            self.widgetList.append(self.editCuttedWidget)
             self.selectedWidget.append(self.editCuttedWidget)
             self.editCuttedWidget = None
 
@@ -512,7 +506,6 @@ class Editor(App):
             return
         self.resizeHelper.setup(None, None)
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
-        self.widgetList.remove(self.selectedWidget)
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag deleted")

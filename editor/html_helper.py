@@ -8,6 +8,8 @@ htmlInternallyUsedTags = ('id'\
 ,'parent_widget'\
 ,'children_list'\
 ,'style'\
+,'draggable'\
+,'tabindex'\
 ,'onabort'\
 ,'onautocomplete'\
 ,'onautocompleteerror'\

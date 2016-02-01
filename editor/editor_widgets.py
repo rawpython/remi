@@ -85,12 +85,25 @@ class SignalConnectionManager(gui.Widget):
         self.append(self.label)
         self.container = gui.VBox(width='100%')
         self.container.style['overflow-y'] = 'scroll'
-        
-    def update(self, widget, listenersList):
+        self.listeners_list = []
+
+    def build_widget_list_from_tree(self, node):
+        if not hasattr(node, 'attributes'):
+            return
+        if not 'editor_varname' in node.attributes.keys():
+            return
+        self.listeners_list.append(node)
+        for child in node.children.values():
+            self.build_widget_list_from_tree(child)
+
+    def update(self, widget, widget_tree):
         """ for the selected widget are listed the relative signals
             for each signal there is a dropdown containing all the widgets
             the user will select the widget that have to listen a specific event
         """
+        self.listeners_list = []
+        self.build_widget_list_from_tree(widget_tree)
+
         self.label.set_text('Signal connections:' + widget.attributes['editor_varname'])
         del self.container
         self.container = gui.VBox(width='100%')
@@ -106,7 +119,7 @@ class SignalConnectionManager(gui.Widget):
                 #listener = widget.eventManager.listeners[registered_event_name]['instance']
                 #listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
                 #self.container.append(gui.Label(setOnEventListenerFuncname),setOnEventListenerFuncname)#setOnEventListenerFunc._event_listener['eventName']))
-                self.container.append( SignalConnection(widget, listenersList, setOnEventListenerFuncname, setOnEventListenerFunc, width='100%') )
+                self.container.append( SignalConnection(widget, self.listeners_list, setOnEventListenerFuncname, setOnEventListenerFunc, width='100%') )
 
 
 class ProjectConfigurationDialog(gui.GenericDialog):
