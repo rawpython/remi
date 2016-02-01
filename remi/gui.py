@@ -885,7 +885,7 @@ class DropDown(Widget):
         super(DropDown, self).__init__(**kwargs)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
-            "var params={};params['new_value']=document.getElementById('%(id)s').value;"\
+            "var params={};params['value']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
                                                                'evt':self.EVENT_ONCHANGE}
         self.selected_item = None
@@ -1049,7 +1049,7 @@ class Input(Widget):
 
         self.attributes[self.EVENT_ONCLICK] = ''
         self.attributes[self.EVENT_ONCHANGE] = \
-            "var params={};params['new_value']=document.getElementById('%(id)s').value;"\
+            "var params={};params['value']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
                                                                'evt':self.EVENT_ONCHANGE}
         self.attributes['value'] = str(default_value)
@@ -1098,7 +1098,7 @@ class CheckBox(Input):
     def __init__(self, checked=False, user_data='', **kwargs):
         super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
-            "var params={};params['new_value']=document.getElementById('%(id)s').checked;"\
+            "var params={};params['value']=document.getElementById('%(id)s').checked;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self),
                                                                'evt':self.EVENT_ONCHANGE}
         self.set_value(checked)
@@ -1149,7 +1149,7 @@ class Slider(Input):
     @decorate_set_on_listener("oninput", "(self,new_value)")
     def set_oninput_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONINPUT] = \
-            "var params={};params['new_value']=document.getElementById('%(id)s').value;"\
+            "var params={};params['value']=document.getElementById('%(id)s').value;"\
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':id(self), 'evt':self.EVENT_ONINPUT}
         self.eventManager.register_listener(self.EVENT_ONINPUT, listener, funcname)
 
