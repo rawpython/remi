@@ -111,7 +111,7 @@ class Tag(object):
                 innerHTML = innerHTML + s.repr(client)
 
         html = '<%s %s>%s</%s>' % (self.type,
-                                   ' '.join(map(lambda k, v: k + '="' + str(v) + '"', self.attributes.keys(), self.attributes.values())),
+                                   ' '.join('%s="%s"' % (k,v) if v is not None else k for k,v in self.attributes.items()),
                                    innerHTML,
                                    self.type)
         return html
