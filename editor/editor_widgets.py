@@ -219,8 +219,18 @@ class WidgetHelper(gui.ListItem):
 
     def __init__(self, widgetClass):
         self.widgetClass = widgetClass
-        super(WidgetHelper, self).__init__(self.widgetClass.__name__)
-            
+        super(WidgetHelper, self).__init__('')
+        self.style['display'] = 'block'
+        self.style['margin'] = '10px auto'
+        self.container = gui.Widget(width='100%', height=40)
+        self.container.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.container.style['background-color'] = 'transparent'
+        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__, width=120, height=40)
+        self.label = gui.Label(self.widgetClass.__name__)
+        self.container.append(self.icon)
+        self.container.append(self.label)
+        self.append(self.container)
+
     def prompt_new_widget(self, appInstance):
         self.appInstance = appInstance
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
