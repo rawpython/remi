@@ -4,7 +4,86 @@
 #these tags will to be not written into the saved project because created at runtime
 import remi.gui as gui
 
-htmlInternallyUsedTags = ('id','parent_widget','children_list', 'style')
+htmlInternallyUsedTags = ('id'\
+,'parent_widget'\
+,'children_list'\
+,'style'\
+,'onabort'\
+,'onautocomplete'\
+,'onautocompleteerror'\
+,'onafterprint'\
+,'onbeforeprint'\
+,'onbeforeunload'\
+,'onblur'\
+,'oncancel'\
+,'oncanplay'\
+,'oncanplaythrough'\
+,'onchange'\
+,'onclick'\
+,'onclose'\
+,'oncontextmenu'\
+,'oncuechange'\
+,'ondblclick'\
+,'ondrag'\
+,'ondragend'\
+,'ondragenter'\
+,'ondragexit'\
+,'ondragleave'\
+,'ondragover'\
+,'ondragstart'\
+,'ondrop'\
+,'ondurationchange'\
+,'onemptied'\
+,'onended'\
+,'onerror'\
+,'onfocus'\
+,'onhashchange'\
+,'oninput'\
+,'oninvalid'\
+,'onkeydown'\
+,'onkeypress'\
+,'onkeyup'\
+,'onlanguagechange'\
+,'onload'\
+,'onloadeddata'\
+,'onloadedmetadata'\
+,'onloadstart'\
+,'onmessage'\
+,'onmousedown'\
+,'onmouseenter'\
+,'onmouseleave'\
+,'onmousemove'\
+,'onmouseout'\
+,'onmouseover'\
+,'onmouseup'\
+,'onwheel'\
+,'onoffline'\
+,'ononline'\
+,'onpagehide'\
+,'onpageshow'\
+,'onpause'\
+,'onplay'\
+,'onplaying'\
+,'onpopstate'\
+,'onprogress'\
+,'onratechange'\
+,'onreset'\
+,'onresize'\
+,'onscroll'\
+,'onseeked'\
+,'onseeking'\
+,'onselect'\
+,'onshow'\
+,'onsort'\
+,'onstalled'\
+,'onstorage'\
+,'onsubmit'\
+,'onsuspend'\
+,'ontimeupdate'\
+,'ontoggle'\
+,'onunload'\
+,'onvolumechange'\
+,'onwaiting')
 
 editorAttributeDictionary = {
     'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},

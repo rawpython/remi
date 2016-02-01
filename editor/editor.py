@@ -106,7 +106,7 @@ class Project(gui.Widget):
         for event in self.pending_listener_registration:
             #print("widget: %s   source:%s    listener:%s"%(str(id(widget)),event['eventsource'].path_to_this_widget,event['eventlistener'].path_to_this_widget))
             if force or (hasattr(event['eventsource'],'path_to_this_widget') and hasattr(event['eventlistener'],'path_to_this_widget')):
-                if (force or (str(id(widget)) in event['eventsource'].path_to_this_widget and str(id(widget)) in event['eventlistener'].path_to_this_widget)) and event['done']==False:
+                if (force or (widget.attributes['editor_varname'] in event['eventsource'].path_to_this_widget and widget.attributes['editor_varname'] in event['eventlistener'].path_to_this_widget)) and event['done']==False:
                     #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
                     if not event['eventsource'] in self.known_project_children or not event['eventlistener'] in self.known_project_children:
                         continue
@@ -125,14 +125,16 @@ class Project(gui.Widget):
                     if len(source_filtered_path)>0:
                         sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
                     if force==True:
-                        if str(id(self.children['root'])) in source_filtered_path:
-                            source_filtered_path.remove(str(id(self.children['root'])))
+                        if self.children['root'].attributes['editor_varname'] in source_filtered_path:
+                            source_filtered_path.remove(self.children['root'].attributes['editor_varname'])
                         sourcename = self.children['root'].attributes['editor_varname']
                         if len(source_filtered_path)>0:
                             sourcename = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
 
                     listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
                     if force==True:
+                        if self.children['root'].attributes['editor_varname'] in listener_filtered_path:
+                            listener_filtered_path.remove(self.children['root'].attributes['editor_varname'])
                         listenername = self.children['root'].attributes['editor_varname']
                         if len(listener_filtered_path)>0:
                             listenername = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
@@ -150,9 +152,9 @@ class Project(gui.Widget):
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
         self.known_project_children.append(widget)
         if hasattr(widget, 'path_to_this_widget'):
-            widget.path_to_this_widget.append( str(id(widget)) )
+            widget.path_to_this_widget.append( widget.attributes['editor_varname'] )
         else:
-            widget.path_to_this_widget = [str(id(widget)),]
+            widget.path_to_this_widget = [widget.attributes['editor_varname'],]
         
         print(widget.attributes['editor_varname'])
         
@@ -202,7 +204,7 @@ class Project(gui.Widget):
                 continue
             child.path_to_this_widget = widget.path_to_this_widget[:]
             children_code_nested += self.repr_widget_for_editor(child)
-            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"%s,'%s'"%(child.attributes['editor_varname'],str(id(child)))}
+            children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"%s,'%s'"%(child.attributes['editor_varname'],child.attributes['editor_varname'])}
         
         children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
                         
@@ -491,7 +493,7 @@ class Editor(App):
         self.resizeHelper.setup(None, None)
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.editCuttedWidget = self.selectedWidget
-        self.widgetList.remove(editCuttedWidget)
+        self.widgetList.remove(self.editCuttedWidget)
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag cutted:" + str(id(self.editCuttedWidget)))
