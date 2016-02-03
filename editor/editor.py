@@ -355,6 +355,14 @@ class Editor(App):
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
         self.project.attributes['editor_varname'] = 'App'
+        self.project.attributes[self.project.EVENT_ONKEYDOWN] = """
+                var params={};
+                params['keypressed']=event.keyCode;
+                sendCallbackParam('%(id)s','%(evt)s',params);
+                if(event.keyCode==46){
+                    return false;
+                }
+            """ % {'id':id(self), 'evt':self.project.EVENT_ONKEYDOWN}
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
@@ -515,7 +523,13 @@ class Editor(App):
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag deleted")
+        
+    def onkeydown(self, keypressed):
+        if keypressed==46: #46 the delete keycode
+            self.toolbar_delete_clicked()
+        print("Key pressed: " + str(keypressed))
 
+        
 #function overload for widgets that have to be editable
 #the normal onfocus function does not returns the widget instance
 #def onfocus_with_instance(self):
