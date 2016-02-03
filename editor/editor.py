@@ -402,7 +402,7 @@ class Editor(App):
             It informs here that it is clicked by the user and the EditorApp starts the allocation
             sending its instance in order to show a dialog 
         """ 
-        helperInstance.prompt_new_widget(self)
+        helperInstance.prompt_new_widget(self, self.project)
     
     def configure_widget_for_editing(self, widget):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 

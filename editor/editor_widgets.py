@@ -242,7 +242,20 @@ class WidgetHelper(gui.ListItem):
         self.container.append(self.label)
         self.append(self.container)
 
-    def prompt_new_widget(self, appInstance):
+    def build_widget_name_list_from_tree(self, node):
+        if not hasattr(node, 'attributes'):
+            return
+        if not 'editor_varname' in node.attributes.keys():
+            return
+        self.varname_list.append(node.attributes['editor_varname'])
+        for child in node.children.values():
+            self.build_widget_name_list_from_tree(child)
+        
+    def prompt_new_widget(self, appInstance, widgets_tree):
+        self.varname_list = list()
+        
+        self.build_widget_name_list_from_tree(widgets_tree)
+        
         self.appInstance = appInstance
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
@@ -276,9 +289,15 @@ class WidgetHelper(gui.ListItem):
         """
         variableName = str(self.dialog.get_field("name").get_value())
         if re.match('(^[a-zA-Z][a-zA-Z0-9_]*)|(^[_][a-zA-Z0-9_]+)', variableName) == None:
-            self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=300,height=130)
+            self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=350,height=120)
             self.errorDialog.show(self.appInstance)
             return
+        
+        if variableName in self.varname_list:
+            self.errorDialog = gui.GenericDialog("Error", "The typed variable name is already used. Please specify a new name.", width=350,height=150)
+            self.errorDialog.show(self.appInstance)
+            return
+        
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
         param_for_constructor = []
