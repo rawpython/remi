@@ -374,13 +374,8 @@ class Editor(App):
         self.subContainer.append(self.project)
         self.subContainer.append(self.attributeEditor)
         
-        self.tabindex = 0 #incremental number to allow widgets selection
-        
-        self.selectedWidget = self.project
-        
         self.resizeHelper = ResizeHelper(width=16, height=16)
-        
-        self.project.new()
+        self.menu_new_clicked()
         
         self.projectPathFilename = ''
         self.editCuttedWidget = None #cut operation, contains the cutted tag
@@ -452,7 +447,13 @@ class Editor(App):
         print("selected widget: " + str(id(widget)))
         
     def menu_new_clicked(self):
+        print('new project')
         self.project.new()
+        self.tabindex = 0 #incremental number to allow widgets selection
+        self.selectedWidget = self.project
+        self.resizeHelper.setup(None, None)
+        if 'root' in self.project.children.keys():
+            self.project.remove_child( self.project.children['root'] )
 
     def on_open_dialog_confirm(self, filelist):
         if len(filelist):
