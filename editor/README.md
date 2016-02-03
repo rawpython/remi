@@ -1,12 +1,19 @@
 
-## *The WYSIWYG Editor for your Remi gui*
+# *The WYSIWYG Editor for your Remi gui*
 
 Introduction
 ===
+What is Remi?
+**A Platform independent Python GUI library for your applications**
+
+[![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+RemI is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
+[More info at https://github.com/dddomodossola/remi](https://github.com/dddomodossola/remi)
 
 ![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/editor/res/preview.png "Editor window")
 
-The editor_app allows you to graphically design your gui interface in an easy to use environment.
+The **editor_app** allows you to graphically design your gui interface in an easy to use environment.
 From a collection of widgets (on the left side of the screen) you can choose the right one you would like to add to your interface.
 Choosing a widget, you have to fill some fields required to allocate the widget. Besides the constructor parameters, some additional information are required:
 - **Variable name**: an identifier that will be used in order to produce the app code;
