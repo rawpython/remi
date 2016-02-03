@@ -217,7 +217,8 @@ class WidgetHelper(gui.ListItem):
         puts the values in an attribute called constructor
     """
 
-    def __init__(self, widgetClass):
+    def __init__(self, widgetClass, **kwargs_to_widget):
+        self.kwargs_to_widget = kwargs_to_widget
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__('')
         self.style['display'] = 'block'
@@ -288,7 +289,7 @@ class WidgetHelper(gui.ListItem):
         #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
         constructor = '(%s)'%(','.join(map(lambda v: str(v), param_for_constructor)))
         #here we create and decorate the widget
-        widget = self.widgetClass(*param_values)
+        widget = self.widgetClass(*param_values, **self.kwargs_to_widget)
         widget.attributes['editor_constructor'] = constructor
         widget.attributes['editor_varname'] = self.dialog.get_field('name').get_value()
         widget.attributes['editor_tag_type'] = 'widget'
@@ -299,7 +300,6 @@ class WidgetHelper(gui.ListItem):
             widget.style['position'] = 'absolute'
         if not 'display' in widget.style:
             widget.style['display'] = 'block'
-        widget.set_size(100,100)
         self.appInstance.add_widget_to_editor(widget)
 
 
@@ -317,30 +317,30 @@ class WidgetCollection(gui.Widget):
         self.append(self.listWidgets)
         
         #load all widgets
-        self.add_widget_to_collection(gui.HBox)
-        self.add_widget_to_collection(gui.VBox)
-        self.add_widget_to_collection(gui.Widget)
-        self.add_widget_to_collection(gui.Button)
-        self.add_widget_to_collection(gui.TextInput)
-        self.add_widget_to_collection(gui.Label)
-        self.add_widget_to_collection(gui.ListView)
-        self.add_widget_to_collection(gui.ListItem)
-        self.add_widget_to_collection(gui.DropDown)
-        self.add_widget_to_collection(gui.DropDownItem)
-        self.add_widget_to_collection(gui.Image)
-        self.add_widget_to_collection(gui.CheckBoxLabel)
-        self.add_widget_to_collection(gui.CheckBox)
-        self.add_widget_to_collection(gui.SpinBox)
-        self.add_widget_to_collection(gui.Slider)
-        self.add_widget_to_collection(gui.ColorPicker)
-        self.add_widget_to_collection(gui.Date)
-        self.add_widget_to_collection(gui.Link)
-        self.add_widget_to_collection(gui.VideoPlayer)
+        self.add_widget_to_collection(gui.HBox, width='250px', height='250px')
+        self.add_widget_to_collection(gui.VBox, width='250px', height='250px')
+        self.add_widget_to_collection(gui.Widget, width='250px', height='250px')
+        self.add_widget_to_collection(gui.Button, width='100px', height='30px')
+        self.add_widget_to_collection(gui.TextInput, width='100px', height='30px')
+        self.add_widget_to_collection(gui.Label, width='100px', height='30px')
+        self.add_widget_to_collection(gui.ListView, width='100px', height='30px')
+        self.add_widget_to_collection(gui.ListItem, width='100px', height='30px')
+        self.add_widget_to_collection(gui.DropDown, width='100px', height='30px')
+        self.add_widget_to_collection(gui.DropDownItem, width='100px', height='30px')
+        self.add_widget_to_collection(gui.Image, width='100px', height='100px')
+        self.add_widget_to_collection(gui.CheckBoxLabel, width='100px', height='30px')
+        self.add_widget_to_collection(gui.CheckBox, width='30px', height='30px')
+        self.add_widget_to_collection(gui.SpinBox, width='100px', height='30px')
+        self.add_widget_to_collection(gui.Slider, width='100px', height='30px')
+        self.add_widget_to_collection(gui.ColorPicker, width='100px', height='30px')
+        self.add_widget_to_collection(gui.Date, width='100px', height='30px')
+        self.add_widget_to_collection(gui.Link, width='100px', height='30px')
+        self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px')
         
-    def add_widget_to_collection(self, widgetClass):
+    def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
         #create an helper that will be created on click
         #the helper have to search for function that have 'return' annotation 'event_listener_setter'
-        helper = WidgetHelper(widgetClass)
+        helper = WidgetHelper(widgetClass, **kwargs_to_widget)
         helper.attributes['title'] = widgetClass.__doc__
         helper.style['width'] = '100%'
         self.listWidgets.append( helper )

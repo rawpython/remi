@@ -131,7 +131,9 @@ class Project(gui.Widget):
                         if len(source_filtered_path)>0:
                             sourcename = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
 
-                    listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
+                    listenername = "self"
+                    if len(listener_filtered_path)>0:
+                        listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
                     if force==True:
                         if self.children['root'].attributes['editor_varname'] in listener_filtered_path:
                             listener_filtered_path.remove(self.children['root'].attributes['editor_varname'])
