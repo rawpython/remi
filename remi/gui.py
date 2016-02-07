@@ -521,9 +521,7 @@ class HBox(Widget):
         """
         super(HBox, self).__init__(**kwargs)
         self.style['display'] = 'flex'
-        self.style['-webkit-justify-content'] = 'space-around'
         self.style['justify-content'] = 'space-around'
-        self.style['-webkit-align-items'] = 'center'
         self.style['align-items'] = 'center'
         self.style['flex-direction'] = 'row'
 
