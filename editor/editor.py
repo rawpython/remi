@@ -428,7 +428,8 @@ class Editor(App):
         widget.attributes['ondragover'] = "event.preventDefault();"   
         widget.attributes['ondrop'] = """event.preventDefault();return false;"""
         widget.attributes['tabindex']=str(self.tabindex)
-        widget.style['position'] = 'absolute'
+        if not 'position' in widget.style.keys():
+            widget.style['position'] = 'absolute'
         if not 'left' in widget.style.keys():
             widget.style['left'] = '1px'
         if not 'top' in widget.style.keys():
