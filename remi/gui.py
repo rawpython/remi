@@ -199,12 +199,12 @@ class Widget(Tag):
     """Base class for gui widgets.
 
     In html, it is a DIV tag    
-    the self.type attribute specifies the HTML tag representation    
-    the self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id' 
-    the self.style[] attribute specifies the CSS style content like 'font' 'color'. 
-    It will be packet together with 'self.attributes'
-
+    The self.type attribute specifies the HTML tag representation
+    The self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id'
+    The self.style[] attribute specifies the CSS style content like 'font' 'color'. It will be packed together with
+    'self.attributes'.
     """
+
     # constants
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
@@ -261,20 +261,27 @@ class Widget(Tag):
         """Set the widget size.
         Parameters
         ----------
-        width (int|str): the value can be of type int, and it will be interpreted as pixel size unit, or can be
-                        of type string and explicitly set as percentage or pixel size unit.
+        width (int|str): the value can be of type integer or string. Where not explicitly defined the size unit will be
+                        considered as 'pixel'.
                         (es. width=10 or width='10px' or width='10%').
-        height (int|str): the value can be of type int, and it will be interpreted as pixel size unit, or can be
-                        of type string and explicitly set as percentage or pixel size unit.
+        height (int|str): the value can be of type integer or string. Where not explicitly defined the size unit will be
+                        considered as 'pixel'.
                         (es. height=10 or height='10px' or height='10%').
         """
-        if type(width) == int:
-            width = to_pix(width)
-        if type(height) == int:
-            height = to_pix(height)
-        if width is not None:
+        if width!=None:
+            try:
+                width = to_pix( int( width ) )
+            except ValueError:
+                # now we know w has 'px or % in it'
+                pass
             self.style['width'] = width
-        if height is not None:
+
+        if height!=None:
+            try:
+                height = to_pix( int(height) )
+            except ValueError:
+                # now we know w has 'px or % in it'
+                pass
             self.style['height'] = height
 
     def set_layout_orientation(self, layout_orientation):
@@ -516,13 +523,18 @@ class Widget(Tag):
 
     def onmousemove(self, x, y):
         """Called when the mouse cursor moves inside the Widget.
+
+        Parameters
+        ----------
+        x (int): position of the mouse inside the widget
+        y (int): position of the mouse inside the widget
         """
         return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
 
     @decorate_set_on_listener("onmousemove", "(self,x,y)")
     def set_on_mousemove_listener(self, listener, funcname):
         """Registers the listener for the Widget.onmousemove event.
-
+        Note: the listener prototype have to be in the form on_widget_mousemove(self, x, y)
         Parameters
         ----------
         listener (App, Widget): Instance of the listener. It can be the App or a Widget.
@@ -538,12 +550,18 @@ class Widget(Tag):
 
     def ontouchmove(self, x, y):
         """Called continuously while a finger is dragged across the screen, over a Widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
         """
         return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
 
     @decorate_set_on_listener("ontouchmove", "(self,x,y)")
     def set_on_touchmove_listener(self, listener, funcname):
         """Registers the listener for the Widget.ontouchmove event.
+        Note: the listener prototype have to be in the form on_widget_touchmove(self, x, y)
 
         Parameters
         ----------
@@ -560,10 +578,25 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
 
     def ontouchstart(self, x, y):
+        """Called when a finger touches the widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
 
     @decorate_set_on_listener("ontouchstart", "(self,x,y)")
     def set_on_touchstart_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchstart event.
+        Note: the listener prototype have to be in the form on_widget_touchstart(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHSTART] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -574,10 +607,25 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
 
     def ontouchend(self, x, y):
+        """Called when a finger is released from the widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
 
     @decorate_set_on_listener("ontouchend", "(self,x,y)")
     def set_on_touchend_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchend event.
+        Note: the listener prototype have to be in the form on_widget_touchend(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHEND] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -588,6 +636,13 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
 
     def ontouchenter(self, x, y):
+        """Called when a finger touches from outside to inside the widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
 
     @decorate_set_on_listener("ontouchenter", "(self,x,y)")
