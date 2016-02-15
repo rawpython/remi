@@ -198,6 +198,13 @@ class Tag(object):
 class Widget(Tag):
     """Base class for gui widgets.
 
+    Widget can be used as generic container. You can add children by the append(value, key) function.
+    Widget can be arranged in absolute positioning (assigning style['top'] and style['left'] attributes to the children
+    or in a simple auto-alignment.
+    You can decide the horizontal or vertical arrangement by the function set_layout_horientation(layout_orientation)
+    passing as parameter Widget.LAYOUT_HORIZONTAL or Widget.LAYOUT_VERTICAL.
+
+    Tips:
     In html, it is a DIV tag    
     The self.type attribute specifies the HTML tag representation
     The self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id'
@@ -647,6 +654,14 @@ class Widget(Tag):
 
     @decorate_set_on_listener("ontouchenter", "(self,x,y)")
     def set_on_touchenter_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchenter event.
+        Note: the listener prototype have to be in the form on_widget_touchenter(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHENTER] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -657,10 +672,20 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
 
     def ontouchleave(self):
+        """Called when a finger touches from inside to outside the widget.
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
 
     @decorate_set_on_listener("ontouchleave", "(self)")
     def set_on_touchleave_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchleave event.
+        Note: the listener prototype have to be in the form on_widget_touchleave(self)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHLEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -668,10 +693,21 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
 
     def ontouchcancel(self):
+        """Called when a touch point has been disrupted in an implementation-specific manner
+        (for example, too many touch points are created).
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
 
     @decorate_set_on_listener("ontouchcancel", "(self)")
     def set_on_touchcancel_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchcancel event.
+        Note: the listener prototype have to be in the form on_widget_touchcancel(self)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHCANCEL] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -680,8 +716,13 @@ class Widget(Tag):
 
 
 class HBox(Widget):
-    """ It contains widget automatically aligning them vertically. 
-        Does not permit children absolute positioning
+    """It contains widget automatically aligning them horizontally.
+    Does not permit children absolute positioning.
+
+    In order to add children to this container, use the append(child, key) function.
+    The key have to be numeric and determines the children order in the layout.
+
+    Note: If you would absolute positioning, use the Widget container instead.
     """
 
     @decorate_constructor_parameter_types([])
@@ -701,7 +742,7 @@ class HBox(Widget):
     def append(self, value, key=''):
         """It allows to add child widgets to this.
         The key allows to access the specific child in this way widget.children[key].
-        The key have to be numeric and determines the child order in the layout.
+        The key have to be numeric and determines the children order in the layout.
 
         Parameters
         ----------
@@ -742,8 +783,13 @@ class HBox(Widget):
 
 
 class VBox(HBox):
-    """ It contains widget automatically aligning them vertically. 
-        Does not permit children absolute positioning
+    """It contains widget automatically aligning them vertically.
+    Does not permit children absolute positioning.
+
+    In order to add children to this container, use the append(child, key) function.
+    The key have to be numeric and determines the children order in the layout.
+
+    Note: If you would absolute positioning, use the Widget container instead.
     """
 
     @decorate_constructor_parameter_types([])
