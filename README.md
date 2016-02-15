@@ -1,5 +1,7 @@
 
 ## *A Platform independent Python GUI library for your applications*
+
+[![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 RemI is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
 Getting Started
@@ -31,7 +33,9 @@ Platform independent Python GUI library. In less than 100 Kbytes of source code,
 RemI enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, RemI automatically translates your Python code into HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
 These widgets are available:
-- Widget : like an empty panel
+- Widget : base class of all widgets. it can be used as a generic container
+- HBox : horizontal container
+- VBox : vertical container
 - Button
 - TextInput : for the editable text
 - SpinBox
@@ -61,20 +65,19 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(120, 100, False, 10)
-        self.lbl = gui.Label(100, 30, 'Hello world!')
-        self.bt = gui.Button(100, 30, 'Press me!')
+        container = gui.VBox(width = 120, height = 100)
+        self.lbl = gui.Label('Hello world!')
+        self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
         self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
-        wid.append('1', self.lbl)
-        wid.append('2', self.bt)
+        container.append(self.lbl)
+        container.append(self.bt)
 
         # returning the root widget
-        return wid
+        return container
 
     # listener function
     def on_button_pressed(self):
@@ -85,10 +88,10 @@ class MyApp(App):
 start(MyApp)
 ```
 
-In order to see the user interface, open your preferred browser (I use Chrome) and type "http://127.0.0.1:8081".
-You can change the url address, edit the "configuration.py" file.
+In order to see the user interface, open your preferred browser and type "http://127.0.0.1:8081".
+You can change the url address by specific **kwargs at `start` function call. This will be discussed later.
 
-Tested on Android, Linux, Windows with Google Chrome.
+Tested on Android, Linux, Windows.
 Useful on Raspberry Pi for Python script development. It allows to interact with your Raspberry Pi remotely from your mobile device.
 
 
@@ -109,10 +112,13 @@ For sure! RemI is released under the Apache License. See the ``LICENSE`` file fo
 - **Where is the documentation?**  
 I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
+- **Do I need some kind of webserver?**
+No, it's included.
+
 
 Brief tutorial
 ===
-Import RemI library and all submodules.
+Import RemI library and some other useful stuff.
 
 ```py
 import remi.gui as gui
@@ -127,7 +133,7 @@ class MyApp( App ):
 		super( MyApp, self ).__init__( *args )
 		
 	def main( self ):
-		lbl = gui.Label( 100, 30, "Hello world!" )
+		lbl = gui.Label( "Hello world!", width=100, height=30 )
 		
 		#return of the root widget
 		return lbl
@@ -149,7 +155,7 @@ start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_
 ```
 
 Parameters:
-- address = network interface ip
+- address: network interface ip
 - port: listen port
 - multiple_instance: boolean, if True multiple clients that connects to your script has different App instances
 - enable_file_cache: boolean, if True enable resource caching
@@ -158,17 +164,16 @@ Parameters:
 You can change these values in order to make the gui accessible on other devices on the network.
 
 
-All widgets constructors require three standard parameters that are in sequence:
-- width in pixel
-- height in pixel
-- layout orientation (boolean, where True means horizontal orientation)
+All widgets constructors accepts two standard **kwargs that are:
+- width: can be expressed as int (and is interpreted as pixel) or as str (and you can specify the measure unit like '10%')
+- height: can be expressed as int (and is interpreted as pixel) or as str (and you can specify the measure unit like '10%')
 
 
 Events and callbacks
 ===
 Widgets exposes a set of events that happens during user interaction. 
 Such events are a convenient way to define the application behavior.
-Each widget has its own callbacks, depending on the type of input it allows.
+Each widget has its own callbacks, depending on the type of user interaction it allows.
 The specific callbacks for the widgets will be illustrated later.
 
 In order to register a function as an event listener you have to call a function like set_on_xxx_listener passing as parameters the instance of widget that will manage the event and the literal string name of the listener function.
@@ -183,21 +188,19 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(120, 100, False, 10)
-        self.lbl = gui.Label(100, 30, 'Hello world!')
-        self.bt = gui.Button(100, 30, 'Press me!')
+        container = gui.VBox(width = 120, height = 100)
+        self.lbl = gui.Label('Hello world!')
+        self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        
         self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
-        wid.append('1', self.lbl)
-        wid.append('2', self.bt)
+        container.append(self.lbl)
+        container.append(self.bt)
 
         # returning the root widget
-        return wid
+        return container
 
     # listener function
     def on_button_pressed(self):

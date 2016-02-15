@@ -17,38 +17,38 @@ from remi import start, App
 
 
 class MyApp(App):
-
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(120, 100, False, 10)
-        self.lbl = gui.Label(100, 30, 'Hello %s!' % name)
-        self.bt = gui.Button(100, 30, 'Press me!')
+        wid = gui.Widget(width=300, height=200)
+        wid.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
+        self.lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
+        self.lbl.style['margin'] = 'auto'
+        self.bt = gui.Button('Press me!', width=200, height=30)
+        self.bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
+        self.npressed = 0
         self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
-        wid.append('1', self.lbl)
-        wid.append('2', self.bt)
+        wid.append(self.lbl)
+        wid.append(self.bt)
 
         # returning the root widget
         return wid
 
     # listener function
     def on_button_pressed(self):
-        self.lbl.set_text('Button pressed!')
+        self.npressed += 1
+        self.lbl.set_text('Button pressed %s times' % self.npressed)
         self.bt.set_text('Hi!')
 
-if __name__ == "__main__":
-	# setting up remi debug level 
-	#       2=all debug messages   1=error messages   0=no messages
-	#import remi.server
-	#remi.server.DEBUG_MODE = 2 
 
-	# starts the webserver
-	# optional parameters   
-	#       start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp)
+if __name__ == "__main__":
+    # starts the webserver
+    # optional parameters
+    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
+    start(MyApp, debug=False)

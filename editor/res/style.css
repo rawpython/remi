@@ -7,9 +7,18 @@
   src: local('Hind Regular'), local('Hind-Regular'), url(/res/font.woff) format('woff');
 }
 
+html {
+	height:100%;
+    margin:0px;
+    padding:0px;
+}
+
 body {
 	background-image: url( '/res/bg.png' );
 	font-family: 'Hind';
+    height:100%;
+    margin:0px;
+    padding:0px;
 }
 
 body > div {
@@ -45,8 +54,8 @@ div {
 
 input,button,textarea,select {
 	font-family: 'Hind';
-	padding: 0px;
 	border: none;
+    padding: 0px;
 }
 
 button,th {
