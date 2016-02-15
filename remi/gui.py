@@ -91,6 +91,11 @@ class EventManager(object):
 
 
 class Tag(object):
+    """
+    Tag is the base class of the framework. It represents an element that can be added to the GUI,
+    but it is not necessarily graphically representable.
+    You can use this class for sending javascript code to the clients.
+    """
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         # the runtime instances are processed every time a requests arrives, searching for the called method
@@ -108,7 +113,7 @@ class Tag(object):
         self.attributes['class'] = self.__class__.__name__
 
     def repr(self, client, include_children=True):
-        """it is used to automatically represent the object to HTML format
+        """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
         Parameters
@@ -191,7 +196,7 @@ class Tag(object):
 
 
 class Widget(Tag):
-    """base class for gui widgets.
+    """Base class for gui widgets.
 
     In html, it is a DIV tag    
     the self.type attribute specifies the HTML tag representation    
@@ -263,6 +268,15 @@ class Widget(Tag):
             self.style['height'] = height
 
     def set_layout_orientation(self, layout_orientation):
+        """For the generic Widget, this function allows to setup the children arrangement.
+        Parameters
+        ----------
+        layout_orientation (Widget.LAYOUT_HORIZONTAL|Widget.LAYOUT_VERTICAL):
+
+        Returns
+        -------
+
+        """
         self.layout_orientation = layout_orientation
 
     def redraw(self):
