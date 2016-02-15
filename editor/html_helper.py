@@ -4,9 +4,110 @@
 #these tags will to be not written into the saved project because created at runtime
 import remi.gui as gui
 
-htmlInternallyUsedTags = ('id','parent_widget','children_list', 'style')
+htmlInternallyUsedTags = ('id'\
+,'parent_widget'\
+,'children_list'\
+,'style'\
+,'draggable'\
+,'tabindex'\
+,'onabort'\
+,'onautocomplete'\
+,'onautocompleteerror'\
+,'onafterprint'\
+,'onbeforeprint'\
+,'onbeforeunload'\
+,'onblur'\
+,'oncancel'\
+,'oncanplay'\
+,'oncanplaythrough'\
+,'onchange'\
+,'onclick'\
+,'onclose'\
+,'oncontextmenu'\
+,'oncuechange'\
+,'ondblclick'\
+,'ondrag'\
+,'ondragend'\
+,'ondragenter'\
+,'ondragexit'\
+,'ondragleave'\
+,'ondragover'\
+,'ondragstart'\
+,'ondrop'\
+,'ondurationchange'\
+,'onemptied'\
+,'onended'\
+,'onerror'\
+,'onfocus'\
+,'onhashchange'\
+,'oninput'\
+,'oninvalid'\
+,'onkeydown'\
+,'onkeypress'\
+,'onkeyup'\
+,'onlanguagechange'\
+,'onload'\
+,'onloadeddata'\
+,'onloadedmetadata'\
+,'onloadstart'\
+,'onmessage'\
+,'onmousedown'\
+,'onmouseenter'\
+,'onmouseleave'\
+,'onmousemove'\
+,'onmouseout'\
+,'onmouseover'\
+,'onmouseup'\
+,'onwheel'\
+,'onoffline'\
+,'ononline'\
+,'onpagehide'\
+,'onpageshow'\
+,'onpause'\
+,'onplay'\
+,'onplaying'\
+,'onpopstate'\
+,'onprogress'\
+,'onratechange'\
+,'onreset'\
+,'onresize'\
+,'onscroll'\
+,'onseeked'\
+,'onseeking'\
+,'onselect'\
+,'onshow'\
+,'onsort'\
+,'onstalled'\
+,'onstorage'\
+,'onsubmit'\
+,'onsuspend'\
+,'ontimeupdate'\
+,'ontoggle'\
+,'onunload'\
+,'onvolumechange'\
+,'onwaiting')
+
+
+editorAttributesGroupOrdering = {
+    'Generic':1,
+    'Geometry':2,
+    'Background':3,
+    'Border':4,
+    'Font':5,
+    'Layout':6
+}
 
 editorAttributeDictionary = {
+    'title':{'type':str, 'description':'Advisory information for the element', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}},
+    'editor_varname':{'type':str, 'description':'Variable name', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}},
+
+    'width':{'type':str, 'description':'Widget width.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+    'height':{'type':str, 'description':'Widget height.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+    'left':{'type':str, 'description':'Widget left.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+    'top':{'type':str, 'description':'Widget top.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+    'right':{'type':str, 'description':'Widget right.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+    'bottom':{'type':str, 'description':'Widget bottom.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+
     'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
     'background-image':{'type':gui.FileSelectionDialog, 'description':'An optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
     'background-position':{'type':str, 'description':'The position of an optional background in the form 0% 0%', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
@@ -43,19 +144,12 @@ editorAttributeDictionary = {
     'flex':{'type':int, 'description':"The flex property specifies the length of the item, relative to the rest of the flexible items inside the same container. The flex property is a shorthand for the flex-grow, flex-shrink, and the flex-basis properties. Note: If the element is not a flexible item, the flex property has no effect."
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':'', 'min':-10000, 'max':10000, 'default':1, 'step':1}},
     'position':{'type':gui.DropDown, 'description':'The position property specifies the type of positioning method used for an element.'
-                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('static','absolute','fixed','relative','initial','inherit')}},
-    'width':{'type':str, 'description':'Widget width.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
-    'height':{'type':str, 'description':'Widget height.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
-    'left':{'type':str, 'description':'Widget left.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
-    'top':{'type':str, 'description':'Widget top.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
-    'right':{'type':str, 'description':'Widget right.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
-    'bottom':{'type':str, 'description':'Widget bottom.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('static','absolute','fixed','relative','initial','inherit')}}
+
     #:{'type':, 'description':'', 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
     
     #'disabled':{'type':bool, 'description':'Whether the form control is disabled', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
     #'hidden':{'type':bool, 'description':'Whether the element is relevant', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
-    'title':{'type':str, 'description':'Advisory information for the element', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}},
-    'editor_varname':{'type':str, 'description':'Variable name', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}}
 }
 
 #future use
