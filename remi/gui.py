@@ -1433,11 +1433,17 @@ class ListItem(Widget):
 
 class DropDown(Widget):
     """Drop down selection widget. Implements the onchange(value) event. Register a listener for its selection change
-    by means of the function DropDown.set_on_change_listener. 
+    by means of the function DropDown.set_on_change_listener.
     """
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(DropDown, self).__init__(**kwargs)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
@@ -1448,8 +1454,11 @@ class DropDown(Widget):
         self.selected_key = None
 
     def select_by_key(self, key):
-        """
-        selects an item by its key
+        """Selects an item by its unique string identifier.
+
+        Parameters
+        ----------
+        key (str): Unique string identifier of the DropDownItem that have to be selected.
         """
         for item in self.children.values():
             if 'selected' in item.attributes:
@@ -1459,8 +1468,11 @@ class DropDown(Widget):
         self.selected_item = self.children[key]
 
     def set_value(self, value):
-        """
-        selects the item by the contained text
+        """Selects a DropDownItem by means of the contained text-
+
+        Parameters
+        ----------
+        value (str): Textual content of the DropDownItem that have to be selected.
         """
         self.selected_key = None
         self.selected_item = None
@@ -1475,24 +1487,41 @@ class DropDown(Widget):
                     del item.attributes['selected']
 
     def get_value(self):
-        """Returns the value of the selected item or None
+        """
+        Returns
+        -------
+        The value of the selected item or None.
         """
         if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
     def get_key(self):
-        """Returns the key of the selected item or None
+        """
+        Returns
+        -------
+        The unique string identifier of the selected item or None.
         """
         return self.selected_key
 
     def onchange(self, value):
+        """Called when a new DropDownItem gets selected.
+        """
         log.debug('combo box. selected %s' % value)
         self.set_value(value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
+        """Registers the listener for the DropDown.onchange event.
+        Note: The prototype of the listener have to be like my_dropdown_onchange(self, value). Where value is
+        the textual content of the selected item.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
@@ -1501,6 +1530,12 @@ class DropDownItem(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(DropDownItem, self).__init__(**kwargs)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -1526,6 +1561,12 @@ class Image(Widget):
     @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """filename should be an URL."""
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Image, self).__init__(**kwargs)
         self.type = 'img'
         self.attributes['src'] = filename
@@ -1538,6 +1579,12 @@ class Table(Widget):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Table, self).__init__(**kwargs)
         self.type = 'table'
         self.style['float'] = 'none'
@@ -1569,6 +1616,12 @@ class TableRow(Widget):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(TableRow, self).__init__(**kwargs)
         self.type = 'tr'
         self.style['float'] = 'none'
@@ -1579,6 +1632,12 @@ class TableItem(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
         self.style['float'] = 'none'
@@ -1590,6 +1649,12 @@ class TableTitle(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, title='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(TableTitle, self).__init__(**kwargs)
         self.type = 'th'
         self.style['float'] = 'none'
@@ -1599,6 +1664,12 @@ class TableTitle(Widget):
 class Input(Widget):
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, input_type='', default_value='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Input, self).__init__(**kwargs)
         self.type = 'input'
         self.attributes['class'] = input_type
@@ -1631,6 +1702,12 @@ class Input(Widget):
 class CheckBoxLabel(Widget):
     @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(CheckBoxLabel, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self._checkbox = CheckBox(checked, user_data)
@@ -1651,6 +1728,12 @@ class CheckBox(Input):
 
     @decorate_constructor_parameter_types([bool, str])
     def __init__(self, checked=False, user_data='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').checked;" \
@@ -1681,6 +1764,12 @@ class SpinBox(Input):
 
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='100', min=100, max=5000, step=1, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SpinBox, self).__init__('number', default_value, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
@@ -1692,6 +1781,12 @@ class SpinBox(Input):
 class Slider(Input):
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='', min=0, max=10000, step=1, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Slider, self).__init__('range', default_value, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
@@ -1712,12 +1807,24 @@ class Slider(Input):
 class ColorPicker(Input):
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='#995500', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(ColorPicker, self).__init__('color', default_value, **kwargs)
 
 
 class Date(Input):
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='2015-04-13', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Date, self).__init__('date', default_value, **kwargs)
 
 
@@ -1729,6 +1836,12 @@ class GenericObject(Widget):
     @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """filename should be an URL."""
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(GenericObject, self).__init__(**kwargs)
         self.type = 'object'
         self.attributes['data'] = filename
@@ -1739,6 +1852,12 @@ class FileFolderNavigator(Widget):
 
     @decorate_constructor_parameter_types([bool, str, bool, bool])
     def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileFolderNavigator, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
 
@@ -1893,6 +2012,12 @@ class FileFolderItem(Widget):
 
     @decorate_constructor_parameter_types([str, bool])
     def __init__(self, text, is_folder=False, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileFolderItem, self).__init__(**kwargs)
         super(FileFolderItem, self).set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self.style['margin'] = '3px'
@@ -1949,6 +2074,12 @@ class FileSelectionDialog(GenericDialog):
     def __init__(self, title='File dialog', message='Select files and folders',
                  multiple_selection=True, selection_folder='.',
                  allow_file_selection=True, allow_folder_selection=True, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileSelectionDialog, self).__init__(title, message, **kwargs)
 
         self.style['width'] = '475px'
@@ -1975,6 +2106,12 @@ class FileSelectionDialog(GenericDialog):
 class MenuBar(Widget):
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(MenuBar, self).__init__(**kwargs)
         self.type = 'nav'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
@@ -1985,6 +2122,12 @@ class Menu(Widget):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Menu, self).__init__(**kwargs)
         self.type = 'ul'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
@@ -1995,6 +2138,12 @@ class MenuItem(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(MenuItem, self).__init__(**kwargs)
         self.sub_container = None
         self.type = 'li'
@@ -2023,6 +2172,12 @@ class FileUploader(Widget):
 
     @decorate_constructor_parameter_types([str, bool])
     def __init__(self, savepath='./', multiple_selection_allowed=False, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileUploader, self).__init__(**kwargs)
         self._savepath = savepath
         self._multiple_selection_allowed = multiple_selection_allowed
@@ -2063,6 +2218,12 @@ class FileDownloader(Widget):
 
     @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, text, filename, path_separator='/', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileDownloader, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['download'] = os.path.basename(filename)
@@ -2085,6 +2246,12 @@ class FileDownloader(Widget):
 class Link(Widget):
     @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Link, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['href'] = url
@@ -2105,6 +2272,12 @@ class Link(Widget):
 class VideoPlayer(Widget):
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, video, poster=None, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(VideoPlayer, self).__init__(**kwargs)
         self.type = 'video'
         self.attributes['src'] = video
@@ -2116,6 +2289,12 @@ class VideoPlayer(Widget):
 class Svg(Widget):
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Svg, self).__init__(**kwargs)
         self.set_size(width, height)
         self.attributes['width'] = width
@@ -2130,6 +2309,12 @@ class Svg(Widget):
 class SvgCircle(Widget):
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, radix, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgCircle, self).__init__(**kwargs)
         self.set_position(x, y)
         self.set_radix(radix)
@@ -2154,6 +2339,12 @@ class SvgCircle(Widget):
 class SvgLine(Widget):
     @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x1, y1, x2, y2, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgLine, self).__init__(**kwargs)
         self.set_coords(x1, y1, x2, y2)
         self.set_stroke()
@@ -2179,6 +2370,12 @@ class SvgLine(Widget):
 class SvgPolyline(Widget):
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgPolyline, self).__init__(**kwargs)
         self.set_stroke()
         self.style['fill'] = 'none'
@@ -2206,6 +2403,12 @@ class SvgPolyline(Widget):
 class SvgText(Widget):
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgText, self).__init__(**kwargs)
         self.type = 'text'
         self.set_position(x, y)
