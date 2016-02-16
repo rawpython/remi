@@ -849,7 +849,8 @@ class Button(Widget):
 
 
 class TextInput(Widget):
-    """Editable multiline/single_line text area widget.
+    """Editable multiline/single_line text area widget. You can set the content by means of the function set_text or
+     retrieve its content with get_text.
     """
 
     @decorate_constructor_parameter_types([bool])
@@ -926,6 +927,8 @@ class TextInput(Widget):
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
         """Registers the listener for the Widget.onchange event.
+        Note: the listener prototype have to be in the form on_textinput_change(self, new_value) where new_value is the
+            new text content of the TextInput.
 
         Parameters
         ----------
@@ -947,7 +950,10 @@ class TextInput(Widget):
     @decorate_set_on_listener("onkeydown", "(self,new_value)")
     def set_on_key_down_listener(self, listener, funcname):
         """Registers the listener for the Widget.onkeydown event.
+        Note: the listener prototype have to be in the form on_textinput_key_down(self, new_value) where new_value is
+            the new text content of the TextInput.
         Note: Overwrites Widget.onenter.
+
         Parameters
         ----------
         listener (App, Widget): Instance of the listener. It can be the App or a Widget.
@@ -971,7 +977,10 @@ class TextInput(Widget):
     @decorate_set_on_listener("onenter", "(self,new_value)")
     def set_on_enter_listener(self, listener, funcname):
         """Registers the listener for the Widget.onenter event.
+        Note: the listener prototype have to be in the form on_textinput_enter(self, new_value) where new_value is
+            the new text content of the TextInput.
         Note: Overwrites Widget.onkeydown.
+
         Parameters
         ----------
         listener (App, Widget): Instance of the listener. It can be the App or a Widget.
@@ -988,6 +997,9 @@ class TextInput(Widget):
 
 
 class Label(Widget):
+    """Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
+    function get_text.
+    """
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -1023,6 +1035,8 @@ class GenericDialog(Widget):
     """Generic Dialog widget. It can be customized to create personalized dialog windows.
     You can setup the content adding content widgets with the functions add_field or add_field_with_label.
     The user can confirm or dismiss the dialog with the common buttons Cancel/Ok.
+    Each field added to the dialog can be retrieved by its key, in order to get back the edited value. Use the function
+    get_field(key) to retrieve the field.
     The Ok button emits the 'confirm_dialog' event. Register the listener to it with set_on_confirm_dialog_listener.
     The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
     """
@@ -1126,15 +1140,14 @@ class GenericDialog(Widget):
 
     def get_field(self, key):
         """
-        Returns the Widget field instance added previously with methods GenericDialog.add_field or
-        GenericDialog.add_field_with_label.
         Parameters
         ----------
         key (str): The unique string identifier of the required field.
 
         Returns
         -------
-        Widget field instance.
+        Widget field instance added previously with methods GenericDialog.add_field or
+        GenericDialog.add_field_with_label.
         """
         return self.inputs[key]
 
@@ -1179,7 +1192,6 @@ class InputDialog(GenericDialog):
     The Ok button click or the ENTER key pression emits the 'confirm_dialog' event. Register the listener to it
     with set_on_confirm_dialog_listener.
     The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
-    Registering a lister
     """
 
     @decorate_constructor_parameter_types([str, str, str])
@@ -1231,10 +1243,19 @@ class InputDialog(GenericDialog):
 
 
 class ListView(Widget):
-    """List widget it can contain ListItems. """
+    """List widget it can contain ListItems. Add items to it by using the standard append(item, key) function or
+    generate a filled list from a string list by means of the function new_from_list. Use the list in conjunction of
+    its onselection event. Register a listener with ListView.set_on_selection_listener.
+    """
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(ListView, self).__init__(**kwargs)
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
@@ -1243,8 +1264,8 @@ class ListView(Widget):
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
-        """
-            the items are appended with an string enumeration key
+        """Populates the ListView with a string list. The key values are generated with an enumeration of the input
+        list.
         """
         obj = cls(**kwargs)
         for key, item in enumerate(items):
@@ -1252,6 +1273,13 @@ class ListView(Widget):
         return obj
 
     def append(self, item, key=''):
+        """Appends child items to the ListView. The items are accessible by list.children[key].
+
+        Parameters
+        ----------
+        item (ListItem): the item to add.
+        key (str): string key for the item.
+        """
         if isinstance(item, type('')) or isinstance(item, type(u'')):
             item = ListItem(item)
         elif not isinstance(item, ListItem):
@@ -1263,11 +1291,15 @@ class ListView(Widget):
         super(ListView, self).append(item, key=key)
 
     def empty(self):
+        """Removes all children from the list
+        """
         self.selected_item = None
         self.selected_key = None
         super(ListView, self).empty()
 
     def onselection(self, clicked_item):
+        """Called when a new item gets selected in the list.
+        """
         self.selected_key = None
         for k in self.children:
             if self.children[k] == clicked_item:
@@ -1282,26 +1314,42 @@ class ListView(Widget):
 
     @decorate_set_on_listener("onselection", "(self,selectedKey)")
     def set_on_selection_listener(self, listener, funcname):
-        """The listener will receive the key of the selected item.
-        If you add the element from an array, use a numeric incremental key
+        """Registers the listener for the ListView.onselection event.
+        Note: The prototype of the listener have to be like my_list_onselection(self, selectedKey). Where selectedKey is
+        the unique string identifier for the selected item. To access the item use ListView.children[key], or its value
+        directly by ListView.get_value.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
         """
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
 
     def get_value(self):
-        """Returns the value of the selected item or None
+        """
+        Returns
+        -------
+        The value of the selected item or None
         """
         if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
     def get_key(self):
-        """Returns the key of the selected item or None
+        """
+        Returns
+        -------
+        The key of the selected item or None if no item is selected.
         """
         return self.selected_key
 
     def select_by_key(self, key):
-        """
-        selects an item by its key
+        """Selects an item by its key.
+
+        Parameters
+        ----------
+        key (str): The unique string identifier of the item that have to be selected.
         """
         self.selected_key = None
         self.selected_item = None
@@ -1314,8 +1362,11 @@ class ListView(Widget):
             self.selected_item = self.children[key]
 
     def set_value(self, value):
-        """
-        selects an item by the value of a child
+        """Selects an item by the text content of the child.
+
+        Parameters
+        ----------
+        value (str): Text content of the item that have to be selected.
         """
         self.selected_key = None
         self.selected_item = None
@@ -1329,10 +1380,20 @@ class ListView(Widget):
 
 
 class ListItem(Widget):
-    """item widget for the ListView"""
+    """List item widget for the ListView. ListItems are characterized by a textual content. They can be selected from
+    the ListView. Do NOT manage directly its selection by registering set_on_click_listener, use instead the events of
+    the ListView.
+    """
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
+        """
+        Parameters
+        ----------
+        text (str): The textual content of the ListItem.
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(ListItem, self).__init__(**kwargs)
         self.type = 'li'
 
@@ -1340,20 +1401,39 @@ class ListItem(Widget):
         self.set_text(text)
 
     def set_text(self, text):
+        """Sets the text content.
+
+        Parameters
+        ----------
+        text (str): The new textual content of the ListItem.
+        """
         self.add_child('text', text)
 
     def get_text(self):
+        """
+        Returns
+        -------
+        The text content of the ListItem
+        """
         return self.get_child('text')
 
     def get_value(self):
+        """Convenient method. Same as ListItem.get_text.
+        Returns
+        -------
+        The text content of the ListItem.
+        """
         return self.get_text()
 
     def onclick(self):
+        """Called when the item gets clicked. It is managed by the container ListView.
+        """
         return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
 
 class DropDown(Widget):
-    """combo box widget implements the onchange event.
+    """Drop down selection widget. Implements the onchange(value) event. Register a listener for its selection change
+    by means of the function DropDown.set_on_change_listener. 
     """
 
     @decorate_constructor_parameter_types([])
