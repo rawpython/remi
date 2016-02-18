@@ -10,7 +10,9 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
+   
+   remi
+   modules
 
 
 Indices and tables
