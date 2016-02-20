@@ -91,6 +91,11 @@ class EventManager(object):
 
 
 class Tag(object):
+    """
+    Tag is the base class of the framework. It represents an element that can be added to the GUI,
+    but it is not necessarily graphically representable.
+    You can use this class for sending javascript code to the clients.
+    """
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         # the runtime instances are processed every time a requests arrives, searching for the called method
@@ -108,7 +113,7 @@ class Tag(object):
         self.attributes['class'] = self.__class__.__name__
 
     def repr(self, client, include_children=True):
-        """it is used to automatically represent the object to HTML format
+        """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
         Parameters
@@ -191,15 +196,22 @@ class Tag(object):
 
 
 class Widget(Tag):
-    """base class for gui widgets.
+    """Base class for gui widgets.
 
+    Widget can be used as generic container. You can add children by the append(value, key) function.
+    Widget can be arranged in absolute positioning (assigning style['top'] and style['left'] attributes to the children
+    or in a simple auto-alignment.
+    You can decide the horizontal or vertical arrangement by the function set_layout_horientation(layout_orientation)
+    passing as parameter Widget.LAYOUT_HORIZONTAL or Widget.LAYOUT_VERTICAL.
+
+    Tips:
     In html, it is a DIV tag    
-    the self.type attribute specifies the HTML tag representation    
-    the self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id' 
-    the self.style[] attribute specifies the CSS style content like 'font' 'color'. 
-    It will be packet together with 'self.attributes'
-
+    The self.type attribute specifies the HTML tag representation
+    The self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id'
+    The self.style[] attribute specifies the CSS style content like 'font' 'color'. It will be packed together with
+    'self.attributes'.
     """
+
     # constants
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
@@ -253,19 +265,43 @@ class Widget(Tag):
         self.set_size(kwargs.get('width'), kwargs.get('height'))
 
     def set_size(self, width, height):
-        if type(width) == int:
-            width = to_pix(width)
-        if type(height) == int:
-            height = to_pix(height)
-        if width is not None:
+        """Set the widget size.
+        Parameters
+        ----------
+        width (int|str): the value can be of type integer or string. Where not explicitly defined the size unit will be
+                        considered as 'pixel'.
+                        (es. width=10 or width='10px' or width='10%').
+        height (int|str): the value can be of type integer or string. Where not explicitly defined the size unit will be
+                        considered as 'pixel'.
+                        (es. height=10 or height='10px' or height='10%').
+        """
+        if width!=None:
+            try:
+                width = to_pix( int( width ) )
+            except ValueError:
+                # now we know w has 'px or % in it'
+                pass
             self.style['width'] = width
-        if height is not None:
+
+        if height!=None:
+            try:
+                height = to_pix( int(height) )
+            except ValueError:
+                # now we know w has 'px or % in it'
+                pass
             self.style['height'] = height
 
     def set_layout_orientation(self, layout_orientation):
+        """For the generic Widget, this function allows to setup the children arrangement.
+        Parameters
+        ----------
+        layout_orientation (Widget.LAYOUT_HORIZONTAL|Widget.LAYOUT_VERTICAL):
+        """
         self.layout_orientation = layout_orientation
 
     def redraw(self):
+        """Allows to force the graphic update of the widget
+        """
         update_event.set()
 
     def repr(self, client, include_children=True):
@@ -306,10 +342,19 @@ class Widget(Tag):
         return key
 
     def onfocus(self):
+        """Called when the Widget gets the focus.
+        """
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
     @decorate_set_on_listener("onfocus", "(self)")
     def set_on_focus_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onfocus event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONFOCUS] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -317,10 +362,19 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
+        """Called when the Widget losts the focus.
+        """
         return self.eventManager.propagate(self.EVENT_ONBLUR, [])
 
     @decorate_set_on_listener("onblur", "(self)")
     def set_on_blur_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onblur event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONBLUR] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -341,25 +395,43 @@ class Widget(Tag):
         self.baseAppInstance.client.root = self
 
     def hide(self):
-        """The root window is restored after a show"""
+        """Hide the widget. The root window is shown."""
         if hasattr(self, 'baseAppInstance'):
             self.baseAppInstance.client.root = self.oldRootWidget
 
     def onclick(self):
+        """Called when the Widget gets clicked by the user with the left mouse button.
+        """
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     @decorate_set_on_listener("onclick", "(self)")
     def set_on_click_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onclick event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONCLICK] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def oncontextmenu(self):
+        """Called when the Widget gets clicked by the user with the right mouse button.
+        """
         return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
 
     @decorate_set_on_listener("oncontextmenu", "(self)")
     def set_on_contextmenu_listener(self, listener, funcname):
+        """Registers the listener for the Widget.oncontextmenu event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONCONTEXTMENU] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -367,10 +439,19 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
 
     def onmousedown(self, x, y):
+        """Called when the user presses left or right mouse button over a Widget.
+        """
         return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
 
     @decorate_set_on_listener("onmousedown", "(self,x,y)")
     def set_on_mousedown_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onmousedown event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONMOUSEDOWN] = \
             "var params={};" \
             "params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop;" \
@@ -380,10 +461,19 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
 
     def onmouseup(self, x, y):
+        """Called when the user releases left or right mouse button over a Widget.
+        """
         return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
 
     @decorate_set_on_listener("onmouseup", "(self,x,y)")
     def set_on_mouseup_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onmouseup event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONMOUSEUP] = \
             "var params={};" \
             "params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop;" \
@@ -393,10 +483,21 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
 
     def onmouseout(self):
+        """Called when the mouse cursor moves outside a Widget.
+        Note: This event is often used together with the Widget.onmouseover event, which occurs when the pointer is
+            moved onto a Widget, or onto one of its children.
+        """
         return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
 
     @decorate_set_on_listener("onmouseout", "(self)")
     def set_on_mouseout_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onmouseout event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONMOUSEOUT] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -404,10 +505,23 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
 
     def onmouseleave(self):
+        """Called when the mouse cursor moves outside a Widget.
+        Note: This event is often used together with the Widget.onmouseenter event, which occurs when the mouse pointer
+            is moved onto a Widget.
+        Note: The Widget.onmouseleave event is similar to the Widget.onmouseout event. The only difference is that the
+            onmouseleave event does not bubble (does not propagate up the Widgets tree).
+        """
         return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
 
     @decorate_set_on_listener("onmouseleave", "(self)")
     def set_on_mouseleave_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onmouseleave event.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONMOUSELEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -415,10 +529,24 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
 
     def onmousemove(self, x, y):
+        """Called when the mouse cursor moves inside the Widget.
+
+        Parameters
+        ----------
+        x (int): position of the mouse inside the widget
+        y (int): position of the mouse inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
 
     @decorate_set_on_listener("onmousemove", "(self,x,y)")
     def set_on_mousemove_listener(self, listener, funcname):
+        """Registers the listener for the Widget.onmousemove event.
+        Note: the listener prototype have to be in the form on_widget_mousemove(self, x, y)
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONMOUSEMOVE] = \
             "var params={};" \
             "params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop;" \
@@ -428,10 +556,25 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
 
     def ontouchmove(self, x, y):
+        """Called continuously while a finger is dragged across the screen, over a Widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
 
     @decorate_set_on_listener("ontouchmove", "(self,x,y)")
     def set_on_touchmove_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchmove event.
+        Note: the listener prototype have to be in the form on_widget_touchmove(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHMOVE] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -442,10 +585,25 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
 
     def ontouchstart(self, x, y):
+        """Called when a finger touches the widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
 
     @decorate_set_on_listener("ontouchstart", "(self,x,y)")
     def set_on_touchstart_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchstart event.
+        Note: the listener prototype have to be in the form on_widget_touchstart(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHSTART] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -456,10 +614,25 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
 
     def ontouchend(self, x, y):
+        """Called when a finger is released from the widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
 
     @decorate_set_on_listener("ontouchend", "(self,x,y)")
     def set_on_touchend_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchend event.
+        Note: the listener prototype have to be in the form on_widget_touchend(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHEND] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -470,10 +643,25 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
 
     def ontouchenter(self, x, y):
+        """Called when a finger touches from outside to inside the widget.
+
+        Parameters
+        ----------
+        x (int): position of the finger inside the widget
+        y (int): position of the finger inside the widget
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
 
     @decorate_set_on_listener("ontouchenter", "(self,x,y)")
     def set_on_touchenter_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchenter event.
+        Note: the listener prototype have to be in the form on_widget_touchenter(self, x, y)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHENTER] = \
             "var params={};" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
@@ -484,10 +672,20 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
 
     def ontouchleave(self):
+        """Called when a finger touches from inside to outside the widget.
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
 
     @decorate_set_on_listener("ontouchleave", "(self)")
     def set_on_touchleave_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchleave event.
+        Note: the listener prototype have to be in the form on_widget_touchleave(self)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHLEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -495,10 +693,21 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
 
     def ontouchcancel(self):
+        """Called when a touch point has been disrupted in an implementation-specific manner
+        (for example, too many touch points are created).
+        """
         return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
 
     @decorate_set_on_listener("ontouchcancel", "(self)")
     def set_on_touchcancel_listener(self, listener, funcname):
+        """Registers the listener for the Widget.ontouchcancel event.
+        Note: the listener prototype have to be in the form on_widget_touchcancel(self)
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.attributes[self.EVENT_ONTOUCHCANCEL] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
@@ -507,8 +716,13 @@ class Widget(Tag):
 
 
 class HBox(Widget):
-    """ It contains widget automatically aligning them vertically. 
-        Does not permit children absolute positioning
+    """It contains widget automatically aligning them horizontally.
+    Does not permit children absolute positioning.
+
+    In order to add children to this container, use the append(child, key) function.
+    The key have to be numeric and determines the children order in the layout.
+
+    Note: If you would absolute positioning, use the Widget container instead.
     """
 
     @decorate_constructor_parameter_types([])
@@ -528,7 +742,7 @@ class HBox(Widget):
     def append(self, value, key=''):
         """It allows to add child widgets to this.
         The key allows to access the specific child in this way widget.children[key].
-        The key have to be numeric and determines the child order in the layout.
+        The key have to be numeric and determines the children order in the layout.
 
         Parameters
         ----------
@@ -569,8 +783,13 @@ class HBox(Widget):
 
 
 class VBox(HBox):
-    """ It contains widget automatically aligning them vertically. 
-        Does not permit children absolute positioning
+    """It contains widget automatically aligning them vertically.
+    Does not permit children absolute positioning.
+
+    In order to add children to this container, use the append(child, key) function.
+    The key have to be numeric and determines the children order in the layout.
+
+    Note: If you would absolute positioning, use the Widget container instead.
     """
 
     @decorate_constructor_parameter_types([])
@@ -630,7 +849,8 @@ class Button(Widget):
 
 
 class TextInput(Widget):
-    """Editable multiline/single_line text area widget.
+    """Editable multiline/single_line text area widget. You can set the content by means of the function set_text or
+     retrieve its content with get_text.
     """
 
     @decorate_constructor_parameter_types([bool])
@@ -707,6 +927,8 @@ class TextInput(Widget):
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
         """Registers the listener for the Widget.onchange event.
+        Note: the listener prototype have to be in the form on_textinput_change(self, new_value) where new_value is the
+            new text content of the TextInput.
 
         Parameters
         ----------
@@ -728,7 +950,10 @@ class TextInput(Widget):
     @decorate_set_on_listener("onkeydown", "(self,new_value)")
     def set_on_key_down_listener(self, listener, funcname):
         """Registers the listener for the Widget.onkeydown event.
+        Note: the listener prototype have to be in the form on_textinput_key_down(self, new_value) where new_value is
+            the new text content of the TextInput.
         Note: Overwrites Widget.onenter.
+
         Parameters
         ----------
         listener (App, Widget): Instance of the listener. It can be the App or a Widget.
@@ -752,7 +977,10 @@ class TextInput(Widget):
     @decorate_set_on_listener("onenter", "(self,new_value)")
     def set_on_enter_listener(self, listener, funcname):
         """Registers the listener for the Widget.onenter event.
+        Note: the listener prototype have to be in the form on_textinput_enter(self, new_value) where new_value is
+            the new text content of the TextInput.
         Note: Overwrites Widget.onkeydown.
+
         Parameters
         ----------
         listener (App, Widget): Instance of the listener. It can be the App or a Widget.
@@ -769,6 +997,9 @@ class TextInput(Widget):
 
 
 class Label(Widget):
+    """Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
+    function get_text.
+    """
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -804,6 +1035,8 @@ class GenericDialog(Widget):
     """Generic Dialog widget. It can be customized to create personalized dialog windows.
     You can setup the content adding content widgets with the functions add_field or add_field_with_label.
     The user can confirm or dismiss the dialog with the common buttons Cancel/Ok.
+    Each field added to the dialog can be retrieved by its key, in order to get back the edited value. Use the function
+    get_field(key) to retrieve the field.
     The Ok button emits the 'confirm_dialog' event. Register the listener to it with set_on_confirm_dialog_listener.
     The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
     """
@@ -907,15 +1140,14 @@ class GenericDialog(Widget):
 
     def get_field(self, key):
         """
-        Returns the Widget field instance added previously with methods GenericDialog.add_field or
-        GenericDialog.add_field_with_label.
         Parameters
         ----------
         key (str): The unique string identifier of the required field.
 
         Returns
         -------
-        Widget field instance.
+        Widget field instance added previously with methods GenericDialog.add_field or
+        GenericDialog.add_field_with_label.
         """
         return self.inputs[key]
 
@@ -960,7 +1192,6 @@ class InputDialog(GenericDialog):
     The Ok button click or the ENTER key pression emits the 'confirm_dialog' event. Register the listener to it
     with set_on_confirm_dialog_listener.
     The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
-    Registering a lister
     """
 
     @decorate_constructor_parameter_types([str, str, str])
@@ -1012,10 +1243,19 @@ class InputDialog(GenericDialog):
 
 
 class ListView(Widget):
-    """List widget it can contain ListItems. """
+    """List widget it can contain ListItems. Add items to it by using the standard append(item, key) function or
+    generate a filled list from a string list by means of the function new_from_list. Use the list in conjunction of
+    its onselection event. Register a listener with ListView.set_on_selection_listener.
+    """
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(ListView, self).__init__(**kwargs)
         self.type = 'ul'
         self.EVENT_ONSELECTION = 'onselection'
@@ -1024,8 +1264,8 @@ class ListView(Widget):
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
-        """
-            the items are appended with an string enumeration key
+        """Populates the ListView with a string list. The key values are generated with an enumeration of the input
+        list.
         """
         obj = cls(**kwargs)
         for key, item in enumerate(items):
@@ -1033,6 +1273,13 @@ class ListView(Widget):
         return obj
 
     def append(self, item, key=''):
+        """Appends child items to the ListView. The items are accessible by list.children[key].
+
+        Parameters
+        ----------
+        item (ListItem): the item to add.
+        key (str): string key for the item.
+        """
         if isinstance(item, type('')) or isinstance(item, type(u'')):
             item = ListItem(item)
         elif not isinstance(item, ListItem):
@@ -1044,11 +1291,15 @@ class ListView(Widget):
         super(ListView, self).append(item, key=key)
 
     def empty(self):
+        """Removes all children from the list
+        """
         self.selected_item = None
         self.selected_key = None
         super(ListView, self).empty()
 
     def onselection(self, clicked_item):
+        """Called when a new item gets selected in the list.
+        """
         self.selected_key = None
         for k in self.children:
             if self.children[k] == clicked_item:
@@ -1063,26 +1314,42 @@ class ListView(Widget):
 
     @decorate_set_on_listener("onselection", "(self,selectedKey)")
     def set_on_selection_listener(self, listener, funcname):
-        """The listener will receive the key of the selected item.
-        If you add the element from an array, use a numeric incremental key
+        """Registers the listener for the ListView.onselection event.
+        Note: The prototype of the listener have to be like my_list_onselection(self, selectedKey). Where selectedKey is
+        the unique string identifier for the selected item. To access the item use ListView.children[key], or its value
+        directly by ListView.get_value.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
         """
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
 
     def get_value(self):
-        """Returns the value of the selected item or None
+        """
+        Returns
+        -------
+        The value of the selected item or None
         """
         if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
     def get_key(self):
-        """Returns the key of the selected item or None
+        """
+        Returns
+        -------
+        The key of the selected item or None if no item is selected.
         """
         return self.selected_key
 
     def select_by_key(self, key):
-        """
-        selects an item by its key
+        """Selects an item by its key.
+
+        Parameters
+        ----------
+        key (str): The unique string identifier of the item that have to be selected.
         """
         self.selected_key = None
         self.selected_item = None
@@ -1095,8 +1362,11 @@ class ListView(Widget):
             self.selected_item = self.children[key]
 
     def set_value(self, value):
-        """
-        selects an item by the value of a child
+        """Selects an item by the text content of the child.
+
+        Parameters
+        ----------
+        value (str): Text content of the item that have to be selected.
         """
         self.selected_key = None
         self.selected_item = None
@@ -1110,10 +1380,20 @@ class ListView(Widget):
 
 
 class ListItem(Widget):
-    """item widget for the ListView"""
+    """List item widget for the ListView. ListItems are characterized by a textual content. They can be selected from
+    the ListView. Do NOT manage directly its selection by registering set_on_click_listener, use instead the events of
+    the ListView.
+    """
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
+        """
+        Parameters
+        ----------
+        text (str): The textual content of the ListItem.
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(ListItem, self).__init__(**kwargs)
         self.type = 'li'
 
@@ -1121,24 +1401,49 @@ class ListItem(Widget):
         self.set_text(text)
 
     def set_text(self, text):
+        """Sets the text content.
+
+        Parameters
+        ----------
+        text (str): The new textual content of the ListItem.
+        """
         self.add_child('text', text)
 
     def get_text(self):
+        """
+        Returns
+        -------
+        The text content of the ListItem
+        """
         return self.get_child('text')
 
     def get_value(self):
+        """Convenient method. Same as ListItem.get_text.
+        Returns
+        -------
+        The text content of the ListItem.
+        """
         return self.get_text()
 
     def onclick(self):
+        """Called when the item gets clicked. It is managed by the container ListView.
+        """
         return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
 
 class DropDown(Widget):
-    """combo box widget implements the onchange event.
+    """Drop down selection widget. Implements the onchange(value) event. Register a listener for its selection change
+    by means of the function DropDown.set_on_change_listener.
     """
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(DropDown, self).__init__(**kwargs)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
@@ -1149,8 +1454,11 @@ class DropDown(Widget):
         self.selected_key = None
 
     def select_by_key(self, key):
-        """
-        selects an item by its key
+        """Selects an item by its unique string identifier.
+
+        Parameters
+        ----------
+        key (str): Unique string identifier of the DropDownItem that have to be selected.
         """
         for item in self.children.values():
             if 'selected' in item.attributes:
@@ -1160,8 +1468,11 @@ class DropDown(Widget):
         self.selected_item = self.children[key]
 
     def set_value(self, value):
-        """
-        selects the item by the contained text
+        """Selects a DropDownItem by means of the contained text-
+
+        Parameters
+        ----------
+        value (str): Textual content of the DropDownItem that have to be selected.
         """
         self.selected_key = None
         self.selected_item = None
@@ -1176,24 +1487,41 @@ class DropDown(Widget):
                     del item.attributes['selected']
 
     def get_value(self):
-        """Returns the value of the selected item or None
+        """
+        Returns
+        -------
+        The value of the selected item or None.
         """
         if self.selected_item is None:
             return None
         return self.selected_item.get_value()
 
     def get_key(self):
-        """Returns the key of the selected item or None
+        """
+        Returns
+        -------
+        The unique string identifier of the selected item or None.
         """
         return self.selected_key
 
     def onchange(self, value):
+        """Called when a new DropDownItem gets selected.
+        """
         log.debug('combo box. selected %s' % value)
         self.set_value(value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
+        """Registers the listener for the DropDown.onchange event.
+        Note: The prototype of the listener have to be like my_dropdown_onchange(self, value). Where value is
+        the textual content of the selected item.
+
+        Parameters
+        ----------
+        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        funcname (str): Literal name of the listener function, member of the listener instance
+        """
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
 
@@ -1202,6 +1530,12 @@ class DropDownItem(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(DropDownItem, self).__init__(**kwargs)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -1227,6 +1561,12 @@ class Image(Widget):
     @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """filename should be an URL."""
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Image, self).__init__(**kwargs)
         self.type = 'img'
         self.attributes['src'] = filename
@@ -1239,6 +1579,12 @@ class Table(Widget):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Table, self).__init__(**kwargs)
         self.type = 'table'
         self.style['float'] = 'none'
@@ -1270,6 +1616,12 @@ class TableRow(Widget):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(TableRow, self).__init__(**kwargs)
         self.type = 'tr'
         self.style['float'] = 'none'
@@ -1280,6 +1632,12 @@ class TableItem(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
         self.style['float'] = 'none'
@@ -1291,6 +1649,12 @@ class TableTitle(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, title='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(TableTitle, self).__init__(**kwargs)
         self.type = 'th'
         self.style['float'] = 'none'
@@ -1300,6 +1664,12 @@ class TableTitle(Widget):
 class Input(Widget):
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, input_type='', default_value='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Input, self).__init__(**kwargs)
         self.type = 'input'
         self.attributes['class'] = input_type
@@ -1332,6 +1702,12 @@ class Input(Widget):
 class CheckBoxLabel(Widget):
     @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(CheckBoxLabel, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self._checkbox = CheckBox(checked, user_data)
@@ -1352,6 +1728,12 @@ class CheckBox(Input):
 
     @decorate_constructor_parameter_types([bool, str])
     def __init__(self, checked=False, user_data='', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').checked;" \
@@ -1382,6 +1764,12 @@ class SpinBox(Input):
 
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='100', min=100, max=5000, step=1, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SpinBox, self).__init__('number', default_value, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
@@ -1393,6 +1781,12 @@ class SpinBox(Input):
 class Slider(Input):
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='', min=0, max=10000, step=1, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Slider, self).__init__('range', default_value, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
@@ -1413,12 +1807,24 @@ class Slider(Input):
 class ColorPicker(Input):
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='#995500', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(ColorPicker, self).__init__('color', default_value, **kwargs)
 
 
 class Date(Input):
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='2015-04-13', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Date, self).__init__('date', default_value, **kwargs)
 
 
@@ -1430,6 +1836,12 @@ class GenericObject(Widget):
     @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """filename should be an URL."""
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(GenericObject, self).__init__(**kwargs)
         self.type = 'object'
         self.attributes['data'] = filename
@@ -1440,6 +1852,12 @@ class FileFolderNavigator(Widget):
 
     @decorate_constructor_parameter_types([bool, str, bool, bool])
     def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileFolderNavigator, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
 
@@ -1594,6 +2012,12 @@ class FileFolderItem(Widget):
 
     @decorate_constructor_parameter_types([str, bool])
     def __init__(self, text, is_folder=False, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileFolderItem, self).__init__(**kwargs)
         super(FileFolderItem, self).set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self.style['margin'] = '3px'
@@ -1650,6 +2074,12 @@ class FileSelectionDialog(GenericDialog):
     def __init__(self, title='File dialog', message='Select files and folders',
                  multiple_selection=True, selection_folder='.',
                  allow_file_selection=True, allow_folder_selection=True, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileSelectionDialog, self).__init__(title, message, **kwargs)
 
         self.style['width'] = '475px'
@@ -1676,6 +2106,12 @@ class FileSelectionDialog(GenericDialog):
 class MenuBar(Widget):
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(MenuBar, self).__init__(**kwargs)
         self.type = 'nav'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
@@ -1686,6 +2122,12 @@ class Menu(Widget):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Menu, self).__init__(**kwargs)
         self.type = 'ul'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
@@ -1696,6 +2138,12 @@ class MenuItem(Widget):
 
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(MenuItem, self).__init__(**kwargs)
         self.sub_container = None
         self.type = 'li'
@@ -1724,6 +2172,12 @@ class FileUploader(Widget):
 
     @decorate_constructor_parameter_types([str, bool])
     def __init__(self, savepath='./', multiple_selection_allowed=False, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileUploader, self).__init__(**kwargs)
         self._savepath = savepath
         self._multiple_selection_allowed = multiple_selection_allowed
@@ -1764,6 +2218,12 @@ class FileDownloader(Widget):
 
     @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, text, filename, path_separator='/', **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(FileDownloader, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['download'] = os.path.basename(filename)
@@ -1786,6 +2246,12 @@ class FileDownloader(Widget):
 class Link(Widget):
     @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Link, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['href'] = url
@@ -1806,6 +2272,12 @@ class Link(Widget):
 class VideoPlayer(Widget):
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, video, poster=None, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(VideoPlayer, self).__init__(**kwargs)
         self.type = 'video'
         self.attributes['src'] = video
@@ -1817,6 +2289,12 @@ class VideoPlayer(Widget):
 class Svg(Widget):
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(Svg, self).__init__(**kwargs)
         self.set_size(width, height)
         self.attributes['width'] = width
@@ -1831,6 +2309,12 @@ class Svg(Widget):
 class SvgCircle(Widget):
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, radix, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgCircle, self).__init__(**kwargs)
         self.set_position(x, y)
         self.set_radix(radix)
@@ -1855,6 +2339,12 @@ class SvgCircle(Widget):
 class SvgLine(Widget):
     @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x1, y1, x2, y2, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgLine, self).__init__(**kwargs)
         self.set_coords(x1, y1, x2, y2)
         self.set_stroke()
@@ -1880,6 +2370,12 @@ class SvgLine(Widget):
 class SvgPolyline(Widget):
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgPolyline, self).__init__(**kwargs)
         self.set_stroke()
         self.style['fill'] = 'none'
@@ -1907,6 +2403,12 @@ class SvgPolyline(Widget):
 class SvgText(Widget):
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        """
         super(SvgText, self).__init__(**kwargs)
         self.type = 'text'
         self.set_position(x, y)
