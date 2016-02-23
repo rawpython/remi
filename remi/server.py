@@ -782,7 +782,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 class Server(object):
     def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
-                 websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000,
+                 websocket_timeout_timer_ms=1000, websocket_port=0, pending_messages_queue_length=1000,
                  userdata=()):
         self._gui = gui_class
         self._wsserver = self._sserver = None
@@ -794,6 +794,7 @@ class Server(object):
         self._update_interval = update_interval
         self._start_browser = start_browser
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
+        self._websocket_port = websocket_port
         self._pending_messages_queue_length = pending_messages_queue_length
         if username and password:
             self._auth = base64.b64encode("%s:%s" % (username,password))
@@ -808,7 +809,7 @@ class Server(object):
 
     def start(self, *userdata):
         # here the websocket is started on an ephemereal port
-        self._wsserver = ThreadedWebsocketServer((self._address, 0), WebSocketsHandler, self._multiple_instance)
+        self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler, self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
         log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
