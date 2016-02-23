@@ -23,12 +23,14 @@ log = logging.getLogger('remi.gui')
 
 
 def decorate_set_on_listener(event_name, params):
-    """ setup important information for editor purpose
+    """ private decorator for use in the editor
 
     Parameters
     ----------
-    event_name (str): Name of the event to which it refers (es. For set_on_click_listener the event_name is "onclick"
-    params (str): The list of parameters for the listener function (es. "(self, new_value)")
+    event_name : str
+        Name of the event to which it refers (es. For set_on_click_listener the event_name is "onclick"
+    params : str
+        The list of parameters for the listener function (es. "(self, new_value)")
     """
 
     def add_annotation(function):
@@ -83,9 +85,12 @@ class EventManager(object):
 
         Parameters
         ----------
-        eventname (str): The event identifier, like Widget.EVENT_ONCLICK that is 'onclick'.
-        instance (Widget, App): The widget or app instance that will listen for an event.
-        funcname (str): The literal function name, member of *instance* that will be called on event.
+        eventname : str
+            The event identifier, like Widget.EVENT_ONCLICK that is 'onclick'.
+        instance : Widget or App
+            The widget or app instance that will listen for an event.
+        funcname : str
+            The literal function name, member of *instance* that will be called on event.
         """
         self.listeners[eventname] = {'instance': instance, 'funcname': funcname}
 
@@ -118,8 +123,10 @@ class Tag(object):
 
         Parameters
         ----------
-        client (App): The client instance.
-        include_children (bool): Specifies if the children have to be represented too.
+        client : App
+            The client instance.
+        include_children : bool
+            Specifies if the children have to be represented too.
         """
 
         self.attributes['children_list'] = ','.join(map(lambda k, v: str(
@@ -150,8 +157,9 @@ class Tag(object):
 
         Parameters
         ----------
-        key (str): Unique child's identifier
-        child (Tag): Tag instance
+        key : str
+            Unique child's identifier
+        child : Tag
         """
         if hasattr(child, 'attributes'):
             child.attributes['parent_widget'] = str(id(self))
@@ -167,7 +175,8 @@ class Tag(object):
 
         Parameters
         ----------
-        key (str): Unique identifier of the child.
+        key : str
+            Unique identifier of the child.
         """
         return self.children[key]
 
@@ -181,7 +190,8 @@ class Tag(object):
 
         Parameters
         ----------
-        child (Tag): The child to be removed.
+        child : Tag
+            The child to be removed.
         """
         if child in self.children.values():
             self._render_children_list.remove(child)
@@ -221,8 +231,10 @@ class Widget(Tag):
         """
         Parameters
         ----------
-        kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
-        kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
+        width : int or str
+            An optional width for the widget (es. width=10 or width='10px' or width='10%').
+        height : int or str
+            An optional height for the widget (es. height=10 or height='10px' or height='10%').
         """
         super(Widget, self).__init__(**kwargs)
 
@@ -268,24 +280,26 @@ class Widget(Tag):
         """Set the widget size.
         Parameters
         ----------
-        width (int|str): the value can be of type integer or string. Where not explicitly defined the size unit will be
-                        considered as 'pixel'.
-                        (es. width=10 or width='10px' or width='10%').
-        height (int|str): the value can be of type integer or string. Where not explicitly defined the size unit will be
-                        considered as 'pixel'.
-                        (es. height=10 or height='10px' or height='10%').
+        width : int or str
+            The value can be of type integer or string. Where not explicitly defined the size unit will be
+            considered as 'pixel'.
+            (es. width=10 or width='10px' or width='10%').
+        height : int or str
+            the value can be of type integer or string. Where not explicitly defined the size unit will be
+            considered as 'pixel'.
+            (es. height=10 or height='10px' or height='10%').
         """
-        if width!=None:
+        if width is not None:
             try:
-                width = to_pix( int( width ) )
+                width = to_pix(int(width))
             except ValueError:
                 # now we know w has 'px or % in it'
                 pass
             self.style['width'] = width
 
-        if height!=None:
+        if height is not None:
             try:
-                height = to_pix( int(height) )
+                height = to_pix(int(height))
             except ValueError:
                 # now we know w has 'px or % in it'
                 pass
@@ -293,15 +307,15 @@ class Widget(Tag):
 
     def set_layout_orientation(self, layout_orientation):
         """For the generic Widget, this function allows to setup the children arrangement.
+
         Parameters
         ----------
-        layout_orientation (Widget.LAYOUT_HORIZONTAL|Widget.LAYOUT_VERTICAL):
+        layout_orientation : Widget.LAYOUT_HORIZONTAL or Widget.LAYOUT_VERTICAL
         """
         self.layout_orientation = layout_orientation
 
     def redraw(self):
-        """Allows to force the graphic update of the widget
-        """
+        """Forces a graphic update of the widget"""
         update_event.set()
 
     def repr(self, client, include_children=True):
