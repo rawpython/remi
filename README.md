@@ -161,6 +161,7 @@ Parameters:
 - enable_file_cache: boolean, if True enable resource caching
 - update_interval: gui update interval in seconds
 - start_browser: boolean that defines if the browser should be opened automatically at startup
+- websocket_port: integer, port number for websocket communication
 You can change these values in order to make the gui accessible on other devices on the network.
 
 
