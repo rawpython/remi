@@ -414,7 +414,7 @@ class App(BaseHTTPRequestHandler, object):
     def log_error(self, format_string, *args):
         msg = format_string % args
         self._log.error("%s %s" % (self.address_string(), msg))
-
+    
     def instance(self):
         global clients
         global runtimeInstances
@@ -513,6 +513,11 @@ function websocketOnMessage (evt){
             var elem = document.getElementById(s[2]);
             elem.innerHTML = elem.innerHTML + decodeURIComponent(content);
         }
+    }else if( command=='javascript'){
+        try{
+            console.debug("executing js code: " + received_msg);
+            eval(received_msg);
+        }catch(e){console.debug(e.message);};
     }else if( command=='ack'){
         pendingSendMessages.shift() /*remove the oldest*/
         if(comTimeout!=null)clearTimeout(comTimeout);
@@ -622,7 +627,47 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Usefull to schedule tasks. """
         pass
-
+        
+    def send_spontaneous_websocket_message(self, message):
+        """this code allows to send spontaneous messages to the clients.
+           It can be considered thread-safe because can be called in two contextes:
+           1- A received message from websocket in case of an event, and the update_lock is already locked
+           2- An internal application event like a Timer, and the update thread is paused by update_event.wait
+        """
+        global update_lock, update_event
+        update_event.wait()
+        for ws in self.websockets:
+            try:
+                print("sending websocket spontaneous message")
+                ws.send_message(message)
+            except:
+                print("ERROR sending websocket spontaneous message")
+                client.websockets.remove(ws)
+        update_event.clear()
+        
+    def notification_message(self, title, content, icon=""):
+        """This function sends "javascript" message to the client, that executes its content.
+           In this particular code, a notification message is shown
+        """
+        code = """
+            var options = {
+                body: "%(content)s",
+                icon: "%(icon)s"
+            }
+            if (!("Notification" in window)) {
+                alert("%(content)s");
+            }else if (Notification.permission === "granted") {
+                var notification = new Notification("%(title)s", options);
+            }else if (Notification.permission !== 'denied') {
+                Notification.requestPermission(function (permission) {
+                    if (permission === "granted") {
+                        var notification = new Notification("%(title)s", options);
+                    }
+                });
+            }
+        """%{'title': title, 'content': content, 'icon': icon}
+        self.send_spontaneous_websocket_message('javascript,' + code)
+    
     def do_POST(self):
         self.instance()
         file_data = None

@@ -270,7 +270,7 @@ class MyApp(App):
         self.lbl.set_text('Image clicked!')
 
     def on_button_pressed(self):
-        self.lbl.set_text('Button pressed!')
+        self.lbl.set_text('Button pressed! ')
         self.bt.set_text('Hi!')
 
     def on_text_area_change(self, newValue):
@@ -355,4 +355,4 @@ if __name__ == "__main__":
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
 
-    start(MyApp, debug=True)
+    start(MyApp, debug=True, address='0.0.0.0')
