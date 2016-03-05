@@ -1,1 +1,3 @@
 include remi/res/*
+include editor/*
+include editor/res/*

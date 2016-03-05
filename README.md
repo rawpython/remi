@@ -244,3 +244,4 @@ Take care about internally used attributes. These are:
 Styling
 ===
 It's possible to change the style of the gui editing the style.css file. Here you can define the css properties of each gui widget.
+
