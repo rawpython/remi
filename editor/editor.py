@@ -307,7 +307,7 @@ class Editor(App):
         menu.append(m2)
         menu.append(m3)
         
-        self.toolbar = editor_widgets.ToolBar(width='100%', height='5%')
+        self.toolbar = editor_widgets.ToolBar(width='100%', height='30px')
         self.toolbar.style['margin'] = '0px 0px'
         self.toolbar.add_command('/res/delete.png', self, 'toolbar_delete_clicked', 'Delete Widget')
         self.toolbar.add_command('/res/cut.png', self, 'menu_cut_selection_clicked', 'Cut Widget')
@@ -340,7 +340,7 @@ class Editor(App):
         #here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(self, width='100%', height='50%')
         
-        self.project = Project(width='56%', height='100%')
+        self.project = Project(width='56%', height='700px')
         
         self.project.attributes['ondragover'] = "event.preventDefault();"
         self.EVENT_ONDROPPPED = "on_dropped"
