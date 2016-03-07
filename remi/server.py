@@ -716,15 +716,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
         if self.server.auth is None:
             do_process = True
         else:
-            if self.headers.getheader('Authorization') is None:
+            if not ('Authorization' in self.headers) or self.headers['Authorization'] is None:
                 log.info("Authenticating")
                 self.do_AUTHHEAD()
                 self.wfile.write('no auth header received')
-            elif self.headers.getheader('Authorization') == 'Basic ' + self.server.auth:
+            elif self.headers['Authorization'] == 'Basic ' + self.server.auth.decode():
                 do_process = True
             else:
                 self.do_AUTHHEAD()
-                self.wfile.write(self.headers.getheader('Authorization'))
+                self.wfile.write(self.headers['Authorization'])
                 self.wfile.write('not authenticated')
 
         if do_process:
@@ -842,7 +842,7 @@ class Server(object):
         self._websocket_port = websocket_port
         self._pending_messages_queue_length = pending_messages_queue_length
         if username and password:
-            self._auth = base64.b64encode("%s:%s" % (username,password))
+            self._auth = base64.b64encode(encodeIfPyGT3("%s:%s" % (username,password)))
         else:
             self._auth = None
 
