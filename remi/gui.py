@@ -1004,6 +1004,8 @@ class TextInput(Widget):
             if (event.keyCode == 13) {
                 var params={};
                 params['new_value']=document.getElementById('%(id)s').value;
+                document.getElementById('%(id)s').value = '';
+                document.getElementById('%(id)s').onchange = '';
                 sendCallbackParam('%(id)s','%(evt)s',params);
                 return false;
             }""" % {'id': id(self), 'evt': self.EVENT_ONENTER}
