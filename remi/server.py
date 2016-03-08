@@ -46,9 +46,10 @@ except ImportError:
     from urllib.parse import urlparse
     from urllib.parse import parse_qs
 import cgi
+import weakref
 
 clients = {}
-runtimeInstances = []
+runtimeInstances = weakref.WeakValueDictionary()
 
 pyLessThan3 = sys.version_info < (3,)
 
@@ -95,7 +96,7 @@ def get_method_by_name(rootNode, name):
 
 def get_method_by_id(rootNode, _id, maxIter=5):
     global runtimeInstances
-    for i in runtimeInstances:
+    for i in runtimeInstances.values():
         if id(i) == _id:
             return i
 
@@ -246,7 +247,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
                         param_dict = parse_parametrs(params)
 
-                        for w in runtimeInstances:
+                        for w in list(runtimeInstances.values()):
                             if str(id(w)) == widget_id:
                                 callback = get_method_by_name(w, function_name)
                                 if callback is not None:
@@ -365,7 +366,7 @@ class _UpdateThread(threading.Thread):
 
     def run(self):
         while True:
-            global clients
+            global clients, runtimeInstances
             global update_lock, update_event
 
             update_event.wait()
@@ -387,6 +388,13 @@ class _UpdateThread(threading.Thread):
                         client.old_root_window = client.root
                         client.idle()
                         gui_updater(client, client.root)
+                        
+                        #pruning old_runtime_widgets, beacause a widget can be deleted from the gui and persist in old_runtime_widgets
+                        for old_widget_key in list(client.old_runtime_widgets):
+                            if not old_widget_key in runtimeInstances.keys():
+                                log.debug("removing deleted widget instance from old_runtime_widgets id: %s" % old_widget_key)
+                                del client.old_runtime_widgets[old_widget_key]
+                        
                 except Exception as e:
                     log.error('error updating gui', exc_info=True)
 
@@ -426,7 +434,7 @@ class App(BaseHTTPRequestHandler, object):
         """
         k = get_instance_key(self)
         if not(k in clients.keys()):
-            runtimeInstances.append(self)
+            runtimeInstances[str(id(self))] = self
             clients[k] = self
         wshost, wsport = self.server.websocket_address
         net_interface_ip = self.connection.getsockname()[0]

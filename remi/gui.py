@@ -106,7 +106,7 @@ class Tag(object):
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
         # we not callable
-        runtimeInstances.append(self)
+        runtimeInstances[str(id(self))] = self
 
         self._render_children_list = []
 
