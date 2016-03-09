@@ -94,7 +94,7 @@ def get_method_by_name(rootNode, name):
 
 def get_method_by_id(rootNode, _id):
     global runtimeInstances
-    if str(_id) in runtimeInstances.keys():
+    if str(_id) in runtimeInstances:
         return runtimeInstances[str(_id)]
     return None
 
@@ -288,7 +288,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
 
     __id = str(id(leaf))
     # if the widget is not contained in the copy
-    if not (__id in client.old_runtime_widgets.keys()):
+    if not (__id in client.old_runtime_widgets):
         client.old_runtime_widgets[__id] = leaf.repr(client,False)
         if not no_update_because_new_subchild:
             no_update_because_new_subchild = True
@@ -296,7 +296,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             for ws in client.websockets:
                 try:
                     # here a new widget is found, but it must be added updating the parent widget
-                    if 'parent_widget' in leaf.attributes.keys():
+                    if 'parent_widget' in leaf.attributes:
                         parentWidgetId = leaf.attributes['parent_widget']
                         html = get_method_by_id(client.root,parentWidgetId).repr(client)
                         ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(html))
@@ -370,7 +370,7 @@ class _UpdateThread(threading.Thread):
                         
                         #pruning old_runtime_widgets, beacause a widget can be deleted from the gui and persist in old_runtime_widgets
                         for old_widget_key in list(client.old_runtime_widgets):
-                            if not old_widget_key in runtimeInstances.keys():
+                            if not old_widget_key in runtimeInstances:
                                 log.debug("removing deleted widget instance from old_runtime_widgets id: %s" % old_widget_key)
                                 del client.old_runtime_widgets[old_widget_key]
                         
@@ -412,7 +412,7 @@ class App(BaseHTTPRequestHandler, object):
         multiple clients" or "multiple instance for multiple clients" execution way
         """
         k = get_instance_key(self)
-        if not(k in clients.keys()):
+        if not(k in clients):
             runtimeInstances[str(id(self))] = self
             clients[k] = self
         wshost, wsport = self.server.websocket_address
