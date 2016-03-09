@@ -89,32 +89,13 @@ def get_method_by_name(rootNode, name):
     val = None
     if hasattr(rootNode, name):
         val = getattr(rootNode, name)
-    else:
-        pass
     return val
 
 
-def get_method_by_id(rootNode, _id, maxIter=5):
+def get_method_by_id(rootNode, _id):
     global runtimeInstances
     if str(_id) in runtimeInstances.keys():
         return runtimeInstances[str(_id)]
-
-    maxIter = maxIter - 1
-    if maxIter < 0:
-        return None
-    _id = int(_id)
-
-    if id(rootNode) == _id:
-        return rootNode
-
-    try:
-        if hasattr(rootNode, 'children'):
-            for i in rootNode.children.values():
-                val = get_method_by_id(i, _id)
-                if val is not None:
-                    return val
-    except:
-        pass
     return None
 
 
