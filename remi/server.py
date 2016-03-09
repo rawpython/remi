@@ -247,11 +247,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
                         param_dict = parse_parametrs(params)
 
-                        for w in list(runtimeInstances.values()):
-                            if str(id(w)) == widget_id:
-                                callback = get_method_by_name(w, function_name)
-                                if callback is not None:
-                                    callback(**param_dict)
+                        callback = get_method_by_name(runtimeInstances[widget_id], 
+                                        function_name)
+                        if callback is not None:
+                            callback(**param_dict)
             except Exception as e:
                 log.error('error parsing websocket', exc_info=True)
 
@@ -322,7 +321,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                         html = get_method_by_id(client.root,parentWidgetId).repr(client)
                         ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(html))
                     else:
-                        log.error('the new widget seems to have no parent...')
+                        log.debug('the new widget seems to have no parent...')
                     # adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                     #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
                 except:
