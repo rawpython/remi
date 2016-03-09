@@ -96,9 +96,8 @@ def get_method_by_name(rootNode, name):
 
 def get_method_by_id(rootNode, _id, maxIter=5):
     global runtimeInstances
-    for i in runtimeInstances.values():
-        if id(i) == _id:
-            return i
+    if str(_id) in runtimeInstances.keys():
+        return runtimeInstances[str(_id)]
 
     maxIter = maxIter - 1
     if maxIter < 0:
