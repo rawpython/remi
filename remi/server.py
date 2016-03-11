@@ -46,9 +46,10 @@ except ImportError:
     from urllib.parse import urlparse
     from urllib.parse import parse_qs
 import cgi
+import weakref
 
 clients = {}
-runtimeInstances = []
+runtimeInstances = weakref.WeakValueDictionary()
 
 pyLessThan3 = sys.version_info < (3,)
 
@@ -88,33 +89,13 @@ def get_method_by_name(rootNode, name):
     val = None
     if hasattr(rootNode, name):
         val = getattr(rootNode, name)
-    else:
-        pass
     return val
 
 
-def get_method_by_id(rootNode, _id, maxIter=5):
+def get_method_by_id(rootNode, _id):
     global runtimeInstances
-    for i in runtimeInstances:
-        if id(i) == _id:
-            return i
-
-    maxIter = maxIter - 1
-    if maxIter < 0:
-        return None
-    _id = int(_id)
-
-    if id(rootNode) == _id:
-        return rootNode
-
-    try:
-        if hasattr(rootNode, 'children'):
-            for i in rootNode.children.values():
-                val = get_method_by_id(i, _id)
-                if val is not None:
-                    return val
-    except:
-        pass
+    if str(_id) in runtimeInstances:
+        return runtimeInstances[str(_id)]
     return None
 
 
@@ -246,11 +227,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
                         param_dict = parse_parametrs(params)
 
-                        for w in runtimeInstances:
-                            if str(id(w)) == widget_id:
-                                callback = get_method_by_name(w, function_name)
-                                if callback is not None:
-                                    callback(**param_dict)
+                        callback = get_method_by_name(runtimeInstances[widget_id], 
+                                        function_name)
+                        if callback is not None:
+                            callback(**param_dict)
             except Exception as e:
                 log.error('error parsing websocket', exc_info=True)
 
@@ -308,7 +288,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
 
     __id = str(id(leaf))
     # if the widget is not contained in the copy
-    if not (__id in client.old_runtime_widgets.keys()):
+    if not (__id in client.old_runtime_widgets):
         client.old_runtime_widgets[__id] = leaf.repr(client,False)
         if not no_update_because_new_subchild:
             no_update_because_new_subchild = True
@@ -316,12 +296,12 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             for ws in client.websockets:
                 try:
                     # here a new widget is found, but it must be added updating the parent widget
-                    if 'parent_widget' in leaf.attributes.keys():
+                    if 'parent_widget' in leaf.attributes:
                         parentWidgetId = leaf.attributes['parent_widget']
                         html = get_method_by_id(client.root,parentWidgetId).repr(client)
                         ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(html))
                     else:
-                        log.error('the new widget seems to have no parent...')
+                        log.debug('the new widget seems to have no parent...')
                     # adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                     #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
                 except:
@@ -365,7 +345,7 @@ class _UpdateThread(threading.Thread):
 
     def run(self):
         while True:
-            global clients
+            global clients, runtimeInstances
             global update_lock, update_event
 
             update_event.wait()
@@ -387,6 +367,13 @@ class _UpdateThread(threading.Thread):
                         client.old_root_window = client.root
                         client.idle()
                         gui_updater(client, client.root)
+                        
+                        #pruning old_runtime_widgets, beacause a widget can be deleted from the gui and persist in old_runtime_widgets
+                        for old_widget_key in list(client.old_runtime_widgets):
+                            if not old_widget_key in runtimeInstances:
+                                log.debug("removing deleted widget instance from old_runtime_widgets id: %s" % old_widget_key)
+                                del client.old_runtime_widgets[old_widget_key]
+                        
                 except Exception as e:
                     log.error('error updating gui', exc_info=True)
 
@@ -425,8 +412,8 @@ class App(BaseHTTPRequestHandler, object):
         multiple clients" or "multiple instance for multiple clients" execution way
         """
         k = get_instance_key(self)
-        if not(k in clients.keys()):
-            runtimeInstances.append(self)
+        if not(k in clients):
+            runtimeInstances[str(id(self))] = self
             clients[k] = self
         wshost, wsport = self.server.websocket_address
         net_interface_ip = self.connection.getsockname()[0]
