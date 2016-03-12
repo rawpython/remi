@@ -593,6 +593,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
 
         # add any app specific headers
         clients[k].html_header = self._app_args.get('html_header', '\n')
+        clients[k].html_footer = self._app_args.get('html_footer', '\n')
 
         # add client styling
         clients[k].css_header = self._app_args.get('css_header', "<link href='/res/style.css' rel='stylesheet' />\n")
@@ -738,6 +739,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
             # render the HTML replacing any local absolute references to the correct IP of this instance
             html = self.client.root.repr(self.client)
             self.wfile.write(encodeIfPyGT3(html))
+            self.wfile.write(encodeIfPyGT3(self.client.html_footer))
             self.wfile.write(encodeIfPyGT3("</body>\n</html>"))
         elif static_file:
             static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
