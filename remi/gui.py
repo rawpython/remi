@@ -135,9 +135,12 @@ class Tag(object):
         self.children = VersionedDictionary()
         self.attributes = VersionedDictionary()  # properties as class id style
 
-        self.type = ''
+        self.type = kwargs.get('_type', '')
         self.attributes['id'] = str(id(self))
-        self.attributes['class'] = self.__class__.__name__
+
+        cls = kwargs.get('_class', self.__class__.__name__)
+        if cls:
+            self.attributes['class'] = cls
 
     def repr(self, client, include_children=True):
         """It is used to automatically represent the object to HTML format
@@ -258,11 +261,12 @@ class Widget(Tag):
         height : int or str
             An optional height for the widget (es. height=10 or height='10px' or height='10%').
         """
+        if '_type' not in kwargs:
+            kwargs['_type'] = 'div'
+
         super(Widget, self).__init__(**kwargs)
 
         self.style = VersionedDictionary()
-
-        self.type = 'div'
 
         # some constants for the events
         self.EVENT_ONCLICK = 'onclick'
@@ -1720,9 +1724,9 @@ class Input(Widget):
         kwargs (width): An optional width for the widget (es. width=10 or width='10px' or width='10%').
         kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
         """
+        kwargs['_class'] = input_type
         super(Input, self).__init__(**kwargs)
         self.type = 'input'
-        self.attributes['class'] = input_type
 
         self.attributes[self.EVENT_ONCLICK] = ''
         self.attributes[self.EVENT_ONCHANGE] = \
@@ -2074,12 +2078,11 @@ class FileFolderItem(Widget):
         self.isFolder = is_folder
         self.EVENT_ONSELECTION = 'onselection'
         self.attributes[self.EVENT_ONCLICK] = ''
-        self.icon = Widget()
+        self.icon = Widget(_class='FileFolderItemIcon')
         self.icon.set_size(30, 30)
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
             self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
-        self.icon.attributes['class'] = 'FileFolderItemIcon'
         icon_file = 'res/folder.png' if is_folder else 'res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(text)
