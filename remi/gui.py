@@ -142,6 +142,10 @@ class Tag(object):
         if cls:
             self.attributes['class'] = cls
 
+    @property
+    def identifier(self):
+        return self.attributes['id']
+
     def repr(self, client, include_children=True):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
