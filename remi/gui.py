@@ -288,6 +288,7 @@ class Widget(Tag):
         self.EVENT_ONCONTEXTMENU = "oncontextmenu"
         self.EVENT_ONUPDATE = 'onupdate'
 
+        # centers the div
         self.style['margin'] = '0px auto'
 
         self.layout_orientation = Widget.LAYOUT_VERTICAL
@@ -770,6 +771,9 @@ class HBox(Widget):
         kwargs (height): An optional height for the widget (es. height=10 or height='10px' or height='10%').
         """
         super(HBox, self).__init__(**kwargs)
+
+        # fixme: support old browsers
+        # http://stackoverflow.com/a/19031640
         self.style['display'] = 'flex'
         self.style['justify-content'] = 'space-around'
         self.style['align-items'] = 'center'
