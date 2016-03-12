@@ -342,26 +342,33 @@ class Widget(Tag):
         update_event.set()
 
     def repr(self, client, include_children=True):
-        """It is used to automatically represent the widget to HTML format
-        packs all the attributes, children and so on.
+        """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Parameters
         ----------
-        client (App): Client instance.
-        include_children (bool): Determines if the children have to be represented together with this Widget.
+        client : App
+            Client instance.
+        include_children : bool
+            Determines if the children have to be represented together with this Widget.
         """
         self.attributes['style'] = jsonize(self.style)
         return super(Widget, self).repr(client, include_children)
 
     def append(self, value, key=''):
-        """It allows to add child widgets to this.
+        """Adds a child widget, generating and returning a key if not provided
 
         In order to access to the specific child in this way widget.children[key].
 
         Parameters
         ----------
-        value (Tag, Widget): The Tag or Widget instance to be appended.
-        key (str): The unique string identifier for the child.
+        value : Tag or Widget
+            The child to be appended.
+        key : str
+            The unique string identifier for the child or ''
+        Returns
+        -------
+        str
+            a key used to refer to the child for all future interaction
         """
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
@@ -379,8 +386,7 @@ class Widget(Tag):
         return key
 
     def onfocus(self):
-        """Called when the Widget gets the focus.
-        """
+        """Called when the Widget gets focus."""
         return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
 
     @decorate_set_on_listener("onfocus", "(self)")
@@ -389,8 +395,10 @@ class Widget(Tag):
 
         Parameters
         ----------
-        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-        funcname (str): Literal name of the listener function, member of the listener instance
+        listener : App or Widget
+            Instance of the listener. It can be the App or a Widget.
+        funcname : str
+            Literal name of the listener function, member of the listener instance
         """
         self.attributes[self.EVENT_ONFOCUS] = \
             "sendCallback('%s','%s');" \
@@ -399,8 +407,7 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
-        """Called when the Widget losts the focus.
-        """
+        """Called when the Widget loses focus"""
         return self.eventManager.propagate(self.EVENT_ONBLUR, [])
 
     @decorate_set_on_listener("onblur", "(self)")
@@ -409,8 +416,10 @@ class Widget(Tag):
 
         Parameters
         ----------
-        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-        funcname (str): Literal name of the listener function, member of the listener instance
+        listener : App or Widget
+            Instance of the listener. It can be the App or a Widget.
+        funcname : str
+            Literal name of the listener function, member of the listener instance
         """
         self.attributes[self.EVENT_ONBLUR] = \
             "sendCallback('%s','%s');" \
@@ -419,11 +428,11 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
 
     def show(self, baseAppInstance):
-        """Allows to show the widget as root window.
+        """Sets this widget as the root widget on the supplied app instance
 
         Parameters
         ----------
-        baseAppInstance (App): Instance of the App class.
+        baseAppInstance : App
         """
         self.baseAppInstance = baseAppInstance
         # here the widget is set up as root, in server.gui_updater is monitored
@@ -437,8 +446,7 @@ class Widget(Tag):
             self.baseAppInstance.client.root = self.oldRootWidget
 
     def onclick(self):
-        """Called when the Widget gets clicked by the user with the left mouse button.
-        """
+        """Called when the Widget gets clicked by the user with the left mouse button."""
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
 
     @decorate_set_on_listener("onclick", "(self)")
@@ -447,7 +455,7 @@ class Widget(Tag):
 
         Parameters
         ----------
-        listener (App, Widget): Instance of the listener. It can be the App or a Widget.
+        listener :  App or Widget): Instance of the listener. It can be the App or a Widget.
         funcname (str): Literal name of the listener function, member of the listener instance
         """
         self.attributes[self.EVENT_ONCLICK] = \
