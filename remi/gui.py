@@ -1756,6 +1756,25 @@ class Input(Widget):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
 
+    def set_enabled(self, enabled):
+        if enabled:
+            try:
+                del self.attributes['disabled']
+            except KeyError:
+                pass
+        else:
+            self.attributes['disabled'] = None
+
+
+    def set_read_only(self, readonly):
+        if readonly:
+            self.attributes['readonly'] = None
+        else:
+            try:
+                del self.attributes['readonly']
+            except KeyError:
+                pass
+
 
 class CheckBoxLabel(Widget):
     @decorate_constructor_parameter_types([str, bool, str])
