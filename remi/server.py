@@ -262,40 +262,41 @@ def parse_parametrs(p):
                         pass
             ret[field_name] = field_value
     return ret
-
-
-def gui_update_children_copy(client, leaf):
+    
+    
+def gui_update_children_version(client, leaf):
     """ This function is called when a leaf is updated by gui_updater
         and so, children does not need graphical update, it is only
-        required to update the memory copy of the children
+        required to update the last version of the dictionaries
     """
     if not hasattr(leaf, 'attributes'):
         return False
-    __id = str(id(leaf))
-    client.old_runtime_widgets[__id] = leaf.repr(client,False)
+    
+    leaf.attributes.__lastversion__ = leaf.attributes.__version__
+    leaf.style.__lastversion__ = leaf.style.__version__
+    leaf.children.__lastversion__ = leaf.children.__version__
     
     for subleaf in leaf.children.values():
-        gui_update_children_copy(client, subleaf)
+        gui_update_children_version(client, subleaf)
     
     
 def gui_updater(client, leaf, no_update_because_new_subchild=False):
     if not hasattr(leaf, 'attributes'):
         return False
 
-    # if there is not a copy of widgets, do it
-    if not hasattr(client, 'old_runtime_widgets'):
-        client.old_runtime_widgets = dict()  # idWidget,reprWidget
+    # if the widget appears here for the first time
+    if not hasattr(leaf.attributes, '__lastversion__'):
+        leaf.attributes.__lastversion__ = leaf.attributes.__version__
+        leaf.style.__lastversion__ = leaf.style.__version__
+        leaf.children.__lastversion__ = leaf.children.__version__
 
-    __id = str(id(leaf))
-    # if the widget is not contained in the copy
-    if not (__id in client.old_runtime_widgets):
-        client.old_runtime_widgets[__id] = leaf.repr(client,False)
         if not no_update_because_new_subchild:
             no_update_because_new_subchild = True
             # we ensure that the clients have an updated version
             for ws in client.websockets:
                 try:
-                    # here a new widget is found, but it must be added updating the parent widget
+                    # here a new widget is found, but it must be added to the client representation
+                    # updating the parent widget
                     if 'parent_widget' in leaf.attributes:
                         parentWidgetId = leaf.attributes['parent_widget']
                         html = get_method_by_id(client.root,parentWidgetId).repr(client)
@@ -307,8 +308,10 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                 except:
                     client.websockets.remove(ws)
 
-    newhtml = leaf.repr(client,False)
-    if newhtml != client.old_runtime_widgets[__id]:
+    if leaf.style.__lastversion__ != leaf.style.__version__ or \
+        leaf.attributes.__lastversion__ != leaf.attributes.__version__ or \
+        leaf.children.__lastversion__ != leaf.children.__version__:
+        __id = str(id(leaf))
         for ws in client.websockets:
             log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
             try:
@@ -316,18 +319,18 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                 ws.send_message('update_widget,' + __id + ',' + toWebsocket(html))
             except:
                 client.websockets.remove(ws)
-        #client.old_runtime_widgets[__id] = newhtml
         
-        #update children back copy in order to avoid nested updates
-        gui_update_children_copy(client, leaf)
+        #update children dictionaries __version__ in order to avoid nested updates
+        gui_update_children_version(client, leaf)
         return True
-        
+    
+    changed_or = False
     # checking if subwidgets changed
     for subleaf in leaf.children.values():
-        gui_updater(client, subleaf, no_update_because_new_subchild)
+        changed_or |= gui_updater(client, subleaf, no_update_because_new_subchild)
         
-    # widget NOT changed
-    return False
+    # propagating the children changed flag
+    return changed_or
 
 
 class _UpdateThread(threading.Thread):
@@ -356,8 +359,6 @@ class _UpdateThread(threading.Thread):
                             continue
                         # here we check if the root window has changed
                         if not hasattr(client, 'old_root_window') or client.old_root_window != client.root:
-                            # a new window is shown, clean the old_runtime_widgets
-                            client.old_runtime_widgets = dict()
                             for ws in client.websockets:
                                 try:
                                     html = client.root.repr(client)
@@ -367,12 +368,6 @@ class _UpdateThread(threading.Thread):
                         client.old_root_window = client.root
                         client.idle()
                         gui_updater(client, client.root)
-                        
-                        #pruning old_runtime_widgets, beacause a widget can be deleted from the gui and persist in old_runtime_widgets
-                        for old_widget_key in list(client.old_runtime_widgets):
-                            if not old_widget_key in runtimeInstances:
-                                log.debug("removing deleted widget instance from old_runtime_widgets id: %s" % old_widget_key)
-                                del client.old_runtime_widgets[old_widget_key]
                         
                 except Exception as e:
                     log.error('error updating gui', exc_info=True)
@@ -478,7 +473,7 @@ openSocket();
 var comTimeout = null;
 function websocketOnMessage (evt){
     var received_msg = evt.data;
-    console.debug('Message is received:' + received_msg);
+    /*console.debug('Message is received:' + received_msg);*/
     var s = received_msg.split(',');
     var command = s[0];
     var index = received_msg.indexOf(',')+1;
@@ -509,8 +504,8 @@ function websocketOnMessage (evt){
         pendingSendMessages.shift() /*remove the oldest*/
         if(comTimeout!=null)clearTimeout(comTimeout);
     }
-    console.debug('command:' + command);
-    console.debug('content:' + content);
+    /*console.debug('command:' + command);
+    console.debug('content:' + content);*/
 };
 /*this uses websockets*/
 var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){

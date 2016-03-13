@@ -22,6 +22,28 @@ from .server import runtimeInstances, update_event
 log = logging.getLogger('remi.gui')
 
 
+class VersionedDictionary(dict):
+    """This dictionary allows to check if its content is changed.
+       It has an attribute __version__ of type int that increments every change
+    """
+    def __init__(self, *args, **kwargs):
+        self.__version__ = 0
+        super(VersionedDictionary, self).__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        if key in self:
+            if self[key] == value:
+                return
+        self.__version__ += 1
+        return super(VersionedDictionary, self).__setitem__(key, value)
+
+    def __delitem__(self, key):
+        if not key in self:
+            return
+        self.__version__ += 1
+        return super(VersionedDictionary, self).__delitem__(key)
+
+
 def decorate_set_on_listener(event_name, params):
     """ private decorator for use in the editor
 
@@ -110,8 +132,8 @@ class Tag(object):
 
         self._render_children_list = []
 
-        self.children = {}
-        self.attributes = {}  # properties as class id style
+        self.children = VersionedDictionary()
+        self.attributes = VersionedDictionary()  # properties as class id style
 
         self.type = ''
         self.attributes['id'] = str(id(self))
@@ -238,7 +260,7 @@ class Widget(Tag):
         """
         super(Widget, self).__init__(**kwargs)
 
-        self.style = {}
+        self.style = VersionedDictionary()
 
         self.type = 'div'
 
