@@ -124,7 +124,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        log.debug('ws connection established: %r' % (self.client_address,))
+        log.info('ws connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
