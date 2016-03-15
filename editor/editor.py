@@ -229,7 +229,10 @@ class Project(gui.Widget):
         code_classes = ''
         
         #the root widget have to appear at the center of the screen, regardless of the user positioning
-        backupRootNodeStyle = dict(self.children['root'].style)
+        _position = self.children['root'].style['position']
+        _left = self.children['root'].style['left']
+        _top = self.children['root'].style['top']
+		
         self.children['root'].style['position'] = 'relative'
         del self.children['root'].style['left']
         del self.children['root'].style['top']
@@ -259,7 +262,9 @@ class Project(gui.Widget):
         
         print(compiled_code)
         
-        self.children['root'].style = backupRootNodeStyle
+        self.children['root'].style['position'] = _position
+        self.children['root'].style['left'] = _left
+        self.children['root'].style['top'] = _top
         
         if save_path_filename!=None:
             f = open(save_path_filename, "w")
