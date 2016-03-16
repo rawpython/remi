@@ -519,7 +519,8 @@ class Widget(Tag):
         """
         self.attributes[self.EVENT_ONMOUSEDOWN] = \
             "var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop;" \
+            "params['x']=event.clientX-this.offsetLeft;" \
+            "params['y']=event.clientY-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (id(self), self.EVENT_ONMOUSEDOWN)
@@ -541,7 +542,8 @@ class Widget(Tag):
         """
         self.attributes[self.EVENT_ONMOUSEUP] = \
             "var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop;" \
+            "params['x']=event.clientX-this.offsetLeft;" \
+            "params['y']=event.clientY-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (id(self), self.EVENT_ONMOUSEUP)
@@ -614,7 +616,8 @@ class Widget(Tag):
         """
         self.attributes[self.EVENT_ONMOUSEMOVE] = \
             "var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;params['y']=event.clientY-this.offsetTop;" \
+            "params['x']=event.clientX-this.offsetLeft;" \
+            "params['y']=event.clientY-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (id(self), self.EVENT_ONMOUSEMOVE)
