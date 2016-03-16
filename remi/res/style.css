@@ -8,14 +8,14 @@
 }
 
 body {
-	background-image: url( '/res/bg.png' );
 	font-family: 'Hind';
+	background: #d5d5d5;
 }
 
 body > div {
-	border: 3px solid rgb(  50,50,50 );
-	-webkit-border-radius: 10px;
-	border-radius: 10px;
+	border-radius : 0.25rem;
+	box-shadow    : 0 1px 2px #aaa;
+	background    : white;
 }
 
 div {
