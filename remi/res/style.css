@@ -15,7 +15,7 @@ body {
 body > div {
 	border-radius : 0.25rem;
 	box-shadow    : 0 1px 2px #aaa;
-	background    : white;
+	background    : rgb(240, 240, 240);
 }
 
 div {
