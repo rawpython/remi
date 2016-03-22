@@ -123,7 +123,10 @@ class Project(gui.Widget):
 
                     sourcename = widgetVarName
                     if len(source_filtered_path)>0:
-                        sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
+                        if len(source_filtered_path)>1:
+                            sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
+                        else:
+                            sourcename = event['eventsource'].attributes['editor_varname']
                     if force==True:
                         if self.children['root'].attributes['editor_varname'] in source_filtered_path:
                             source_filtered_path.remove(self.children['root'].attributes['editor_varname'])
@@ -133,7 +136,10 @@ class Project(gui.Widget):
 
                     listenername = "self"
                     if len(listener_filtered_path)>0:
-                        listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
+                        if len(listener_filtered_path)>1:
+                            listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
+                        else:
+                            listenername = event['eventlistener'].attributes['editor_varname']
                     if force==True:
                         if self.children['root'].attributes['editor_varname'] in listener_filtered_path:
                             listener_filtered_path.remove(self.children['root'].attributes['editor_varname'])
@@ -156,7 +162,7 @@ class Project(gui.Widget):
         if hasattr(widget, 'path_to_this_widget'):
             widget.path_to_this_widget.append( widget.attributes['editor_varname'] )
         else:
-            widget.path_to_this_widget = [widget.attributes['editor_varname'],]
+            widget.path_to_this_widget = []
         
         print(widget.attributes['editor_varname'])
         

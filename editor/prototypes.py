@@ -47,7 +47,9 @@ class %(classname)s(App):
     @staticmethod
     def construct_ui(self):
         %(code_nested)s
-        return %(mainwidgetname)s
+
+        self.%(mainwidgetname)s = %(mainwidgetname)s
+        return self.%(mainwidgetname)s
     
 """
 

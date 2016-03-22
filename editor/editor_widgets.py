@@ -215,7 +215,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
         
         
-class WidgetHelper(gui.ListItem):
+class WidgetHelper(gui.HBox):
     """ Allocates the Widget to which it refers, 
         interfacing to the user in order to obtain the necessary attribute values
         obtains the constructor parameters, asks for them in a dialog
@@ -225,22 +225,17 @@ class WidgetHelper(gui.ListItem):
     def __init__(self, widgetClass, **kwargs_to_widget):
         self.kwargs_to_widget = kwargs_to_widget
         self.widgetClass = widgetClass
-        super(WidgetHelper, self).__init__('')
+        super(WidgetHelper, self).__init__()
         self.style['display'] = 'block'
-        self.style['margin'] = '5px auto'
-        self.container = gui.HBox(width='100%', height=40)
-        self.container.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        self.container.style['background-color'] = 'transparent'
-        self.container.style['justify-content'] = 'flex-start'
-        self.container.style['-webkit-justify-content'] = 'flex-start'
-        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__, width=120, height=40)
+        self.style['background-color'] = 'white'
+        #self.style['margin'] = '5px auto'
+        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__)#, width=120, height=40)
         self.icon.style['margin'] = '2px'
-        self.label = gui.Label(self.widgetClass.__name__)
-        self.label.style['margin'] = ''
-        self.label.style['align-self'] = 'center'
-        self.container.append(self.icon)
-        self.container.append(self.label)
-        self.append(self.container)
+        #self.label = gui.Label(self.widgetClass.__name__)
+        #self.label.style['margin'] = ''
+        #self.label.style['align-self'] = 'center'
+        self.append(self.icon)
+        #self.container.append(self.label)
 
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
@@ -283,6 +278,9 @@ class WidgetHelper(gui.ListItem):
         self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
+
+    def onclick(self):
+        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
         
     def on_dialog_confirm(self):
         """ Here the widget is allocated
@@ -338,12 +336,14 @@ class WidgetCollection(gui.Widget):
         super(WidgetCollection, self).__init__(**kwargs)
         
         self.lblTitle = gui.Label("Widgets Toolbox")
-        self.listWidgets = gui.ListView(width='100%', height='85%')
-        self.listWidgets.style['overflow-y'] = 'scroll'
-        self.listWidgets.style['overflow-x'] = 'hidden'
-        
+        self.widgetsContainer = gui.HBox(width='100%', height='85%')
+        self.widgetsContainer.style['overflow-y'] = 'scroll'
+        self.widgetsContainer.style['overflow-x'] = 'hidden'
+        self.widgetsContainer.style['flex-wrap'] = 'wrap'
+        self.widgetsContainer.style['background-color'] = 'white'
+
         self.append(self.lblTitle)
-        self.append(self.listWidgets)
+        self.append(self.widgetsContainer)
         
         #load all widgets
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px')
@@ -371,8 +371,7 @@ class WidgetCollection(gui.Widget):
         #the helper have to search for function that have 'return' annotation 'event_listener_setter'
         helper = WidgetHelper(widgetClass, **kwargs_to_widget)
         helper.attributes['title'] = widgetClass.__doc__
-        helper.style['width'] = '100%'
-        self.listWidgets.append( helper )
+        self.widgetsContainer.append( helper )
         helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")
 
 
