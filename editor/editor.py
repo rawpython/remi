@@ -352,7 +352,8 @@ class Editor(App):
         #here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(self, width='100%', height='50%')
         
-        self.project = Project(width='56%', height='700px')
+        self.project = Project(width='56%', height='100%')
+        self.project.style['min-height'] = '400px'
         
         self.project.attributes['ondragover'] = "event.preventDefault();"
         self.EVENT_ONDROPPPED = "on_dropped"
@@ -444,7 +445,7 @@ class Editor(App):
         #widget.style['resize'] = 'both'
         widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
-        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['move',event.target.id,(event.clientX),(event.clientY)]));"""
+        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move'; event.dataTransfer.setData('application/json', JSON.stringify(['move',event.target.id,(event.clientX),(event.clientY)]));"""
         widget.attributes['ondragover'] = "event.preventDefault();"   
         widget.EVENT_ONDROPPPED = "on_dropped"
         widget.attributes['ondrop'] = """
@@ -580,7 +581,8 @@ def on_dropped(self, left, top):
     self.style['left']=left
     self.style['top']=top
 
-if __name__ == "__main__":
+
+def main():
     #p = Project()
     #root = p.load('./example_project.py')
     #p.append(root, "root")
@@ -589,4 +591,7 @@ if __name__ == "__main__":
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(Editor, debug=False, port=8082)
+    start(Editor, debug=False, address='0.0.0.0', port=8082)
+    
+if __name__ == "__main__":
+    main()
