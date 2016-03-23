@@ -37,7 +37,9 @@ class SignalConnection(gui.Widget):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        self.style['overflow'] = 'hidden'
+        self.style['overflow'] = 'visible'
+        self.style['height'] = '24px'
+        self.style['display'] = 'block'
         self.label = gui.Label(eventConnectionFuncName, width='49%')
         self.label.style['float'] = 'left'
         self.label.style['font-size'] = '10px'
@@ -82,9 +84,10 @@ class SignalConnectionManager(gui.Widget):
     """ This class allows to interconnect event signals """
     def __init__(self, **kwargs):
         super(SignalConnectionManager, self).__init__(**kwargs)
-        self.label = gui.Label('Signal connections')
+        self.label = gui.Label('Signal connections', width='100%', height='10%')
+        self.label.style['font-weight'] = 'bold'
         self.append(self.label)
-        self.container = gui.VBox(width='100%')
+        self.container = gui.VBox(width='100%', height='90%')
         self.container.style['overflow-y'] = 'scroll'
         self.listeners_list = []
 
@@ -107,7 +110,7 @@ class SignalConnectionManager(gui.Widget):
 
         self.label.set_text('Signal connections: ' + widget.attributes['editor_varname'])
         del self.container
-        self.container = gui.VBox(width='100%')
+        self.container = gui.VBox(width='100%', height='90%')
         self.container.style['overflow-y'] = 'scroll'
         self.append(self.container, 'container')
         ##for all the events of this widget
@@ -228,14 +231,11 @@ class WidgetHelper(gui.HBox):
         super(WidgetHelper, self).__init__()
         self.style['display'] = 'block'
         self.style['background-color'] = 'white'
-        #self.style['margin'] = '5px auto'
-        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__)#, width=120, height=40)
+        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__, width='auto')
+        self.icon.style['max-width'] = '100%'
         self.icon.style['margin'] = '2px'
-        #self.label = gui.Label(self.widgetClass.__name__)
-        #self.label.style['margin'] = ''
-        #self.label.style['align-self'] = 'center'
+        self.icon.style['image-rendering'] = 'auto'
         self.append(self.icon)
-        #self.container.append(self.label)
 
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
@@ -336,6 +336,7 @@ class WidgetCollection(gui.Widget):
         super(WidgetCollection, self).__init__(**kwargs)
         
         self.lblTitle = gui.Label("Widgets Toolbox")
+        self.lblTitle.style['font-weight'] = 'bold'
         self.widgetsContainer = gui.HBox(width='100%', height='85%')
         self.widgetsContainer.style['overflow-y'] = 'scroll'
         self.widgetsContainer.style['overflow-x'] = 'hidden'
@@ -414,7 +415,9 @@ class EditorAttributes(gui.VBox):
         self.style['justify-content'] = 'flex-start'
         self.style['-webkit-justify-content'] = 'flex-start'
         self.titleLabel = gui.Label('Attributes editor')
+        self.titleLabel.style['font-weight'] = 'bold'
         self.infoLabel = gui.Label('Selected widget: None')
+        self.infoLabel.style['font-weight'] = 'bold'
         self.append(self.titleLabel)
         self.append(self.infoLabel)
 

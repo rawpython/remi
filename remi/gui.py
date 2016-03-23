@@ -87,6 +87,17 @@ class _VersionedDictionary(dict):
             return
         self.__version__ += 1
         return super(_VersionedDictionary, self).__delitem__(key)
+    
+    def pop(self, key, d=None):
+        if not key in self:
+            return
+        self.__version__ += 1
+        return super(_VersionedDictionary, self).pop(key, d)
+        
+    def clear(self):
+        self.__version__ += 1
+        return super(_VersionedDictionary, self).clear()
+
 
 
 class _EventManager(object):
