@@ -34,7 +34,7 @@ class ResizeHelper(gui.Widget):
         self.style['left']='0px'
         self.style['top']='0px'
         self.attributes['draggable'] = 'true'
-        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"
+        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['resize',event.target.id,(event.clientX),(event.clientY)]));"
         self.attributes['ondragover'] = "event.preventDefault();"   
         self.attributes['ondrop'] = "event.preventDefault();return false;"
         self.parent = None
@@ -358,12 +358,25 @@ class Editor(App):
         self.EVENT_ONDROPPPED = "on_dropped"
         self.project.attributes['ondrop'] = """event.preventDefault();
                 var data = JSON.parse(event.dataTransfer.getData('application/json'));
-                document.getElementById(data[0]).style.left = parseInt(document.getElementById(data[0]).style.left) + event.clientX - data[1] + 'px';
-                document.getElementById(data[0]).style.top = parseInt(document.getElementById(data[0]).style.top) + event.clientY - data[2] + 'px';
+                var params={};
+                if( data[0] == 'resize'){
+                    document.getElementById(data[1]).style.left = parseInt(document.getElementById(data[1]).style.left) + event.clientX - data[2] + 'px';
+                    document.getElementById(data[1]).style.top = parseInt(document.getElementById(data[1]).style.top) + event.clientY - data[3] + 'px';
+                    params['left']=document.getElementById(data[1]).style.left;
+                    params['top']=document.getElementById(data[1]).style.top;
+                }
+                if( data[0] == 'add'){
+                    params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
+                    params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
+                }
+                if( data[0] == 'move'){
+                    document.getElementById(data[1]).style.left = parseInt(document.getElementById(data[1]).style.left) + event.clientX - data[2] + 'px';
+                    document.getElementById(data[1]).style.top = parseInt(document.getElementById(data[1]).style.top) + event.clientY - data[3] + 'px';
+                    params['left']=document.getElementById(data[1]).style.left;
+                    params['top']=document.getElementById(data[1]).style.top;
+                }
                 
-                var params={};params['left']=document.getElementById(data[0]).style.left;
-                params['top']=document.getElementById(data[0]).style.top;
-                sendCallbackParam(data[0],'%(evt)s',params);
+                sendCallbackParam(data[1],'%(evt)s',params);
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
         self.project.attributes['editor_varname'] = 'App'
@@ -407,19 +420,14 @@ class Editor(App):
         
         # returning the root widget
         return self.mainContainer
-
-    # listener function
-    def widget_helper_clicked(self, helperInstance):
-        """ The widgetHelper is a class that allocates a widget, calling its constructor
-            It informs here that it is clicked by the user and the EditorApp starts the allocation
-            sending its instance in order to show a dialog 
-        """ 
-        helperInstance.prompt_new_widget(self, self.project)
     
     def configure_widget_for_editing(self, widget):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
             to the editor
         """
+        
+        if not 'editor_varname' in widget.attributes:
+            return
         
         #here, the standard onclick function of the widget is overridden with a custom function
         #this function redirect the onclick event to the editor App in order to manage the event
@@ -436,9 +444,26 @@ class Editor(App):
         #widget.style['resize'] = 'both'
         widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
-        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify([event.target.id,(event.clientX),(event.clientY)]));"""
+        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['move',event.target.id,(event.clientX),(event.clientY)]));"""
         widget.attributes['ondragover'] = "event.preventDefault();"   
-        widget.attributes['ondrop'] = """event.preventDefault();return false;"""
+        widget.EVENT_ONDROPPPED = "on_dropped"
+        widget.attributes['ondrop'] = """
+                var data = JSON.parse(event.dataTransfer.getData('application/json'));
+                var params={};
+                if( data[0] == 'add'){
+                    console.debug('addd---------------------------------------------');
+                    sendCallback('%(id)s','%(event_click)s');
+                    console.debug('dopo---------------------------------------------');
+                    params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
+                    params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
+                    sendCallbackParam(data[1],'%(evt)s',params);
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+                
+                
+                return false;""" % {'evt':widget.EVENT_ONDROPPPED, 'id': str(id(widget)), 'event_click': widget.EVENT_ONCLICK}
+                
         widget.attributes['tabindex']=str(self.tabindex)
         if not 'position' in widget.style.keys():
             widget.style['position'] = 'absolute'

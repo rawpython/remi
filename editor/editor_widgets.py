@@ -225,8 +225,9 @@ class WidgetHelper(gui.HBox):
         puts the values in an attribute called constructor
     """
 
-    def __init__(self, widgetClass, **kwargs_to_widget):
+    def __init__(self, appInstance, widgetClass, **kwargs_to_widget):
         self.kwargs_to_widget = kwargs_to_widget
+        self.appInstance = appInstance
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__()
         self.style['display'] = 'block'
@@ -235,8 +236,19 @@ class WidgetHelper(gui.HBox):
         self.icon.style['max-width'] = '100%'
         self.icon.style['margin'] = '2px'
         self.icon.style['image-rendering'] = 'auto'
+        self.icon.attributes['draggable'] = 'false'
+        self.icon.attributes['ondragstart'] = "event.preventDefault();"
         self.append(self.icon)
-
+        
+        self.attributes['draggable'] = 'true'
+        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));"
+        self.attributes['ondragover'] = "event.preventDefault();"   
+        self.attributes['ondrop'] = "event.preventDefault();return false;"
+        
+        self.optional_style_dict = {} #this dictionary will contain optional style attributes that have to be added to the widget once created
+        
+        self.set_on_click_listener(self, 'prompt_new_widget')
+        
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
@@ -246,12 +258,11 @@ class WidgetHelper(gui.HBox):
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
         
-    def prompt_new_widget(self, appInstance, widgets_tree):
+    def prompt_new_widget(self):
         self.varname_list = list()
         
-        self.build_widget_name_list_from_tree(widgets_tree)
+        self.build_widget_name_list_from_tree(self.appInstance.project)
         
-        self.appInstance = appInstance
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list', width='40%')
@@ -279,8 +290,10 @@ class WidgetHelper(gui.HBox):
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
 
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+    def on_dropped(self, left, top):
+        self.optional_style_dict['left'] = gui.to_pix(left)
+        self.optional_style_dict['top'] = gui.to_pix(top)
+        self.prompt_new_widget()
         
     def on_dialog_confirm(self):
         """ Here the widget is allocated
@@ -327,6 +340,11 @@ class WidgetHelper(gui.HBox):
             widget.style['position'] = 'absolute'
         if not 'display' in widget.style:
             widget.style['display'] = 'block'
+            
+        for key in self.optional_style_dict:
+            widget.style[key] = self.optional_style_dict[key]
+        self.optional_style_dict = {}
+        
         self.appInstance.add_widget_to_editor(widget)
 
 
@@ -370,10 +388,9 @@ class WidgetCollection(gui.Widget):
     def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
         #create an helper that will be created on click
         #the helper have to search for function that have 'return' annotation 'event_listener_setter'
-        helper = WidgetHelper(widgetClass, **kwargs_to_widget)
+        helper = WidgetHelper(self.appInstance, widgetClass, **kwargs_to_widget)
         helper.attributes['title'] = widgetClass.__doc__
         self.widgetsContainer.append( helper )
-        helper.set_on_click_listener(self.appInstance, "widget_helper_clicked")
 
 
 class EditorAttributesGroup(gui.Widget):
