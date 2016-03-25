@@ -78,9 +78,8 @@ class Project(gui.Widget):
         super(Project, self).__init__(**kwargs)
     
         self.style['position'] = 'relative'    
-        self.style['overflow'] = 'scroll'
-        self.style['background-color'] = 'gray'
-        self.style['background-image'] = "url( '/res/bg.png' );"
+        self.style['overflow'] = 'auto'
+        self.style['background-color'] = 'rgb(250,248,240)'
     
     def new(self):
         #remove the main widget
@@ -292,11 +291,12 @@ class Editor(App):
         self.mainContainer.style['background-color'] = 'white'
         self.mainContainer.style['border'] = 'none'
         
-        menu = gui.Menu(width='100%',height='5%')
+        menubar = gui.MenuBar(height='4%')
+        menu = gui.Menu(width='100%',height='100%')
         menu.style['z-index'] = '1'
-        m1 = gui.MenuItem('File', width=100)
-        m10 = gui.MenuItem('New', width=100, height=30)
-        m11 = gui.MenuItem('Open', width=100, height=30)
+        m1 = gui.MenuItem('File', width=150, height='100%')
+        m10 = gui.MenuItem('New', width=150, height=30)
+        m11 = gui.MenuItem('Open', width=150, height=30)
         m12 = gui.MenuItem('Save Your App', width=150, height=30)
         #m12.style['visibility'] = 'hidden'
         m121 = gui.MenuItem('Save', width=100, height=30)
@@ -307,20 +307,23 @@ class Editor(App):
         m12.append(m121)
         m12.append(m122)
         
-        m2 = gui.MenuItem('Edit', width=100)
+        m2 = gui.MenuItem('Edit', width=100, height='100%')
         m21 = gui.MenuItem('Cut', width=100, height=30)
         m22 = gui.MenuItem('Paste', width=100, height=30)
         m2.append(m21)
         m2.append(m22)
         
-        m3 = gui.MenuItem('Project Config', width=200)
+        m3 = gui.MenuItem('Project Config', width=200, height='100%')
         
         menu.append(m1)
         menu.append(m2)
         menu.append(m3)
         
+        menubar.append(menu)
+        
         self.toolbar = editor_widgets.ToolBar(width='100%', height='30px')
         self.toolbar.style['margin'] = '0px 0px'
+        self.toolbar.style['border-bottom'] = '1px solid rgba(0,0,0,.12)'
         self.toolbar.add_command('/res/delete.png', self, 'toolbar_delete_clicked', 'Delete Widget')
         self.toolbar.add_command('/res/cut.png', self, 'menu_cut_selection_clicked', 'Cut Widget')
         self.toolbar.add_command('/res/paste.png', self, 'menu_paste_selection_clicked', 'Paste Widget')
@@ -341,7 +344,7 @@ class Editor(App):
         
         m3.set_on_click_listener(self, 'menu_project_config_clicked')
         
-        self.subContainer = gui.HBox(width='100%', height='90%')
+        self.subContainer = gui.HBox(width='100%', height='96%')
         #self.subContainer.style['display']='block'
         self.subContainer.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         #self.subContainer.style['background-color'] = 'transparent'
@@ -352,7 +355,7 @@ class Editor(App):
         #here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(self, width='100%', height='50%')
         
-        self.project = Project(width='56%', height='100%')
+        self.project = Project(width='100%', height='100%')
         self.project.style['min-height'] = '400px'
         
         self.project.attributes['ondragover'] = "event.preventDefault();"
@@ -395,11 +398,11 @@ class Editor(App):
         self.attributeEditor = editor_widgets.EditorAttributes(self, width='24%', height='100%')
         self.attributeEditor.style['position'] = 'absolute'
         self.attributeEditor.style['right'] = '0px'
+        self.attributeEditor.add_class('RaisedFrame')
         
         self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%')
         
-        self.mainContainer.append(menu)
-        self.mainContainer.append(self.toolbar)
+        self.mainContainer.append(menubar)
         self.mainContainer.append(self.subContainer)
         
         self.subContainerLeft = gui.Widget(width='20%', height='100%')
@@ -407,9 +410,15 @@ class Editor(App):
         self.subContainerLeft.style['left'] = '0px'
         self.subContainerLeft.append(self.widgetsCollection)
         self.subContainerLeft.append(self.signalConnectionManager)
+        self.subContainerLeft.add_class('RaisedFrame')
         
         self.subContainer.append(self.subContainerLeft)
-        self.subContainer.append(self.project)
+        
+        self.centralContainer = gui.VBox(width='56%', height='100%')
+        self.centralContainer.append(self.toolbar)
+        self.centralContainer.append(self.project)
+        
+        self.subContainer.append(self.centralContainer)
         self.subContainer.append(self.attributeEditor)
         self.project.style['position'] = 'relative'
         
@@ -491,7 +500,7 @@ class Editor(App):
     def on_widget_selection(self, widget):
         self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
-        self.selectedWidget.style['box-shadow'] = '0 0 10px rgba(255, 120, 0, 1)'
+        self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])

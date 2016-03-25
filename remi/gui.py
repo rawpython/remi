@@ -98,8 +98,7 @@ class _VersionedDictionary(dict):
         self.__version__ += 1
         return super(_VersionedDictionary, self).clear()
 
-
-
+        
 class _EventManager(object):
     """Manages the event propagation to the listeners functions"""
 
@@ -1146,7 +1145,7 @@ class GenericDialog(Widget):
 
         if len(title) > 0:
             t = Label(title)
-            t.style['margin'] = '5px'
+            t.add_class('DialogTitle')
             self.append(t)
 
         if len(message) > 0:
@@ -1161,12 +1160,13 @@ class GenericDialog(Widget):
         self.container.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
+        self.conf.style['margin'] = '3px'
         self.cancel = Button('Cancel')
         self.cancel.set_size(100, 30)
-        hlay = Widget()
+        self.cancel.style['margin'] = '3px'
+        hlay = Widget(height=35)
         hlay.style['display'] = 'block'
-        hlay.style['overflow'] = 'auto'
-        hlay.style['margin'] = '3px'
+        hlay.style['overflow'] = 'visible'
         hlay.append(self.conf)
         hlay.append(self.cancel)
         self.conf.style['float'] = 'right'
@@ -1195,14 +1195,12 @@ class GenericDialog(Widget):
         self.inputs[key] = field
         label = Label(label_description)
         label.style['margin'] = '0px 5px'
-        container = Widget()
-        container.style['display'] = 'block'
+        label.style['min-width'] = '30%'
+        container = HBox()
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
-        container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
-        self.inputs[key].style['float'] = 'right'
         self.container.append(container, key=key)
 
     def add_field(self, key, field):
@@ -2157,7 +2155,7 @@ class FileFolderItem(Widget):
 
     def set_selected(self, selected):
         self.selected = selected
-        self.style['color'] = 'red' if self.selected else 'black'
+        self.label.style['font-weight'] = 'bold' if self.selected else 'normal'
 
     def onselection(self):
         self.set_selected(not self.selected)

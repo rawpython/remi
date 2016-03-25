@@ -39,6 +39,10 @@ class Cell(gui.Widget):
         self.style['font-weight'] = 'bold'
         self.style['text-align'] = 'center'
         self.style['background-size'] = 'contain'
+        if ((x+y)%2)>0:
+            self.style['background-color'] = 'rgb(255,255,255)'
+        else:
+            self.style['background-color'] = 'rgb(245,245,240)'
         self.set_on_contextmenu_listener(self, 'on_right_click')
         self.set_on_click_listener(self, "check_mine")
 

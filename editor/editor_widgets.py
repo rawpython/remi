@@ -84,10 +84,11 @@ class SignalConnectionManager(gui.Widget):
     """ This class allows to interconnect event signals """
     def __init__(self, **kwargs):
         super(SignalConnectionManager, self).__init__(**kwargs)
-        self.label = gui.Label('Signal connections', width='100%', height='10%')
-        self.label.style['font-weight'] = 'bold'
+        self.label = gui.Label('Signal connections', width='100%')
+        self.label.add_class("DialogTitle")
         self.append(self.label)
         self.container = gui.VBox(width='100%', height='90%')
+        self.container.style['justify-content'] = 'flex-start'
         self.container.style['overflow-y'] = 'scroll'
         self.listeners_list = []
 
@@ -111,6 +112,7 @@ class SignalConnectionManager(gui.Widget):
         self.label.set_text('Signal connections: ' + widget.attributes['editor_varname'])
         del self.container
         self.container = gui.VBox(width='100%', height='90%')
+        self.container.style['justify-content'] = 'flex-start'
         self.container.style['overflow-y'] = 'scroll'
         self.append(self.container, 'container')
         ##for all the events of this widget
@@ -352,9 +354,8 @@ class WidgetCollection(gui.Widget):
     def __init__(self, appInstance, **kwargs):
         self.appInstance = appInstance
         super(WidgetCollection, self).__init__(**kwargs)
-        
         self.lblTitle = gui.Label("Widgets Toolbox")
-        self.lblTitle.style['font-weight'] = 'bold'
+        self.lblTitle.add_class("DialogTitle")
         self.widgetsContainer = gui.HBox(width='100%', height='85%')
         self.widgetsContainer.style['overflow-y'] = 'scroll'
         self.widgetsContainer.style['overflow-x'] = 'hidden'
@@ -399,14 +400,14 @@ class EditorAttributesGroup(gui.Widget):
     """
     def __init__(self, title, **kwargs):
         super(EditorAttributesGroup, self).__init__(**kwargs)
+        self.add_class('.RaisedFrame')
         self.style['display'] = 'block'
         self.style['overflow'] = 'visible'
         self.opened = True
         self.title = gui.Label(title)
+        self.title.add_class("Title")
         self.title.style['padding-left'] = '32px'
         self.title.style['background-image'] = "url('/res/minus.png')"
-        self.title.style['font-weight'] = 'bold'
-        self.title.style['background-color'] = 'lightgray'
         self.title.style['background-repeat'] = 'no-repeat'
         self.title.style['background-position'] = '5px'
         self.title.set_on_click_listener(self, 'openClose')
@@ -431,8 +432,8 @@ class EditorAttributes(gui.VBox):
         self.style['overflow-y'] = 'scroll'
         self.style['justify-content'] = 'flex-start'
         self.style['-webkit-justify-content'] = 'flex-start'
-        self.titleLabel = gui.Label('Attributes editor')
-        self.titleLabel.style['font-weight'] = 'bold'
+        self.titleLabel = gui.Label('Attributes editor', width='100%')
+        self.titleLabel.add_class("DialogTitle")
         self.infoLabel = gui.Label('Selected widget: None')
         self.infoLabel.style['font-weight'] = 'bold'
         self.append(self.titleLabel)

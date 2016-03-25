@@ -19,7 +19,7 @@ from threading import Timer
 
 class MyApp(App):
     def __init__(self, *args):
-        super(MyApp, self).__init__(*args)
+        super(MyApp, self).__init__(*args, static_paths=('./res/',))
 
     def main(self):
         verticalContainer = gui.Widget(width=540)
@@ -200,7 +200,7 @@ class MyApp(App):
 
     def menu_dialog_clicked(self):
         self.dialog = gui.GenericDialog(title='Dialog Box', message='Click Ok to transfer content to main page')
-        self.dialog.style['width'] = '300px'
+        self.dialog.style['width'] = '500px'
         self.dtextinput = gui.TextInput(width=200, height=30)
         self.dtextinput.set_value('Initial Text')
         self.dialog.add_field_with_label('dtextinput', 'Text Input', self.dtextinput)

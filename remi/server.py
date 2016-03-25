@@ -730,8 +730,9 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
             self.wfile.write(encodeIfPyGT3("<!DOCTYPE html>\n"))
             self.wfile.write(encodeIfPyGT3("<html>\n<head>\n"))
             self.wfile.write(encodeIfPyGT3(
-                "<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>\n"
-                "<meta content='utf-8' http-equiv='encoding'>\n"))
+                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+                <meta content='utf-8' http-equiv='encoding'>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
             self.wfile.write(encodeIfPyGT3(self.client.css_header))
             self.wfile.write(encodeIfPyGT3(self.client.html_header))
             self.wfile.write(encodeIfPyGT3(self.client.script_header))
