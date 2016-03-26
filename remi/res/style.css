@@ -15,11 +15,11 @@ textarea:focus,input[type='checkbox']:focus,input[type='color']:focus,input[type
     border-bottom:1px solid rgba(33,150,243,.26);
 }
 ::-moz-selection{
-    background:(33,150,243,.26);
+    background:rgba(33,150,243,.26);
     text-shadow:none
 }
 ::selection{
-    background:(33,150,243,.26);
+    background:rgba(33,150,243,.26);
     text-shadow:none
 }
 audio,canvas,iframe,img,svg,video{

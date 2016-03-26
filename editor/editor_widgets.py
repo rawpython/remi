@@ -521,6 +521,10 @@ class UrlPathInput(gui.Widget):
 
 
 class StringEditor(gui.TextInput):
+    """ This class sends the input directly to the listener, but don't applies the changes
+        to the widget itself in order to avoid to get updated losting the focus.
+        The value will be committed to the widget itself when blurs.
+    """
     def __init__(self, **kwargs):
         super(StringEditor, self).__init__(**kwargs)
         self.attributes[self.EVENT_ONBLUR] = \
@@ -534,28 +538,6 @@ class StringEditor(gui.TextInput):
     def onkeyup(self, new_value):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])
         
-        
-"""class MeasureEditor(gui.Widget):
-    def __init__(self, **kwargs):
-        super(MeasureEditor, self).__init__(**kwargs)
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        
-        self.valueInput = SpinBox(0, -9999999, 9999999, 1, width='80%', height='100%')
-        
-        self.typeInput = gui.DropDown(width='20%', height='100%')
-        c0 = gui.DropDownItem('px')
-        c1 = gui.DropDownItem('%')
-        self.typeInput.append(c0)
-        self.typeInput.append(c1)
-        self.typeInput.set_on_change_listener(self, 'on_type_changed')
-        self.typeInput.set_value('px')
-        
-    def onchange(self, value):
-        
-        
-    def on_type_changed(self, *values):
-        self.
-"""
 
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
