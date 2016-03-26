@@ -567,13 +567,14 @@ function websocketOnError(evt){
     console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
 };
 
-function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
+function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     var url = '/';
     var xhr = new XMLHttpRequest();
     var fd = new FormData();
     xhr.open('POST', url, true);
-    xhr.setRequestHeader('savepath', savePath);
     xhr.setRequestHeader('filename', file.name);
+    xhr.setRequestHeader('listener', widgetID);
+    xhr.setRequestHeader('listener_function', eventData);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             /* Every thing ok, file uploaded */
@@ -654,10 +655,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
     def do_POST(self):
         self.instance()
         file_data = None
+        listener_widget = None
+        listener_function = None
         try:
             # Parse the form data posted
-            savepath = self.headers['savepath']
             filename = self.headers['filename']
+            listener_widget = runtimeInstances[self.headers['listener']]
+            listener_function = self.headers['listener_function']
             form = cgi.FieldStorage(
                 fp=self.rfile,
                 headers=self.headers,
@@ -672,15 +676,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, savePath,file){
                     file_data = field_item.file.read()
                     file_len = len(file_data)
                     log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
+                    get_method_by_name(listener_widget, listener_function)(file_data, filename)
                 else:
                     # Regular form value
                     log.debug('post: %s=%s\n' % (field, form[field].value))
 
             if file_data is not None:
-                log.debug('GUI - server.py do_POST: fileupload path= %s name= %s' % (savepath, filename))
-                with open(savepath+filename,'wb') as f:
-                    f.write(file_data)
-                    self.send_response(200)
+                #the filedata is sent to the listener
+                log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
+                self.send_response(200)
         except Exception as e:
             log.error('post error', exc_info=True)
             self.send_response(400)

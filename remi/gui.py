@@ -2297,13 +2297,14 @@ class FileUploader(Widget):
         self.attributes[self.EVENT_ONCLICK] = ''
         self.EVENT_ON_SUCCESS = 'onsuccess'
         self.EVENT_ON_FAILED = 'onfailed'
+        self.EVENT_ON_DATA = 'ondata'
 
         self.attributes[self.EVENT_ONCHANGE] = \
             "var files = this.files;" \
             "for(var i=0; i<files.length; i++){" \
-            "uploadFile('%(id)s','%(evt_success)s','%(evt_failed)s','%(savepath)s',files[i]);}" % {
+            "uploadFile('%(id)s','%(evt_success)s','%(evt_failed)s','%(evt_data)s',files[i]);}" % {
                 'id': id(self), 'evt_success': self.EVENT_ON_SUCCESS, 'evt_failed': self.EVENT_ON_FAILED,
-                'savepath': self._savepath}
+                'evt_data': self.EVENT_ON_DATA}
 
     def onsuccess(self, filename):
         return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
@@ -2319,6 +2320,15 @@ class FileUploader(Widget):
     @decorate_set_on_listener("onfailed", "(self,filename)")
     def set_on_failed_listener(self, listener, funcname):
         self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, funcname)
+        
+    def ondata(self, filedata, filename):
+        with open(self._savepath+filename,'wb') as f:
+            f.write(filedata)
+        return self.eventManager.propagate(self.EVENT_ON_DATA, [filedata, filename])
+
+    @decorate_set_on_listener("ondata", "(self,filedata, filename)")
+    def set_on_data_listener(self, listener, funcname):
+        self.eventManager.register_listener(self.EVENT_ON_DATA, listener, funcname)
 
 
 class FileDownloader(Widget):
