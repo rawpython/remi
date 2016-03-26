@@ -520,6 +520,43 @@ class UrlPathInput(gui.Widget):
         self.txtInput.set_value(value)
 
 
+class StringEditor(gui.TextInput):
+    def __init__(self, **kwargs):
+        super(StringEditor, self).__init__(**kwargs)
+        self.attributes[self.EVENT_ONBLUR] = \
+            "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONCHANGE}
+            
+        self.attributes[self.EVENT_ONKEYUP] = \
+            "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONKEYUP}
+        
+    def onkeyup(self, new_value):
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])
+        
+        
+"""class MeasureEditor(gui.Widget):
+    def __init__(self, **kwargs):
+        super(MeasureEditor, self).__init__(**kwargs)
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        
+        self.valueInput = SpinBox(0, -9999999, 9999999, 1, width='80%', height='100%')
+        
+        self.typeInput = gui.DropDown(width='20%', height='100%')
+        c0 = gui.DropDownItem('px')
+        c1 = gui.DropDownItem('%')
+        self.typeInput.append(c0)
+        self.typeInput.append(c1)
+        self.typeInput.set_on_change_listener(self, 'on_type_changed')
+        self.typeInput.set_value('px')
+        
+    def onchange(self, value):
+        
+        
+    def on_type_changed(self, *values):
+        self.
+"""
+
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
 class EditorAttributeInput(gui.Widget):
@@ -554,14 +591,14 @@ class EditorAttributeInput(gui.Widget):
                     self.inputWidget.append(gui.DropDownItem(value),value)
             if attributeDict['type'] == gui.FileSelectionDialog:
                 self.inputWidget = UrlPathInput(appInstance)
-                
+            
         else: #default editor is string
-            self.inputWidget = gui.TextInput()
+            self.inputWidget = StringEditor()
  
+        self.inputWidget.set_on_change_listener(self,"on_attribute_changed")
         self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
         label.attributes['title'] = attributeDict['description']
-        self.inputWidget.set_on_change_listener(self,"on_attribute_changed")
         self.append(self.inputWidget)
         self.inputWidget.style['float'] = 'right'
     
