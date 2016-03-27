@@ -137,6 +137,7 @@ class Tag(object):
 
         self.children = _VersionedDictionary()
         self.attributes = _VersionedDictionary()  # properties as class id style
+        self.style = _VersionedDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
 
         self.type = kwargs.get('_type', '')
         self.attributes['id'] = str(id(self))
@@ -297,8 +298,6 @@ class Widget(Tag):
             kwargs['_type'] = 'div'
 
         super(Widget, self).__init__(**kwargs)
-
-        self.style = _VersionedDictionary()
 
         # centers the div
         self.style['margin'] = '0px auto'
