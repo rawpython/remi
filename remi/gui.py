@@ -197,8 +197,8 @@ class Tag(object):
         To retrieve the child call get_child or access to the Tag.children[key] dictionary.
 
         Args:
-            key (str, Tag):  Unique child's identifier
-            child (Tag):
+            key (str):  Unique child's identifier
+            child (Tag, str):
         """
         if hasattr(child, 'attributes'):
             child.attributes['parent_widget'] = str(id(self))
@@ -1131,7 +1131,7 @@ class GenericDialog(Widget):
 
         Args:
             key (str): The unique identifier for the field.
-            field (Widget): The instance of the field Widget. It can be for example a TextInput or maybe a custom widget.
+            field (Widget): The widget to be added to the dialog, TextInput or any Widget for example.
         """
         self.inputs[key] = field
         container = Widget()
@@ -1387,7 +1387,7 @@ class ListItem(Widget):
     def __init__(self, text, **kwargs):
         """
         Args:
-            text (str): The textual content of the ListItem.
+            text (str, unicode): The textual content of the ListItem.
             kwargs: See Widget.__init__()
         """
         super(ListItem, self).__init__(**kwargs)
