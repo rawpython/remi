@@ -1881,6 +1881,12 @@ class SpinBox(Input):
         self.attributes[self.EVENT_ONKEYPRESS] = \
             'return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46 || event.charCode == 13;'
 
+    def get_value(self):
+        """returns the value."""
+        value = self.attributes['value']
+        value = float(value) if (float(value)>int(value)) else int(value)
+        return value
+        
 
 class Slider(Input):
 
