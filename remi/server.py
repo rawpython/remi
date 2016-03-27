@@ -784,16 +784,20 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             for k in param_dict:
                 params.append(param_dict[k])
 
-            widget,function = attr_call.group(1,2)
+            widget, function = attr_call.group(1, 2)
             try:
-                content,headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
+                content, headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
                 if content is None:
                     self.send_response(503)
                     return
                 self.send_response(200)
             except IOError:
-                self.log.error('attr call error', exc_info=True)
+                self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
                 self.send_response(404)
+                return
+            except (TypeError, AttributeError):
+                self.log.error('attr %s/%s not available' % (widget, function))
+                self.send_response(503)
                 return
 
             for k in headers.keys():
