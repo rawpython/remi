@@ -84,7 +84,6 @@ class MyApp(App):
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()
 
-        # appending a widget to another, the first argument is a string key
         wid.append(bt)
         wid.append(self.mpl)
 

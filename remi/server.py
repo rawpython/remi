@@ -119,18 +119,23 @@ class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServe
 
 
 class WebSocketsHandler(socketserver.StreamRequestHandler):
+
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+
+    def __init__(self, *args, **kwargs):
+        self.log = logging.getLogger('remi.server.ws')
+        socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        log.info('ws connection established: %r' % (self.client_address,))
+        self.log.info('connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
-        log.debug('ws handle')
-        #on some systems like ROS, the default socket timeout
-        #is less than expected, we force it to infinite (None) as default socket value
+        self.log.debug('handle')
+        # on some systems like ROS, the default socket timeout
+        # is less than expected, we force it to infinite (None) as default socket value
         self.request.settimeout(None)
         while True:
             if not self.handshake_done:
@@ -140,7 +145,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                     k = get_instance_key(self)
                     clients[k].websockets.remove(self)
                     self.handshake_done = False
-                    log.debug('ws ending websocket service')
+                    self.log.debug('ws ending websocket service')
                     break
 
     def bytetonum(self,b):
@@ -149,7 +154,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        log.debug('ws read_next_message')
+        self.log.debug('read_next_message')
         length = self.rfile.read(2)
         try:
             length = self.bytetonum(length[1]) & 127
@@ -163,14 +168,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(fromWebsocket(decoded))
         except Exception as e:
-            log.error("Exception parsing websocket", exc_info=True)
+            self.log.error("Exception parsing websocket", exc_info=True)
             return False
         return True
 
     def send_message(self, message):
         out = bytearray()
         out.append(129)
-        log.debug('send_message')
+        self.log.debug('send_message')
         length = len(message)
         if length <= 125:
             out.append(length)
@@ -186,9 +191,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        log.debug('handshake')
+        self.log.debug('handshake')
         data = self.request.recv(1024).strip()
-        log.debug('Handshaking...')
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
@@ -197,6 +201,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
         response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
+        self.log.info('handshaknote complete')
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
@@ -210,9 +215,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             try:
                 # saving the websocket in order to update the client
                 k = get_instance_key(self)
-                if not self in clients[k].websockets:
+                if self not in clients[k].websockets:
                     clients[k].websockets.append(self)
-                log.debug('on_message')
+                self.log.debug('on_message')
 
                 # parsing messages
                 chunks = message.split('/')
@@ -232,7 +237,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         if callback is not None:
                             callback(**param_dict)
             except Exception as e:
-                log.error('error parsing websocket', exc_info=True)
+                self.log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
 
@@ -384,18 +389,19 @@ class App(BaseHTTPRequestHandler, object):
         - function calls with parameters
         - file requests
     """
+
     def __init__(self, request, client_address, server, **app_args):
-        self._log = logging.getLogger('remi.server.request')
         self._app_args = app_args
+        self.log = logging.getLogger('remi.server.http')
         super(App, self).__init__(request, client_address, server)
 
     def log_message(self, format_string, *args):
         msg = format_string % args
-        self._log.debug("%s %s" % (self.address_string(), msg))
+        self.log.debug("%s %s" % (self.address_string(), msg))
 
     def log_error(self, format_string, *args):
         msg = format_string % args
-        self._log.error("%s %s" % (self.address_string(), msg))
+        self.log.error("%s %s" % (self.address_string(), msg))
     
     def instance(self):
         global clients
@@ -675,18 +681,18 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     # The field contains an uploaded file
                     file_data = field_item.file.read()
                     file_len = len(file_data)
-                    log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
+                    self.log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
                     get_method_by_name(listener_widget, listener_function)(file_data, filename)
                 else:
                     # Regular form value
-                    log.debug('post: %s=%s\n' % (field, form[field].value))
+                    self.log.debug('post: %s=%s\n' % (field, form[field].value))
 
             if file_data is not None:
-                #the filedata is sent to the listener
-                log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
+                # the filedata is sent to the listener
+                self.log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
                 self.send_response(200)
         except Exception as e:
-            log.error('post error', exc_info=True)
+            self.log.error('post: failed', exc_info=True)
             self.send_response(400)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
@@ -704,7 +710,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             do_process = True
         else:
             if not ('Authorization' in self.headers) or self.headers['Authorization'] is None:
-                log.info("Authenticating")
+                self.log.info("Authenticating")
                 self.do_AUTHHEAD()
                 self.wfile.write('no auth header received')
             elif self.headers['Authorization'] == 'Basic ' + self.server.auth.decode():
@@ -720,6 +726,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.process_all(path)
 
     def process_all(self, function):
+        self.log.debug('get: %s' % function)
         static_file = re.match(r"^/*res\/(.*)$", function)
         attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)
         if (function == '/') or (not function):
@@ -777,16 +784,20 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             for k in param_dict:
                 params.append(param_dict[k])
 
-            widget,function = attr_call.group(1,2)
+            widget, function = attr_call.group(1, 2)
             try:
-                content,headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
+                content, headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
                 if content is None:
                     self.send_response(503)
                     return
                 self.send_response(200)
             except IOError:
-                log.error('attr call error', exc_info=True)
+                self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
                 self.send_response(404)
+                return
+            except (TypeError, AttributeError):
+                self.log.error('attr %s/%s not available' % (widget, function))
+                self.send_response(503)
                 return
 
             for k in headers.keys():
@@ -901,7 +912,8 @@ def start(mainGuiClass, **kwargs):
         debug = kwargs.pop('debug')
     except KeyError:
         debug = False
-    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
+                        format='%(name)-16s %(levelname)-8s %(message)s')
     s = Server(mainGuiClass, start=True, **kwargs)
     s.serve_forever()
 
