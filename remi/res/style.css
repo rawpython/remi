@@ -219,7 +219,7 @@ select {
     border: none;
     border-bottom: 1px solid rgba(0, 0, 0, .12);
     display: block;
-    font-size: 16px;
+    font-size: 14px;
     font-family: inherit;
     margin: 0;
     width: 100%;
@@ -274,8 +274,8 @@ button:disabled {
     border: none;
     border-bottom: 1px solid rgba(0, 0, 0, .12);
     display: block;
-    font-size: 16px;
-    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 14px;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -433,11 +433,11 @@ input[type='range']::-ms-track {
 }
 input[type='range']::-ms-fill-lower {
     padding: 0;
-    background: linear-gradient(to right, transparent, transparent 16px, rgb(33, 150, 243)16px, rgb(33, 150, 243)0)
+    background: linear-gradient(to right, transparent, transparent 16px, rgb(33, 150, 243), rgb(33, 150, 243)0)
 }
 input[type='range']::-ms-fill-upper {
     padding: 0;
-    background: linear-gradient(to left, transparent, transparent 16px, rgba(0, 0, 0, .26)16px, rgba(0, 0, 0, .26)0)
+    background: linear-gradient(to left, transparent, transparent 16px, rgba(0, 0, 0, .26), rgba(0, 0, 0, .26)0)
 }
 input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
