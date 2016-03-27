@@ -129,35 +129,49 @@ class SignalConnectionManager(gui.Widget):
 
 
 class ProjectConfigurationDialog(gui.GenericDialog):
+    KEY_PRJ_NAME = 'config_project_name'
+    KEY_ADDRESS = 'config_address'
+    KEY_PORT = 'config_port'
+    KEY_MULTIPLE_INSTANCE = 'config_multiple_instance'
+    KEY_ENABLE_CACHE = 'config_enable_file_cache'
+    KEY_START_BROWSER = 'config_start_browser'
+    KEY_RESOURCEPATH = 'config_resourcepath'
+    
     def __init__(self, title='', message=''):
         super(ProjectConfigurationDialog, self).__init__('Project Configuration', 'Here are the configuration options of the project.', width=500)
         #standard configuration
         self.configDict = {}
-        self.configDict['config_project_name'] = 'untitled'
-        self.configDict['config_address'] = '0.0.0.0'
-        self.configDict['config_port'] = 8081
-        self.configDict['config_multiple_instance'] = True
-        self.configDict['config_enable_file_cache'] = True
-        self.configDict['config_start_browser'] = True
-        self.configDict['config_resourcepath'] = "./res/"
+        
+        self.configDict[self.KEY_PRJ_NAME] = 'untitled'
+        self.configDict[self.KEY_ADDRESS] = '0.0.0.0'
+        self.configDict[self.KEY_PORT] = 8081
+        self.configDict[self.KEY_MULTIPLE_INSTANCE] = True
+        self.configDict[self.KEY_ENABLE_CACHE] = True
+        self.configDict[self.KEY_START_BROWSER] = True
+        self.configDict[self.KEY_RESOURCEPATH] = "./res/"
 
-        self.add_field_with_label( 'config_project_name', 'Project Name', gui.TextInput() )
-        self.add_field_with_label( 'config_address', 'IP address', gui.TextInput() )
-        self.add_field_with_label( 'config_port', 'Listen port', gui.SpinBox(8082, 1025, 65535) )
-        self.add_field_with_label( 'config_multiple_instance', 'Use single App instance for multiple users', gui.CheckBox(True) )
-        self.add_field_with_label( 'config_enable_file_cache', 'Enable file caching', gui.CheckBox(True) )
-        self.add_field_with_label( 'config_start_browser', 'Start browser automatically', gui.CheckBox(True) )
-        self.add_field_with_label( 'config_resourcepath', 'Additional resource path', gui.TextInput() )
+        self.add_field_with_label( self.KEY_PRJ_NAME, 'Project Name', gui.TextInput() )
+        self.add_field_with_label( self.KEY_ADDRESS, 'IP address', gui.TextInput() )
+        self.add_field_with_label( self.KEY_PORT, 'Listen port', gui.SpinBox(8082, 1025, 65535) )
+        self.add_field_with_label( self.KEY_MULTIPLE_INSTANCE, 'Use single App instance for multiple users', gui.CheckBox(True) )
+        self.add_field_with_label( self.KEY_ENABLE_CACHE, 'Enable file caching', gui.CheckBox(True) )
+        self.add_field_with_label( self.KEY_START_BROWSER, 'Start browser automatically', gui.CheckBox(True) )
+        self.add_field_with_label( self.KEY_RESOURCEPATH, 'Additional resource path', gui.TextInput() )
         self.from_dict_to_fields(self.configDict)
     
     def from_dict_to_fields(self, dictionary):
         for key in self.inputs.keys():
             if key in dictionary.keys():
-                self.get_field(key).set_value(dictionary[key])
+                self.get_field(key).set_value( str( dictionary[key] ) )
         
     def from_fields_to_dict(self):
-        for key in self.inputs.keys():
-            self.configDict[key] = self.get_field(key).get_value()
+        self.configDict[self.KEY_PRJ_NAME] = self.get_field(self.KEY_PRJ_NAME).get_value()
+        self.configDict[self.KEY_ADDRESS] = self.get_field(self.KEY_ADDRESS).get_value()
+        self.configDict[self.KEY_PORT] = int( self.get_field(self.KEY_PORT).get_value() )
+        self.configDict[self.KEY_MULTIPLE_INSTANCE] = self.get_field(self.KEY_MULTIPLE_INSTANCE).get_value()
+        self.configDict[self.KEY_ENABLE_CACHE] = self.get_field(self.KEY_ENABLE_CACHE).get_value()
+        self.configDict[self.KEY_START_BROWSER] = self.get_field(self.KEY_START_BROWSER).get_value()
+        self.configDict[self.KEY_RESOURCEPATH] = self.get_field(self.KEY_RESOURCEPATH).get_value()
             
     def confirm_dialog(self):
         """event called pressing on OK button.

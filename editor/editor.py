@@ -245,8 +245,8 @@ class Project(gui.Widget):
         ret = self.repr_widget_for_editor( self.children['root'] )
         self.path_to_this_widget = []
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
-        main_code_class = prototypes.proto_code_main_class%{'classname':configuration.configDict['config_project_name'],
-                                                        'config_resourcepath':configuration.configDict['config_resourcepath'],
+        main_code_class = prototypes.proto_code_main_class%{'classname':configuration.configDict[configuration.KEY_PRJ_NAME],
+                                                        'config_resourcepath':configuration.configDict[configuration.KEY_RESOURCEPATH],
                                                         'code_nested':code_nested, 
                                                         'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
@@ -261,7 +261,7 @@ class Project(gui.Widget):
         
         code_classes += main_code_class
         compiled_code = prototypes.proto_code_program%{ 'code_classes':code_classes,
-                                                        'classname':configuration.configDict['config_project_name'],
+                                                        'classname':configuration.configDict[configuration.KEY_PRJ_NAME],
                                                         'configuration':configuration.configDict
                                                        }
         
