@@ -391,17 +391,17 @@ class App(BaseHTTPRequestHandler, object):
     """
 
     def __init__(self, request, client_address, server, **app_args):
-        self._log = logging.getLogger('remi.server.request')
         self._app_args = app_args
+        self.log = logging.getLogger('remi.server.http')
         super(App, self).__init__(request, client_address, server)
 
     def log_message(self, format_string, *args):
         msg = format_string % args
-        self._log.debug("%s %s" % (self.address_string(), msg))
+        self.log.debug("%s %s" % (self.address_string(), msg))
 
     def log_error(self, format_string, *args):
         msg = format_string % args
-        self._log.error("%s %s" % (self.address_string(), msg))
+        self.log.error("%s %s" % (self.address_string(), msg))
     
     def instance(self):
         global clients
@@ -681,18 +681,18 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     # The field contains an uploaded file
                     file_data = field_item.file.read()
                     file_len = len(file_data)
-                    log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
+                    self.log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
                     get_method_by_name(listener_widget, listener_function)(file_data, filename)
                 else:
                     # Regular form value
-                    log.debug('post: %s=%s\n' % (field, form[field].value))
+                    self.log.debug('post: %s=%s\n' % (field, form[field].value))
 
             if file_data is not None:
-                #the filedata is sent to the listener
-                log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
+                # the filedata is sent to the listener
+                self.log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
                 self.send_response(200)
         except Exception as e:
-            log.error('post error', exc_info=True)
+            self.log.error('post: failed', exc_info=True)
             self.send_response(400)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
@@ -710,7 +710,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             do_process = True
         else:
             if not ('Authorization' in self.headers) or self.headers['Authorization'] is None:
-                log.info("Authenticating")
+                self.log.info("Authenticating")
                 self.do_AUTHHEAD()
                 self.wfile.write('no auth header received')
             elif self.headers['Authorization'] == 'Basic ' + self.server.auth.decode():
@@ -726,6 +726,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.process_all(path)
 
     def process_all(self, function):
+        self.log.debug('get: %s' % function)
         static_file = re.match(r"^/*res\/(.*)$", function)
         attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)
         if (function == '/') or (not function):
@@ -791,7 +792,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     return
                 self.send_response(200)
             except IOError:
-                log.error('attr call error', exc_info=True)
+                self.log.error('attr call error', exc_info=True)
                 self.send_response(404)
                 return
 
@@ -907,7 +908,8 @@ def start(mainGuiClass, **kwargs):
         debug = kwargs.pop('debug')
     except KeyError:
         debug = False
-    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
+                        format='%(name)-16s %(levelname)-8s %(message)s')
     s = Server(mainGuiClass, start=True, **kwargs)
     s.serve_forever()
 
