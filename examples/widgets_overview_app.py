@@ -19,7 +19,7 @@ from threading import Timer
 
 class MyApp(App):
     def __init__(self, *args):
-        super(MyApp, self).__init__(*args, static_paths=('./res/',))
+        super(MyApp, self).__init__(*args)
 
     def main(self):
         verticalContainer = gui.Widget(width=540)
