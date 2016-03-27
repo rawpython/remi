@@ -1,7 +1,6 @@
 import time
 
 import remi.server as server
-server.DEBUG_MODE = 2
 
 from simple_app import MyApp
 
