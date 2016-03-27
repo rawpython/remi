@@ -119,18 +119,23 @@ class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServe
 
 
 class WebSocketsHandler(socketserver.StreamRequestHandler):
+
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+
+    def __init__(self, *args, **kwargs):
+        self.log = logging.getLogger('remi.server.ws')
+        socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        log.info('ws connection established: %r' % (self.client_address,))
+        self.log.info('connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
-        log.debug('ws handle')
-        #on some systems like ROS, the default socket timeout
-        #is less than expected, we force it to infinite (None) as default socket value
+        self.log.debug('handle')
+        # on some systems like ROS, the default socket timeout
+        # is less than expected, we force it to infinite (None) as default socket value
         self.request.settimeout(None)
         while True:
             if not self.handshake_done:
@@ -140,7 +145,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                     k = get_instance_key(self)
                     clients[k].websockets.remove(self)
                     self.handshake_done = False
-                    log.debug('ws ending websocket service')
+                    self.log.debug('ws ending websocket service')
                     break
 
     def bytetonum(self,b):
@@ -149,7 +154,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        log.debug('ws read_next_message')
+        self.log.debug('read_next_message')
         length = self.rfile.read(2)
         try:
             length = self.bytetonum(length[1]) & 127
@@ -163,14 +168,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(fromWebsocket(decoded))
         except Exception as e:
-            log.error("Exception parsing websocket", exc_info=True)
+            self.log.error("Exception parsing websocket", exc_info=True)
             return False
         return True
 
     def send_message(self, message):
         out = bytearray()
         out.append(129)
-        log.debug('send_message')
+        self.log.debug('send_message')
         length = len(message)
         if length <= 125:
             out.append(length)
@@ -186,9 +191,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        log.debug('handshake')
+        self.log.debug('handshake')
         data = self.request.recv(1024).strip()
-        log.debug('Handshaking...')
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
@@ -197,6 +201,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
         response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
+        self.log.info('handshaknote complete')
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
@@ -210,9 +215,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             try:
                 # saving the websocket in order to update the client
                 k = get_instance_key(self)
-                if not self in clients[k].websockets:
+                if self not in clients[k].websockets:
                     clients[k].websockets.append(self)
-                log.debug('on_message')
+                self.log.debug('on_message')
 
                 # parsing messages
                 chunks = message.split('/')
@@ -232,7 +237,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         if callback is not None:
                             callback(**param_dict)
             except Exception as e:
-                log.error('error parsing websocket', exc_info=True)
+                self.log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
 
@@ -384,6 +389,7 @@ class App(BaseHTTPRequestHandler, object):
         - function calls with parameters
         - file requests
     """
+
     def __init__(self, request, client_address, server, **app_args):
         self._log = logging.getLogger('remi.server.request')
         self._app_args = app_args
