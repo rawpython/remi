@@ -60,39 +60,40 @@ update_thread = None
 log = logging.getLogger('remi.server')
 
 
-def toWebsocket(data):
-    #encoding end deconding utility function
+def to_websocket(data):
+    # encoding end decoding utility function
     if pyLessThan3:
         return quote(data)
     return quote(data, encoding='utf-8')
 
-def fromWebsocket(data):
-    #encoding end deconding utility function
+
+def from_websocket(data):
+    # encoding end deconding utility function
     if pyLessThan3:
         return unquote(data)
     return unquote(data, encoding='utf-8')
 
 
-def encodeIfPyGT3(data):
+def encode_text(data):
     if not pyLessThan3:
         return data.encode('utf-8')
     return data
 
 
-def get_method_by(rootNode, idname):
+def get_method_by(root_node, idname):
     if idname.isdigit():
-        return get_method_by_id(rootNode, idname)
-    return get_method_by_name(rootNode, idname)
+        return get_method_by_id(idname)
+    return get_method_by_name(root_node, idname)
 
 
-def get_method_by_name(rootNode, name):
+def get_method_by_name(root_node, name):
     val = None
-    if hasattr(rootNode, name):
-        val = getattr(rootNode, name)
+    if hasattr(root_node, name):
+        val = getattr(root_node, name)
     return val
 
 
-def get_method_by_id(rootNode, _id):
+def get_method_by_id(_id):
     global runtimeInstances
     if str(_id) in runtimeInstances:
         return runtimeInstances[str(_id)]
@@ -105,7 +106,7 @@ def get_instance_key(handler):
         # instance
         return 0
     ip = handler.client_address[0]
-    unique_port = getattr(handler.server,'websocket_address', handler.server.server_address)[1]
+    unique_port = getattr(handler.server, 'websocket_address', handler.server.server_address)[1]
     return ip, unique_port
 
 
@@ -123,6 +124,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
     def __init__(self, *args, **kwargs):
+        self.handshake_done = False
         self.log = logging.getLogger('remi.server.ws')
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
@@ -148,7 +150,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                     self.log.debug('ws ending websocket service')
                     break
 
-    def bytetonum(self,b):
+    @staticmethod
+    def bytetonum(b):
         if pyLessThan3:
             b = ord(b)
         return b
@@ -166,7 +169,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             decoded = ''
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-            self.on_message(fromWebsocket(decoded))
+            self.on_message(from_websocket(decoded))
         except Exception as e:
             self.log.error("Exception parsing websocket", exc_info=True)
             return False
@@ -201,7 +204,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
         response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
-        self.log.info('handshaknote complete')
+        self.log.info('handshake complete')
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
@@ -232,10 +235,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
                         param_dict = parse_parametrs(params)
 
-                        callback = get_method_by_name(runtimeInstances[widget_id], 
-                                        function_name)
+                        callback = get_method_by_name(runtimeInstances[widget_id], function_name)
                         if callback is not None:
                             callback(**param_dict)
+
             except Exception as e:
                 self.log.error('error parsing websocket', exc_info=True)
 
@@ -303,29 +306,30 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                     # here a new widget is found, but it must be added to the client representation
                     # updating the parent widget
                     if 'parent_widget' in leaf.attributes:
-                        parentWidgetId = leaf.attributes['parent_widget']
-                        html = get_method_by_id(client.root,parentWidgetId).repr(client)
-                        ws.send_message('update_widget,' + parentWidgetId + ',' + toWebsocket(html))
+                        parent_widget_id = leaf.attributes['parent_widget']
+                        html = get_method_by_id(parent_widget_id).repr(client)
+                        ws.send_message('update_widget,' + parent_widget_id + ',' + to_websocket(html))
                     else:
                         log.debug('the new widget seems to have no parent...')
                     # adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
-                    #ws.send_message('insert_widget,' + __id + ',' + parentWidgetId + ',' + repr(leaf))
+                    #ws.send_message('insert_widget,' + __id + ',' + parent_widget_id + ',' + repr(leaf))
                 except:
                     client.websockets.remove(ws)
 
-    if leaf.style.__lastversion__ != leaf.style.__version__ or \
-        leaf.attributes.__lastversion__ != leaf.attributes.__version__ or \
-        leaf.children.__lastversion__ != leaf.children.__version__:
+    if (leaf.style.__lastversion__ != leaf.style.__version__) or \
+            (leaf.attributes.__lastversion__ != leaf.attributes.__version__) or \
+            (leaf.children.__lastversion__ != leaf.children.__version__):
+
         __id = str(id(leaf))
         for ws in client.websockets:
             log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
             try:
                 html = leaf.repr(client)
-                ws.send_message('update_widget,' + __id + ',' + toWebsocket(html))
+                ws.send_message('update_widget,' + __id + ',' + to_websocket(html))
             except:
                 client.websockets.remove(ws)
         
-        #update children dictionaries __version__ in order to avoid nested updates
+        # update children dictionaries __version__ in order to avoid nested updates
         gui_update_children_version(client, leaf)
         return True
     
@@ -367,7 +371,7 @@ class _UpdateThread(threading.Thread):
                             for ws in client.websockets:
                                 try:
                                     html = client.root.repr(client)
-                                    ws.send_message('show_window,' + str(id(client.root)) + ',' + toWebsocket(html))
+                                    ws.send_message('show_window,' + str(id(client.root)) + ',' + to_websocket(html))
                                 except:
                                     client.websockets.remove(ws)
                         client.old_root_window = client.root
@@ -392,6 +396,7 @@ class App(BaseHTTPRequestHandler, object):
 
     def __init__(self, request, client_address, server, **app_args):
         self._app_args = app_args
+        self.client = None
         self.log = logging.getLogger('remi.server.http')
         super(App, self).__init__(request, client_address, server)
 
@@ -615,12 +620,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
-            Usefull to schedule tasks. """
+            Useful to schedule tasks. """
         pass
         
     def send_spontaneous_websocket_message(self, message):
         """this code allows to send spontaneous messages to the clients.
-           It can be considered thread-safe because can be called in two contextes:
+           It can be considered thread-safe because can be called in two contexts:
            1- A received message from websocket in case of an event, and the update_lock is already locked
            2- An internal application event like a Timer, and the update thread is paused by update_event.wait
         """
@@ -738,21 +743,21 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(encodeIfPyGT3("<!DOCTYPE html>\n"))
-            self.wfile.write(encodeIfPyGT3("<html>\n<head>\n"))
-            self.wfile.write(encodeIfPyGT3(
+            self.wfile.write(encode_text("<!DOCTYPE html>\n"))
+            self.wfile.write(encode_text("<html>\n<head>\n"))
+            self.wfile.write(encode_text(
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
-            self.wfile.write(encodeIfPyGT3(self.client.css_header))
-            self.wfile.write(encodeIfPyGT3(self.client.html_header))
-            self.wfile.write(encodeIfPyGT3(self.client.script_header))
-            self.wfile.write(encodeIfPyGT3("\n</head>\n<body>\n"))
+            self.wfile.write(encode_text(self.client.css_header))
+            self.wfile.write(encode_text(self.client.html_header))
+            self.wfile.write(encode_text(self.client.script_header))
+            self.wfile.write(encode_text("\n</head>\n<body>\n"))
             # render the HTML replacing any local absolute references to the correct IP of this instance
             html = self.client.root.repr(self.client)
-            self.wfile.write(encodeIfPyGT3(html))
-            self.wfile.write(encodeIfPyGT3(self.client.html_footer))
-            self.wfile.write(encodeIfPyGT3("</body>\n</html>"))
+            self.wfile.write(encode_text(html))
+            self.wfile.write(encode_text(self.client.html_footer))
+            self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
             static_paths.extend(self._app_args.get('static_paths', ()))
@@ -842,7 +847,7 @@ class Server(object):
         self._websocket_port = websocket_port
         self._pending_messages_queue_length = pending_messages_queue_length
         if username and password:
-            self._auth = base64.b64encode(encodeIfPyGT3("%s:%s" % (username,password)))
+            self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
         else:
             self._auth = None
 
