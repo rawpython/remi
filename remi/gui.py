@@ -1742,10 +1742,10 @@ class CheckBox(Input):
 
     def set_value(self, checked):
         if checked:
-            self.attributes['checked'] = 'checked'
+            self.attributes.__setitem__('checked', 'checked', 0)
         else:
             if 'checked' in self.attributes:
-                del self.attributes['checked']
+                self.attributes.__delitem__('checked', 0)
 
     def get_value(self):
         """
