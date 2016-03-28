@@ -626,13 +626,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         """
         global update_lock, update_event
         update_event.wait()
-        for ws in self.websockets:
+        for ws in self.client.websockets:
             try:
-                print("sending websocket spontaneous message")
+                self.log.debug("sending websocket spontaneous message")
                 ws.send_message(message)
             except:
-                print("ERROR sending websocket spontaneous message")
-                client.websockets.remove(ws)
+                self.log.error("sending websocket spontaneous message", exc_info=True)
+                self.client.websockets.remove(ws)
         update_event.clear()
         
     def notification_message(self, title, content, icon=""):
