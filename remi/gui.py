@@ -299,15 +299,11 @@ class Widget(Tag):
 
         super(Widget, self).__init__(**kwargs)
 
-        # centers the div
-        self.style['margin'] = '0px auto'
-
-        self.layout_orientation = Widget.LAYOUT_VERTICAL
-
+        self.eventManager = _EventManager()
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.eventManager = _EventManager()
-
+        self.style['margin'] = kwargs.get('margin', '0px auto')  # centers the div
+        self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
 
     def set_size(self, width, height):
