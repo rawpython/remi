@@ -286,8 +286,7 @@ class Editor(App):
         self.resizeHelper.update_position()
 
     def main(self):
-        self.mainContainer = gui.Widget(width='100%', height='100%')
-        self.mainContainer.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
+        self.mainContainer = gui.Widget(width='100%', height='100%', layout_orientation=gui.Widget.LAYOUT_VERTICAL)
         self.mainContainer.style['background-color'] = 'white'
         self.mainContainer.style['border'] = 'none'
         
@@ -321,8 +320,7 @@ class Editor(App):
         
         menubar.append(menu)
         
-        self.toolbar = editor_widgets.ToolBar(width='100%', height='30px')
-        self.toolbar.style['margin'] = '0px 0px'
+        self.toolbar = editor_widgets.ToolBar(width='100%', height='30px', margin='0px 0px')
         self.toolbar.style['border-bottom'] = '1px solid rgba(0,0,0,.12)'
         self.toolbar.add_command('/res/delete.png', self, 'toolbar_delete_clicked', 'Delete Widget')
         self.toolbar.add_command('/res/cut.png', self, 'menu_cut_selection_clicked', 'Cut Widget')
@@ -344,10 +342,7 @@ class Editor(App):
         
         m3.set_on_click_listener(self, 'menu_project_config_clicked')
         
-        self.subContainer = gui.HBox(width='100%', height='96%')
-        #self.subContainer.style['display']='block'
-        self.subContainer.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        #self.subContainer.style['background-color'] = 'transparent'
+        self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style['position'] = 'relative'
         self.subContainer.style['overflow']='auto'
         self.subContainer.style['align-items']='stretch'
