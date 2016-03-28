@@ -72,30 +72,30 @@ class _VersionedDictionary(dict):
         self.__version__ = 0
         super(_VersionedDictionary, self).__init__(*args, **kwargs)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value, version_increment=1):
         if key in self:
             if self[key] == value:
                 return
-        self.__version__ += 1
+        self.__version__ += version_increment
         return super(_VersionedDictionary, self).__setitem__(key, value)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key, version_increment=1):
         if not key in self:
             return
-        self.__version__ += 1
+        self.__version__ += version_increment
         return super(_VersionedDictionary, self).__delitem__(key)
     
-    def pop(self, key, d=None):
+    def pop(self, key, d=None, version_increment=1):
         if not key in self:
             return
-        self.__version__ += 1
+        self.__version__ += version_increment
         return super(_VersionedDictionary, self).pop(key, d)
         
-    def clear(self):
-        self.__version__ += 1
+    def clear(self, version_increment=1):
+        self.__version__ += version_increment
         return super(_VersionedDictionary, self).clear()
 
-        
+
 class _EventManager(object):
     """Manages the event propagation to the listeners functions"""
 
@@ -1667,7 +1667,8 @@ class Input(Widget):
         return self.attributes['value']
 
     def onchange(self, value):
-        self.attributes['value'] = value
+        #0 hinibits the unwanted gui update that causes focus lost and difficulties in editing
+        self.attributes.__setitem__('value', value, 0)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
