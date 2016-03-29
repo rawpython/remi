@@ -1737,15 +1737,15 @@ class CheckBox(Input):
         self.set_value(checked)
 
     def onchange(self, value):
-        self.set_value(value in ('True', 'true'))
+        self.set_value(value in ('True', 'true'), 0)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
-    def set_value(self, checked):
+    def set_value(self, checked, update_ui = 1):
         if checked:
-            self.attributes.__setitem__('checked', 'checked', 0)
+            self.attributes.__setitem__('checked', 'checked', update_ui)
         else:
             if 'checked' in self.attributes:
-                self.attributes.__delitem__('checked', 0)
+                self.attributes.__delitem__('checked', update_ui)
 
     def get_value(self):
         """
