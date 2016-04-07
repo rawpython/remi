@@ -53,20 +53,26 @@ class ResizeHelper(gui.Widget):
         self.update_position()
             
     def on_dropped(self, left, top):
-        self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
-        self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
+        try:
+            self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
+            self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
+        except:
+            pass
         self.update_position()
         
     def update_position(self):
         if self.refWidget == None:
             return
-        if self.refWidget.style['position'] != 'absolute':
+        if self.refWidget.style['position'] != 'absolute' or ('right' in self.refWidget.style) or ('bottom' in self.refWidget.style):
             self.style['display'] = 'none'
             return
-        self.style['position'] = 'absolute'
-        self.style['display'] = 'block'
-        self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
-        self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
+        try:
+            self.style['position'] = 'absolute'
+            self.style['display'] = 'block'
+            self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
+            self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
+        except:
+            self.style['display'] = 'none'
 
 
 class Project(gui.Widget):

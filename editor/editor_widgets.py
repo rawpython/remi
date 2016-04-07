@@ -463,6 +463,7 @@ class EditorAttributes(gui.VBox):
         for attributeName in html_helper.editorAttributeDictionary.keys():
             attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], appInstance)
             attributeEditor.set_on_attribute_change_listener(self,"onattribute_changed")
+            attributeEditor.set_on_attribute_remove_listener(self,"onattribute_remove")
             #attributeEditor.style['display'] = 'none'
             if not html_helper.editorAttributeDictionary[attributeName]['group'] in self.attributeGroups.keys():
                 groupContainer = EditorAttributesGroup(html_helper.editorAttributeDictionary[attributeName]['group'], width='100%')
@@ -482,6 +483,11 @@ class EditorAttributes(gui.VBox):
         getattr(self.targetWidget, widgetAttributeMember)[attributeName] = str(newValue)
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [widgetAttributeMember, attributeName, newValue])
         
+    def onattribute_remove(self, widgetAttributeMember, attributeName):
+        if attributeName in getattr(self.targetWidget, widgetAttributeMember):
+            del getattr(self.targetWidget, widgetAttributeMember)[attributeName]
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [widgetAttributeMember, attributeName])
+    
     def set_widget(self, widget):
         self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
         self.attributes['selected_widget_id'] = str(id(widget))
@@ -489,6 +495,50 @@ class EditorAttributes(gui.VBox):
         for w in self.attributesInputs:
             #w.style['display'] = 'block'
             w.set_from_dict(getattr(widget, w.attributeDict['affected_widget_attribute']))
+
+
+class CssSizeInput(gui.Widget):
+    def __init__(self, appInstance, **kwargs):
+        super(CssSizeInput, self).__init__(**kwargs)
+        self.appInstance = appInstance
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'hidden'
+        
+        self.numInput = gui.SpinBox('0',-999999999, 999999999, 0.1, width='60%', height='100%')
+        self.numInput.set_on_change_listener(self, "on_value_changed")
+        self.numInput.style['text-align'] = 'right'
+        self.append(self.numInput)
+        
+        self.dropMeasureUnit = gui.DropDown(width='40%', height='100%')
+        self.dropMeasureUnit.append( gui.DropDownItem('px'), 'px' )
+        self.dropMeasureUnit.append( gui.DropDownItem('%'), '%' )
+        self.dropMeasureUnit.select_by_key('px')
+        self.dropMeasureUnit.set_on_change_listener(self, "on_value_changed")
+        self.append(self.dropMeasureUnit)
+    
+    def on_value_changed(self, new_value):
+        new_size = str(self.numInput.get_value()) + str(self.dropMeasureUnit.get_value())
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_size])
+        
+    def set_on_change_listener(self, listener, funcname):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+    
+    def set_value(self, value):
+        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit 
+        """
+        v = 0
+        measure_unit = 'px'
+        try:
+            v = int(float(value.replace('px', '')))
+        except ValueError:
+            try:
+                v = int(float(value.replace('%', '')))
+                measure_unit = '%'
+            except ValueError:
+                pass                
+        self.numInput.set_value(v)
+        self.dropMeasureUnit.set_value(measure_unit)
 
 
 class UrlPathInput(gui.Widget):
@@ -499,7 +549,7 @@ class UrlPathInput(gui.Widget):
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
         
-        self.txtInput = gui.TextInput(True, width='80%', height='100%')
+        self.txtInput = StringEditor(width='80%', height='100%')
         self.txtInput.style['float'] = 'left'
         self.txtInput.set_on_change_listener(self, "on_txt_changed")
         self.append(self.txtInput)
@@ -537,16 +587,21 @@ class StringEditor(gui.TextInput):
         to the widget itself in order to avoid to get updated losting the focus.
         The value will be committed to the widget itself when blurs.
     """
-    def __init__(self, **kwargs):
-        super(StringEditor, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(StringEditor, self).__init__(True, *args, **kwargs)
         self.attributes[self.EVENT_ONBLUR] = \
-            "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONCHANGE}
+            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join(''); 
+            var params={};params['new_value']=elem.value;
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': id(self), 'evt': self.EVENT_ONCHANGE}
             
         self.attributes[self.EVENT_ONKEYUP] = \
-            "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONKEYUP}
+            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join(''); 
+            var params={};params['new_value']=elem.value;
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': id(self), 'evt': self.EVENT_ONKEYUP}
         
+        self.attributes[self.EVENT_ONKEYDOWN] = \
+            """if((event.charCode||event.keyCode)==13){event.keyCode = 0;event.charCode = 0; return false;}""" % {'id': id(self)}
+            
     def onkeyup(self, new_value):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])
         
@@ -564,14 +619,20 @@ class EditorAttributeInput(gui.Widget):
         self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         
-        label = gui.Label(attributeName, width='50%', height=22, margin='0px')
+        self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
+        self.removeAttribute = gui.Image('/res/delete.png', width='5%')
+        self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
+        self.removeAttribute.set_on_click_listener(self,'on_attribute_remove')
+        self.append(self.removeAttribute)
+        
+        label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         label.style['overflow'] = 'hidden'
         label.style['font-size'] = '13px'
         self.append(label)
         self.inputWidget = None
 
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'affected_widget_attribute':'style', 'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-        if attributeDict['type'] in (bool,int,float,gui.ColorPicker,gui.DropDown,gui.FileSelectionDialog):
+        if attributeDict['type'] in (bool,int,float,gui.ColorPicker,gui.DropDown,'url_editor','css_size'):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked')
             if attributeDict['type'] == int or attributeDict['type'] == float:
@@ -582,8 +643,10 @@ class EditorAttributeInput(gui.Widget):
                 self.inputWidget = gui.DropDown()
                 for value in attributeDict['additional_data']['possible_values']:
                     self.inputWidget.append(gui.DropDownItem(value),value)
-            if attributeDict['type'] == gui.FileSelectionDialog:
+            if attributeDict['type'] == 'url_editor':
                 self.inputWidget = UrlPathInput(appInstance)
+            if attributeDict['type'] == 'css_size':
+                self.inputWidget = CssSizeInput(appInstance)
             
         else: #default editor is string
             self.inputWidget = StringEditor()
@@ -596,16 +659,36 @@ class EditorAttributeInput(gui.Widget):
         self.inputWidget.style['float'] = 'right'
     
         self.style['display'] = 'block'
+        self.set_valid(False)
+    
+    def set_valid(self, valid=True):
+        self.style['opacity'] = '1.0'
+        if 'display' in self.removeAttribute.style: 
+            del self.removeAttribute.style['display']
+        if not valid:
+            self.style['opacity'] = '0.5'
+            self.removeAttribute.style['display'] = 'none'
+        
+    def on_attribute_remove(self):
+        self.set_valid(False)
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONREMOVE, [self.attributeDict['affected_widget_attribute'], self.attributeName])
+    
+    def set_on_attribute_remove_listener(self, listener, funcname):
+        self.eventManager.register_listener(self.EVENT_ATTRIB_ONREMOVE, listener, funcname)
     
     def set_from_dict(self, dictionary):
         self.inputWidget.set_value('')
+        self.set_valid(False)
         if self.attributeName in dictionary:
+            self.set_valid()
             self.inputWidget.set_value(dictionary[self.attributeName])
     
     def set_value(self, value):
+        self.set_valid()
         self.inputWidget.set_value(value)
     
     def on_attribute_changed(self, value):
+        self.set_valid()
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self.attributeDict['affected_widget_attribute'], self.attributeName, value])
         
     def set_on_attribute_change_listener(self, listener, funcname):
