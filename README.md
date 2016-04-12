@@ -241,6 +241,18 @@ Take care about internally used attributes. These are:
 - **class**: It is used to store the Widget class name for styling purpose
 - **id**: It is used to store the instance id of the widget for callback management
 
+
+Remote access
+===
+If you are using your REMI app remotely, with a DNS and a behind a firewall, you can specify special parameters in the `start` call:
+- websocket_port: an integer number of the port used by websocket. Don't forget to NAT this port on your router;
+- host_name: a string containing the host name or remote ip address that allows to access to your app.
+
+```py
+start(MyApp,address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhostname.net') 
+```
+
+
 Styling
 ===
 It's possible to change the style of the gui editing the style.css file. Here you can define the css properties of each gui widget.

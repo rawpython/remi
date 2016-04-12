@@ -422,7 +422,10 @@ class App(BaseHTTPRequestHandler, object):
             runtimeInstances[str(id(self))] = self
             clients[k] = self
         wshost, wsport = self.server.websocket_address
+        
         net_interface_ip = self.connection.getsockname()[0]
+        if self.server.host_name != None:
+            net_interface_ip = self.server.host_name
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
@@ -817,7 +820,8 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
                  auth, multiple_instance, enable_file_cache, update_interval,
-                 websocket_timeout_timer_ms, pending_messages_queue_length, *userdata):
+                 websocket_timeout_timer_ms, host_name, pending_messages_queue_length, 
+                 *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
         self.auth = auth
@@ -825,6 +829,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.enable_file_cache = enable_file_cache
         self.update_interval = update_interval
         self.websocket_timeout_timer_ms = websocket_timeout_timer_ms
+        self.host_name = host_name
         self.pending_messages_queue_length = pending_messages_queue_length
         self.userdata = userdata
 
@@ -832,8 +837,8 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 class Server(object):
     def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
-                 websocket_timeout_timer_ms=1000, websocket_port=0, pending_messages_queue_length=1000,
-                 userdata=()):
+                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                 pending_messages_queue_length=1000, userdata=()):
         self._gui = gui_class
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
@@ -845,6 +850,7 @@ class Server(object):
         self._start_browser = start_browser
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
         self._websocket_port = websocket_port
+        self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
@@ -872,7 +878,8 @@ class Server(object):
                                            (wshost, wsport), self._auth,
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
-                                           self._pending_messages_queue_length, *userdata)
+                                           self._host_name, self._pending_messages_queue_length, 
+                                           *userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
