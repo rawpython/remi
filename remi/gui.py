@@ -897,7 +897,7 @@ class TextInput(Widget):
         Args:
             text (str): The string content that have to be appended as standard child identified by the key 'text'
         """
-        self.add_child('text', text)
+        self.add_child('text', str(text))
 
     def get_text(self):
         """
