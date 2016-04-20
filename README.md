@@ -245,11 +245,20 @@ Take care about internally used attributes. These are:
 Remote access
 ===
 If you are using your REMI app remotely, with a DNS and a behind a firewall, you can specify special parameters in the `start` call:
-- websocket_port: an integer number of the port used by websocket. Don't forget to NAT this port on your router;
-- host_name: a string containing the host name or remote ip address that allows to access to your app.
+- **websocket_port**: an integer number of the port used by websocket. Don't forget to NAT this port on your router;
+- **host_name**: a string containing the host name or remote ip address that allows to access to your app.
 
 ```py
-start(MyApp,address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhostname.net') 
+start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhostname.net') 
+```
+
+
+Authentication
+===
+In order to limit the remote access to your interface you can define a username and password. It consists in a simple authentication process.
+Just define the parameters **username** and **password** in the start call:
+```py
+start(MyApp, username='myusername', password='mypassword') 
 ```
 
 
