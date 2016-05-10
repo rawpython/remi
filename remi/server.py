@@ -842,6 +842,7 @@ class Server(object):
         self._gui = gui_class
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
+        self._base_address = ''
         self._address = address
         self._sport = port
         self._multiple_instance = multiple_instance
@@ -862,6 +863,10 @@ class Server(object):
 
         if start:
             self.start(*userdata)
+
+    @property
+    def address(self):
+        return self._base_address
 
     def start(self, *userdata):
         # here the websocket is started on an ephemereal port
@@ -884,18 +889,18 @@ class Server(object):
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
             shost = '127.0.0.1'
-        base_address = 'http://%s:%s/' % (shost,sport)
-        log.info('Started httpserver %s' % base_address)
+        self._base_address = 'http://%s:%s/' % (shost,sport)
+        log.info('Started httpserver %s' % self._base_address)
         if self._start_browser:
             try:
                 import android
-                android.webbrowser.open(base_address)
+                android.webbrowser.open(self._base_address)
             except:
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
-                    webbrowser.get('windows-default').open(base_address)
+                    webbrowser.get('windows-default').open(self._base_address)
                 else:
-                    webbrowser.open(base_address)
+                    webbrowser.open(self._base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
         self._sth.daemon = True
         self._sth.start()
@@ -916,6 +921,27 @@ class Server(object):
         self._wsth.join()
         self._sserver.shutdown()
         self._sth.join()
+
+
+class StandaloneServer(Server):
+
+    def __init__(self, gui_class, application_name='', width=800, height=600, resizable=True, fullscreen=False, start=True, userdata=()):
+        Server.__init__(self, gui_class, start=False, address='127.0.0.1', port=0, username=None, password=None,
+                 multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
+                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                 pending_messages_queue_length=1000, userdata=userdata)
+
+        self._application_name = application_name or gui_class.__name__
+        self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
+
+        if start:
+            self.serve_forever()
+
+    def serve_forever(self):
+        import webview
+        Server.start(self)
+        webview.create_window(self._application_name, self.address, **self._application_conf)
+        Server.stop(self)
 
 
 def start(mainGuiClass, **kwargs):
