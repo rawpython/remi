@@ -22,6 +22,9 @@ try:
     import socketserver
 except:
     import SocketServer as socketserver
+import socket
+import ssl
+
 import mimetypes
 import webbrowser
 import struct
@@ -110,14 +113,39 @@ def get_instance_key(handler):
     return ip, unique_port
 
 
-class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+class MySSL_TCPServer(socketserver.TCPServer):
+    def __init__(self,
+                 server_address,
+                 RequestHandlerClass,
+                 certfile='server.crt',
+                 keyfile='server.key',
+                 ssl_version=ssl.PROTOCOL_TLSv1_2,
+                 bind_and_activate=True):
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
+        self.certfile = certfile
+        self.keyfile = keyfile
+        self.ssl_version = ssl_version
+
+    def get_request(self):
+        newsocket, fromaddr = self.socket.accept()
+        connstream = ssl.wrap_socket(newsocket,
+                                 server_side=True,
+                                 certfile = self.certfile,
+                                 keyfile = self.keyfile,
+                                 ssl_version = self.ssl_version)
+        return connstream, fromaddr
+
+class MySSL_ThreadingTCPServer(socketserver.ThreadingMixIn, MySSL_TCPServer): pass
+
+
+class ThreadedWebsocketServer(MySSL_ThreadingTCPServer):
     allow_reuse_address = True
     daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass, multiple_instance):
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
+        MySSL_ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
         self.multiple_instance = multiple_instance
-
+        # self.getsockopt = self.socket.getsockopt
 
 class WebSocketsHandler(socketserver.StreamRequestHandler):
 
@@ -125,6 +153,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def __init__(self, *args, **kwargs):
         self.handshake_done = False
+        self.handshaking = False
         self.log = logging.getLogger('remi.server.ws')
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
@@ -141,7 +170,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.settimeout(None)
         while True:
             if not self.handshake_done:
-                self.handshake()
+                if not self.handshaking:
+                    self.handshake()
+                    if not self.handshake_done:
+                        break
             else:
                 if not self.read_next_message():
                     k = get_instance_key(self)
@@ -194,19 +226,27 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        self.log.debug('handshake')
-        data = self.request.recv(1024).strip()
-        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
-        digest = hashlib.sha1((key.encode("utf-8")+self.magic))
-        digest = digest.digest()
-        digest = base64.b64encode(digest)
-        response = 'HTTP/1.1 101 Switching Protocols\r\n'
-        response += 'Upgrade: websocket\r\n'
-        response += 'Connection: Upgrade\r\n'
-        response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
-        self.log.info('handshake complete')
-        self.request.sendall(response.encode("utf-8"))
-        self.handshake_done = True
+        self.handshaking = True
+        try:
+            self.log.debug('handshake')
+
+            data = self.request.recv(1024).strip()
+
+            key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+            digest = hashlib.sha1((key.encode("utf-8")+self.magic))
+            digest = digest.digest()
+            digest = base64.b64encode(digest)
+            response = 'HTTP/1.1 101 Switching Protocols\r\n'
+            response += 'Upgrade: websocket\r\n'
+            response += 'Connection: Upgrade\r\n'
+            response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
+            self.request.sendall(response.encode("utf-8"))
+            self.handshake_done = True
+            print('handshake complete {}'.format(self.client_address))
+        except Exception as ex:
+            print(ex)
+        finally:
+            self.handshaking = False
 
     def on_message(self, message):
         global runtimeInstances
@@ -398,6 +438,7 @@ class App(BaseHTTPRequestHandler, object):
         self._app_args = app_args
         self.client = None
         self.log = logging.getLogger('remi.server.http')
+        self.log.debug('creating App id: {}'.format(id(self)))
         super(App, self).__init__(request, client_address, server)
 
     def log_message(self, format_string, *args):
@@ -465,7 +506,7 @@ var paramPacketize = function (ps){
 var ws;
 function openSocket(){
     try{
-        ws = new WebSocket('ws://%s:%s/');
+        ws = new WebSocket('wss://%s:%s/'); // SSL VERSION
         console.debug('opening websocket');
         ws.onopen = function(evt) {
             if(ws.readyState == 1){
@@ -481,7 +522,7 @@ function openSocket(){
         ws.onmessage = websocketOnMessage;
         ws.onclose = websocketOnClose;
         ws.onerror = websocketOnError;
-    }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
+    }catch(ex){ws=false;alert('websocket not supported or server unreachable');}
 }
 openSocket();
 var comTimeout = null;
@@ -552,7 +593,7 @@ function renewConnection(){
         }catch(err){};
     }
     else if(ws.readyState == 0){
-     // Don't do anything, just wait for the connection to be stablished
+     // Don't do anything, just wait for the connection to be established
     }
     else{
         openSocket();
@@ -579,6 +620,9 @@ function websocketOnError(evt){
     /* websocket is closed. */
     /* alert('Websocket error...');*/
     console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
+    // // Might be nice to reconnect or at least let the user know they are not conncted.
+    alert('Server unavailable. Reconnecting.');
+    window.location.reload(true);
 };
 
 function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
@@ -604,7 +648,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     fd.append('upload_file', file);
     xhr.send(fd);
 };
-</script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
+</script>""" % ("'+window.location.hostname+'", wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
+                                   #(net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
 
         # add any app specific headers
         clients[k].html_header = self._app_args.get('html_header', '\n')
@@ -832,6 +877,13 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.host_name = host_name
         self.pending_messages_queue_length = pending_messages_queue_length
         self.userdata = userdata
+
+        self.certfile = 'server.crt'
+        self.keyfile = 'server.key'
+        self.ssl_version = ssl.PROTOCOL_TLSv1_2
+        bind_and_activate = True
+
+        self.socket = ssl.wrap_socket(self.socket, keyfile=self.keyfile, certfile=self.certfile, server_side=True, ssl_version=self.ssl_version, do_handshake_on_connect=True)
 
 
 class Server(object):
