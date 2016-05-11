@@ -20,17 +20,16 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
-    def main(self, name='world'):
+    def main(self):
         # the arguments are	width - height - layoutOrientationOrizontal
         wid = gui.Widget(width=300, height=200)
         wid.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
-        self.lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
+        self.lbl = gui.Label('Press the button', width='80%', height='50%')
         self.lbl.style['margin'] = 'auto'
         self.bt = gui.Button('Press me!', width=200, height=30)
         self.bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
-        self.npressed = 0
         self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
@@ -42,9 +41,9 @@ class MyApp(App):
 
     # listener function
     def on_button_pressed(self):
-        self.npressed += 1
-        self.lbl.set_text('Button pressed %s times' % self.npressed)
+        self.lbl.set_text('A notification message should appear.')
         self.bt.set_text('Hi!')
+        self.notification_message("Message title", "Hello world!", "")
 
 
 if __name__ == "__main__":

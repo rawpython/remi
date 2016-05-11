@@ -510,3 +510,11 @@ input[type='range']:disabled::-moz-range-thumb {
     transform: scale(.667);
     background: rgba(0, 0, 0, .26)
 }
+
+.EditorAttributeInput > .Image{
+	display:none;
+}
+
+.EditorAttributeInput:hover > .Image{
+	display:block;
+}
