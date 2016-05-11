@@ -253,6 +253,14 @@ start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhos
 ```
 
 
+Standalone Execution
+===
+RemI is an effective solution for building your Remote Interface, but what about standalone execution? 
+Sure you can use it with your browser, but for applications where remote access is not required, than the native GUI is the best.
+This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview). 
+Here is an example about this [desktop_app.py](https://github.com/dddomodossola/remi/blob/master/examples/desktop_app.py).
+
+
 Authentication
 ===
 In order to limit the remote access to your interface you can define a username and password. It consists in a simple authentication process.
@@ -266,3 +274,28 @@ Styling
 ===
 It's possible to change the style of the gui editing the style.css file. Here you can define the css properties of each gui widget.
 
+
+Compatibility
+===
+RemI is made to be compatible from Python2.7 to Python3.X . Please notify compatibility issues.
+
+
+Contributors
+===
+Thank you for collaborating with us to make RemI better!
+The real power of opensource are contributors. Please feel free to partecipate to this project, and consider to add yourself to the following list.
+Yes I know that github already provides a list of contributors, but I feel that I must mention who helps.
+[Davide Rosa](https://github.com/dddomodossola)
+[John Stowers](https://github.com/nzjrs)
+[Claudio Cannatà](https://github.com/cyberpro4)
+[Sam Pfeiffer](https://github.com/awesomebytes)
+[Ken Thompson](https://github.com/KenT2)
+[Paarth Tandon](https://github.com/Paarthri)
+[Ally Weir](https://github.com/allyjweir)
+[Timothy Cyrus](https://github.com/tcyrus)
+[John Hunter Bowen](https://github.com/jhb188)
+[Martin Spasov](https://github.com/SuburbanFilth)
+[Wellington Castello](https://github.com/wcastello)
+[PURPORC](https://github.com/PURPORC)
+[ttufts](https://github.com/ttufts)
+[Chris Braun](https://github.com/cryzed)
