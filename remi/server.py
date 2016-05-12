@@ -621,8 +621,8 @@ function websocketOnError(evt){
     /* alert('Websocket error...');*/
     console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
     // // Might be nice to reconnect or at least let the user know they are not conncted.
-    alert('Server unavailable. Reconnecting.');
-    window.location.reload(true);
+    // alert('Server unavailable.  Please reload the window in a few moments. (F5)');
+    // window.location.reload(true);
 };
 
 function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
@@ -857,6 +857,31 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.send_header(k, headers[k])
             self.end_headers()
             self.wfile.write(content)
+
+    ### some sanity checks on global state
+
+    def get_orphaned_listeners(self):
+        # this doesn't allow for stuff indirectly owned by an App instance
+	return [v.eventManager.listeners for v in runtimeInstances.values() if
+	       getattr(v, 'eventManager', None) and v.eventManager.listeners 
+	       and any(l['instance'] not in clients.values() for l in v.eventManager.listeners.values())]
+
+    def get_connected_nodes(self, clients, instances):
+        import itertools
+        connected = set()
+        interesting = set(clients.keys())
+        interesting.update([cv.root for cv in clients.values()])
+        while interesting:
+            connected.update(interesting)
+            interesting = set(itertools.chain(w.children.keys() for w in interesting.values()))
+        return connected
+
+    def prune_nodes(self, connected_nodes):
+        to_delete = runtimeInstances.keys() - connected_nodes
+
+        for n in to_delete:
+            del runtimeInstances[n]
+
 
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
