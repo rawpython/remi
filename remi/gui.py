@@ -871,11 +871,12 @@ class TextInput(Widget):
     EVENT_ONENTER = 'onenter'
 
     @decorate_constructor_parameter_types([bool])
-    def __init__(self, single_line=True, **kwargs):
+    def __init__(self, single_line=True, hint='', **kwargs):
         """
         Args:
             single_line (bool): Determines if the TextInput have to be single_line. A multiline TextInput have a gripper
                                 that allows the resize.
+            hint (str): Sets a hint using the html placeholder attribute.
             kwargs: See Widget.__init__()
         """
         super(TextInput, self).__init__(**kwargs)
@@ -890,6 +891,8 @@ class TextInput(Widget):
         if single_line:
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
+        if hint:
+            self.attributes['placeholder'] = hint
 
     def set_text(self, text):
         """Sets the text content.
