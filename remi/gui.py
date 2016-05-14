@@ -870,7 +870,7 @@ class TextInput(Widget):
 
     EVENT_ONENTER = 'onenter'
 
-    @decorate_constructor_parameter_types([bool])
+    @decorate_constructor_parameter_types([bool, str])
     def __init__(self, single_line=True, hint='', **kwargs):
         """
         Args:
