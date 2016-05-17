@@ -2,11 +2,11 @@
 ## *A Platform independent Python GUI library for your applications*
 
 [![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-RemI is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
+Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
 Getting Started
 ===
-[Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out RemI from git and install
+[Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
 
 ```
 python setup.py install
@@ -22,15 +22,15 @@ Then start the test script:
 python widgets_overview_app.py
 ```
 
-we recommend installing RemI into a virtualenv. Remi is not yet API stable.
+we recommend installing Remi into a virtualenv. Remi is not yet API stable.
 
-RemI
+Remi
 ===
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
 
 ![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/screenshot.png "Widgets overview")
 
-RemI enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, RemI automatically translates your Python code into HTML. When your app starts, it starts a webserver that will be accessible on your network.
+Remi enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
 These widgets are available:
 - Widget : base class of all widgets. it can be used as a generic container
@@ -107,7 +107,7 @@ NO, It is not required, you have to code only in Python.
 I have developed this using Chrome (on Windows, Linux and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
 
 - **Is it open source?**  
-For sure! RemI is released under the Apache License. See the ``LICENSE`` file for more details.
+For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
 
 - **Where is the documentation?**  
 I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
@@ -118,7 +118,7 @@ No, it's included.
 
 Brief tutorial
 ===
-Import RemI library and some other useful stuff.
+Import Remi library and some other useful stuff.
 
 ```py
 import remi.gui as gui
@@ -255,7 +255,7 @@ start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhos
 
 Standalone Execution
 ===
-RemI is an effective solution for building your Remote Interface, but what about standalone execution? 
+Remi is an effective solution for building your Remote Interface, but what about standalone execution? 
 Sure you can use it with your browser, but for applications where remote access is not required, than the native GUI is the best.
 This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview). 
 Here is an example about this [desktop_app.py](https://github.com/dddomodossola/remi/blob/master/examples/desktop_app.py).
@@ -277,12 +277,12 @@ It's possible to change the style of the gui editing the style.css file. Here yo
 
 Compatibility
 ===
-RemI is made to be compatible from Python2.7 to Python3.X . Please notify compatibility issues.
+Remi is made to be compatible from Python2.7 to Python3.X . Please notify compatibility issues.
 
 
 Contributors
 ===
-Thank you for collaborating with us to make RemI better!
+Thank you for collaborating with us to make Remi better!
 The real power of opensource are contributors. Please feel free to partecipate to this project, and consider to add yourself to the following list.
 Yes I know that github already provides a list of contributors, but I feel that I must mention who helps.
 [Davide Rosa](https://github.com/dddomodossola)
