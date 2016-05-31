@@ -260,14 +260,6 @@ def parse_parametrs(p):
             field_name = p.split('|')[0].split('=')[0]
             field_value = p[len(field_name) + 1:l]
             p = p[l + 1:]
-            if field_value.count("'") == 0 and field_value.count('"') == 0:
-                try:
-                    field_value = int(field_value)
-                except ValueError:
-                    try:
-                        field_value = float(field_value)
-                    except ValueError:
-                        pass
             ret[field_name] = field_value
     return ret
     
