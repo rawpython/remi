@@ -21,6 +21,10 @@ from .server import runtimeInstances, update_event
 
 log = logging.getLogger('remi.gui')
 
+def uid(obj):
+    if not hasattr(obj,'identifier'):
+        return str(id(obj)) 
+    return obj.identifier
 
 def decorate_set_on_listener(event_name, params):
     """ private decorator for use in the editor
@@ -131,12 +135,9 @@ class Tag(object):
         Args:
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
+           id (str): the unique identifier for the class instance, usefull for public API definition.
         """
         self.kwargs = kwargs
-        # the runtime instances are processed every time a requests arrives, searching for the called method
-        # if a class instance is not present in the runtimeInstances, it will
-        # we not callable
-        runtimeInstances[str(id(self))] = self
 
         self._render_children_list = []
 
@@ -145,7 +146,12 @@ class Tag(object):
         self.style = _VersionedDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
 
         self.type = kwargs.get('_type', '')
-        self.attributes['id'] = str(id(self))
+        self.attributes['id'] = kwargs.get('id', str(id(self)))
+
+        # the runtime instances are processed every time a requests arrives, searching for the called method
+        # if a class instance is not present in the runtimeInstances, it will
+        # we not callable
+        runtimeInstances[self.identifier] = self
 
         cls = kwargs.get('_class', self.__class__.__name__)
         if cls:
@@ -165,9 +171,8 @@ class Tag(object):
             client (App): The client instance.
             include_children (bool): Specifies if the children have to be represented too.
         """
-
-        self.attributes['children_list'] = ','.join(map(lambda k, v: str(
-                id(v)), self.children.keys(), self.children.values()))
+        self.attributes['children_list'] = ','.join(map(lambda k, v: uid(v), 
+                self.children.keys(), self.children.values()))
 
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
@@ -207,7 +212,7 @@ class Tag(object):
             child (Tag, str):
         """
         if hasattr(child, 'attributes'):
-            child.attributes['parent_widget'] = str(id(self))
+            child.attributes['parent_widget'] = self.identifier
 
         if key in self.children:
             self._render_children_list.remove(self.children[key])
@@ -237,7 +242,7 @@ class Tag(object):
         if child in self.children.values():
             self._render_children_list.remove(child)
             for k in self.children.keys():
-                if str(id(self.children[k])) == str(id(child)):
+                if self.children[k].identifier == child.identifier:
                     if k in self._render_children_list:
                         self._render_children_list.remove(self.children[k])
                     self.children.pop(k)
@@ -373,7 +378,7 @@ class Widget(Tag):
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
-        key = str(id(value)) if key == '' else key
+        key = value.identifier if key == '' else key
         self.add_child(key, value)
 
         if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
@@ -400,7 +405,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONFOCUS] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONFOCUS)
+            "return false;" % (self.identifier, self.EVENT_ONFOCUS)
         self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
 
     def onblur(self):
@@ -418,7 +423,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONBLUR] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONBLUR)
+            "return false;" % (self.identifier, self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
 
     def show(self, baseAppInstance):
@@ -452,7 +457,7 @@ class Widget(Tag):
         """
         self.attributes[self.EVENT_ONCLICK] = \
             "sendCallback('%s','%s');" \
-            "event.stopPropagation();event.preventDefault();" % (id(self), self.EVENT_ONCLICK)
+            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
 
     def oncontextmenu(self):
@@ -471,7 +476,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONCONTEXTMENU] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONCONTEXTMENU)
+            "return false;" % (self.identifier, self.EVENT_ONCONTEXTMENU)
         self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
 
     def onmousedown(self, x, y):
@@ -493,7 +498,7 @@ class Widget(Tag):
             "params['y']=event.clientY-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONMOUSEDOWN)
+            "return false;" % (self.identifier, self.EVENT_ONMOUSEDOWN)
         self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
 
     def onmouseup(self, x, y):
@@ -515,7 +520,7 @@ class Widget(Tag):
             "params['y']=event.clientY-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONMOUSEUP)
+            "return false;" % (self.identifier, self.EVENT_ONMOUSEUP)
         self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
 
     def onmouseout(self):
@@ -537,7 +542,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONMOUSEOUT] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONMOUSEOUT)
+            "return false;" % (self.identifier, self.EVENT_ONMOUSEOUT)
         self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
 
     def onmouseleave(self):
@@ -562,7 +567,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONMOUSELEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONMOUSELEAVE)
+            "return false;" % (self.identifier, self.EVENT_ONMOUSELEAVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
 
     def onmousemove(self, x, y):
@@ -589,7 +594,7 @@ class Widget(Tag):
             "params['y']=event.clientY-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONMOUSEMOVE)
+            "return false;" % (self.identifier, self.EVENT_ONMOUSEMOVE)
         self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
 
     def ontouchmove(self, x, y):
@@ -616,7 +621,7 @@ class Widget(Tag):
             "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONTOUCHMOVE)
+            "return false;" % (self.identifier, self.EVENT_ONTOUCHMOVE)
         self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
 
     def ontouchstart(self, x, y):
@@ -643,7 +648,7 @@ class Widget(Tag):
             "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONTOUCHSTART)
+            "return false;" % (self.identifier, self.EVENT_ONTOUCHSTART)
         self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
 
     def ontouchend(self, x, y):
@@ -670,7 +675,7 @@ class Widget(Tag):
             "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONTOUCHEND)
+            "return false;" % (self.identifier, self.EVENT_ONTOUCHEND)
         self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
 
     def ontouchenter(self, x, y):
@@ -698,7 +703,7 @@ class Widget(Tag):
             "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONTOUCHENTER)
+            "return false;" % (self.identifier, self.EVENT_ONTOUCHENTER)
         self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
 
     def ontouchleave(self):
@@ -718,7 +723,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONTOUCHLEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONTOUCHLEAVE)
+            "return false;" % (self.identifier, self.EVENT_ONTOUCHLEAVE)
         self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
 
     def ontouchcancel(self):
@@ -740,7 +745,7 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONTOUCHCANCEL] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (id(self), self.EVENT_ONTOUCHCANCEL)
+            "return false;" % (self.identifier, self.EVENT_ONTOUCHCANCEL)
         self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
 
 
@@ -793,7 +798,7 @@ class HBox(Widget):
         # value.style['-ms-flex'] =
         # value.style['flex'] =
 
-        key = str(id(value)) if key == '' else key
+        key = value.identifier if key == '' else key
         self.add_child(key, value)
 
         if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
@@ -835,7 +840,7 @@ class Button(Widget):
         """
         super(Button, self).__init__(**kwargs)
         self.type = 'button'
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCLICK)
+        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
 
     def set_text(self, text):
@@ -885,7 +890,7 @@ class TextInput(Widget):
         self.attributes[self.EVENT_ONCLICK] = ''
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONCHANGE}
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
         self.set_text('')
 
         if single_line:
@@ -972,7 +977,7 @@ class TextInput(Widget):
         """
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONKEYDOWN}
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONKEYDOWN}
         self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, funcname)
 
     def onenter(self, new_value):
@@ -1006,7 +1011,7 @@ class TextInput(Widget):
                 document.getElementById('%(id)s').onchange = '';
                 sendCallbackParam('%(id)s','%(evt)s',params);
                 return false;
-            }""" % {'id': id(self), 'evt': self.EVENT_ONENTER}
+            }""" % {'id': self.identifier, 'evt': self.EVENT_ONENTER}
         self.eventManager.register_listener(self.EVENT_ONENTER, listener, funcname)
 
 
@@ -1099,8 +1104,8 @@ class GenericDialog(Widget):
         self.append(self.container)
         self.append(hlay)
 
-        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCONFIRM)
-        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (id(self), self.EVENT_ONCANCEL)
+        self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCONFIRM)
+        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCANCEL)
 
         self.inputs = {}
 
@@ -1442,7 +1447,7 @@ class DropDown(Widget):
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self),
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier,
                                                                'evt': self.EVENT_ONCHANGE}
         self.selected_item = None
         self.selected_key = None
@@ -1657,7 +1662,7 @@ class Input(Widget):
         self.attributes[self.EVENT_ONCLICK] = ''
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self),
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier,
                                                                'evt': self.EVENT_ONCHANGE}
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
@@ -1735,7 +1740,7 @@ class CheckBox(Input):
         super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').checked;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self),
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier,
                                                                'evt': self.EVENT_ONCHANGE}
         self.set_value(checked)
 
@@ -1806,7 +1811,7 @@ class Slider(Input):
     def set_oninput_listener(self, listener, funcname):
         self.attributes[self.EVENT_ONINPUT] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': id(self), 'evt': self.EVENT_ONINPUT}
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONINPUT}
         self.eventManager.register_listener(self.EVENT_ONINPUT, listener, funcname)
 
 
@@ -2168,7 +2173,7 @@ class FileUploader(Widget):
             "var files = this.files;" \
             "for(var i=0; i<files.length; i++){" \
             "uploadFile('%(id)s','%(evt_success)s','%(evt_failed)s','%(evt_data)s',files[i]);}" % {
-                'id': id(self), 'evt_success': self.EVENT_ON_SUCCESS, 'evt_failed': self.EVENT_ON_FAILED,
+                'id': self.identifier, 'evt_success': self.EVENT_ON_SUCCESS, 'evt_failed': self.EVENT_ON_FAILED,
                 'evt_data': self.EVENT_ON_DATA}
 
     def onsuccess(self, filename):
@@ -2204,7 +2209,7 @@ class FileDownloader(Widget):
         super(FileDownloader, self).__init__(**kwargs)
         self.type = 'a'
         self.attributes['download'] = os.path.basename(filename)
-        self.attributes['href'] = "/%s/download" % id(self)
+        self.attributes['href'] = "/%s/download" % self.identifier
         self.set_text(text)
         self._filename = filename
         self._path_separator = path_separator

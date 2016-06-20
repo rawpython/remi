@@ -490,7 +490,7 @@ class EditorAttributes(gui.VBox):
     
     def set_widget(self, widget):
         self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
-        self.attributes['selected_widget_id'] = str(id(widget))
+        self.attributes['selected_widget_id'] = widget.identifier
         self.targetWidget = widget
         for w in self.attributesInputs:
             #w.style['display'] = 'block'
@@ -592,15 +592,15 @@ class StringEditor(gui.TextInput):
         self.attributes[self.EVENT_ONBLUR] = \
             """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join(''); 
             var params={};params['new_value']=elem.value;
-            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': id(self), 'evt': self.EVENT_ONCHANGE}
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
             
         self.attributes[self.EVENT_ONKEYUP] = \
             """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join(''); 
             var params={};params['new_value']=elem.value;
-            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': id(self), 'evt': self.EVENT_ONKEYUP}
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONKEYUP}
         
         self.attributes[self.EVENT_ONKEYDOWN] = \
-            """if((event.charCode||event.keyCode)==13){event.keyCode = 0;event.charCode = 0; return false;}""" % {'id': id(self)}
+            """if((event.charCode||event.keyCode)==13){event.keyCode = 0;event.charCode = 0; return false;}""" % {'id': self.identifier}
             
     def onkeyup(self, new_value):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])

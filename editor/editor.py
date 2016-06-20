@@ -157,9 +157,9 @@ class Project(gui.Widget):
                                                 'register_function':  event['setoneventfuncname'],
                                                 'listenername': listenername,
                                                 'listener_function': event['listenerfuncname']}                
-                    if not str(id(event['eventlistener'])) in self.code_declared_classes:
-                        self.code_declared_classes[str(id(event['eventlistener']))] = ''
-                    self.code_declared_classes[str(id(event['eventlistener']))] += event['listenerClassFunction']
+                    if not event['eventlistener'].identifier in self.code_declared_classes:
+                        self.code_declared_classes[event['eventlistener'].identifier] = ''
+                    self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
         
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
@@ -180,7 +180,7 @@ class Project(gui.Widget):
         newClass = widget.attributes['editor_newclass'] == 'True'
         classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
         
-        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':str(id(widget))}
+        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':widget.identifier}
         
         for key in widget.attributes.keys():
             if key not in html_helper.htmlInternallyUsedTags:
@@ -222,10 +222,10 @@ class Project(gui.Widget):
         children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
                         
         if newClass:# and not (classname in self.code_declared_classes.keys()):
-            if not str(id(widget)) in self.code_declared_classes:
-                self.code_declared_classes[str(id(widget))] = ''
-            self.code_declared_classes[str(id(widget))] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.attributes['editor_baseclass'],
-                                                        'nested_code': children_code_nested } + self.code_declared_classes[str(id(widget))]
+            if not widget.identifier in self.code_declared_classes:
+                self.code_declared_classes[widget.identifier] = ''
+            self.code_declared_classes[widget.identifier] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.attributes['editor_baseclass'],
+                                                        'nested_code': children_code_nested } + self.code_declared_classes[widget.identifier]
         else:
             code_nested = code_nested + children_code_nested
         
@@ -256,9 +256,9 @@ class Project(gui.Widget):
                                                         'code_nested':code_nested, 
                                                         'mainwidgetname':self.children['root'].attributes['editor_varname']}
 
-        if str(id(self)) in self.code_declared_classes.keys():
-            main_code_class += self.code_declared_classes[str(id(self))]
-            del self.code_declared_classes[str(id(self))]
+        if self.identifier in self.code_declared_classes.keys():
+            main_code_class += self.code_declared_classes[self.identifier]
+            del self.code_declared_classes[self.identifier]
             
         for key in self.code_declared_classes.keys():
             code_class = self.code_declared_classes[key]
@@ -392,7 +392,7 @@ class Editor(App):
                 if(event.keyCode==46){
                     return false;
                 }
-            """ % {'id':id(self), 'evt':self.project.EVENT_ONKEYDOWN}
+            """ % {'id':str(id(self)), 'evt':self.project.EVENT_ONKEYDOWN}
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
@@ -445,7 +445,7 @@ class Editor(App):
         #detecting the widget selection
         typefunc = type(widget.onclick)
         widget.onclick = typefunc(onclick_with_instance, widget)
-        widget.attributes[widget.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (id(widget), widget.EVENT_ONCLICK)
+        widget.attributes[widget.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (widget.identifier, widget.EVENT_ONCLICK)
         widget.editor = self
         
         #setup of the on_dropped function of the widget in order to manage the dragNdrop 
@@ -473,7 +473,7 @@ class Editor(App):
                 }
                 
                 
-                return false;""" % {'evt':widget.EVENT_ONDROPPPED, 'id': str(id(widget)), 'event_click': widget.EVENT_ONCLICK}
+                return false;""" % {'evt':widget.EVENT_ONDROPPPED, 'id': widget.identifier, 'event_click': widget.EVENT_ONCLICK}
                 
         widget.attributes['tabindex']=str(self.tabindex)
         if not 'position' in widget.style.keys():
@@ -488,7 +488,7 @@ class Editor(App):
         if parent == None:
             parent = self.selectedWidget
         self.configure_widget_for_editing(widget)
-        key = "root" if parent==self.project else str(id(widget))
+        key = "root" if parent==self.project else widget.identifier
         if root_tree_node:
             parent.append(widget,key)
             if self.selectedWidget == self.project:
@@ -504,9 +504,9 @@ class Editor(App):
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
-        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by_id(self.selectedWidget.attributes['parent_widget'])
         self.resizeHelper.setup(widget,parent)
-        print("selected widget: " + str(id(widget)))
+        print("selected widget: " + widget.identifier)
         
     def menu_new_clicked(self):
         print('new project')
@@ -550,11 +550,11 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
-        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by_id(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
-        print("tag cutted:" + str(id(self.editCuttedWidget)))
+        print("tag cutted:" + self.editCuttedWidget.identifier)
 
     def menu_paste_selection_clicked(self):
         if self.editCuttedWidget != None:
@@ -568,7 +568,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
-        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by_id(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag deleted")

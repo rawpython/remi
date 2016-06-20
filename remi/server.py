@@ -80,12 +80,6 @@ def encode_text(data):
     return data
 
 
-def get_method_by(root_node, idname):
-    if idname.isdigit():
-        return get_method_by_id(idname)
-    return get_method_by_name(root_node, idname)
-
-
 def get_method_by_name(root_node, name):
     val = None
     if hasattr(root_node, name):
@@ -312,7 +306,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             (leaf.attributes.__lastversion__ != leaf.attributes.__version__) or \
             (leaf.children.__lastversion__ != leaf.children.__version__):
 
-        __id = str(id(leaf))
+        __id = leaf.identifier
         for ws in client.websockets:
             log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
             try:
@@ -363,7 +357,7 @@ class _UpdateThread(threading.Thread):
                             for ws in client.websockets:
                                 try:
                                     html = client.root.repr(client)
-                                    ws.send_message('show_window,' + str(id(client.root)) + ',' + to_websocket(html))
+                                    ws.send_message('show_window,' + client.root.identifier + ',' + to_websocket(html))
                                 except:
                                     client.websockets.remove(ws)
                         client.old_root_window = client.root
@@ -728,7 +722,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     def process_all(self, function):
         self.log.debug('get: %s' % function)
         static_file = re.match(r"^/*res\/(.*)$", function)
-        attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)
+        attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\&{0,1})*$", function)
         if (function == '/') or (not function):
             # build the root page once if necessary
             should_call_main = not hasattr(self.client, 'root')
@@ -779,14 +773,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 content = f.read()
                 self.wfile.write(content)
         elif attr_call:
-            params = list()
             param_dict = parse_qs(urlparse(function).query)
             for k in param_dict:
-                params.append(param_dict[k])
-
+                param_dict[k] = param_dict[k][0]
+            print("FUNCTION: %s   -    params: %s"%(function, str(param_dict)))
             widget, function = attr_call.group(1, 2)
             try:
-                content, headers = get_method_by(get_method_by(self.client.root, widget), function)(*params)
+                content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
                 if content is None:
                     self.send_response(503)
                     return
@@ -803,7 +796,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             for k in headers.keys():
                 self.send_header(k, headers[k])
             self.end_headers()
-            self.wfile.write(content)
+            try:
+                self.wfile.write(content)
+            except:
+                self.wfile.write(encode_text(content))
 
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
