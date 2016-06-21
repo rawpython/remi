@@ -25,6 +25,7 @@ except:
 import mimetypes
 import webbrowser
 import struct
+import socket
 import base64
 import hashlib
 import sys
@@ -122,8 +123,10 @@ class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServe
 class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+    timeout = 10
 
     def __init__(self, *args, **kwargs):
+        self.last_ping = time.time()
         self.handshake_done = False
         self.log = logging.getLogger('remi.server.ws')
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
@@ -138,7 +141,6 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.log.debug('handle')
         # on some systems like ROS, the default socket timeout
         # is less than expected, we force it to infinite (None) as default socket value
-        self.request.settimeout(None)
         while True:
             if not self.handshake_done:
                 self.handshake()
@@ -157,9 +159,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        self.log.debug('read_next_message')
-        length = self.rfile.read(2)
         try:
+            length = self.rfile.read(2)
             length = self.bytetonum(length[1]) & 127
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
@@ -170,15 +171,25 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(from_websocket(decoded))
+        except socket.timeout as e:
+            self.log.debug('socket timed out: %s' % e)
+            return False
         except Exception as e:
-            self.log.error("Exception parsing websocket", exc_info=True)
+            self.log.error("error parsing websocket", exc_info=True)
             return False
         return True
 
+    def ping(self):
+        t = time.time()
+        if (t - self.last_ping) > (0.5*self.timeout):
+            self.last_ping = t
+            self.send_message('ping')
+
     def send_message(self, message):
+        if message != 'ping':
+            self.log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
-        self.log.debug('send_message')
         length = len(message)
         if length <= 125:
             out.append(length)
@@ -212,6 +223,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         global runtimeInstances
         global update_lock, update_event
 
+        if message == 'pong':
+            return
+
         self.send_message('ack')
 
         with update_lock:
@@ -220,10 +234,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 k = get_instance_key(self)
                 if self not in clients[k].websockets:
                     clients[k].websockets.append(self)
-                self.log.debug('on_message')
 
                 # parsing messages
                 chunks = message.split('/')
+                self.log.debug('on_message: %s' % chunks[0])
+
                 if len(chunks) > 3:  # msgtype,widget,function,params
                     # if this is a callback
                     msg_type = 'callback'
@@ -368,6 +383,10 @@ class _UpdateThread(threading.Thread):
                                     client.websockets.remove(ws)
                         client.old_root_window = client.root
                         gui_updater(client, client.root)
+
+                        for ws in client.websockets:
+                            ws.ping()
+
                         client.idle()
                         
                 except Exception as e:
@@ -508,6 +527,8 @@ function websocketOnMessage (evt){
     }else if( command=='ack'){
         pendingSendMessages.shift() /*remove the oldest*/
         if(comTimeout!=null)clearTimeout(comTimeout);
+    }else if( command=='ping'){
+        ws.send('pong');
     }
 };
 
