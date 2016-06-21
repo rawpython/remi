@@ -774,9 +774,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write(content)
         elif attr_call:
             param_dict = parse_qs(urlparse(function).query)
+            #parse_qs returns patameters as list, here we take the first element
             for k in param_dict:
                 param_dict[k] = param_dict[k][0]
-            print("FUNCTION: %s   -    params: %s"%(function, str(param_dict)))
+
             widget, function = attr_call.group(1, 2)
             try:
                 content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
