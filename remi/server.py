@@ -804,13 +804,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
             self.wfile.write(encode_text(self.client.css_header))
             self.wfile.write(encode_text(self.client.html_header))
-            self.wfile.write(encode_text(self.client.script_header))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             # render the HTML replacing any local absolute references to the correct IP of this instance
             html = self.client.root.repr(self.client)
             self.wfile.write(encode_text(html))
             self.wfile.write(encode_text(self.client.html_footer))
+            self.wfile.write(encode_text(self.client.script_header))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
