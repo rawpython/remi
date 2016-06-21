@@ -400,7 +400,7 @@ class App(BaseHTTPRequestHandler, object):
         msg = format_string % args
         self.log.error("%s %s" % (self.address_string(), msg))
     
-    def instance(self):
+    def _instance(self):
         global clients
         global runtimeInstances
         global update_event, update_thread
@@ -659,7 +659,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         self.send_spontaneous_websocket_message('javascript,' + code)
     
     def do_POST(self):
-        self.instance()
+        self._instance()
         file_data = None
         listener_widget = None
         listener_function = None
@@ -721,11 +721,11 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write('not authenticated')
 
         if do_process:
-            self.instance()
+            self._instance()
             path = str(unquote(self.path))
-            self.process_all(path)
+            self._process_all(path)
 
-    def process_all(self, function):
+    def _process_all(self, function):
         self.log.debug('get: %s' % function)
         static_file = re.match(r"^/*res\/(.*)$", function)
         attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)
