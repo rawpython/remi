@@ -899,6 +899,8 @@ class TextInput(Widget):
         if hint:
             self.attributes['placeholder'] = hint
 
+        self.attributes['autocomplete'] = 'off'
+
     def set_text(self, text):
         """Sets the text content.
 
@@ -1666,6 +1668,7 @@ class Input(Widget):
                                                                'evt': self.EVENT_ONCHANGE}
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
+        self.attributes['autocomplete'] = 'off'
 
     def set_value(self, value):
         self.attributes['value'] = str(value)
@@ -1675,8 +1678,7 @@ class Input(Widget):
         return self.attributes['value']
 
     def onchange(self, value):
-        #0 hinibits the unwanted gui update that causes focus lost and difficulties in editing
-        self.attributes.__setitem__('value', value, 0)
+        self.attributes['value'] = value
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
@@ -1745,15 +1747,15 @@ class CheckBox(Input):
         self.set_value(checked)
 
     def onchange(self, value):
-        self.set_value(value in ('True', 'true'), 0)
+        self.set_value(value in ('True', 'true'))
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     def set_value(self, checked, update_ui = 1):
         if checked:
-            self.attributes.__setitem__('checked', 'checked', update_ui)
+            self.attributes['checked'] = 'checked'
         else:
             if 'checked' in self.attributes:
-                self.attributes.__delitem__('checked', update_ui)
+                del self.attributes['checked']
 
     def get_value(self):
         """
