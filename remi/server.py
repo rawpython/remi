@@ -430,6 +430,9 @@ class App(BaseHTTPRequestHandler, object):
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
 // characters than they actually were
 var pendingSendMessages=[];
+var ws = null;
+var comTimeout = null;
+
 function byteLength(str) {
   // returns the byte length of an utf8 string
   var s = str.length;
@@ -454,7 +457,6 @@ var paramPacketize = function (ps){
     return ret;
 };
 
-var ws;
 function openSocket(){
     try{
         ws = new WebSocket('ws://%s:%s/');
@@ -465,8 +467,9 @@ function openSocket(){
         ws.onerror = websocketOnError;
     }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
 }
+
 openSocket();
-var comTimeout = null;
+
 function websocketOnMessage (evt){
     var received_msg = evt.data;
     /*console.debug('Message is received:' + received_msg);*/
@@ -503,6 +506,7 @@ function websocketOnMessage (evt){
     /*console.debug('command:' + command);
     console.debug('content:' + content);*/
 };
+
 /*this uses websockets*/
 var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
     var paramStr = '';
@@ -518,10 +522,12 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
         renewConnection();
     }
 };
+
 /*this uses websockets*/
 var sendCallback = function (widgetID,functionName){
     sendCallbackParam(widgetID,functionName,null);
 };
+
 function renewConnection(){
     // ws.readyState:
     //A value of 0 indicates that the connection has not yet been established.
@@ -539,11 +545,13 @@ function renewConnection(){
     else{
         openSocket();
     }
-}
+};
+
 function checkTimeout(){
     if(pendingSendMessages.length>0)
         renewConnection();    
-}
+};
+
 function websocketOnClose(evt){
     /* websocket is closed. */
     console.debug('Connection is closed... event code: ' + evt.code + ', reason: ' + evt.reason);
@@ -557,11 +565,13 @@ function websocketOnClose(evt){
     }
 
 };
+
 function websocketOnError(evt){
     /* websocket is closed. */
     /* alert('Websocket error...');*/
     console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
 };
+
 function websocketOnOpen(evt){
     if(ws.readyState == 1){
         ws.send('Hello from the client!');
