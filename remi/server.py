@@ -429,9 +429,10 @@ class App(BaseHTTPRequestHandler, object):
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
 // characters than they actually were
-var pendingSendMessages=[];
+var pendingSendMessages = [];
 var ws = null;
 var comTimeout = null;
+var failedConnections = 0;
 
 function byteLength(str) {
   // returns the byte length of an utf8 string
@@ -479,8 +480,13 @@ function websocketOnMessage (evt){
     received_msg = received_msg.substr(index,received_msg.length-index);/*removing the command from the message*/
     index = received_msg.indexOf(',')+1;
     var content = received_msg.substr(index,received_msg.length-index);
+
+    /*console.debug('command:' + command);*/
+    /*console.debug('content:' + content);*/
+
     if( command=='show_window' ){
-        document.body.innerHTML = decodeURIComponent(content);
+        document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
+        document.body.innerHTML += decodeURIComponent(content);
     }else if( command=='update_widget'){
         var elem = document.getElementById(s[1]);
         var index = received_msg.indexOf(',')+1;
@@ -503,8 +509,6 @@ function websocketOnMessage (evt){
         pendingSendMessages.shift() /*remove the oldest*/
         if(comTimeout!=null)clearTimeout(comTimeout);
     }
-    /*console.debug('command:' + command);
-    console.debug('content:' + content);*/
 };
 
 /*this uses websockets*/
@@ -560,6 +564,36 @@ function websocketOnClose(evt){
     // Got it with Chrome saying:
     // WebSocket connection to 'ws://x.x.x.x:y/' failed: Could not decode a text frame as UTF-8.
     // WebSocket connection to 'ws://x.x.x.x:y/' failed: Invalid frame header
+
+    try {
+        document.getElementById("loading").style.display = '';
+    } catch(err) {
+        console.log('Error hiding loading overlay ' + err.message);
+    }
+
+    failedConnections += 1;
+
+    console.debug('failed connections=' + failedConnections + ' queued messages=' + pendingSendMessages.length);
+
+    if(failedConnections > 3) {
+
+        // check if the server has been restarted - which would give it a new websocket address,
+        // new state, and require a reload
+        console.debug('Checking if GUI still up ' + location.href);
+
+        var http = new XMLHttpRequest();
+        http.open('HEAD', location.href);
+        http.onreadystatechange = function() {
+            if (http.status == 200) {
+                // server is up but has a new websocket address, reload
+                location.reload();
+            }
+        };
+        http.send();
+
+        failedConnections = 0;
+    }
+
     if(evt.code == 1006){
         renewConnection();
     }
@@ -574,7 +608,16 @@ function websocketOnError(evt){
 
 function websocketOnOpen(evt){
     if(ws.readyState == 1){
-        ws.send('Hello from the client!');
+        ws.send('connected');
+
+        try {
+            document.getElementById("loading").style.display = 'none';
+        } catch(err) {
+            console.log('Error hiding loading overlay ' + err.message);
+        }
+
+        failedConnections = 0;
+
         while(pendingSendMessages.length>0){
             ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
         }
@@ -708,6 +751,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+
     def do_AUTHHEAD(self):
         self.send_response(401)
         self.send_header('WWW-Authenticate', 'Basic realm=\"Protected\"')
@@ -759,6 +806,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.wfile.write(encode_text(self.client.html_header))
             self.wfile.write(encode_text(self.client.script_header))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
+            self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             # render the HTML replacing any local absolute references to the correct IP of this instance
             html = self.client.root.repr(self.client)
             self.wfile.write(encode_text(html))
