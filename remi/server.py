@@ -367,8 +367,8 @@ class _UpdateThread(threading.Thread):
                                 except:
                                     client.websockets.remove(ws)
                         client.old_root_window = client.root
-                        client.idle()
                         gui_updater(client, client.root)
+                        client.idle()
                         
                 except Exception as e:
                     log.error('error updating gui', exc_info=True)
