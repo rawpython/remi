@@ -894,6 +894,8 @@ class TextInput(Widget):
         if hint:
             self.attributes['placeholder'] = hint
 
+        self.attributes['autocomplete'] = 'off'
+
     def set_text(self, text):
         """Sets the text content.
 
@@ -1661,6 +1663,7 @@ class Input(Widget):
                                                                'evt': self.EVENT_ONCHANGE}
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
+        self.attributes['autocomplete'] = 'off'
 
     def set_value(self, value):
         self.attributes['value'] = str(value)
