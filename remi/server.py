@@ -459,17 +459,7 @@ function openSocket(){
     try{
         ws = new WebSocket('ws://%s:%s/');
         console.debug('opening websocket');
-        ws.onopen = function(evt) {
-            if(ws.readyState == 1){
-                ws.send('Hello from the client!');
-                while(pendingSendMessages.length>0){
-                    ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
-                }
-            }
-            else{
-                console.debug('onopen fired but the socket readyState was not 1');
-            }
-        };
+        ws.onopen = websocketOnOpen;
         ws.onmessage = websocketOnMessage;
         ws.onclose = websocketOnClose;
         ws.onerror = websocketOnError;
@@ -571,6 +561,17 @@ function websocketOnError(evt){
     /* websocket is closed. */
     /* alert('Websocket error...');*/
     console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
+};
+function websocketOnOpen(evt){
+    if(ws.readyState == 1){
+        ws.send('Hello from the client!');
+        while(pendingSendMessages.length>0){
+            ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
+        }
+    }
+    else{
+        console.debug('onopen fired but the socket readyState was not 1');
+    }
 };
 
 function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
