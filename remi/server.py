@@ -373,25 +373,34 @@ class _UpdateThread(threading.Thread):
             update_event.wait()
             with update_lock:
                 try:
+
                     for client in clients.values():
                         if not hasattr(client, 'root'):
                             continue
-                        # here we check if the root window has changed
-                        if not hasattr(client, 'old_root_window') or client.old_root_window != client.root:
+
+                        if not hasattr(client, 'old_root_window'):
+                            client.old_root_window = client.root
+
+                        if client.websockets:
+
+                            # here we check if the root window has changed, such as if we just
+                            # showed a dialog
+                            if client.old_root_window != client.root:
+                                for ws in client.websockets:
+                                    try:
+                                        html = client.root.repr(client)
+                                        ws.send_message('show_window,' + str(id(client.root)) + ',' + to_websocket(html))
+                                    except:
+                                        client.websockets.remove(ws)
+                            client.old_root_window = client.root
+
+                            gui_updater(client, client.root)
+
                             for ws in client.websockets:
-                                try:
-                                    html = client.root.repr(client)
-                                    ws.send_message('show_window,' + str(id(client.root)) + ',' + to_websocket(html))
-                                except:
-                                    client.websockets.remove(ws)
-                        client.old_root_window = client.root
-                        gui_updater(client, client.root)
+                                ws.ping()
 
-                        for ws in client.websockets:
-                            ws.ping()
+                            client.idle()
 
-                        client.idle()
-                        
                 except Exception as e:
                     log.error('error updating gui', exc_info=True)
 
