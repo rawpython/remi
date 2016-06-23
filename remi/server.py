@@ -186,6 +186,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             self.send_message('ping')
 
     def send_message(self, message):
+        if not self.handshake_done:
+            self.log.warning("ignoring message %s (handshake not done)" % message[:10])
+
         if message != 'ping':
             self.log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
