@@ -1030,10 +1030,7 @@ class StandaloneServer(Server):
 
 def start(mainGuiClass, **kwargs):
     """This method starts the webserver with a specific App subclass."""
-    try:
-        debug = kwargs.pop('debug')
-    except KeyError:
-        debug = False
+    debug = kwargs.pop('debug', False)
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(name)-16s %(levelname)-8s %(message)s')
     s = Server(mainGuiClass, start=True, **kwargs)
