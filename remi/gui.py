@@ -1259,8 +1259,8 @@ class ListView(Widget):
 
     EVENT_ONSELECTION = 'onselection'
 
-    @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    @decorate_constructor_parameter_types([bool])
+    def __init__(self, selectable=True, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -1269,6 +1269,7 @@ class ListView(Widget):
         self.type = 'ul'
         self.selected_item = None
         self.selected_key = None
+        self._selectable = selectable
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1311,11 +1312,11 @@ class ListView(Widget):
         for k in self.children:
             if self.children[k] == clicked_item:
                 self.selected_key = k
-                log.debug('ListView - onselection. Selected item key: %s' % k)
-                if self.selected_item is not None:
+                if (self.selected_item is not None) and self._selectable:
                     self.selected_item.attributes['selected'] = False
                 self.selected_item = self.children[self.selected_key]
-                self.selected_item.attributes['selected'] = True
+                if self._selectable:
+                    self.selected_item.attributes['selected'] = True
                 break
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
@@ -1331,6 +1332,7 @@ class ListView(Widget):
             listener (App, Widget): Instance of the listener. It can be the App or a Widget.
             funcname (str): Literal name of the listener function, member of the listener instance
         """
+        self._selectable = True
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
 
     def get_value(self):
