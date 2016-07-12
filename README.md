@@ -286,16 +286,35 @@ Thank you for collaborating with us to make Remi better!
 The real power of opensource are contributors. Please feel free to partecipate to this project, and consider to add yourself to the following list.
 Yes I know that github already provides a list of contributors, but I feel that I must mention who helps.
 [Davide Rosa](https://github.com/dddomodossola)
+
 [John Stowers](https://github.com/nzjrs)
+
 [Claudio Cannatà](https://github.com/cyberpro4)
+
 [Sam Pfeiffer](https://github.com/awesomebytes)
+
 [Ken Thompson](https://github.com/KenT2)
+
 [Paarth Tandon](https://github.com/Paarthri)
+
 [Ally Weir](https://github.com/allyjweir)
+
 [Timothy Cyrus](https://github.com/tcyrus)
+
 [John Hunter Bowen](https://github.com/jhb188)
+
 [Martin Spasov](https://github.com/SuburbanFilth)
+
 [Wellington Castello](https://github.com/wcastello)
+
 [PURPORC](https://github.com/PURPORC)
+
 [ttufts](https://github.com/ttufts)
+
 [Chris Braun](https://github.com/cryzed)
+
+
+Other Implementations
+===
+Here are listed other implementations of this library:
+- **cremi**: developed for your C++ projects by [Claudio Cannatà](https://github.com/cyberpro4).
