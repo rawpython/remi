@@ -550,7 +550,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
-        parent = remi.server.get_method_by_id(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by_id(self.selectedWidget.attributes['parent_widget'])
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
@@ -568,7 +568,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
-        parent = remi.server.get_method_by_id(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by_id(self.selectedWidget.attributes['parent_widget'])
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag deleted")
