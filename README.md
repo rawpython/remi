@@ -317,4 +317,4 @@ Yes I know that github already provides a list of contributors, but I feel that 
 Other Implementations
 ===
 Here are listed other implementations of this library:
-- [**cremi**](https://github.com/cyberpro4/cremi): developed for your C++ projects by [Claudio Cannatà](https://github.com/cyberpro4).
+- [**cremi**](https://github.com/cyberpro4/cremi): (WIP) developed for your C++ projects by [Claudio Cannatà](https://github.com/cyberpro4).
