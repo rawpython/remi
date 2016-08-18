@@ -822,6 +822,97 @@ class VBox(HBox):
         self.style['flex-direction'] = 'column'
 
 
+class TabBox(Widget):
+
+    # create a structure like the following
+    #
+    # <div class="wrapper">
+    # <ul class="tabs clearfix">
+    #   <li><a href="#tab1" class="active">Tab 1</a></li>
+    #   <li><a href="#tab2">Tab 2</a></li>
+    #   <li><a href="#tab3">Tab 3</a></li>
+    #   <li><a href="#tab4">Tab 4</a></li>
+    #   <li><a href="#tab5">Tab 5</a></li>
+    # </ul>
+    # <section id="first-tab-group">
+    #   <div id="tab1">
+
+    def __init__(self, **kwargs):
+        super(TabBox, self).__init__(**kwargs)
+
+        self._section = Tag(_type='section')
+
+        self._tab_cbs = {}
+
+        self._ul = Tag(_type='ul', _class='tabs clearfix')
+        self.add_child('ul', self._ul)
+
+        self.add_child('section', self._section)
+
+        # maps tabs to their corresponding tab header
+        self._tabs = {}
+
+    def _fix_tab_widths(self):
+        tab_w = 100.0 / len(self._tabs)
+        for a, li, holder in self._tabs.itervalues():
+            li.attributes['style'] = "float:left;width:%.1f%%" % tab_w
+
+    def _on_tab_pressed(self, tab_identifier):
+        # remove active on all tabs, and hide their contents
+        for a, li, holder in self._tabs.itervalues():
+            a.remove_class('active')
+            holder.attributes['style'] = 'padding:15px;display:none'
+
+        # add it on the current one
+        a, li, holder = self._tabs[tab_identifier]
+        a.add_class('active')
+        holder.attributes['style'] = 'padding:15px;display:block'
+
+        # call other callbacks
+        cb = self._tab_cbs[tab_identifier]
+        if cb is not None:
+            cb()
+
+    def add_tab(self, widget, name, tab_cb):
+
+        holder = Tag(_type='div', _class='')
+        holder.add_child('content', widget)
+
+        li = Tag(_type='li', _class='')
+
+        a = Widget(_type='a', _class='')
+        if len(self._tabs) == 0:
+            a.add_class('active')
+            holder.attributes['style'] = 'padding:15px;display:block'
+        else:
+            holder.attributes['style'] = 'padding:15px;display:none'
+
+        # we need a href attribute for hover effects to work, and while empty
+        # href attributes are valid html5, this didn't seem reliable in testing.
+        # finally, '#' moves to the top of the page, and '#abcd' leaves browser history.
+        # so no-op JS is the least of all evils
+        a.attributes['href'] = 'javascript:void(0);'
+
+        a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
+        # fixme: userdata in callbacks
+        f = lambda _id=holder.identifier: self._on_tab_pressed(_id)
+        fname = 'on_tab_pressed_%s' % holder.identifier
+        setattr(self, fname, f)
+        self._tab_cbs[holder.identifier] = tab_cb
+        a.eventManager.register_listener(a.EVENT_ONCLICK, self, fname)
+
+        a.add_child('text', name)
+        li.add_child('a', a)
+        self._ul.add_child(li.identifier, li)
+
+        self._section.add_child(holder.identifier, holder)
+
+        self._tabs[holder.identifier] = (a, li, holder)
+        self._fix_tab_widths()
+
+        return holder.identifier
+
+
 class Button(Widget):
     """The Button widget. Have to be used in conjunction with its event onclick.
     Use Widget.set_on_click_listener in order to register the listener.
