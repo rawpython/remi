@@ -148,10 +148,9 @@ class Tag(object):
         self.attributes['id'] = str(id(self))
 
         cls = kwargs.get('_class', self.__class__.__name__)
+        self._classes = []
         if cls:
-            self._classes = [cls]
-        else:
-            self._classes = []
+            self.add_class(cls)
 
     @property
     def identifier(self):
@@ -180,22 +179,23 @@ class Tag(object):
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
-        html = '<%s %s %s>%s</%s>' % (self.type,
+        html = '<%s %s>%s</%s>' % (self.type,
                                    ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                             self.attributes.items()),
-                                   ('class="%s"' % ' '.join(self._classes)) if self._classes else '',
                                    innerHTML,
                                    self.type)
         return html
 
     def add_class(self, cls):
         self._classes.append(cls)
+        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
     def remove_class(self, cls):
         try:
             self._classes.remove(cls)
         except ValueError:
             pass
+        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
     def add_child(self, key, child):
         """Adds a child to the Tag
