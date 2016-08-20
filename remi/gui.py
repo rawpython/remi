@@ -165,9 +165,6 @@ class Tag(object):
             include_children (bool): Specifies if the children have to be represented too.
         """
 
-        self.attributes['children_list'] = ','.join(map(lambda k, v: str(
-                id(v)), self.children.keys(), self.children.values()))
-
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
