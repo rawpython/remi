@@ -947,6 +947,7 @@ class Server(object):
 
         if start:
             self.start(*userdata)
+            self.serve_forever()
 
     @property
     def address(self):
@@ -1034,5 +1035,5 @@ def start(mainGuiClass, **kwargs):
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(name)-16s %(levelname)-8s %(message)s')
     s = Server(mainGuiClass, start=True, **kwargs)
-    s.serve_forever()
+
 
