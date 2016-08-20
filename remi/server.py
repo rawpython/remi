@@ -315,8 +315,8 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                 try:
                     # here a new widget is found, but it must be added to the client representation
                     # updating the parent widget
-                    if 'parent_widget' in leaf.attributes:
-                        parent_widget_id = leaf.attributes['parent_widget']
+                    if 'data-parent-widget' in leaf.attributes:
+                        parent_widget_id = leaf.attributes['data-parent-widget']
                         html = get_method_by_id(parent_widget_id).repr(client)
                         ws.send_message('update_widget,' + parent_widget_id + ',' + to_websocket(html))
                     else:

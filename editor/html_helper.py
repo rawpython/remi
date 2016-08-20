@@ -5,7 +5,7 @@
 import remi.gui as gui
 
 htmlInternallyUsedTags = ('id'\
-,'parent_widget'\
+,'data-parent-widget'\
 ,'style'\
 ,'draggable'\
 ,'tabindex'\

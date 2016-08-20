@@ -204,7 +204,7 @@ class Tag(object):
             child (Tag, str):
         """
         if hasattr(child, 'attributes'):
-            child.attributes['parent_widget'] = str(id(self))
+            child.attributes['data-parent-widget'] = str(id(self))
 
         if key in self.children:
             self._render_children_list.remove(self.children[key])

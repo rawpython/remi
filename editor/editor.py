@@ -504,7 +504,7 @@ class Editor(App):
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
-        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['data-parent-widget'])
         self.resizeHelper.setup(widget,parent)
         print("selected widget: " + str(id(widget)))
         
@@ -550,7 +550,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
-        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['data-parent-widget'])
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
@@ -568,7 +568,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
-        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['parent_widget'])
+        parent = remi.server.get_method_by(self.mainContainer, self.selectedWidget.attributes['data-parent-widget'])
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
         print("tag deleted")
