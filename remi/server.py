@@ -837,6 +837,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
             self.wfile.write(encode_text(self.client.css_header))
             self.wfile.write(encode_text(self.client.html_header))
+            self.wfile.write(encode_text("\n<title>%s</title>\n" % self.server.title))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             # render the HTML replacing any local absolute references to the correct IP of this instance
@@ -904,8 +905,8 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
                  auth, multiple_instance, enable_file_cache, update_interval,
-                 websocket_timeout_timer_ms, host_name, pending_messages_queue_length, 
-                 *userdata):
+                 websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
+                 title, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
         self.auth = auth
@@ -915,15 +916,17 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.websocket_timeout_timer_ms = websocket_timeout_timer_ms
         self.host_name = host_name
         self.pending_messages_queue_length = pending_messages_queue_length
+        self.title = title
         self.userdata = userdata
 
 
 class Server(object):
-    def __init__(self, gui_class, start=True, address='127.0.0.1', port=8081, username=None, password=None,
+    def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
                  pending_messages_queue_length=1000, userdata=()):
         self._gui = gui_class
+        self._title = title or gui_class.__name__
         self._wsserver = self._sserver = None
         self._wsth = self._sth = None
         self._base_address = ''
@@ -950,6 +953,10 @@ class Server(object):
             self.serve_forever()
 
     @property
+    def title(self):
+        return self._title
+
+    @property
     def address(self):
         return self._base_address
 
@@ -968,8 +975,8 @@ class Server(object):
                                            (wshost, wsport), self._auth,
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
-                                           self._host_name, self._pending_messages_queue_length, 
-                                           *userdata)
+                                           self._host_name, self._pending_messages_queue_length,
+                                           self._title, *userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
@@ -1010,13 +1017,12 @@ class Server(object):
 
 class StandaloneServer(Server):
 
-    def __init__(self, gui_class, application_name='', width=800, height=600, resizable=True, fullscreen=False, start=True, userdata=()):
-        Server.__init__(self, gui_class, start=False, address='127.0.0.1', port=0, username=None, password=None,
+    def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True, userdata=()):
+        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
                  pending_messages_queue_length=1000, userdata=userdata)
 
-        self._application_name = application_name or gui_class.__name__
         self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
 
         if start:
@@ -1025,7 +1031,7 @@ class StandaloneServer(Server):
     def serve_forever(self):
         import webview
         Server.start(self)
-        webview.create_window(self._application_name, self.address, **self._application_conf)
+        webview.create_window(self.title, self.address, **self._application_conf)
         Server.stop(self)
 
 

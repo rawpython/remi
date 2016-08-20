@@ -36,5 +36,5 @@ class MyApp(server.App):
         return tb
 
 if __name__ == "__main__":
-    s = server.StandaloneServer(MyApp, start=True)
+    s = server.StandaloneServer(MyApp, title="Tab Demo", start=True)
 
