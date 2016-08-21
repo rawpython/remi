@@ -816,6 +816,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             path = str(unquote(self.path))
             self._process_all(path)
 
+    def _get_static_file(self, filename):
+
+        static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
+        static_paths.extend(self._app_args.get('static_paths', ()))
+
+        for s in reversed(static_paths):
+            path = os.path.join(s, filename)
+            if os.path.exists(path):
+                return path
+
     def _process_all(self, function):
         self.log.debug('get: %s' % function)
         static_file = re.match(r"^/*res\/(.*)$", function)
@@ -847,21 +857,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.wfile.write(encode_text(self.client.script_header))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
-            static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
-            static_paths.extend(self._app_args.get('static_paths', ()))
-
-            filename = None
-            found = False
-            for s in reversed(static_paths):
-                filename = os.path.join(s, static_file.groups()[0])
-                if os.path.exists(filename):
-                    found = True
-                    break
-
-            if not found:
+            filename = self._get_static_file(static_file.groups()[0])
+            if not filename:
                 self.send_response(404)
                 return
-
             mimetype,encoding = mimetypes.guess_type(filename)
             self.send_response(200)
             self.send_header('Content-type', mimetype if mimetype else 'application/octet-stream')
