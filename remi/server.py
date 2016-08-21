@@ -417,6 +417,9 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
+    re_static_file = re.compile(r"^/*res\/(.*)$")
+    re_attr_call = re.compile(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$")
+
     def __init__(self, request, client_address, server, **app_args):
         self._app_args = app_args
         self.client = None
@@ -828,8 +831,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def _process_all(self, function):
         self.log.debug('get: %s' % function)
-        static_file = re.match(r"^/*res\/(.*)$", function)
-        attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)
+        static_file = self.re_static_file.match(function)
+        attr_call = self.re_attr_call.match(function)
         if (function == '/') or (not function):
             # build the root page once if necessary
             should_call_main = not hasattr(self.client, 'root')
