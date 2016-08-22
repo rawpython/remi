@@ -836,14 +836,19 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 return path
 
     def _process_all(self, function):
+        global update_lock
+
         self.log.debug('get: %s' % function)
         static_file = self.re_static_file.match(function)
         attr_call = self.re_attr_call.match(function)
         if (function == '/') or (not function):
-            # build the root page once if necessary
-            should_call_main = not hasattr(self.client, 'root')
-            if should_call_main:
-                self.client.root = self.main(*self.server.userdata)
+            with update_lock:
+                # build the root page once if necessary
+                should_call_main = not hasattr(self.client, 'root')
+                if should_call_main:
+                    self.client.root = self.main(*self.server.userdata)
+                # render the HTML
+                html = self.client.root.repr(self.client)
 
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -859,8 +864,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.wfile.write(encode_text("\n<title>%s</title>\n" % self.server.title))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
-            # render the HTML replacing any local absolute references to the correct IP of this instance
-            html = self.client.root.repr(self.client)
             self.wfile.write(encode_text(html))
             self.wfile.write(encode_text(self.client.html_footer))
             self.wfile.write(encode_text(self.client.script_header))
