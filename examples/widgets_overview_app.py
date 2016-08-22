@@ -86,11 +86,8 @@ class MyApp(App):
 
         self.link = gui.Link("http://localhost:8081", "A link to here", width=200, height=30, margin='10px')
 
-        self.dropDown = gui.DropDown(width=200, height=20, margin='10px')
-        c0 = gui.DropDownItem('DropDownItem 0', width=200, height=20)
-        c1 = gui.DropDownItem('DropDownItem 1', width=200, height=20)
-        self.dropDown.append(c0)
-        self.dropDown.append(c1)
+        self.dropDown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
+                                                   width=200, height=20, margin='10px')
         self.dropDown.set_on_change_listener(self, 'drop_down_changed')
         self.dropDown.set_value('DropDownItem 0')
 
@@ -187,12 +184,8 @@ class MyApp(App):
             self.dlistView.append(value, key=str(key))
         self.dialog.add_field_with_label('dlistView', 'Listview', self.dlistView)
 
-        self.ddropdown = gui.DropDown(width=200, height=20)
-        c0 = gui.DropDownItem('DropDownItem 0', width=200, height=20)
-        c1 = gui.DropDownItem('DropDownItem 1', width=200, height=20)
-        self.ddropdown.append(c0)
-        self.ddropdown.append(c1)
-        self.ddropdown.set_value('Value1')
+        self.ddropdown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
+                                                    width=200, height=20)
         self.dialog.add_field_with_label('ddropdown', 'Dropdown', self.ddropdown)
 
         self.dspinbox = gui.SpinBox(min=0, max=5000, width=200, height=20)

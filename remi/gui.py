@@ -1539,6 +1539,13 @@ class DropDown(Widget):
         self.selected_item = None
         self.selected_key = None
 
+    @classmethod
+    def new_from_list(cls, items, **kwargs):
+        obj = cls(**kwargs)
+        for item in items:
+            obj.append(DropDownItem(item))
+        return obj
+
     def select_by_key(self, key):
         """Selects an item by its unique string identifier.
 
