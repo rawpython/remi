@@ -28,7 +28,7 @@ class ResizeHelper(gui.Widget):
     def __init__(self, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
         self.style['float'] = 'none'
-        self.style['background-image'] = "url('res/resize.png')"
+        self.style['background-image'] = "url('/res/resize.png')"
         self.style['background-color'] = "rgba(255,255,255,0.5)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'

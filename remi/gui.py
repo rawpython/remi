@@ -2112,7 +2112,7 @@ class FileFolderItem(Widget):
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
             self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
-        icon_file = 'res/folder.png' if is_folder else 'res/file.png'
+        icon_file = '/res/folder.png' if is_folder else '/res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.set_size(400, 30)
