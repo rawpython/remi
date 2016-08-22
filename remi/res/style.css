@@ -228,6 +228,9 @@ select {
     color: inherit;
     padding: 0;
 }
+select {
+    border-bottom: 2px solid rgba(0, 0, 0, .12);
+}
 input[type='checkbox'] {
     height: 100%;
     min-height: 20px;
@@ -557,6 +560,7 @@ input[type='range']:disabled::-moz-range-thumb {
 
 .tabs li {
     list-style-type: none;
+    border: none;
 }
 
 .tabs a {
