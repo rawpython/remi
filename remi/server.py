@@ -417,7 +417,7 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
-    re_static_file = re.compile(r"^/*res\/(.*)$")
+    re_static_file = re.compile(r"^/*res\/([-_.\w\d]*)\?{0,1}(?:[\w\d]*)")
     re_attr_call = re.compile(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
@@ -693,7 +693,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         clients[k].html_footer = self._app_args.get('html_footer', '\n')
 
         # add client styling
-        clients[k].css_header = self._app_args.get('css_header', "<link href='/res/style.css' rel='stylesheet' />\n")
+        try:
+            clients[k].css_header = self._app_args['css_header']
+        except KeyError:
+            # use the default css, but append a version based on its hash, to stop browser caching
+            with open(self._get_static_file('style.css'), 'rb') as f:
+                md5 = hashlib.md5(f.read()).hexdigest()
+            clients[k].css_header = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
 
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = []
