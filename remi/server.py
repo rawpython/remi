@@ -458,7 +458,7 @@ class App(BaseHTTPRequestHandler, object):
 
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
-        clients[k].script_header = """
+        clients[k].script_footer = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
@@ -688,6 +688,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 };
 </script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
 
+        # add app specific javascript
+        try:
+            clients[k].script_footer += self._app_args['script_footer']
+        except KeyError:
+            pass
+
         # add any app specific headers
         clients[k].html_header = self._app_args.get('html_header', '\n')
         clients[k].html_footer = self._app_args.get('html_footer', '\n')
@@ -866,7 +872,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             self.wfile.write(encode_text(html))
             self.wfile.write(encode_text(self.client.html_footer))
-            self.wfile.write(encode_text(self.client.script_header))
+            self.wfile.write(encode_text(self.client.script_footer))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
