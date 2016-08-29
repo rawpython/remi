@@ -2257,8 +2257,16 @@ class VideoPlayer(Widget):
 
 
 class Svg(Widget):
+    """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
+    
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, **kwargs):
+        """
+        Args:
+            width (int): the viewport width in pixel
+            height (int): the viewport height in pixel
+            kwargs: See Widget.__init__()
+        """
         super(Svg, self).__init__(**kwargs)
         self.set_size(width, height)
         self.attributes['width'] = width
@@ -2266,31 +2274,129 @@ class Svg(Widget):
         self.type = 'svg'
 
     def set_viewbox(self, x, y, w, h):
+        """Sets the origin and size of the viewbox, describing a virtual view area.
+
+        Args:
+            x (int): x coordinate of the viewbox origin
+            y (int): y coordinate of the viewbox origin
+            w (int): width of the viewbox
+            h (int): height of the viewbox
+        """
         self.attributes['viewBox'] = "%s %s %s %s" % (x, y, w, h)
         self.attributes['preserveAspectRatio'] = 'none'
 
 
-class SvgCircle(Widget):
+class SvgRectangle(Widget):
+    """svg rectangle - a rectangle represented filled and with a stroke."""
+    
     @decorate_constructor_parameter_types([int, int, int])
-    def __init__(self, x, y, radix, **kwargs):
-        super(SvgCircle, self).__init__(**kwargs)
+    def __init__(self, x, y, w, h, **kwargs):
+        """
+        Args:
+            x (int): the x coordinate of the top left corner of the rectangle
+            y (int): the y coordinate of the top left corner of the rectangle
+            w (int): width of the rectangle
+            h (int): height of the rectangle
+            kwargs: See Widget.__init__()
+        """
+        super(SvgRectangle, self).__init__(**kwargs)
         self.set_position(x, y)
-        self.set_radix(radix)
+        self.set_size(w, h)
         self.set_stroke()
-        self.type = 'circle'
-
+        self.type = 'rect'
+    
     def set_position(self, x, y):
-        self.attributes['cx'] = x
-        self.attributes['cy'] = y
-
-    def set_radix(self, radix):
-        self.attributes['r'] = radix
-
+        """Sets the rectangle position.
+        
+        Args:
+            x (int): the x center point of the circle
+            y (int): the y center point of the circle
+        """
+        self.attributes['x'] = str(x)
+        self.attributes['y'] = str(y)
+    
+    def set_size(self, w, h):
+        """ Sets the rectangle size.
+        
+        Args:
+            w (int): width of the rectangle
+            h (int): height of the rectangle
+            kwargs: See Widget.__init__()
+        """
+        self.attributes['width'] = str(w)
+        self.attributes['height'] = str(h)
+        
     def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+        
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
         self.attributes['stroke'] = color
         self.attributes['stroke-width'] = str(width)
 
     def set_fill(self, color):
+        """Sets the circle fill color.
+        
+        Args:
+            color (str): stroke color
+        """
+        self.attributes['fill'] = color
+        
+
+class SvgCircle(Widget):
+    """svg circle - a circle represented filled and with a stroke."""
+    
+    @decorate_constructor_parameter_types([int, int, int])
+    def __init__(self, x, y, radius, **kwargs):
+        """
+        Args:
+            x (int): the x center point of the circle
+            y (int): the y center point of the circle
+            radius (int): the circle radius
+            kwargs: See Widget.__init__()
+        """
+        super(SvgCircle, self).__init__(**kwargs)
+        self.set_position(x, y)
+        self.set_radius(radius)
+        self.set_stroke()
+        self.type = 'circle'
+
+    def set_position(self, x, y):
+        """Sets the circle position.
+        
+        Args:
+            x (int): the x center point of the circle
+            y (int): the y center point of the circle
+        """
+        self.attributes['cx'] = x
+        self.attributes['cy'] = y
+
+    def set_radius(self, radius):
+        """Sets the circle radius.
+        
+        Args:
+            radius (int): the circle radius
+        """
+        self.attributes['r'] = radius
+
+    def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+        
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
+        self.attributes['stroke'] = color
+        self.attributes['stroke-width'] = str(width)
+
+    def set_fill(self, color):
+        """Sets the circle fill color.
+        
+        Args:
+            color (str): stroke color
+        """
         self.attributes['fill'] = color
 
 
