@@ -2285,8 +2285,52 @@ class Svg(Widget):
         self.attributes['viewBox'] = "%s %s %s %s" % (x, y, w, h)
         self.attributes['preserveAspectRatio'] = 'none'
 
+        
+class SvgShape(Widget):
+    """svg shape generic widget. Consists of a position, a fill color and a stroke."""
+    
+    @decorate_constructor_parameter_types([int, int, int])
+    def __init__(self, x, y, **kwargs):
+        """
+        Args:
+            x (int): the x coordinate
+            y (int): the y coordinate
+            kwargs: See Widget.__init__()
+        """
+        super(SvgShape, self).__init__(**kwargs)
+        self.set_position(x, y)
+        self.set_stroke()
+    
+    def set_position(self, x, y):
+        """Sets the shape position.
+        
+        Args:
+            x (int): the x coordinate
+            y (int): the y coordinate
+        """
+        self.attributes['x'] = str(x)
+        self.attributes['y'] = str(y)
+    
+    def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+        
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
+        self.attributes['stroke'] = color
+        self.attributes['stroke-width'] = str(width)
 
-class SvgRectangle(Widget):
+    def set_fill(self, color='black'):
+        """Sets the fill color.
+        
+        Args:
+            color (str): stroke color
+        """
+        self.attributes['fill'] = color
+        
+        
+class SvgRectangle(SvgShape):
     """svg rectangle - a rectangle represented filled and with a stroke."""
     
     @decorate_constructor_parameter_types([int, int, int])
@@ -2299,21 +2343,9 @@ class SvgRectangle(Widget):
             h (int): height of the rectangle
             kwargs: See Widget.__init__()
         """
-        super(SvgRectangle, self).__init__(**kwargs)
-        self.set_position(x, y)
+        super(SvgRectangle, self).__init__(x, y, **kwargs)
         self.set_size(w, h)
-        self.set_stroke()
         self.type = 'rect'
-    
-    def set_position(self, x, y):
-        """Sets the rectangle position.
-        
-        Args:
-            x (int): the x center point of the circle
-            y (int): the y center point of the circle
-        """
-        self.attributes['x'] = str(x)
-        self.attributes['y'] = str(y)
     
     def set_size(self, w, h):
         """ Sets the rectangle size.
@@ -2326,26 +2358,8 @@ class SvgRectangle(Widget):
         self.attributes['width'] = str(w)
         self.attributes['height'] = str(h)
         
-    def set_stroke(self, width=1, color='black'):
-        """Sets the stroke properties.
-        
-        Args:
-            width (int): stroke width
-            color (str): stroke color
-        """
-        self.attributes['stroke'] = color
-        self.attributes['stroke-width'] = str(width)
 
-    def set_fill(self, color):
-        """Sets the circle fill color.
-        
-        Args:
-            color (str): stroke color
-        """
-        self.attributes['fill'] = color
-        
-
-class SvgCircle(Widget):
+class SvgCircle(SvgShape):
     """svg circle - a circle represented filled and with a stroke."""
     
     @decorate_constructor_parameter_types([int, int, int])
@@ -2357,21 +2371,9 @@ class SvgCircle(Widget):
             radius (int): the circle radius
             kwargs: See Widget.__init__()
         """
-        super(SvgCircle, self).__init__(**kwargs)
-        self.set_position(x, y)
+        super(SvgCircle, self).__init__(x, y, **kwargs)
         self.set_radius(radius)
-        self.set_stroke()
         self.type = 'circle'
-
-    def set_position(self, x, y):
-        """Sets the circle position.
-        
-        Args:
-            x (int): the x center point of the circle
-            y (int): the y center point of the circle
-        """
-        self.attributes['cx'] = x
-        self.attributes['cy'] = y
 
     def set_radius(self, radius):
         """Sets the circle radius.
@@ -2380,24 +2382,6 @@ class SvgCircle(Widget):
             radius (int): the circle radius
         """
         self.attributes['r'] = radius
-
-    def set_stroke(self, width=1, color='black'):
-        """Sets the stroke properties.
-        
-        Args:
-            width (int): stroke width
-            color (str): stroke color
-        """
-        self.attributes['stroke'] = color
-        self.attributes['stroke-width'] = str(width)
-
-    def set_fill(self, color):
-        """Sets the circle fill color.
-        
-        Args:
-            color (str): stroke color
-        """
-        self.attributes['fill'] = color
 
 
 class SvgLine(Widget):
@@ -2452,21 +2436,16 @@ class SvgPolyline(Widget):
         self.style['stroke-width'] = str(width)
 
 
-class SvgText(Widget):
+class SvgText(SvgShape):
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
-        super(SvgText, self).__init__(**kwargs)
+        super(SvgText, self).__init__(x, y, **kwargs)
         self.type = 'text'
-        self.set_position(x, y)
         self.set_fill()
+        self.set_stroke(0)
         self.set_text(text)
 
     def set_text(self, text):
         self.add_child('text', text)
 
-    def set_position(self, x, y):
-        self.attributes['x'] = str(x)
-        self.attributes['y'] = str(y)
-
-    def set_fill(self, color='black'):
-        self.attributes['fill'] = color
+    
