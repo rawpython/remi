@@ -426,23 +426,6 @@ class Widget(Tag):
             "return false;" % (self.identifier, self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
 
-    def show(self, baseAppInstance):
-        """Sets this widget as the root widget on the supplied app instance
-
-        Args:
-            baseAppInstance (App):
-        """
-        self.baseAppInstance = baseAppInstance
-        # here the widget is set up as root, in server.gui_updater is monitored
-        # this change and the new window is send to the browser
-        self.oldRootWidget = self.baseAppInstance.client.root
-        self.baseAppInstance.client.root = self
-
-    def hide(self):
-        """Hide the widget. The root window is shown."""
-        if hasattr(self, 'baseAppInstance'):
-            self.baseAppInstance.client.root = self.oldRootWidget
-
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
         return self.eventManager.propagate(self.EVENT_ONCLICK, [])
@@ -1197,6 +1180,14 @@ class GenericDialog(Widget):
             funcname (str): Literal name of the listener function, member of the listener instance
         """
         self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, funcname)
+
+    def show(self, baseAppInstance):
+        self.baseAppInstance = baseAppInstance
+        self.old_root_widget = self.baseAppInstance.root
+        self.baseAppInstance.set_root_widget(self)
+    
+    def hide(self):
+        self.baseAppInstance.set_root_widget(self.old_root_widget)
 
 
 class InputDialog(GenericDialog):
