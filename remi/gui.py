@@ -14,12 +14,29 @@
 
 import os
 import logging
-from functools import cmp_to_key
+import functools
+import threading
 import collections
 
 from .server import runtimeInstances, update_event
 
 log = logging.getLogger('remi.gui')
+
+
+def debounce_button(btn_attr_name, t=2, final_value=True):
+    def wrapper(f):
+        @functools.wraps(f)
+        def wrapped(self, *f_args, **f_kwargs):
+            btn = getattr(self, btn_attr_name)
+            btn.set_enabled(False)
+            try:
+                f(self, *f_args, **f_kwargs)
+            except Exception as e:
+                print e
+            finally:
+                threading.Timer(t, btn.set_enabled, (final_value,)).start()
+        return wrapped
+    return wrapper
 
 
 def decorate_set_on_listener(event_name, params):
@@ -2010,7 +2027,7 @@ class FileFolderNavigator(Widget):
         log.debug("FileFolderNavigator - populate_folder_items")
 
         l = os.listdir(directory)
-        l.sort(key=cmp_to_key(_sort_files))
+        l.sort(key=functools.cmp_to_key(_sort_files))
 
         # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory
