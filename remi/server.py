@@ -1024,6 +1024,8 @@ class Server(object):
             # signal.pause() is missing for Windows; wait 1ms and loop instead
             while True:
                 time.sleep(1)
+        except KeyboardInterrupt:
+            pass
 
     def stop(self):
         self._wsserver.shutdown()
