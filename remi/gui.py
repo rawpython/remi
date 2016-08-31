@@ -91,6 +91,7 @@ class _VersionedDictionary(dict):
     """
     def __init__(self, *args, **kwargs):
         self.__version__ = 0
+        self.__lastversion__ = 0
         super(_VersionedDictionary, self).__init__(*args, **kwargs)
 
     def __setitem__(self, key, value, version_increment=1):
@@ -115,6 +116,12 @@ class _VersionedDictionary(dict):
     def clear(self, version_increment=1):
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).clear()
+
+    def ischanged(self):
+        return self.__version__!=self.__lastversion__
+
+    def align_version(self):
+        self.__lastversion__ = self.__version__
 
 
 class _EventManager(object):
@@ -175,11 +182,14 @@ class Tag(object):
         if cls:
             self.add_class(cls)
 
+        #this variable will contain the repr of this tag, in order to avoid unuseful operations
+        self._backup_repr = ''
+
     @property
     def identifier(self):
         return self.attributes['id']
 
-    def repr(self, client, include_children=True):
+    def repr(self, client, changed_widgets={}):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
@@ -187,24 +197,31 @@ class Tag(object):
             client (App): The client instance.
             include_children (bool): Specifies if the children have to be represented too.
         """
-
-        # concatenating innerHTML. in case of html object we use repr, in case
-        # of string we use directly the content
+        local_changed_widgets = {}
         innerHTML = ''
         for s in self._render_children_list:
             if isinstance(s, type('')):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
                 innerHTML = innerHTML + s.encode('utf-8')
-            elif include_children:
-                innerHTML = innerHTML + s.repr(client)
+            else:
+                innerHTML = innerHTML + s.repr(client, local_changed_widgets)
 
-        html = '<%s %s>%s</%s>' % (self.type,
-                                   ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                            self.attributes.items()),
-                                   innerHTML,
-                                   self.type)
-        return html
+        if self._ischanged() or ( len(changed_widgets) > 0 ):
+            self.attributes['style'] = jsonize(self.style)
+            self._backup_repr = '<%s %s>%s</%s>' % (self.type,
+                                    ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
+                                                self.attributes.items()),
+                                    innerHTML,
+                                    self.type)
+        if self._ischanged():
+            #if self changed, no matter about the children because will be updated the entire parent
+            # and so local_changed_widgets is not merged
+            changed_widgets[self] = self._backup_repr
+            self._set_updated()
+        else:
+            changed_widgets.update(local_changed_widgets)
+        return self._backup_repr
 
     def add_class(self, cls):
         self._classes.append(cls)
@@ -264,6 +281,14 @@ class Tag(object):
                     # when the child is removed we stop the iteration
                     # this implies that a child replication should not be allowed
                     break
+
+    def _ischanged(self):
+        return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
+
+    def _set_updated(self):
+        self.children.align_version()
+        self.attributes.align_version()
+        self.style.align_version()
 
 
 class Widget(Tag):
@@ -368,15 +393,15 @@ class Widget(Tag):
         """Forces a graphic update of the widget"""
         update_event.set()
 
-    def repr(self, client, include_children=True):
+    def repr(self, client, changed_widgets={}):
         """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Args:
             client (App): Client instance.
-            include_children (bool): Determines if the children have to be represented together with this Widget.
+            changed_widgets (dict): A dictionary containing a collection of widgets that have to be updated.
+                The Widget that have to be updated is the key, and the value is its textual repr.
         """
-        self.attributes['style'] = jsonize(self.style)
-        return super(Widget, self).repr(client, include_children)
+        return super(Widget, self).repr(client, changed_widgets)
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
