@@ -195,7 +195,8 @@ class Tag(object):
 
         Args:
             client (App): The client instance.
-            include_children (bool): Specifies if the children have to be represented too.
+            changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
+                The tag that have to be updated is the key, and the value is its textual repr.
         """
         local_changed_widgets = {}
         innerHTML = ''
