@@ -14,7 +14,8 @@
 
 import os
 import logging
-from functools import cmp_to_key
+import functools
+import threading
 import collections
 
 from .server import runtimeInstances, update_event
@@ -25,6 +26,22 @@ def uid(obj):
     if not hasattr(obj,'identifier'):
         return str(id(obj)) 
     return obj.identifier
+
+def debounce_button(btn_attr_name, t=2, final_value=True):
+    def wrapper(f):
+        @functools.wraps(f)
+        def wrapped(self, *f_args, **f_kwargs):
+            btn = getattr(self, btn_attr_name)
+            btn.set_enabled(False)
+            try:
+                f(self, *f_args, **f_kwargs)
+            except Exception as e:
+                print e
+            finally:
+                threading.Timer(t, btn.set_enabled, (final_value,)).start()
+        return wrapped
+    return wrapper
+
 
 def decorate_set_on_listener(event_name, params):
     """ private decorator for use in the editor
@@ -154,10 +171,9 @@ class Tag(object):
         runtimeInstances[self.identifier] = self
 
         cls = kwargs.get('_class', self.__class__.__name__)
+        self._classes = []
         if cls:
-            self._classes = [cls]
-        else:
-            self._classes = []
+            self.add_class(cls)
 
     @property
     def identifier(self):
@@ -171,7 +187,11 @@ class Tag(object):
             client (App): The client instance.
             include_children (bool): Specifies if the children have to be represented too.
         """
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> loopbio/master
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
@@ -183,22 +203,23 @@ class Tag(object):
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
-        html = '<%s %s %s>%s</%s>' % (self.type,
+        html = '<%s %s>%s</%s>' % (self.type,
                                    ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                             self.attributes.items()),
-                                   ('class="%s"' % ' '.join(self._classes)) if self._classes else '',
                                    innerHTML,
                                    self.type)
         return html
 
     def add_class(self, cls):
         self._classes.append(cls)
+        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
     def remove_class(self, cls):
         try:
             self._classes.remove(cls)
         except ValueError:
             pass
+        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
     def add_child(self, key, child):
         """Adds a child to the Tag
@@ -210,7 +231,11 @@ class Tag(object):
             child (Tag, str):
         """
         if hasattr(child, 'attributes'):
+<<<<<<< HEAD
             child.attributes['parent_widget'] = self.identifier
+=======
+            child.attributes['data-parent-widget'] = str(id(self))
+>>>>>>> loopbio/master
 
         if key in self.children:
             self._render_children_list.remove(self.children[key])
@@ -808,6 +833,97 @@ class VBox(HBox):
         self.style['flex-direction'] = 'column'
 
 
+class TabBox(Widget):
+
+    # create a structure like the following
+    #
+    # <div class="wrapper">
+    # <ul class="tabs clearfix">
+    #   <li><a href="#tab1" class="active">Tab 1</a></li>
+    #   <li><a href="#tab2">Tab 2</a></li>
+    #   <li><a href="#tab3">Tab 3</a></li>
+    #   <li><a href="#tab4">Tab 4</a></li>
+    #   <li><a href="#tab5">Tab 5</a></li>
+    # </ul>
+    # <section id="first-tab-group">
+    #   <div id="tab1">
+
+    def __init__(self, **kwargs):
+        super(TabBox, self).__init__(**kwargs)
+
+        self._section = Tag(_type='section')
+
+        self._tab_cbs = {}
+
+        self._ul = Tag(_type='ul', _class='tabs clearfix')
+        self.add_child('ul', self._ul)
+
+        self.add_child('section', self._section)
+
+        # maps tabs to their corresponding tab header
+        self._tabs = {}
+
+    def _fix_tab_widths(self):
+        tab_w = 100.0 / len(self._tabs)
+        for a, li, holder in self._tabs.itervalues():
+            li.attributes['style'] = "float:left;width:%.1f%%" % tab_w
+
+    def _on_tab_pressed(self, tab_identifier):
+        # remove active on all tabs, and hide their contents
+        for a, li, holder in self._tabs.itervalues():
+            a.remove_class('active')
+            holder.attributes['style'] = 'padding:15px;display:none'
+
+        # add it on the current one
+        a, li, holder = self._tabs[tab_identifier]
+        a.add_class('active')
+        holder.attributes['style'] = 'padding:15px;display:block'
+
+        # call other callbacks
+        cb = self._tab_cbs[tab_identifier]
+        if cb is not None:
+            cb()
+
+    def add_tab(self, widget, name, tab_cb):
+
+        holder = Tag(_type='div', _class='')
+        holder.add_child('content', widget)
+
+        li = Tag(_type='li', _class='')
+
+        a = Widget(_type='a', _class='')
+        if len(self._tabs) == 0:
+            a.add_class('active')
+            holder.attributes['style'] = 'padding:15px;display:block'
+        else:
+            holder.attributes['style'] = 'padding:15px;display:none'
+
+        # we need a href attribute for hover effects to work, and while empty
+        # href attributes are valid html5, this didn't seem reliable in testing.
+        # finally, '#' moves to the top of the page, and '#abcd' leaves browser history.
+        # so no-op JS is the least of all evils
+        a.attributes['href'] = 'javascript:void(0);'
+
+        a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
+        # fixme: userdata in callbacks
+        f = lambda _id=holder.identifier: self._on_tab_pressed(_id)
+        fname = 'on_tab_pressed_%s' % holder.identifier
+        setattr(self, fname, f)
+        self._tab_cbs[holder.identifier] = tab_cb
+        a.eventManager.register_listener(a.EVENT_ONCLICK, self, fname)
+
+        a.add_child('text', name)
+        li.add_child('a', a)
+        self._ul.add_child(li.identifier, li)
+
+        self._section.add_child(holder.identifier, holder)
+
+        self._tabs[holder.identifier] = (a, li, holder)
+        self._fix_tab_widths()
+
+        return holder.identifier
+
+
 class Button(Widget):
     """The Button widget. Have to be used in conjunction with its event onclick.
     Use Widget.set_on_click_listener in order to register the listener.
@@ -879,6 +995,8 @@ class TextInput(Widget):
             self.attributes['rows'] = '1'
         if hint:
             self.attributes['placeholder'] = hint
+
+        self.attributes['autocomplete'] = 'off'
 
     def set_text(self, text):
         """Sets the text content.
@@ -1251,8 +1369,8 @@ class ListView(Widget):
 
     EVENT_ONSELECTION = 'onselection'
 
-    @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    @decorate_constructor_parameter_types([bool])
+    def __init__(self, selectable=True, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -1261,6 +1379,7 @@ class ListView(Widget):
         self.type = 'ul'
         self.selected_item = None
         self.selected_key = None
+        self._selectable = selectable
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1303,11 +1422,11 @@ class ListView(Widget):
         for k in self.children:
             if self.children[k] == clicked_item:
                 self.selected_key = k
-                log.debug('ListView - onselection. Selected item key: %s' % k)
-                if self.selected_item is not None:
+                if (self.selected_item is not None) and self._selectable:
                     self.selected_item.attributes['selected'] = False
                 self.selected_item = self.children[self.selected_key]
-                self.selected_item.attributes['selected'] = True
+                if self._selectable:
+                    self.selected_item.attributes['selected'] = True
                 break
         return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
 
@@ -1323,6 +1442,7 @@ class ListView(Widget):
             listener (App, Widget): Instance of the listener. It can be the App or a Widget.
             funcname (str): Literal name of the listener function, member of the listener instance
         """
+        self._selectable = True
         self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
 
     def get_value(self):
@@ -1440,6 +1560,13 @@ class DropDown(Widget):
                                                                'evt': self.EVENT_ONCHANGE}
         self.selected_item = None
         self.selected_key = None
+
+    @classmethod
+    def new_from_list(cls, items, **kwargs):
+        obj = cls(**kwargs)
+        for item in items:
+            obj.append(DropDownItem(item))
+        return obj
 
     def select_by_key(self, key):
         """Selects an item by its unique string identifier.
@@ -1655,6 +1782,7 @@ class Input(Widget):
                                                                'evt': self.EVENT_ONCHANGE}
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
+        self.attributes['autocomplete'] = 'off'
 
     def set_value(self, value):
         self.attributes['value'] = str(value)
@@ -1664,8 +1792,7 @@ class Input(Widget):
         return self.attributes['value']
 
     def onchange(self, value):
-        #0 hinibits the unwanted gui update that causes focus lost and difficulties in editing
-        self.attributes.__setitem__('value', value, 0)
+        self.attributes['value'] = value
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
@@ -1734,15 +1861,15 @@ class CheckBox(Input):
         self.set_value(checked)
 
     def onchange(self, value):
-        self.set_value(value in ('True', 'true'), 0)
+        self.set_value(value in ('True', 'true'))
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     def set_value(self, checked, update_ui = 1):
         if checked:
-            self.attributes.__setitem__('checked', 'checked', update_ui)
+            self.attributes['checked'] = 'checked'
         else:
             if 'checked' in self.attributes:
-                self.attributes.__delitem__('checked', update_ui)
+                del self.attributes['checked']
 
     def get_value(self):
         """
@@ -1905,7 +2032,7 @@ class FileFolderNavigator(Widget):
         log.debug("FileFolderNavigator - populate_folder_items")
 
         l = os.listdir(directory)
-        l.sort(key=cmp_to_key(_sort_files))
+        l.sort(key=functools.cmp_to_key(_sort_files))
 
         # used to restore a valid path after a wrong edit in the path editor
         self.lastValidPath = directory
@@ -2014,7 +2141,7 @@ class FileFolderItem(Widget):
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
             self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
-        icon_file = 'res/folder.png' if is_folder else 'res/file.png'
+        icon_file = '/res/folder.png' if is_folder else '/res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.set_size(400, 30)
