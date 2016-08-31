@@ -175,6 +175,7 @@ class MyApp(App):
         self.mine_table.from_2d_matrix(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
         self.check_if_win()
+        self.set_root_widget(self.main_container)
 
     def build_mine_matrix(self, w, h, minenum):
         """random fill cells with mines and increments nearest mines num in adiacent cells"""
@@ -219,7 +220,7 @@ class MyApp(App):
             self.dialog = gui.GenericDialog(title='You Win!', message='Game done in %s seconds' % self.time_count)
             self.dialog.set_on_confirm_dialog_listener(self, 'new_game')
             self.dialog.set_on_cancel_dialog_listener(self, 'new_game')
-            self.dialog.show(self)
+            self.set_root_widget(self.dialog)
 
     def fill_void_cells(self, cell):
         checked_cells = [cell, ]

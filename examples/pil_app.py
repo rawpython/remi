@@ -50,8 +50,8 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(width=640, height=270)
-        wid.style['text-align'] = 'center'
+        self.mainContainer = gui.Widget(width=640, height=270)
+        self.mainContainer.style['text-align'] = 'center'
         self.image_widget = PILImageViewverWidget(width=200, height=200)
 
         self.menu = gui.Menu(width=620, height=30)
@@ -70,23 +70,29 @@ class MyApp(App):
         m11.append(m111)
         m11.append(m112)
 
-        wid.append(self.menu)
-        wid.append(self.image_widget)
+        self.mainContainer.append(self.menu)
+        self.mainContainer.append(self.image_widget)
 
         # returning the root widget
-        return wid
+        return self.mainContainer
 
     def menu_open_clicked(self):
         self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select an image file', False, '.')
         self.fileselectionDialog.set_on_confirm_value_listener(
             self, 'on_image_file_selected')
-        # here is returned the Input Dialog widget, and it will be shown
-        self.fileselectionDialog.show(self)
+        self.fileselectionDialog.set_on_cancel_dialog_listener(
+            self, 'on_dialog_cancel')
+        # here is shown the dialog as root widget
+        self.set_root_widget(self.fileselectionDialog)
 
     def on_image_file_selected(self, file_list):
         if len(file_list) < 1:
             return
         self.image_widget.load(file_list[0])
+        self.set_root_widget(self.mainContainer)
+    
+    def on_dialog_cancel(self):
+        self.set_root_widget(self.mainContainer)
 
 
 if __name__ == "__main__":

@@ -177,10 +177,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         t = time.time()
         if (t - self.last_ping) > (0.5*self.timeout):
             self.last_ping = t
-            self.send_message('ping')
+            self.send_message('4') #4==ping
 
     def send_message(self, message):
-        if message != 'ping':
+        if message != '4': #4==ping
             self.log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
@@ -220,7 +220,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if message == 'pong':
             return
 
-        self.send_message('ack')
+        self.send_message('3') #3==ack
 
         with update_lock:
             try:
@@ -309,7 +309,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                     if 'parent_widget' in leaf.attributes:
                         parent_widget_id = leaf.attributes['parent_widget']
                         html = get_method_by_id(parent_widget_id).repr(client)
-                        ws.send_message('update_widget,' + parent_widget_id + ',' + to_websocket(html))
+                        ws.send_message('1' + parent_widget_id + ',' + to_websocket(html)) #1==update_widget message
                     else:
                         log.debug('the new widget seems to have no parent...')
                     # adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
@@ -326,7 +326,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
             try:
                 html = leaf.repr(client)
-                ws.send_message('update_widget,' + __id + ',' + to_websocket(html))
+                ws.send_message('1' + __id + ',' + to_websocket(html)) #1==update_widget message
             except:
                 client.websockets.remove(ws)
         
@@ -365,17 +365,6 @@ class _UpdateThread(threading.Thread):
             with update_lock:
                 try:
                     for client in clients.values():
-                        if not hasattr(client, 'root'):
-                            continue
-                        # here we check if the root window has changed
-                        if not hasattr(client, 'old_root_window') or client.old_root_window != client.root:
-                            for ws in client.websockets:
-                                try:
-                                    html = client.root.repr(client)
-                                    ws.send_message('show_window,' + client.root.identifier + ',' + to_websocket(html))
-                                except:
-                                    client.websockets.remove(ws)
-                        client.old_root_window = client.root
                         gui_updater(client, client.root)
 
                         for ws in client.websockets:
@@ -486,42 +475,31 @@ openSocket();
 
 function websocketOnMessage (evt){
     var received_msg = evt.data;
-    /*console.debug('Message is received:' + received_msg);*/
-    var s = received_msg.split(',');
-    var command = s[0];
-    var index = received_msg.indexOf(',')+1;
-    received_msg = received_msg.substr(index,received_msg.length-index);/*removing the command from the message*/
-    index = received_msg.indexOf(',')+1;
-    var content = received_msg.substr(index,received_msg.length-index);
 
-    /*console.debug('command:' + command);*/
-    /*console.debug('content:' + content);*/
-
-    if( command=='show_window' ){
+    if( received_msg[0]=='0' ){ /*show_window*/
+        var index = received_msg.indexOf(',')+1;
+        /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
+        var content = received_msg.substr(index,received_msg.length-index);
+    
         document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
         document.body.innerHTML += decodeURIComponent(content);
-    }else if( command=='update_widget'){
-        var elem = document.getElementById(s[1]);
+    }else if( received_msg[0]=='1' ){ /*update_widget*/
         var index = received_msg.indexOf(',')+1;
+        var idElem = received_msg.substr(1,index-2);
+        var content = received_msg.substr(index,received_msg.length-index);
+
+        var elem = document.getElementById(idElem);
         elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
         elem.parentElement.removeChild(elem);
-    }else if( command=='insert_widget'){
-        if( document.getElementById(s[1])==null ){
-            /*the content contains an additional field that we have to remove*/
-            index = content.indexOf(',')+1;
-            content = content.substr(index,content.length-index);
-            var elem = document.getElementById(s[2]);
-            elem.innerHTML = elem.innerHTML + decodeURIComponent(content);
-        }
-    }else if( command=='javascript'){
+    }else if( received_msg[0]=='2' ){ /*javascript*/
+        var content = received_msg.substr(1,received_msg.length-1);
         try{
-            console.debug("executing js code: " + received_msg);
             eval(received_msg);
         }catch(e){console.debug(e.message);};
-    }else if( command=='ack'){
+    }else if( received_msg[0]=='3' ){ /*ack*/
         pendingSendMessages.shift() /*remove the oldest*/
         if(comTimeout!=null)clearTimeout(comTimeout);
-    }else if( command=='ping'){
+    }else if( received_msg[0]=='4' ){ /*ping*/
         ws.send('pong');
     }
 };
@@ -686,7 +664,20 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Useful to schedule tasks. """
         pass
-        
+    
+    def set_root_widget(self, widget):
+        global update_lock, update_event
+        update_event.wait()
+        self.root = widget
+        # here we check if the root window has changed
+        for ws in self.websockets:
+            try:
+                html = self.root.repr(self)
+                ws.send_message('0' + self.root.identifier + ',' + to_websocket(html)) ##0==show_window message
+            except:
+                self.websockets.remove(ws)
+        update_event.clear()
+
     def send_spontaneous_websocket_message(self, message):
         """this code allows to send spontaneous messages to the clients.
            It can be considered thread-safe because can be called in two contexts:
@@ -725,7 +716,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 });
             }
         """%{'title': title, 'content': content, 'icon': icon}
-        self.send_spontaneous_websocket_message('javascript,' + code)
+        self.send_spontaneous_websocket_message('2' + code) #2==javascript
     
     def do_POST(self):
         self._instance()
