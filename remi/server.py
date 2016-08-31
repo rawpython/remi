@@ -273,7 +273,7 @@ def parse_parametrs(p):
     return ret
     
     
-def gui_update_children_version(client, leaf):
+def gui_update_children_version(leaf):
     """ This function is called when a leaf is updated by gui_updater
         and so, children does not need graphical update, it is only
         required to update the last version of the dictionaries
@@ -286,7 +286,7 @@ def gui_update_children_version(client, leaf):
     leaf.children.__lastversion__ = leaf.children.__version__
     
     for subleaf in leaf.children.values():
-        gui_update_children_version(client, subleaf)
+        gui_update_children_version(subleaf)
     
     
 def gui_updater(client, leaf, no_update_because_new_subchild=False):
@@ -322,16 +322,16 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             (leaf.children.__lastversion__ != leaf.children.__version__):
 
         __id = leaf.identifier
+        html = leaf.repr(client)
         for ws in client.websockets:
             log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
             try:
-                html = leaf.repr(client)
                 ws.send_message('1' + __id + ',' + to_websocket(html)) #1==update_widget message
             except:
                 client.websockets.remove(ws)
         
         # update children dictionaries __version__ in order to avoid nested updates
-        gui_update_children_version(client, leaf)
+        gui_update_children_version(leaf)
         return True
     
     changed_or = False
