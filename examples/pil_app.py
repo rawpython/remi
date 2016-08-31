@@ -83,7 +83,7 @@ class MyApp(App):
         self.fileselectionDialog.set_on_cancel_dialog_listener(
             self, 'on_dialog_cancel')
         # here is shown the dialog as root widget
-        self.set_root_widget(self.fileselectionDialog)
+        self.fileselectionDialog.show(self)
 
     def on_image_file_selected(self, file_list):
         if len(file_list) < 1:
