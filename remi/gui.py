@@ -36,7 +36,7 @@ def debounce_button(btn_attr_name, t=2, final_value=True):
             try:
                 f(self, *f_args, **f_kwargs)
             except Exception as e:
-                print e
+                print(e)
             finally:
                 threading.Timer(t, btn.set_enabled, (final_value,)).start()
         return wrapped
@@ -187,11 +187,7 @@ class Tag(object):
             client (App): The client instance.
             include_children (bool): Specifies if the children have to be represented too.
         """
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> loopbio/master
         # concatenating innerHTML. in case of html object we use repr, in case
         # of string we use directly the content
         innerHTML = ''
@@ -231,11 +227,7 @@ class Tag(object):
             child (Tag, str):
         """
         if hasattr(child, 'attributes'):
-<<<<<<< HEAD
-            child.attributes['parent_widget'] = self.identifier
-=======
-            child.attributes['data-parent-widget'] = str(id(self))
->>>>>>> loopbio/master
+            child.attributes['data-parent-widget'] = self.identifier
 
         if key in self.children:
             self._render_children_list.remove(self.children[key])
@@ -1792,7 +1784,7 @@ class Input(Widget):
         return self.attributes['value']
 
     def onchange(self, value):
-        self.attributes['value'] = value
+        self.attributes.__setitem__('value', value, 0)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
