@@ -826,9 +826,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write('not authenticated')
 
         if do_process:
-            self._instance()
-            path = str(unquote(self.path))
-            self._process_all(path)
+            # noinspection PyBroadException
+            try:
+                self._instance()
+                path = str(unquote(self.path))
+                self._process_all(path)
+            except:
+                self.log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
 
