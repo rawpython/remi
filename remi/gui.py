@@ -1810,7 +1810,8 @@ class Input(Widget):
         return self.attributes['value']
 
     def onchange(self, value):
-        self.attributes.__setitem__('value', value, 0)
+        #self.attributes.__setitem__('value', value, 0)
+        self.attributes['value'] = value
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")

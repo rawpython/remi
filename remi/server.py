@@ -439,6 +439,7 @@ function websocketOnMessage (evt){
         document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
         document.body.innerHTML += decodeURIComponent(content);
     }else if( received_msg[0]=='1' ){ /*update_widget*/
+        var focusedElement = document.activeElement.id;
         var index = received_msg.indexOf(',')+1;
         var idElem = received_msg.substr(1,index-2);
         var content = received_msg.substr(index,received_msg.length-index);
@@ -446,6 +447,8 @@ function websocketOnMessage (evt){
         var elem = document.getElementById(idElem);
         elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
         elem.parentElement.removeChild(elem);
+
+        document.getElementById(focusedElement).focus();
     }else if( received_msg[0]=='2' ){ /*javascript*/
         var content = received_msg.substr(1,received_msg.length-1);
         try{
