@@ -54,7 +54,7 @@ runtimeInstances = weakref.WeakValueDictionary()
 
 pyLessThan3 = sys.version_info < (3,)
 
-update_lock = threading.Lock()
+update_lock = threading.RLock()
 update_event = threading.Event()
 update_thread = None
 
@@ -728,17 +728,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
            1- A received message from websocket in case of an event, and the update_lock is already locked
            2- An internal application event like a Timer, and the update thread is paused by update_event.wait
         """
-        global update_lock, update_event
-        update_event.wait()
-        for ws in self.client.websockets:
-            try:
-                self.log.debug("sending websocket spontaneous message")
-                ws.send_message(message)
-            except:
-                self.log.error("sending websocket spontaneous message", exc_info=True)
-                self.client.websockets.remove(ws)
-        update_event.clear()
-        
+        global update_lock
+        with update_lock:
+            for ws in self.client.websockets:
+                try:
+                    self.log.debug("sending websocket spontaneous message")
+                    ws.send_message(message)
+                except:
+                    self.log.error("sending websocket spontaneous message", exc_info=True)
+                    self.client.websockets.remove(ws)
+
     def notification_message(self, title, content, icon=""):
         """This function sends "javascript" message to the client, that executes its content.
            In this particular code, a notification message is shown
