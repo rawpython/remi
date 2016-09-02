@@ -722,12 +722,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             Useful to schedule tasks. """
         pass
         
-    def send_spontaneous_websocket_message(self, message):
-        """this code allows to send spontaneous messages to the clients.
-           It can be considered thread-safe because can be called in two contexts:
-           1- A received message from websocket in case of an event, and the update_lock is already locked
-           2- An internal application event like a Timer, and the update thread is paused by update_event.wait
-        """
+    def _send_spontaneous_websocket_message(self, message):
         global update_lock
         with update_lock:
             for ws in self.client.websockets:
@@ -737,6 +732,9 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 except:
                     self.log.error("sending websocket spontaneous message", exc_info=True)
                     self.client.websockets.remove(ws)
+
+    def execute_javascript(self, code):
+        self._send_spontaneous_websocket_message('javascript,' + code)
 
     def notification_message(self, title, content, icon=""):
         """This function sends "javascript" message to the client, that executes its content.
@@ -759,8 +757,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 });
             }
         """%{'title': title, 'content': content, 'icon': icon}
-        self.send_spontaneous_websocket_message('javascript,' + code)
-    
+        self.execute_javascript(code)
+
     def do_POST(self):
         self._instance()
         file_data = None
