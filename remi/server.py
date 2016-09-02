@@ -357,20 +357,14 @@ class _UpdateThread(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self._interval = interval
-        Timer(self._interval, self._timed_update).start()
         self.start()
-
-    def _timed_update(self):
-        global update_event
-        update_event.set()
-        Timer(self._interval, self._timed_update).start()
 
     def run(self):
         while True:
             global clients, runtimeInstances
             global update_lock, update_event
 
-            update_event.wait()
+            update_event.wait(self._interval)
             with update_lock:
                 try:
 
