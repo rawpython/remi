@@ -447,8 +447,11 @@ function websocketOnMessage (evt){
         var elem = document.getElementById(idElem);
         elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
         elem.parentElement.removeChild(elem);
-
-        document.getElementById(focusedElement).focus();
+        
+        var elemToFocus = document.getElementById(focusedElement);
+        if( elemToFocus != null ){
+            document.getElementById(focusedElement).focus();
+        }
     }else if( received_msg[0]=='2' ){ /*javascript*/
         var content = received_msg.substr(1,received_msg.length-1);
         try{

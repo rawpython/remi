@@ -208,7 +208,7 @@ class Tag(object):
             else:
                 innerHTML = innerHTML + s.repr(client, local_changed_widgets)
 
-        if self._ischanged() or ( len(changed_widgets) > 0 ):
+        if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self.attributes['style'] = jsonize(self.style)
             self._backup_repr = '<%s %s>%s</%s>' % (self.type,
                                     ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
