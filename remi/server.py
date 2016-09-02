@@ -707,7 +707,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         self.client = clients[k]
 
         if update_thread is None:
-            update_thread = _UpdateThread(self.server.update_interval)
+            # we need to, at least, ping the websockets to keep them alive. we might also ping more frequently if the
+            # user requested we do so
+            ping_time = self.server.websocket_timeout_timer_ms / 2000.0  # twice the timeout in ms
+            if self.server.update_interval is None:
+                interval = ping_time
+            else:
+                interval = min(ping_time, self.server.update_interval)
+            update_thread = _UpdateThread(interval)
+            update_event.set()  # update now
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
