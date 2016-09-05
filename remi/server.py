@@ -420,6 +420,17 @@ class App(BaseHTTPRequestHandler, object):
         self.log = logging.getLogger('remi.server.http')
         super(App, self).__init__(request, client_address, server)
 
+    def _get_list_from_app_args(self, name):
+        try:
+            v = self._app_args[name]
+            if isinstance(v, (tuple, list)):
+                vals = v
+            else:
+                vals = [v]
+        except KeyError:
+            vals = []
+        return vals
+
     def log_message(self, format_string, *args):
         msg = format_string % args
         self.log.debug("%s %s" % (self.address_string(), msg))
@@ -427,7 +438,7 @@ class App(BaseHTTPRequestHandler, object):
     def log_error(self, format_string, *args):
         msg = format_string % args
         self.log.error("%s %s" % (self.address_string(), msg))
-    
+
     def _instance(self):
         global clients
         global runtimeInstances
@@ -452,7 +463,7 @@ class App(BaseHTTPRequestHandler, object):
 
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
-        clients[k].script_footer = """
+        clients[k].js_body_end = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
@@ -682,24 +693,21 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 };
 </script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
 
-        # add app specific javascript
-        try:
-            clients[k].script_footer += self._app_args['script_footer']
-        except KeyError:
-            pass
+        # add built in js, extend with user js
+        clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
+        # use the default css, but append a version based on its hash, to stop browser caching
+        with open(self._get_static_file('style.css'), 'rb') as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            clients[k].css_head = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
+        # add built in css, extend with user css
+        clients[k].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
 
-        # add any app specific headers
-        clients[k].html_header = self._app_args.get('html_header', '\n')
-        clients[k].html_footer = self._app_args.get('html_footer', '\n')
-
-        # add client styling
-        try:
-            clients[k].css_header = self._app_args['css_header']
-        except KeyError:
-            # use the default css, but append a version based on its hash, to stop browser caching
-            with open(self._get_static_file('style.css'), 'rb') as f:
-                md5 = hashlib.md5(f.read()).hexdigest()
-            clients[k].css_header = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
+        # add user supplied extra html,css,js
+        clients[k].html_head = '\n'.join(self._get_list_from_app_args('html_head'))
+        clients[k].html_body_start = '\n'.join(self._get_list_from_app_args('html_body_start'))
+        clients[k].html_body_end = '\n'.join(self._get_list_from_app_args('html_body_end'))
+        clients[k].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
+        clients[k].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
 
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = []
@@ -835,10 +843,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
-
         static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
         static_paths.extend(self._app_args.get('static_paths', ()))
-
         for s in reversed(static_paths):
             path = os.path.join(s, filename)
             if os.path.exists(path):
@@ -868,14 +874,17 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
-            self.wfile.write(encode_text(self.client.css_header))
-            self.wfile.write(encode_text(self.client.html_header))
+            self.wfile.write(encode_text(self.client.css_head))
+            self.wfile.write(encode_text(self.client.html_head))
+            self.wfile.write(encode_text(self.client.js_head))
             self.wfile.write(encode_text("\n<title>%s</title>\n" % self.server.title))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
+            self.wfile.write(encode_text(self.client.js_body_start))
+            self.wfile.write(encode_text(self.client.html_body_start))
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             self.wfile.write(encode_text(html))
-            self.wfile.write(encode_text(self.client.html_footer))
-            self.wfile.write(encode_text(self.client.script_footer))
+            self.wfile.write(encode_text(self.client.html_body_end))
+            self.wfile.write(encode_text(self.client.js_body_end))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
