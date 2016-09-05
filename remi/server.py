@@ -159,6 +159,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
+        # noinspection PyBroadException
         try:
             length = self.rfile.read(2)
             length = self.bytetonum(length[1]) & 127
@@ -174,7 +175,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         except socket.timeout as e:
             self.log.debug('socket timed out: %s' % e)
             return False
-        except Exception as e:
+        except Exception:
             self.log.error("error parsing websocket", exc_info=True)
             return False
         return True
@@ -196,7 +197,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         length = len(message)
         if length <= 125:
             out.append(length)
-        elif length >= 126 and length <= 65535:
+        elif 126 <= length <= 65535:
             out.append(126)
             out += struct.pack('>H', length)
         else:
@@ -232,6 +233,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.send_message('ack')
 
         with update_lock:
+            # noinspection PyBroadException
             try:
                 # saving the websocket in order to update the client
                 k = get_instance_key(self)
@@ -257,7 +259,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         if callback is not None:
                             callback(**param_dict)
 
-            except Exception as e:
+            except Exception:
                 self.log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
@@ -312,6 +314,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             no_update_because_new_subchild = True
             # we ensure that the clients have an updated version
             for ws in client.websockets:
+                # noinspection PyBroadException
                 try:
                     # here a new widget is found, but it must be added to the client representation
                     # updating the parent widget
@@ -324,6 +327,7 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
                     # adding new widget with insert_widget causes glitches, so is preferred to update the parent widget
                     #ws.send_message('insert_widget,' + __id + ',' + parent_widget_id + ',' + repr(leaf))
                 except:
+                    log.error('error updating widget', exc_info=True)
                     client.websockets.remove(ws)
 
     if (leaf.style.__lastversion__ != leaf.style.__version__) or \
@@ -333,10 +337,12 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
         __id = str(id(leaf))
         for ws in client.websockets:
             log.debug('update_widget: %s type: %s' %(__id, type(leaf)))
+            # noinspection PyBroadException
             try:
                 html = leaf.repr(client)
                 ws.send_message('update_widget,' + __id + ',' + to_websocket(html))
-            except:
+            except Exception:
+                log.error('error updating widget' % __id, exc_info=True)
                 client.websockets.remove(ws)
         
         # update children dictionaries __version__ in order to avoid nested updates
@@ -366,6 +372,7 @@ class _UpdateThread(threading.Thread):
 
             update_event.wait(self._interval)
             with update_lock:
+                # noinspection PyBroadException
                 try:
 
                     for client in clients.values():
@@ -381,10 +388,12 @@ class _UpdateThread(threading.Thread):
                             # showed a dialog
                             if client.old_root_window != client.root:
                                 for ws in client.websockets:
+                                    # noinspection PyBroadException
                                     try:
                                         html = client.root.repr(client)
                                         ws.send_message('show_window,' + str(id(client.root)) + ',' + to_websocket(html))
-                                    except:
+                                    except Exception:
+                                        log.error('error showing new root window', exc_info=True)
                                         client.websockets.remove(ws)
                             client.old_root_window = client.root
 
@@ -395,7 +404,7 @@ class _UpdateThread(threading.Thread):
 
                             client.idle()
 
-                except Exception as e:
+                except Exception:
                     log.error('error updating gui', exc_info=True)
 
             update_event.clear()
@@ -455,7 +464,7 @@ class App(BaseHTTPRequestHandler, object):
         wshost, wsport = self.server.websocket_address
         
         net_interface_ip = self.connection.getsockname()[0]
-        if self.server.host_name != None:
+        if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
@@ -734,6 +743,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         global update_lock
         with update_lock:
             for ws in self.client.websockets:
+                # noinspection PyBroadException
                 try:
                     self.log.debug("sending websocket spontaneous message")
                     ws.send_message(message)
@@ -777,12 +787,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             filename = self.headers['filename']
             listener_widget = runtimeInstances[self.headers['listener']]
             listener_function = self.headers['listener_function']
-            form = cgi.FieldStorage(
-                fp=self.rfile,
-                headers=self.headers,
-                environ={'REQUEST_METHOD':'POST',
-                        'CONTENT_TYPE':self.headers['Content-Type'],
-                        })
+            form = cgi.FieldStorage(fp=self.rfile,
+                                    headers=self.headers,
+                                    environ={'REQUEST_METHOD': 'POST',
+                                             'CONTENT_TYPE': self.headers['Content-Type']})
             # Echo back information about what was posted in the form
             for field in form.keys():
                 field_item = form[field]
@@ -891,7 +899,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             if not filename:
                 self.send_response(404)
                 return
-            mimetype,encoding = mimetypes.guess_type(filename)
+            mimetype, encoding = mimetypes.guess_type(filename)
             self.send_response(200)
             self.send_header('Content-type', mimetype if mimetype else 'application/octet-stream')
             if self.server.enable_file_cache:
@@ -991,7 +999,8 @@ class Server(object):
 
     def start(self, *userdata):
         # here the websocket is started on an ephemereal port
-        self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler, self._multiple_instance)
+        self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
+                                                 self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
         log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
@@ -1016,7 +1025,7 @@ class Server(object):
             try:
                 import android
                 android.webbrowser.open(self._base_address)
-            except:
+            except ImportError:
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
                     webbrowser.get('windows-default').open(self._base_address)
@@ -1029,6 +1038,7 @@ class Server(object):
     def serve_forever(self):
         # we could join on the threads, but join blocks all interupts (including
         # ctrl+c, so just spin here
+        # noinspection PyBroadException
         try:
             while True:
                 signal.pause()
@@ -1047,12 +1057,13 @@ class Server(object):
 
 
 class StandaloneServer(Server):
-
-    def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True, userdata=()):
-        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None, password=None,
-                 multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
-                 pending_messages_queue_length=1000, userdata=userdata)
+    def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True,
+                 userdata=()):
+        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
+                        password=None,
+                        multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
+                        websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                        pending_messages_queue_length=1000, userdata=userdata)
 
         self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
 
