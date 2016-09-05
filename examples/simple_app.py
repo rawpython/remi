@@ -18,7 +18,9 @@ from remi import start, App
 
 class MyApp(App):
     def __init__(self, *args):
-        super(MyApp, self).__init__(*args)
+        kwargs = {k:k for k in ('js_body_end', 'css_head', 'html_head', 'html_body_start', 'html_body_end', 'js_body_start', 'js_head')}
+        kwargs['js_body_end'] = ('js_body_end1','js_body_end2')
+        super(MyApp, self).__init__(*args, **kwargs)
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal

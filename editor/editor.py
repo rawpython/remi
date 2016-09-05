@@ -286,7 +286,7 @@ class Project(gui.Widget):
 class Editor(App):
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
-        super(Editor, self).__init__(*args, static_paths=(editor_res_path,))
+        super(Editor, self).__init__(*args, static_file_path=editor_res_path)
 
     def idle(self):
         self.resizeHelper.update_position()

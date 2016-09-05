@@ -844,7 +844,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def _get_static_file(self, filename):
         static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
-        static_paths.extend(self._app_args.get('static_paths', ()))
+        static_paths.extend(self._get_list_from_app_args('static_file_path'))
         for s in reversed(static_paths):
             path = os.path.join(s, filename)
             if os.path.exists(path):
