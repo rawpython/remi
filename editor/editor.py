@@ -54,8 +54,9 @@ class ResizeHelper(gui.Widget):
             
     def on_dropped(self, left, top):
         try:
-            self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
-            self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
+            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
+                self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
+                self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
         except:
             pass
         self.update_position()
@@ -69,8 +70,9 @@ class ResizeHelper(gui.Widget):
         try:
             self.style['position'] = 'absolute'
             self.style['display'] = 'block'
-            self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
-            self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
+            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
+                self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
+                self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
         except:
             self.style['display'] = 'none'
 
@@ -239,15 +241,6 @@ class Project(gui.Widget):
         compiled_code = ''
         code_classes = ''
         
-        #the root widget have to appear at the center of the screen, regardless of the user positioning
-        _position = self.children['root'].style['position']
-        _left = self.children['root'].style['left']
-        _top = self.children['root'].style['top']
-		
-        self.children['root'].style['position'] = 'relative'
-        del self.children['root'].style['left']
-        del self.children['root'].style['top']
-        
         ret = self.repr_widget_for_editor( self.children['root'] )
         self.path_to_this_widget = []
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
@@ -272,10 +265,6 @@ class Project(gui.Widget):
                                                        }
         
         print(compiled_code)
-        
-        self.children['root'].style['position'] = _position
-        self.children['root'].style['left'] = _left
-        self.children['root'].style['top'] = _top
         
         if save_path_filename!=None:
             f = open(save_path_filename, "w")
@@ -588,9 +577,12 @@ def onclick_with_instance(self):
     self.editor.on_widget_selection(self)
     
 def on_dropped(self, left, top):
+    if len(left)<1:
+        left='0px'
+    if len(top)<1:
+        top='0px'
     self.style['left']=left
     self.style['top']=top
-
 
 def main():
     #p = Project()
