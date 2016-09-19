@@ -1561,6 +1561,7 @@ class DropDown(Widget):
         obj = cls(**kwargs)
         for item in items:
             obj.append(DropDownItem(item))
+        obj.set_value(item)  # ensure one is selected
         return obj
 
     def select_by_key(self, key):
