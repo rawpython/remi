@@ -1472,7 +1472,7 @@ class ListView(Widget):
             self.selected_key = key
             self.selected_item = self.children[key]
 
-    def set_value(self, value):
+    def select_by_value(self, value):
         """Selects an item by the text content of the child.
 
         Args:
@@ -1561,7 +1561,7 @@ class DropDown(Widget):
         obj = cls(**kwargs)
         for item in items:
             obj.append(DropDownItem(item))
-        obj.set_value(item)  # ensure one is selected
+        obj.select_by_value(item)  # ensure one is selected
         return obj
 
     def select_by_key(self, key):
@@ -1577,7 +1577,7 @@ class DropDown(Widget):
         self.selected_key = key
         self.selected_item = self.children[key]
 
-    def set_value(self, value):
+    def select_by_value(self, value):
         """Selects a DropDownItem by means of the contained text-
 
         Args:
@@ -1615,7 +1615,7 @@ class DropDown(Widget):
         """Called when a new DropDownItem gets selected.
         """
         log.debug('combo box. selected %s' % value)
-        self.set_value(value)
+        self.select_by_value(value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")

@@ -89,7 +89,7 @@ class MyApp(App):
         self.dropDown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
                                                    width=200, height=20, margin='10px')
         self.dropDown.set_on_change_listener(self, 'drop_down_changed')
-        self.dropDown.set_value('DropDownItem 0')
+        self.dropDown.select_by_value('DropDownItem 0')
 
         self.slider = gui.Slider(10, 0, 100, 5, width=200, height=20, margin='10px')
         self.slider.set_on_change_listener(self, 'slider_changed')
@@ -215,7 +215,7 @@ class MyApp(App):
         self.check.set_value(result)
 
         result = self.dialog.get_field('ddropdown').get_value()
-        self.dropDown.set_value(result)
+        self.dropDown.select_by_value(result)
 
         result = self.dialog.get_field('dspinbox').get_value()
         self.spin.set_value(result)
