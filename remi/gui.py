@@ -1585,7 +1585,10 @@ class DropDown(Widget, _SyncableValuesMixin):
         obj = cls(**kwargs)
         for item in items:
             obj.append(DropDownItem(item))
-        obj.select_by_value(item)  # ensure one is selected
+        try:
+            obj.select_by_value(item)  # ensure one is selected
+        except UnboundLocalError:
+            pass
         return obj
 
     def append(self, item, key=''):
