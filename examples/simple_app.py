@@ -21,9 +21,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(width=300, height=200)
-        wid.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
+        wid = gui.VBox(width=300, height=200)
         self.lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
         self.lbl.style['margin'] = 'auto'
         self.bt = gui.Button('Press me!', width=200, height=30)
