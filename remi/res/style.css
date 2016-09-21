@@ -11,6 +11,7 @@ textarea:focus,
 input[type='checkbox']:focus,
 input[type='color']:focus,
 input[type='number']:focus,
+input[type='text']:focus,
 input[type='date']:focus,
 select:focus {
     border: 0px;
@@ -209,6 +210,7 @@ option:hover {
     background: rgba(33, 150, 243, .26)
 }
 input[type='number'],
+input[type='text'],
 input[type='date'],
 input[type='color'],
 textarea,
