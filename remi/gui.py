@@ -97,13 +97,13 @@ class _VersionedDictionary(dict):
         return super(_VersionedDictionary, self).__setitem__(key, value)
 
     def __delitem__(self, key, version_increment=1):
-        if not key in self:
+        if key not in self:
             return
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).__delitem__(key)
     
     def pop(self, key, d=None, version_increment=1):
-        if not key in self:
+        if key not in self:
             return
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).pop(key, d)
