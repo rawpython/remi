@@ -1367,7 +1367,8 @@ class _SyncableValuesMixin(object):
         changed = None  # indicates if we changed the model, and represents the last item
         if before != after:
             self.empty()
-            for item in after:
+            # iter over values to maintain the order
+            for item in values:
                 self.append(item)
                 changed = item
 
