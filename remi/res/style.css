@@ -227,6 +227,16 @@ select {
     color: inherit;
     padding: 0;
 }
+textarea:disabled,
+input[type='checkbox']:disabled,
+input[type='color']:disabled,
+input[type='number']:disabled,
+input[type='text']:disabled,
+input[type='date']:disabled {
+    color: rgba(0,0,0,0.3);
+    cursor: default;
+    border-bottom: 1px solid rgba(0,0,0,0.3);
+}
 select {
     border-bottom: 2px solid rgba(0, 0, 0, .12);
 }
@@ -269,6 +279,9 @@ button:disabled {
     background-color: #ddd;
     background: #ddd;
     border: 1px solid #ddd;
+    box-shadow: none;
+    cursor: default;
+    color: #9F9F9F;
 }
 .TextInput {
     border: none;

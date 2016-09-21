@@ -327,6 +327,15 @@ class Widget(Tag):
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
 
+    def set_enabled(self, enabled):
+        if enabled:
+            try:
+                del self.attributes['disabled']
+            except KeyError:
+                pass
+        else:
+            self.attributes['disabled'] = None
+
     def set_size(self, width, height):
         """Set the widget size.
 
@@ -951,21 +960,6 @@ class Button(Widget):
             text (str): The string label of the button.
         """
         self.add_child('text', text)
-
-    def set_enabled(self, enabled):
-        """
-        Enables or disables the Button.
-
-        Args:
-            enabled (bool): If true te button is enabled and so the user can press it.
-        """
-        if enabled:
-            try:
-                del self.attributes['disabled']
-            except KeyError:
-                pass
-        else:
-            self.attributes['disabled'] = None
 
 
 class TextInput(Widget):
@@ -1835,15 +1829,6 @@ class Input(Widget):
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
-
-    def set_enabled(self, enabled):
-        if enabled:
-            try:
-                del self.attributes['disabled']
-            except KeyError:
-                pass
-        else:
-            self.attributes['disabled'] = None
 
     def set_read_only(self, readonly):
         if readonly:
