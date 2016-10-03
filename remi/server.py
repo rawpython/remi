@@ -984,17 +984,25 @@ class StandaloneServer(Server):
             self.serve_forever()
 
     def serve_forever(self):
-        import webview
-        Server.start(self)
-        webview.create_window(self.title, self.address, **self._application_conf)
-        Server.stop(self)
+        try:
+            import webview
+            Server.start(self)
+            webview.create_window(self.title, self.address, **self._application_conf)
+            Server.stop(self)
+        except ImportError:
+            raise ImportError('PyWebView is missing. Please install it by:\n    pip install pywebview\n    more info at https://github.com/r0x0r/pywebview')
 
 
 def start(mainGuiClass, **kwargs):
     """This method starts the webserver with a specific App subclass."""
     debug = kwargs.pop('debug', False)
+    standalone = kwargs.pop('standalone', False)
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(name)-16s %(levelname)-8s %(message)s')
-    s = Server(mainGuiClass, start=True, **kwargs)
+    if standalone:
+        s = StandaloneServer(mainGuiClass, start=True, **kwargs)
+    else:
+        s = Server(mainGuiClass, start=True, **kwargs)
+	
 
 

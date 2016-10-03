@@ -162,8 +162,7 @@ Parameters:
 - update_interval: gui update interval in seconds
 - start_browser: boolean that defines if the browser should be opened automatically at startup
 - websocket_port: integer, port number for websocket communication
-You can change these values in order to make the gui accessible on other devices on the network.
-
+- standalone: boolean, indicates where to run the application as standard Desktop application with its own window. If False, the interface is shown in a browser webpage.
 
 All widgets constructors accepts two standard **kwargs that are:
 - width: can be expressed as int (and is interpreted as pixel) or as str (and you can specify the measure unit like '10%')

@@ -13,10 +13,10 @@
 """
 
 import remi.gui as gui
-import remi.server as server
+from remi import start, App
 
 
-class MyApp(server.App):
+class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
@@ -36,5 +36,5 @@ class MyApp(server.App):
         return tb
 
 if __name__ == "__main__":
-    s = server.StandaloneServer(MyApp, title="Tab Demo", start=True)
+    start(MyApp, title="Tab Demo", standalone=True)
 
