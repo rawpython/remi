@@ -338,7 +338,7 @@ class App(BaseHTTPRequestHandler, object):
     """
 
     re_static_file = re.compile(r"^/res/([-_.\w\d]+)\?{0,1}(?:[\w\d]*)")  # https://regex101.com/r/uK1sX1/1
-    re_attr_call = re.compile(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$")
+    re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
         self._app_args = app_args
@@ -463,7 +463,7 @@ function websocketOnMessage (evt){
     }else if( received_msg[0]=='2' ){ /*javascript*/
         var content = received_msg.substr(1,received_msg.length-1);
         try{
-            eval(received_msg);
+            eval(content);
         }catch(e){console.debug(e.message);};
     }else if( received_msg[0]=='3' ){ /*ack*/
         pendingSendMessages.shift() /*remove the oldest*/
@@ -678,7 +678,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         update_event.clear()
 
     def execute_javascript(self, code):
-        self._send_spontaneous_websocket_message('javascript,' + code)
+        self._send_spontaneous_websocket_message('2' + code)
 
     def notification_message(self, title, content, icon=""):
         """This function sends "javascript" message to the client, that executes its content.

@@ -1513,7 +1513,10 @@ class ListView(Widget, _SyncableValuesMixin):
             self.children[key].attributes['selected'] = True
             self._selected_key = key
             self._selected_item = self.children[key]
-
+            
+    def set_value(self, value):
+        self.select_by_value(value)
+        
     def select_by_value(self, value):
         """Selects an item by the text content of the child.
 
@@ -1635,6 +1638,9 @@ class DropDown(Widget, _SyncableValuesMixin):
         self._selected_key = key
         self._selected_item = self.children[key]
 
+    def set_value(self, value):
+        self.select_by_value(value)
+    
     def select_by_value(self, value):
         """Selects a DropDownItem by means of the contained text-
 
