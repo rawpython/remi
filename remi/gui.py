@@ -2518,6 +2518,16 @@ class SvgCircle(SvgShape):
         """
         self.attributes['r'] = radius
 
+    def set_position(self, x, y):
+        """Sets the circle position.
+        
+        Args:
+            x (int): the x coordinate
+            y (int): the y coordinate
+        """
+        self.attributes['cx'] = str(x)
+        self.attributes['cy'] = str(y)
+
 
 class SvgLine(Widget):
     @decorate_constructor_parameter_types([int, int, int, int])
