@@ -884,17 +884,18 @@ class TabBox(Widget):
     def _fix_tab_widths(self):
         tab_w = 100.0 / len(self._tabs)
         for a, li, holder in self._tabs.values():
-            li.attributes['style'] = "float:left;width:%.1f%%" % tab_w
+            li.style['float'] = "left"
+            li.style['width'] = "%.1f%%" % tab_w
 
     def _on_tab_pressed(self, tab_identifier):
         # remove active on all tabs, and hide their contents
         for a, li, holder in self._tabs.values():
             a.remove_class('active')
-            holder.attributes['style'] = 'padding:15px;display:none'
+            holder.style['display'] = 'none'
         # add it on the current one
         a, li, holder = self._tabs[tab_identifier]
         a.add_class('active')
-        holder.attributes['style'] = 'padding:15px;display:block'
+        holder.style['display'] = 'block'
 
         # call other callbacks
         cb = self._tab_cbs[tab_identifier]
@@ -904,6 +905,7 @@ class TabBox(Widget):
     def add_tab(self, widget, name, tab_cb):
 
         holder = Tag(_type='div', _class='')
+        holder.style['padding'] = '15px'
         holder.add_child('content', widget)
 
         li = Tag(_type='li', _class='')
@@ -911,9 +913,9 @@ class TabBox(Widget):
         a = Widget(_type='a', _class='')
         if len(self._tabs) == 0:
             a.add_class('active')
-            holder.attributes['style'] = 'padding:15px;display:block'
+            holder.style['display'] = 'block'
         else:
-            holder.attributes['style'] = 'padding:15px;display:none'
+            holder.style['display'] = 'none'
 
         # we need a href attribute for hover effects to work, and while empty
         # href attributes are valid html5, this didn't seem reliable in testing.
