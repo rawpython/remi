@@ -72,7 +72,7 @@ class SignalConnection(gui.Widget):
         if self.dropdown.get_value()=='None':
             del self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]
             return
-        listener = self.dropdown.selected_item.listenerInstance
+        listener = self.dropdown._selected_item.listenerInstance
         listener.attributes['editor_newclass'] = "True"
         print("signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
         listener.fakeListenerFunc = self.fakeListenerFunc

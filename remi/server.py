@@ -54,7 +54,7 @@ runtimeInstances = weakref.WeakValueDictionary()
 
 pyLessThan3 = sys.version_info < (3,)
 
-update_lock = threading.Lock()
+update_lock = threading.RLock()
 update_event = threading.Event()
 update_thread = None
 
@@ -153,6 +153,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
+        # noinspection PyBroadException
         try:
             length = self.rfile.read(2)
             length = self.bytetonum(length[1]) & 127
@@ -168,7 +169,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         except socket.timeout as e:
             self.log.debug('socket timed out: %s' % e)
             return False
-        except Exception as e:
+        except Exception:
             self.log.error("error parsing websocket", exc_info=True)
             return False
         return True
@@ -190,7 +191,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         length = len(message)
         if length <= 125:
             out.append(length)
-        elif length >= 126 and length <= 65535:
+        elif 126 <= length <= 65535:
             out.append(126)
             out += struct.pack('>H', length)
         else:
@@ -226,6 +227,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.send_message('3') #3==ack
 
         with update_lock:
+            # noinspection PyBroadException
             try:
                 # saving the websocket in order to update the client
                 k = get_instance_key(self)
@@ -251,7 +253,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         if callback is not None:
                             callback(**param_dict)
 
-            except Exception as e:
+            except Exception:
                 self.log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
@@ -274,8 +276,8 @@ def parse_parametrs(p):
             p = p[l + 1:]
             ret[field_name] = field_value
     return ret
-    
-    
+
+
 def gui_updater(client, node):
     changed_widgets = {} #key = widget instance, value = html representation
     node.repr(client, changed_widgets)
@@ -295,21 +297,16 @@ class _UpdateThread(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self._interval = interval
-        Timer(self._interval, self._timed_update).start()
         self.start()
-
-    def _timed_update(self):
-        global update_event
-        update_event.set()
-        Timer(self._interval, self._timed_update).start()
 
     def run(self):
         while True:
             global clients, runtimeInstances
             global update_lock, update_event
 
-            update_event.wait()
+            update_event.wait(self._interval)
             with update_lock:
+                # noinspection PyBroadException
                 try:
 
                     for client in clients.values():
@@ -323,11 +320,11 @@ class _UpdateThread(threading.Thread):
                                 ws.ping()
 
                         client.idle()
-                            
-                except Exception as e:
+                        
+                except Exception:
                     log.error('error updating gui', exc_info=True)
 
-            update_event.clear()
+                update_event.clear()
 
 
 class App(BaseHTTPRequestHandler, object):
@@ -349,6 +346,17 @@ class App(BaseHTTPRequestHandler, object):
         self.log = logging.getLogger('remi.server.http')
         super(App, self).__init__(request, client_address, server)
 
+    def _get_list_from_app_args(self, name):
+        try:
+            v = self._app_args[name]
+            if isinstance(v, (tuple, list)):
+                vals = v
+            else:
+                vals = [v]
+        except KeyError:
+            vals = []
+        return vals
+
     def log_message(self, format_string, *args):
         msg = format_string % args
         self.log.debug("%s %s" % (self.address_string(), msg))
@@ -356,7 +364,7 @@ class App(BaseHTTPRequestHandler, object):
     def log_error(self, format_string, *args):
         msg = format_string % args
         self.log.error("%s %s" % (self.address_string(), msg))
-    
+
     def _instance(self):
         global clients
         global runtimeInstances
@@ -373,7 +381,7 @@ class App(BaseHTTPRequestHandler, object):
         wshost, wsport = self.server.websocket_address
         
         net_interface_ip = self.connection.getsockname()[0]
-        if self.server.host_name != None:
+        if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
@@ -381,7 +389,7 @@ class App(BaseHTTPRequestHandler, object):
 
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
-        clients[k].script_footer = """
+        clients[k].js_body_end = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less 
@@ -606,24 +614,21 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 };
 </script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
 
-        # add app specific javascript
-        try:
-            clients[k].script_footer += self._app_args['script_footer']
-        except KeyError:
-            pass
+        # add built in js, extend with user js
+        clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
+        # use the default css, but append a version based on its hash, to stop browser caching
+        with open(self._get_static_file('style.css'), 'rb') as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            clients[k].css_head = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
+        # add built in css, extend with user css
+        clients[k].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
 
-        # add any app specific headers
-        clients[k].html_header = self._app_args.get('html_header', '\n')
-        clients[k].html_footer = self._app_args.get('html_footer', '\n')
-
-        # add client styling
-        try:
-            clients[k].css_header = self._app_args['css_header']
-        except KeyError:
-            # use the default css, but append a version based on its hash, to stop browser caching
-            with open(self._get_static_file('style.css'), 'rb') as f:
-                md5 = hashlib.md5(f.read()).hexdigest()
-            clients[k].css_header = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
+        # add user supplied extra html,css,js
+        clients[k].html_head = '\n'.join(self._get_list_from_app_args('html_head'))
+        clients[k].html_body_start = '\n'.join(self._get_list_from_app_args('html_body_start'))
+        clients[k].html_body_end = '\n'.join(self._get_list_from_app_args('html_body_end'))
+        clients[k].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
+        clients[k].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
 
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = []
@@ -631,7 +636,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         self.client = clients[k]
 
         if update_thread is None:
-            update_thread = _UpdateThread(self.server.update_interval)
+            # we need to, at least, ping the websockets to keep them alive. we might also ping more frequently if the
+            # user requested we do so
+            ping_time = self.server.websocket_timeout_timer_ms / 2000.0  # twice the timeout in ms
+            if self.server.update_interval is None:
+                interval = ping_time
+            else:
+                interval = min(ping_time, self.server.update_interval)
+            update_thread = _UpdateThread(interval)
+            update_event.set()  # update now
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
@@ -640,7 +653,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     
     def set_root_widget(self, widget):
         global update_lock, update_event
-        update_event.wait()
+        #update_event.wait()
         self.root = widget
         # here we check if the root window has changed
         for ws in self.websockets:
@@ -649,25 +662,24 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 ws.send_message('0' + self.root.identifier + ',' + to_websocket(html)) ##0==show_window message
             except:
                 self.websockets.remove(ws)
+        #update_event.clear()
+
+    def _send_spontaneous_websocket_message(self, message):
+        global update_lock
+        with update_lock:
+            for ws in self.client.websockets:
+                # noinspection PyBroadException
+                try:
+                    self.log.debug("sending websocket spontaneous message")
+                    ws.send_message(message)
+                except:
+                    self.log.error("sending websocket spontaneous message", exc_info=True)
+                    self.client.websockets.remove(ws)
         update_event.clear()
 
-    def send_spontaneous_websocket_message(self, message):
-        """this code allows to send spontaneous messages to the clients.
-           It can be considered thread-safe because can be called in two contexts:
-           1- A received message from websocket in case of an event, and the update_lock is already locked
-           2- An internal application event like a Timer, and the update thread is paused by update_event.wait
-        """
-        global update_lock, update_event
-        update_event.wait()
-        for ws in self.client.websockets:
-            try:
-                self.log.debug("sending websocket spontaneous message")
-                ws.send_message(message)
-            except:
-                self.log.error("sending websocket spontaneous message", exc_info=True)
-                self.client.websockets.remove(ws)
-        update_event.clear()
-        
+    def execute_javascript(self, code):
+        self._send_spontaneous_websocket_message('javascript,' + code)
+
     def notification_message(self, title, content, icon=""):
         """This function sends "javascript" message to the client, that executes its content.
            In this particular code, a notification message is shown
@@ -689,8 +701,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 });
             }
         """%{'title': title, 'content': content, 'icon': icon}
-        self.send_spontaneous_websocket_message('2' + code) #2==javascript
-    
+        self.execute_javascript(code)
+
     def do_POST(self):
         self._instance()
         file_data = None
@@ -701,12 +713,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             filename = self.headers['filename']
             listener_widget = runtimeInstances[self.headers['listener']]
             listener_function = self.headers['listener_function']
-            form = cgi.FieldStorage(
-                fp=self.rfile,
-                headers=self.headers,
-                environ={'REQUEST_METHOD':'POST',
-                        'CONTENT_TYPE':self.headers['Content-Type'],
-                        })
+            form = cgi.FieldStorage(fp=self.rfile,
+                                    headers=self.headers,
+                                    environ={'REQUEST_METHOD': 'POST',
+                                             'CONTENT_TYPE': self.headers['Content-Type']})
             # Echo back information about what was posted in the form
             for field in form.keys():
                 field_item = form[field]
@@ -758,15 +768,17 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write('not authenticated')
 
         if do_process:
-            self._instance()
-            path = str(unquote(self.path))
-            self._process_all(path)
+            # noinspection PyBroadException
+            try:
+                self._instance()
+                path = str(unquote(self.path))
+                self._process_all(path)
+            except:
+                self.log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
-
         static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
-        static_paths.extend(self._app_args.get('static_paths', ()))
-
+        static_paths.extend(self._get_list_from_app_args('static_file_path'))
         for s in reversed(static_paths):
             path = os.path.join(s, filename)
             if os.path.exists(path):
@@ -798,21 +810,24 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
-            self.wfile.write(encode_text(self.client.css_header))
-            self.wfile.write(encode_text(self.client.html_header))
+            self.wfile.write(encode_text(self.client.css_head))
+            self.wfile.write(encode_text(self.client.html_head))
+            self.wfile.write(encode_text(self.client.js_head))
             self.wfile.write(encode_text("\n<title>%s</title>\n" % self.server.title))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
+            self.wfile.write(encode_text(self.client.js_body_start))
+            self.wfile.write(encode_text(self.client.html_body_start))
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             self.wfile.write(encode_text(html))
-            self.wfile.write(encode_text(self.client.html_footer))
-            self.wfile.write(encode_text(self.client.script_footer))
+            self.wfile.write(encode_text(self.client.html_body_end))
+            self.wfile.write(encode_text(self.client.js_body_end))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
             if not filename:
                 self.send_response(404)
                 return
-            mimetype,encoding = mimetypes.guess_type(filename)
+            mimetype, encoding = mimetypes.guess_type(filename)
             self.send_response(200)
             self.send_header('Content-type', mimetype if mimetype else 'application/octet-stream')
             if self.server.enable_file_cache:
@@ -915,7 +930,8 @@ class Server(object):
 
     def start(self, *userdata):
         # here the websocket is started on an ephemereal port
-        self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler, self._multiple_instance)
+        self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
+                                                 self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
         log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
@@ -940,7 +956,7 @@ class Server(object):
             try:
                 import android
                 android.webbrowser.open(self._base_address)
-            except:
+            except ImportError:
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
                     webbrowser.get('windows-default').open(self._base_address)
@@ -953,6 +969,7 @@ class Server(object):
     def serve_forever(self):
         # we could join on the threads, but join blocks all interupts (including
         # ctrl+c, so just spin here
+        # noinspection PyBroadException
         try:
             while True:
                 signal.pause()
@@ -971,12 +988,13 @@ class Server(object):
 
 
 class StandaloneServer(Server):
-
-    def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True, userdata=()):
-        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None, password=None,
-                 multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
-                 pending_messages_queue_length=1000, userdata=userdata)
+    def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True,
+                 userdata=()):
+        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
+                        password=None,
+                        multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
+                        websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                        pending_messages_queue_length=1000, userdata=userdata)
 
         self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
 

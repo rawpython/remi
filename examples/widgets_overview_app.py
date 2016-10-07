@@ -89,7 +89,7 @@ class MyApp(App):
         self.dropDown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
                                                    width=200, height=20, margin='10px')
         self.dropDown.set_on_change_listener(self, 'drop_down_changed')
-        self.dropDown.set_value('DropDownItem 0')
+        self.dropDown.select_by_value('DropDownItem 0')
 
         self.slider = gui.Slider(10, 0, 100, 5, width=200, height=20, margin='10px')
         self.slider.set_on_change_listener(self, 'slider_changed')
@@ -179,9 +179,7 @@ class MyApp(App):
         self.dcheck = gui.CheckBox(False, width=200, height=30)
         self.dialog.add_field_with_label('dcheck', 'Label Checkbox', self.dcheck)
         values = ('Danny Young', 'Christine Holand', 'Lars Gordon', 'Roberto Robitaille')
-        self.dlistView = gui.ListView(width=200, height=120)
-        for key, value in enumerate(values):
-            self.dlistView.append(value, key=str(key))
+        self.dlistView = gui.ListView.new_from_list(values, width=200, height=120)
         self.dialog.add_field_with_label('dlistView', 'Listview', self.dlistView)
 
         self.ddropdown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
@@ -215,7 +213,7 @@ class MyApp(App):
         self.check.set_value(result)
 
         result = self.dialog.get_field('ddropdown').get_value()
-        self.dropDown.set_value(result)
+        self.dropDown.select_by_value(result)
 
         result = self.dialog.get_field('dspinbox').get_value()
         self.spin.set_value(result)

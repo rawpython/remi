@@ -102,13 +102,13 @@ class _VersionedDictionary(dict):
         return super(_VersionedDictionary, self).__setitem__(key, value)
 
     def __delitem__(self, key, version_increment=1):
-        if not key in self:
+        if key not in self:
             return
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).__delitem__(key)
     
     def pop(self, key, d=None, version_increment=1):
-        if not key in self:
+        if key not in self:
             return
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).pop(key, d)
@@ -358,6 +358,15 @@ class Widget(Tag):
         self.style['margin'] = kwargs.get('margin', '0px auto')  # centers the div
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
+
+    def set_enabled(self, enabled):
+        if enabled:
+            try:
+                del self.attributes['disabled']
+            except KeyError:
+                pass
+        else:
+            self.attributes['disabled'] = None
 
     def set_size(self, width, height):
         """Set the widget size.
@@ -968,21 +977,6 @@ class Button(Widget):
         """
         self.add_child('text', text)
 
-    def set_enabled(self, enabled):
-        """
-        Enables or disables the Button.
-
-        Args:
-            enabled (bool): If true te button is enabled and so the user can press it.
-        """
-        if enabled:
-            try:
-                del self.attributes['disabled']
-            except KeyError:
-                pass
-        else:
-            self.attributes['disabled'] = None
-
 
 class TextInput(Widget):
     """Editable multiline/single_line text area widget. You can set the content by means of the function set_text or
@@ -1380,7 +1374,31 @@ class InputDialog(GenericDialog):
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
 
 
-class ListView(Widget):
+# noinspection PyUnresolvedReferences
+class _SyncableValuesMixin(object):
+
+    def synchronize_values(self, values):
+        selected_before = self.get_value()
+        before = set(self.children[k].get_value() for k in self.children)
+        after = set(values)
+
+        changed = None  # indicates if we changed the model, and represents the last item
+        if before != after:
+            self.empty()
+            # iter over values to maintain the order
+            for item in values:
+                self.append(item)
+                changed = item
+
+        if (changed is not None) and selected_before and self._selectable:
+            if selected_before in after:
+                self.select_by_value(selected_before)
+            else:
+                # select the last item given nothing better to do...
+                self.select_by_value(changed)
+
+
+class ListView(Widget, _SyncableValuesMixin):
     """List widget it can contain ListItems. Add items to it by using the standard append(item, key) function or
     generate a filled list from a string list by means of the function new_from_list. Use the list in conjunction of
     its onselection event. Register a listener with ListView.set_on_selection_listener.
@@ -1396,8 +1414,8 @@ class ListView(Widget):
         """
         super(ListView, self).__init__(**kwargs)
         self.type = 'ul'
-        self.selected_item = None
-        self.selected_key = None
+        self._selected_item = None
+        self._selected_key = None
         self._selectable = selectable
 
     @classmethod
@@ -1408,8 +1426,8 @@ class ListView(Widget):
             items (list): list of strings to fill the widget with.
         """
         obj = cls(**kwargs)
-        for key, item in enumerate(items):
-            obj.append(item, str(key))
+        for item in items:
+            obj.append(ListItem(item))
         return obj
 
     def append(self, item, key=''):
@@ -1431,23 +1449,23 @@ class ListView(Widget):
 
     def empty(self):
         """Removes all children from the list"""
-        self.selected_item = None
-        self.selected_key = None
+        self._selected_item = None
+        self._selected_key = None
         super(ListView, self).empty()
 
     def onselection(self, clicked_item):
         """Called when a new item gets selected in the list."""
-        self.selected_key = None
+        self._selected_key = None
         for k in self.children:
             if self.children[k] == clicked_item:
-                self.selected_key = k
-                if (self.selected_item is not None) and self._selectable:
-                    self.selected_item.attributes['selected'] = False
-                self.selected_item = self.children[self.selected_key]
+                self._selected_key = k
+                if (self._selected_item is not None) and self._selectable:
+                    self._selected_item.attributes['selected'] = False
+                self._selected_item = self.children[self._selected_key]
                 if self._selectable:
-                    self.selected_item.attributes['selected'] = True
+                    self._selected_item.attributes['selected'] = True
                 break
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self.selected_key])
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self._selected_key])
 
     @decorate_set_on_listener("onselection", "(self,selectedKey)")
     def set_on_selection_listener(self, listener, funcname):
@@ -1469,16 +1487,16 @@ class ListView(Widget):
         Returns:
             str: The value of the selected item or None
         """
-        if self.selected_item is None:
+        if self._selected_item is None:
             return None
-        return self.selected_item.get_value()
+        return self._selected_item.get_value()
 
     def get_key(self):
         """
         Returns:
             str: The key of the selected item or None if no item is selected.
         """
-        return self.selected_key
+        return self._selected_key
 
     def select_by_key(self, key):
         """Selects an item by its key.
@@ -1486,31 +1504,31 @@ class ListView(Widget):
         Args:
             key (str): The unique string identifier of the item that have to be selected.
         """
-        self.selected_key = None
-        self.selected_item = None
+        self._selected_key = None
+        self._selected_item = None
         for item in self.children.values():
             item.attributes['selected'] = False
 
         if key in self.children:
             self.children[key].attributes['selected'] = True
-            self.selected_key = key
-            self.selected_item = self.children[key]
+            self._selected_key = key
+            self._selected_item = self.children[key]
 
-    def set_value(self, value):
+    def select_by_value(self, value):
         """Selects an item by the text content of the child.
 
         Args:
             value (str): Text content of the item that have to be selected.
         """
-        self.selected_key = None
-        self.selected_item = None
+        self._selected_key = None
+        self._selected_item = None
         for k in self.children:
             item = self.children[k]
             item.attributes['selected'] = False
             if value == item.get_value():
-                self.selected_key = k
-                self.selected_item = item
-                self.selected_item.attributes['selected'] = True
+                self._selected_key = k
+                self._selected_item = item
+                self._selected_item.attributes['selected'] = True
 
 
 class ListItem(Widget):
@@ -1560,7 +1578,7 @@ class ListItem(Widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
 
 
-class DropDown(Widget):
+class DropDown(Widget, _SyncableValuesMixin):
     """Drop down selection widget. Implements the onchange(value) event. Register a listener for its selection change
     by means of the function DropDown.set_on_change_listener.
     """
@@ -1577,15 +1595,32 @@ class DropDown(Widget):
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier,
                                                                'evt': self.EVENT_ONCHANGE}
-        self.selected_item = None
-        self.selected_key = None
+        self._selected_item = None
+        self._selected_key = None
+        self._selectable = True
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
         obj = cls(**kwargs)
         for item in items:
             obj.append(DropDownItem(item))
+        try:
+            obj.select_by_value(item)  # ensure one is selected
+        except UnboundLocalError:
+            pass
         return obj
+
+    def append(self, item, key=''):
+        if isinstance(item, type('')) or isinstance(item, type(u'')):
+            item = DropDownItem(item)
+        elif not isinstance(item, DropDownItem):
+            raise ValueError("item must be text or a DropDownItem instance")
+        super(DropDown, self).append(item, key=key)
+
+    def empty(self):
+        self._selected_item = None
+        self._selected_key = None
+        super(DropDown, self).empty()
 
     def select_by_key(self, key):
         """Selects an item by its unique string identifier.
@@ -1597,23 +1632,23 @@ class DropDown(Widget):
             if 'selected' in item.attributes:
                 del item.attributes['selected']
         self.children[key].attributes['selected'] = 'selected'
-        self.selected_key = key
-        self.selected_item = self.children[key]
+        self._selected_key = key
+        self._selected_item = self.children[key]
 
-    def set_value(self, value):
+    def select_by_value(self, value):
         """Selects a DropDownItem by means of the contained text-
 
         Args:
             value (str): Textual content of the DropDownItem that have to be selected.
         """
-        self.selected_key = None
-        self.selected_item = None
+        self._selected_key = None
+        self._selected_item = None
         for k in self.children:
             item = self.children[k]
             if item.attributes['value'] == value:
                 item.attributes['selected'] = 'selected'
-                self.selected_key = k
-                self.selected_item = item
+                self._selected_key = k
+                self._selected_item = item
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
@@ -1623,22 +1658,22 @@ class DropDown(Widget):
         Returns:
             str: The value of the selected item or None.
         """
-        if self.selected_item is None:
+        if self._selected_item is None:
             return None
-        return self.selected_item.get_value()
+        return self._selected_item.get_value()
 
     def get_key(self):
         """
         Returns:
             str: The unique string identifier of the selected item or None.
         """
-        return self.selected_key
+        return self._selected_key
 
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
         log.debug('combo box. selected %s' % value)
-        self.set_value(value)
+        self.select_by_value(value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
@@ -1819,15 +1854,6 @@ class Input(Widget):
     def set_on_change_listener(self, listener, funcname):
         """register the listener for the onchange event."""
         self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
-
-    def set_enabled(self, enabled):
-        if enabled:
-            try:
-                del self.attributes['disabled']
-            except KeyError:
-                pass
-        else:
-            self.attributes['disabled'] = None
 
     def set_read_only(self, readonly):
         if readonly:

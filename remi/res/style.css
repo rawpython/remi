@@ -11,6 +11,7 @@ textarea:focus,
 input[type='checkbox']:focus,
 input[type='color']:focus,
 input[type='number']:focus,
+input[type='text']:focus,
 input[type='date']:focus,
 select:focus {
     border: 0px;
@@ -80,7 +81,7 @@ h6 small {
     font-size: .6em
 }
 h1 {
-    font-size: 56px;
+    font-size: 400%;
     line-height: 1.35;
     letter-spacing: -.02em;
     margin: 24px 0
@@ -91,7 +92,7 @@ h2 {
     font-weight: 400
 }
 h2 {
-    font-size: 45px;
+    font-size: 320%;
     line-height: 48px
 }
 h2,
@@ -99,7 +100,7 @@ h3 {
     margin: 24px 0
 }
 h3 {
-    font-size: 34px;
+    font-size: 240%;
     line-height: 40px
 }
 h3,
@@ -108,13 +109,13 @@ h4 {
     font-weight: 400
 }
 h4 {
-    font-size: 24px;
+    font-size: 170%;
     line-height: 32px;
     -moz-osx-font-smoothing: grayscale;
     margin: 24px 0 16px
 }
 h5 {
-    font-size: 20px;
+    font-size: 140%;
     font-weight: 500;
     line-height: 1;
     letter-spacing: .02em
@@ -125,7 +126,7 @@ h6 {
     margin: 24px 0 16px
 }
 h6 {
-    font-size: 16px;
+    font-size: 114%x;
     letter-spacing: .04em
 }
 h6,
@@ -134,7 +135,6 @@ p {
     line-height: 24px
 }
 p {
-    font-size: 14px;
     letter-spacing: 0;
     margin: 0 0 16px
 }
@@ -145,7 +145,7 @@ a {
 blockquote {
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     position: relative;
-    font-size: 24px;
+    font-size: 170%;
     font-weight: 300;
     font-style: italic;
     line-height: 1.35;
@@ -167,7 +167,7 @@ dt {
     font-weight: 700
 }
 address {
-    font-size: 12px;
+    font-size: 86%;
     line-height: 1;
     font-style: normal
 }
@@ -179,7 +179,6 @@ ol {
 }
 ul,
 ol {
-    font-size: 14px;
     line-height: 24px
 }
 .RaisedFrame {
@@ -211,6 +210,7 @@ option:hover {
     background: rgba(33, 150, 243, .26)
 }
 input[type='number'],
+input[type='text'],
 input[type='date'],
 input[type='color'],
 textarea,
@@ -219,14 +219,23 @@ select {
     border: none;
     border-bottom: 1px solid rgba(0, 0, 0, .12);
     display: block;
-    font-size: 14px;
-    font-family: inherit;
+    font-size: 95%;
     margin: 0;
     width: 100%;
     background: 0 0;
     text-align: left;
     color: inherit;
     padding: 0;
+}
+textarea:disabled,
+input[type='checkbox']:disabled,
+input[type='color']:disabled,
+input[type='number']:disabled,
+input[type='text']:disabled,
+input[type='date']:disabled {
+    color: rgba(0,0,0,0.3);
+    cursor: default;
+    border-bottom: 1px solid rgba(0,0,0,0.3);
 }
 select {
     border-bottom: 2px solid rgba(0, 0, 0, .12);
@@ -244,10 +253,8 @@ button {
     position: relative;
     height: 36px;
     margin: 0;
-    padding: 0 16px;
+    padding: 0 8px;
     display: inline-block;
-    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-    font-size: 14px;
     font-weight: 500;
     letter-spacing: 0;
     overflow: hidden;
@@ -272,12 +279,14 @@ button:disabled {
     background-color: #ddd;
     background: #ddd;
     border: 1px solid #ddd;
+    box-shadow: none;
+    cursor: default;
+    color: #9F9F9F;
 }
 .TextInput {
     border: none;
     border-bottom: 1px solid rgba(0, 0, 0, .12);
     display: block;
-    font-size: 14px;
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     margin: 0;
     padding: 0;
@@ -580,4 +589,30 @@ input[type='range']:disabled::-moz-range-thumb {
     content: "";
     display: table;
     clear: both;
+}
+
+@media only screen and (max-width: 320px) {
+   body {
+    font-size: 12px;
+   }
+   button {
+    padding: 0 2px;
+    font-size: 12px;
+   }
+   select {
+    font-size: 12px;
+   }
+}
+
+@media only screen and (max-width: 360px) {
+   body {
+    font-size: 13px;
+   }
+   button {
+    padding: 0 2px;
+    font-size: 13px;
+   }
+   select {
+    font-size: 13px;
+   }
 }

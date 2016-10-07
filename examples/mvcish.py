@@ -20,19 +20,23 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
-    def main(self, name='world'):
-        wid = gui.VBox(width=300, height=200)
-        self.lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
-        self.lbl.style['margin'] = 'auto'
-        self.bt = gui.Button('Press me!', width=200, height=30)
+    def main(self):
+        wid = gui.VBox(width=300, height=300)
+
+        self._items = ("/test/1", "/test/7")
+
+        self.dd = gui.DropDown.new_from_list(self._items, width='80%', height=40)
+        self.list = gui.ListView.new_from_list(self._items, width='80%', height='50%')
+        self.ent = gui.TextInput(width=200, height=30, hint='enter words')
+        self.bt = gui.Button('Update Models', width=200, height=30)
         self.bt.style['margin'] = 'auto 50px'
 
-        # setting the listener for the onclick event of the button
-        self.npressed = 0
         self.bt.set_on_click_listener(self, 'on_button_pressed')
 
         # appending a widget to another, the first argument is a string key
-        wid.append(self.lbl)
+        wid.append(self.dd)
+        wid.append(self.list)
+        wid.append(self.ent)
         wid.append(self.bt)
 
         # returning the root widget
@@ -40,9 +44,11 @@ class MyApp(App):
 
     # listener function
     def on_button_pressed(self):
-        self.npressed += 1
-        self.lbl.set_text('Button pressed %s times' % self.npressed)
-        self.bt.set_text('Hi!')
+        txt = self.ent.get_text()
+        if txt:
+            self._items = tuple("/test/%s" % i for i in txt.split(' '))
+        self.dd.synchronize_values(self._items)
+        self.list.synchronize_values(self._items)
 
 
 if __name__ == "__main__":
