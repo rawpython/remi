@@ -36,5 +36,5 @@ class MyApp(App):
         return tb
 
 if __name__ == "__main__":
-    start(MyApp, title="Tab Demo", standalone=True)
+    start(MyApp, title="Tab Demo", standalone=False)
 
