@@ -880,29 +880,17 @@ class TabBox(Widget):
 
         # maps tabs to their corresponding tab header
         self._tabs = {}
-         
-        # get python version
-        self.python_version = sys.version_info[0]
 
     def _fix_tab_widths(self):
         tab_w = 100.0 / len(self._tabs)
-        if self.python_version == 2:
-            for a, li, holder in self._tabs.itervalues():
-                li.attributes['style'] = "float:left;width:%.1f%%" % tab_w
-        else:
-            for a, li, holder in self._tabs.values():
-                li.attributes['style'] = "float:left;width:%.1f%%" % tab_w
+        for a, li, holder in self._tabs.values():
+            li.attributes['style'] = "float:left;width:%.1f%%" % tab_w
 
     def _on_tab_pressed(self, tab_identifier):
         # remove active on all tabs, and hide their contents
-        if self.python_version == 2:
-            for a, li, holder in self._tabs.itervalues():
-                a.remove_class('active')
-                holder.attributes['style'] = 'padding:15px;display:none'
-        else:
-            for a, li, holder in self._tabs.values():
-                a.remove_class('active')
-                holder.attributes['style'] = 'padding:15px;display:none'
+        for a, li, holder in self._tabs.values():
+            a.remove_class('active')
+            holder.attributes['style'] = 'padding:15px;display:none'
                
         # add it on the current one
         a, li, holder = self._tabs[tab_identifier]
