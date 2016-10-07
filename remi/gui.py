@@ -850,7 +850,7 @@ class VBox(HBox):
         super(VBox, self).__init__(**kwargs)
         self.style['flex-direction'] = 'column'
 
-
+         
 class TabBox(Widget):
 
     # create a structure like the following
@@ -891,7 +891,6 @@ class TabBox(Widget):
         for a, li, holder in self._tabs.values():
             a.remove_class('active')
             holder.attributes['style'] = 'padding:15px;display:none'
-               
         # add it on the current one
         a, li, holder = self._tabs[tab_identifier]
         a.add_class('active')
@@ -2593,4 +2592,4 @@ class SvgText(SvgShape):
     def set_text(self, text):
         self.add_child('text', text)
 
-    
+ 
