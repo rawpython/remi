@@ -505,7 +505,7 @@ class CssSizeInput(gui.Widget):
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
         
-        self.numInput = gui.SpinBox('0',-999999999, 999999999, 0.1, width='60%', height='100%')
+        self.numInput = gui.SpinBox('0',-999999999, 999999999, 1, width='60%', height='100%')
         self.numInput.set_on_change_listener(self, "on_value_changed")
         self.numInput.style['text-align'] = 'right'
         self.append(self.numInput)
@@ -625,10 +625,10 @@ class EditorAttributeInput(gui.Widget):
         self.removeAttribute.set_on_click_listener(self,'on_attribute_remove')
         self.append(self.removeAttribute)
         
-        label = gui.Label(attributeName, width='45%', height=22, margin='0px')
-        label.style['overflow'] = 'hidden'
-        label.style['font-size'] = '13px'
-        self.append(label)
+        self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
+        self.label.style['overflow'] = 'hidden'
+        self.label.style['font-size'] = '13px'
+        self.append(self.label)
         self.inputWidget = None
 
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'affected_widget_attribute':'style', 'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
@@ -654,7 +654,7 @@ class EditorAttributeInput(gui.Widget):
         self.inputWidget.set_on_change_listener(self,"on_attribute_changed")
         self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
-        label.attributes['title'] = attributeDict['description']
+        self.label.attributes['title'] = attributeDict['description']
         self.append(self.inputWidget)
         self.inputWidget.style['float'] = 'right'
     
@@ -662,11 +662,11 @@ class EditorAttributeInput(gui.Widget):
         self.set_valid(False)
     
     def set_valid(self, valid=True):
-        self.style['opacity'] = '1.0'
+        self.label.style['opacity'] = '1.0'
         if 'display' in self.removeAttribute.style: 
             del self.removeAttribute.style['display']
         if not valid:
-            self.style['opacity'] = '0.5'
+            self.label.style['opacity'] = '0.5'
             self.removeAttribute.style['display'] = 'none'
         
     def on_attribute_remove(self):
