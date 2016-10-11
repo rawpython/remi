@@ -385,10 +385,7 @@ class Editor(App):
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
-        self.attributeEditor = editor_widgets.EditorAttributes(self, width='24%', height='100%')
-        self.attributeEditor.style['position'] = 'absolute'
-        self.attributeEditor.style['right'] = '0px'
-        self.attributeEditor.add_class('RaisedFrame')
+        self.attributeEditor = editor_widgets.EditorAttributes(self, width='100%')
         
         self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%')
         
@@ -402,14 +399,25 @@ class Editor(App):
         self.subContainerLeft.append(self.signalConnectionManager)
         self.subContainerLeft.add_class('RaisedFrame')
         
-        self.subContainer.append(self.subContainerLeft)
-        
         self.centralContainer = gui.VBox(width='56%', height='100%')
         self.centralContainer.append(self.toolbar)
         self.centralContainer.append(self.project)
         
+        self.subContainerRight = gui.Widget(width='24%', height='100%')
+        self.subContainerRight.style['position'] = 'absolute'
+        self.subContainerRight.style['right'] = '0px'
+        self.subContainerRight.style['overflow'] = 'hidden'
+        self.subContainerRight.add_class('RaisedFrame')
+        
+        self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
+        self.instancesWidget.dropDown.set_on_change_listener(self, 'on_widget_selection')
+        
+        self.subContainerRight.append(self.instancesWidget)
+        self.subContainerRight.append(self.attributeEditor)
+        
+        self.subContainer.append(self.subContainerLeft)
         self.subContainer.append(self.centralContainer)
-        self.subContainer.append(self.attributeEditor)
+        self.subContainer.append(self.subContainerRight)
         self.project.style['position'] = 'relative'
         
         self.resizeHelper = ResizeHelper(width=16, height=16)
@@ -486,6 +494,8 @@ class Editor(App):
             if type(child) == str:
                 continue
             self.add_widget_to_editor(child, widget, False)
+            
+        self.instancesWidget.update(self.project, self.selectedWidget)
     
     def on_widget_selection(self, widget):
         self.remove_box_shadow_selected_widget()
@@ -495,6 +505,7 @@ class Editor(App):
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
         self.resizeHelper.setup(widget,parent)
+        self.instancesWidget.update(self.project, self.selectedWidget)
         print("selected widget: " + widget.identifier)
         
     def menu_new_clicked(self):
@@ -543,12 +554,15 @@ class Editor(App):
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
+        self.instancesWidget.update(self.project, self.selectedWidget)
         print("tag cutted:" + self.editCuttedWidget.identifier)
 
     def menu_paste_selection_clicked(self):
         if self.editCuttedWidget != None:
-            self.selectedWidget.append(self.editCuttedWidget)
+            key = "root" if self.selectedWidget==self.project else self.editCuttedWidget.identifier
+            self.selectedWidget.append(self.editCuttedWidget, key)
             self.editCuttedWidget = None
+            self.instancesWidget.update(self.project, self.selectedWidget)
 
     def menu_project_config_clicked(self):
         self.projectConfiguration.show(self)
@@ -559,6 +573,7 @@ class Editor(App):
         self.resizeHelper.setup(None, None)
         parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
         parent.remove_child(self.selectedWidget)
+        self.instancesWidget.update(self.project, self.selectedWidget)
         self.selectedWidget = parent
         print("tag deleted")
         

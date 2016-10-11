@@ -18,6 +18,68 @@ import inspect
 import re
 
 
+class InstancesDropDown(gui.DropDown):
+    def __init__(self, **kwargs):
+        super(InstancesDropDown, self).__init__(**kwargs)
+        self.EVENT_ONCHANGE = "on_instance_selection"
+        
+    def append_instance(self, instance):
+        item = gui.DropDownItem(instance.attributes['editor_varname'])
+        self.append(item)
+        item.instance = instance
+        
+    def item_by_instance(self, instance):
+        for item in self.children.values():
+            if item.instance.identifier == instance.identifier:
+                return item
+        return None
+    
+    def remove_instance(self, instance):
+        self.remove_child(self.item_by_instance(instance))
+        
+    def select_instance(self, instance):
+        item = self.item_by_instance(instance)
+        if item is not None:
+            item.set_text(instance.attributes['editor_varname'])
+            self.select_by_value(item.get_value())
+    
+    def onchange(self, value):
+        self.select_by_value(value)
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, [self._selected_item.instance])
+        
+    def append_instances_from_tree(self, node):
+        if not hasattr(node, 'attributes'):
+            return
+        if not 'editor_varname' in node.attributes.keys():
+            return
+        self.append_instance(node)
+        for child in node.children.values():
+            self.append_instances_from_tree(child)
+
+
+class InstancesWidget(gui.VBox):
+    def __init__(self, **kwargs):
+        super(InstancesWidget, self).__init__(**kwargs)
+        self.titleLabel = gui.Label('Instances list', width='100%')
+        self.titleLabel.add_class("DialogTitle")
+        
+        self.dropDown = InstancesDropDown()
+        
+        self.append(self.titleLabel)
+        self.append(self.dropDown)
+        
+        self.titleLabel.style['order'] = '-1'
+        self.titleLabel.style['-webkit-order'] = '-1'
+        self.dropDown.style['order'] = '0'
+        self.dropDown.style['-webkit-order'] = '0'
+    
+    def update(self, editorProject, selectedNode):
+        self.dropDown.empty()
+        if 'root' in editorProject.children.keys():
+            self.dropDown.append_instances_from_tree(editorProject.children['root'])
+            self.dropDown.select_instance(selectedNode)
+    
+
 class ToolBar(gui.Widget):
     def __init__(self, **kwargs):
         super(ToolBar, self).__init__(**kwargs)
