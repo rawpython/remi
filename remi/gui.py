@@ -1006,6 +1006,9 @@ class TextInput(Widget):
         if single_line:
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
+            self.attributes[self.EVENT_ONKEYDOWN] = "if((event.charCode||event.keyCode)==13){" \
+                "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur();" \
+                "return false;}" % {'id': self.identifier}
         if hint:
             self.attributes['placeholder'] = hint
 
@@ -1089,7 +1092,8 @@ class TextInput(Widget):
         """
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
-            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONKEYDOWN}
+            "sendCallbackParam('%(id)s','%(evt)s',params);if((event.charCode||event.keyCode)==13){" \
+            "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur(); return false;}" % {'id': self.identifier, 'evt': self.EVENT_ONKEYDOWN}
         self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, funcname)
 
     def onenter(self, new_value):

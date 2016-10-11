@@ -386,7 +386,7 @@ class Editor(App):
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
         self.attributeEditor = editor_widgets.EditorAttributes(self, width='100%')
-        
+        self.attributeEditor.style['overflow'] = 'hide'
         self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%')
         
         self.mainContainer.append(menubar)
@@ -406,7 +406,7 @@ class Editor(App):
         self.subContainerRight = gui.Widget(width='24%', height='100%')
         self.subContainerRight.style['position'] = 'absolute'
         self.subContainerRight.style['right'] = '0px'
-        self.subContainerRight.style['overflow'] = 'hidden'
+        self.subContainerRight.style['overflow'] = 'scroll'
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')

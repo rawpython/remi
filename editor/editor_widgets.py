@@ -503,7 +503,7 @@ class EditorAttributes(gui.VBox):
     def __init__(self, appInstance, **kwargs):
         super(EditorAttributes, self).__init__(**kwargs)
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
-        self.style['overflow-y'] = 'scroll'
+        #self.style['overflow-y'] = 'scroll'
         self.style['justify-content'] = 'flex-start'
         self.style['-webkit-justify-content'] = 'flex-start'
         self.titleLabel = gui.Label('Attributes editor', width='100%')
