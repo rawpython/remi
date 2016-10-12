@@ -283,6 +283,10 @@ button:disabled {
     cursor: default;
     color: #9F9F9F;
 }
+ button:active{
+    background: rgb(25, 145, 223);
+    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .12), 0 2px 0px -1px rgba(0, 0, 0, .2);
+}
 .TextInput {
     border: none;
     border-bottom: 1px solid rgba(0, 0, 0, .12);
