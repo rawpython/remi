@@ -211,13 +211,13 @@ class ProjectConfigurationDialog(gui.GenericDialog):
         self.configDict[self.KEY_START_BROWSER] = True
         self.configDict[self.KEY_RESOURCEPATH] = "./res/"
 
-        self.add_field_with_label( self.KEY_PRJ_NAME, 'Project Name', gui.TextInput() )
-        self.add_field_with_label( self.KEY_ADDRESS, 'IP address', gui.TextInput() )
-        self.add_field_with_label( self.KEY_PORT, 'Listen port', gui.SpinBox(8082, 1025, 65535) )
-        self.add_field_with_label( self.KEY_MULTIPLE_INSTANCE, 'Use single App instance for multiple users', gui.CheckBox(True) )
-        self.add_field_with_label( self.KEY_ENABLE_CACHE, 'Enable file caching', gui.CheckBox(True) )
-        self.add_field_with_label( self.KEY_START_BROWSER, 'Start browser automatically', gui.CheckBox(True) )
-        self.add_field_with_label( self.KEY_RESOURCEPATH, 'Additional resource path', gui.TextInput() )
+        self.append( gui.TextInput(), self.KEY_PRJ_NAME, 'Project Name' )
+        self.append( gui.TextInput(), self.KEY_ADDRESS, 'IP address' )
+        self.append( gui.SpinBox(8082, 1025, 65535), self.KEY_PORT, 'Listen port' )
+        self.append( gui.CheckBox(True), self.KEY_MULTIPLE_INSTANCE, 'Use single App instance for multiple users' )
+        self.append( gui.CheckBox(True), self.KEY_ENABLE_CACHE, 'Enable file caching' )
+        self.append( gui.CheckBox(True), self.KEY_START_BROWSER, 'Start browser automatically' )
+        self.append( gui.TextInput(), self.KEY_RESOURCEPATH, 'Additional resource path' )
         self.from_dict_to_fields(self.configDict)
     
     def from_dict_to_fields(self, dictionary):
@@ -278,7 +278,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         self.txtFilename.set_on_enter_listener(self, 'on_enter_key_pressed')
         self.txtFilename.set_text(defaultname)
         
-        self.add_field_with_label("filename","Filename",self.txtFilename)
+        self.append(self.txtFilename, "filename","Filename")
         
     def get_fileinput_value(self):
         return self.get_field('filename').get_value()
@@ -345,7 +345,7 @@ class WidgetHelper(gui.HBox):
         varNameTextInput = gui.TextInput()
         varNameTextInput.attributes['tabindex'] = '1'
         varNameTextInput.attributes['autofocus'] = 'autofocus'
-        self.dialog.add_field_with_label('name', 'Variable name', varNameTextInput)
+        self.dialog.append(varNameTextInput, 'name', 'Variable name')
         #for param in self.constructor_parameters_list:
         for index in range(0,len(self.widgetClass.__init__._constructor_types)):
             param = self.constructor_parameters_list[index]
@@ -360,9 +360,9 @@ class WidgetHelper(gui.HBox):
                 editWidget = gui.TextInput()
 
             editWidget.attributes['tabindex'] = str(index+2)
-            self.dialog.add_field_with_label(param, param + note, editWidget)
+            self.dialog.append(editWidget, param, param + note)
             
-        self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
+        self.dialog.append(gui.CheckBox(), "editor_newclass", "Overload base class")
         self.dialog.set_on_confirm_dialog_listener(self, "on_dialog_confirm")
         self.dialog.show(self.appInstance)
 

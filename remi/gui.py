@@ -1164,7 +1164,7 @@ class Label(Widget):
 
 class GenericDialog(Widget):
     """Generic Dialog widget. It can be customized to create personalized dialog windows.
-    You can setup the content adding content widgets with the functions add_field or add_field_with_label.
+    You can setup the content adding content widgets with the function append.
     The user can confirm or dismiss the dialog with the common buttons Cancel/Ok.
     Each field added to the dialog can be retrieved by its key, in order to get back the edited value. Use the function
     get_field(key) to retrieve the field.
@@ -1191,12 +1191,12 @@ class GenericDialog(Widget):
         if len(title) > 0:
             t = Label(title)
             t.add_class('DialogTitle')
-            self.append(t)
+            self.add_child('title', t)
 
         if len(message) > 0:
             m = Label(message)
             m.style['margin'] = '5px'
-            self.append(m)
+            self.add_child('message', m)
 
         self.container = Widget()
         self.container.style['display'] = 'block'
@@ -1217,8 +1217,8 @@ class GenericDialog(Widget):
         self.conf.style['float'] = 'right'
         self.cancel.style['float'] = 'right'
 
-        self.append(self.container)
-        self.append(hlay)
+        self.add_child('container', self.container)
+        self.add_child('hlay', hlay)
 
         self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCONFIRM)
         self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCANCEL)
@@ -1227,44 +1227,32 @@ class GenericDialog(Widget):
 
         self.baseAppInstance = None
 
-    def add_field_with_label(self, key, label_description, field):
+    def append(self, field, key=None, label_description=None):
         """
         Adds a field to the dialog together with a descriptive label and a unique identifier.
 
         Note: You can access to the fields content calling the function GenericDialog.get_field(key).
 
         Args:
-            key (str): The unique identifier for the field.
-            label_description (str): The string content of the description label.
             field (Widget): The instance of the field Widget. It can be for example a TextInput or maybe a custom widget.
+            key (str): The unique identifier for the field. If omitted, field.identifier is used instead.
+            label_description (str): The string content of the description label.
         """
-        self.inputs[key] = field
-        label = Label(label_description)
-        label.style['margin'] = '0px 5px'
-        label.style['min-width'] = '30%'
         container = HBox()
-        container.style['overflow'] = 'auto'
-        container.style['padding'] = '3px'
-        container.append(label, key='lbl' + key)
-        container.append(self.inputs[key], key=key)
-        self.container.append(container, key=key)
-
-    def add_field(self, key, field):
-        """
-        Adds a field to the dialog with a unique identifier.
-
-        Note: You can access to the fields content calling the function GenericDialog.get_field(key).
-
-        Args:
-            key (str): The unique identifier for the field.
-            field (Widget): The widget to be added to the dialog, TextInput or any Widget for example.
-        """
+        
+        if key is None:
+            key = field.identifier
+            
         self.inputs[key] = field
-        container = Widget()
-        container.style['display'] = 'block'
+        
+        if label_description!=None:
+            label = Label(label_description)
+            label.style['margin'] = '0px 5px'
+            label.style['min-width'] = '30%'
+            container.append(label, key='lbl' + key)
+        
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
-        container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -1274,8 +1262,7 @@ class GenericDialog(Widget):
             key (str): The unique string identifier of the required field.
 
         Returns:
-            Widget field instance added previously with methods GenericDialog.add_field or
-            GenericDialog.add_field_with_label.
+            Widget field instance added previously with method GenericDialog.append.
         """
         return self.inputs[key]
 
@@ -1346,7 +1333,7 @@ class InputDialog(GenericDialog):
 
         self.inputText = TextInput()
         self.inputText.set_on_enter_listener(self, 'on_text_enter_listener')
-        self.add_field('textinput', self.inputText)
+        self.append(self.inputText, 'textinput')
         self.inputText.set_text(initial_value)
 
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
@@ -2248,7 +2235,7 @@ class FileSelectionDialog(GenericDialog):
         self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
                                                        allow_file_selection,
                                                        allow_folder_selection)
-        self.add_field('fileFolderNavigator', self.fileFolderNavigator)
+        self.append(self.fileFolderNavigator, 'fileFolderNavigator')
         self.set_on_confirm_dialog_listener(self, 'confirm_value')
 
     def confirm_value(self):
