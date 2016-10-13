@@ -103,6 +103,29 @@ class MyApp(App):
         self.video = gui.VideoPlayer('http://www.w3schools.com/tags/movie.mp4',
                                      'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg',
                                      width=300, height=270, margin='10px')
+                                     
+        self.tree = gui.TreeView(width='100%', height=300)
+        ti1 = gui.TreeItem("Item1")
+        ti2 = gui.TreeItem("Item2")
+        ti3 = gui.TreeItem("Item3")
+        subti1 = gui.TreeItem("Sub Item1")
+        subti2 = gui.TreeItem("Sub Item2")
+        subti3 = gui.TreeItem("Sub Item3")
+        subti4 = gui.TreeItem("Sub Item4")
+        subsubti1 = gui.TreeItem("Sub Sub Item1")
+        subsubti2 = gui.TreeItem("Sub Sub Item2")
+        subsubti3 = gui.TreeItem("Sub Sub Item3")
+        self.tree.append(ti1)
+        self.tree.append(ti2)
+        self.tree.append(ti3)
+        ti2.append(subti1)
+        ti2.append(subti2)
+        ti2.append(subti3)
+        ti2.append(subti4)
+        subti4.append(subsubti1)
+        subti4.append(subsubti2)
+        subti4.append(subsubti3)
+        
         # appending a widget to another, the first argument is a string key
         subContainerRight.append(self.counter)
         subContainerRight.append(self.lbl)
@@ -120,6 +143,7 @@ class MyApp(App):
         subContainerRight.append(self.slider)
         subContainerRight.append(self.colorPicker)
         subContainerRight.append(self.date)
+        subContainerRight.append(self.tree)
         self.subContainerRight = subContainerRight
 
         subContainerLeft.append(self.img)
