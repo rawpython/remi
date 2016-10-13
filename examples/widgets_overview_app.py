@@ -227,8 +227,8 @@ class MyApp(App):
         result = self.dialog.get_field('ddate').get_value()
         self.date.set_value(result)
 
-        result = self.dialog.get_field('dlistView').get_key()
-        self.listView.select_by_key(result)
+        result = self.dialog.get_field('dlistView').get_value()
+        self.listView.select_by_value(result)
 
     # listener function
     def on_img_clicked(self):
