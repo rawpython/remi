@@ -174,33 +174,33 @@ class MyApp(App):
         self.dialog = gui.GenericDialog(title='Dialog Box', message='Click Ok to transfer content to main page', width='500px')
         self.dtextinput = gui.TextInput(width=200, height=30)
         self.dtextinput.set_value('Initial Text')
-        self.dialog.append(self.dtextinput, 'dtextinput', 'Text Input')
+        self.dialog.add_field_with_label('dtextinput', 'Text Input', self.dtextinput)
 
         self.dcheck = gui.CheckBox(False, width=200, height=30)
-        self.dialog.append(self.dcheck, 'dcheck', 'Label Checkbox')
+        self.dialog.add_field_with_label('dcheck', 'Label Checkbox', self.dcheck)
         values = ('Danny Young', 'Christine Holand', 'Lars Gordon', 'Roberto Robitaille')
         self.dlistView = gui.ListView.new_from_list(values, width=200, height=120)
-        self.dialog.append(self.dlistView, 'dlistView', 'Listview')
+        self.dialog.add_field_with_label('dlistView', 'Listview', self.dlistView)
 
         self.ddropdown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
                                                     width=200, height=20)
-        self.dialog.append(self.ddropdown, 'ddropdown', 'Dropdown')
+        self.dialog.add_field_with_label('ddropdown', 'Dropdown', self.ddropdown)
 
         self.dspinbox = gui.SpinBox(min=0, max=5000, width=200, height=20)
         self.dspinbox.set_value(50)
-        self.dialog.append(self.dspinbox, 'dspinbox', 'Spinbox')
+        self.dialog.add_field_with_label('dspinbox', 'Spinbox', self.dspinbox)
 
         self.dslider = gui.Slider(10, 0, 100, 5, width=200, height=20)
         self.dspinbox.set_value(50)
-        self.dialog.append(self.dslider, 'dslider', 'Slider')
+        self.dialog.add_field_with_label('dslider', 'Slider', self.dslider)
 
         self.dcolor = gui.ColorPicker(width=200, height=20)
         self.dcolor.set_value('#ffff00')
-        self.dialog.append(self.dcolor, 'dcolor', 'Colour Picker')
+        self.dialog.add_field_with_label('dcolor', 'Colour Picker', self.dcolor)
 
         self.ddate = gui.Date(width=200, height=20)
         self.ddate.set_value('2000-01-01')
-        self.dialog.append(self.ddate, 'ddate', 'Date')
+        self.dialog.add_field_with_label('ddate', 'Date', self.ddate)
 
         self.dialog.set_on_confirm_dialog_listener(self, 'dialog_confirm')
         self.dialog.show(self)
@@ -227,8 +227,8 @@ class MyApp(App):
         result = self.dialog.get_field('ddate').get_value()
         self.date.set_value(result)
 
-        result = self.dialog.get_field('dlistView').get_value()
-        self.listView.select_by_value(result)
+        result = self.dialog.get_field('dlistView').get_key()
+        self.listView.select_by_key(result)
 
     # listener function
     def on_img_clicked(self):
