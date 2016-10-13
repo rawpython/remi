@@ -2317,6 +2317,62 @@ class MenuItem(Widget):
 
     def get_text(self):
         return self.get_child('text')
+        
+        
+class TreeView(Widget):
+    """TreeView widget can contain TreeItem."""
+
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        """
+        Args:
+            kwargs: See Widget.__init__()
+        """
+        super(TreeView, self).__init__(**kwargs)
+        self.type = 'ul'
+
+
+class TreeItem(Widget):
+    """TreeItem widget can contain other TreeItem."""
+
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text, **kwargs):
+        """
+        Args:
+            text (str):
+            kwargs: See Widget.__init__()
+        """
+        super(TreeItem, self).__init__(**kwargs)
+        self.sub_container = None
+        self.type = 'li'
+        self.attributes[self.EVENT_ONCLICK] = \
+            "sendCallback('%s','%s');" \
+            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
+        self.set_text(text)
+        self.treeopen = False
+        self.attributes['treeopen'] = 'false'
+        self.attributes['has-subtree'] = 'false'
+
+    def append(self, value, key=''):
+        if self.sub_container is None:
+            self.attributes['has-subtree'] = 'true'
+            self.sub_container = TreeView()
+            super(TreeItem, self).append(self.sub_container, key='subcontainer')
+        self.sub_container.append(value, key=key)
+
+    def set_text(self, text):
+        self.add_child('text', text)
+
+    def get_text(self):
+        return self.get_child('text')
+
+    def onclick(self):
+        self.treeopen = not self.treeopen
+        if(self.treeopen):
+            self.attributes['treeopen'] = 'true'
+        else:
+            self.attributes['treeopen'] = 'false'
+        super(TreeItem, self).onclick()
 
 
 class FileUploader(Widget):

@@ -620,3 +620,36 @@ input[type='range']:disabled::-moz-range-thumb {
     font-size: 13px;
    }
 }
+
+ul.TreeView{
+    list-style-type: none;
+    padding: 0;
+    position: relative;
+    display: block;
+}
+.TreeItem{
+    background-repeat: no-repeat;
+    padding-left: 18px;
+    display: block;
+}
+.TreeItem[has-subtree='true'][treeopen='false']{
+    background-image: url('/res/plus.png');
+    background-position-y: 4px;
+}
+.TreeItem[has-subtree='true'][treeopen='true']{
+    background-image: url('/res/minus.png');
+    background-position-y: 4px;
+    border-bottom: 0;
+}
+.TreeItem[treeopen="false"] .TreeView .TreeItem{
+    display: none;
+}
+.TreeItem[treeopen="false"] .TreeView{
+    display: none;
+}
+.TreeItem:hover {
+    background-color: rgba(33, 150, 243, .26);
+}
+.TreeItem[has-subtree='true'][treeopen='true']:hover {
+    background-color: transparent;
+}
