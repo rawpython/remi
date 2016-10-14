@@ -488,14 +488,13 @@ class Editor(App):
         key = "root" if parent==self.project else widget.identifier
         if root_tree_node:
             parent.append(widget,key)
-            if self.selectedWidget == self.project:
-                self.on_widget_selection( widget )
         for child in widget.children.values():
             if type(child) == str:
                 continue
             self.add_widget_to_editor(child, widget, False)
             
         self.instancesWidget.update(self.project, self.selectedWidget)
+        self.on_widget_selection(widget)
     
     def on_widget_selection(self, widget):
         self.remove_box_shadow_selected_widget()
