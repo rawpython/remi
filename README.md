@@ -284,6 +284,7 @@ Contributors
 Thank you for collaborating with us to make Remi better!
 The real power of opensource are contributors. Please feel free to partecipate to this project, and consider to add yourself to the following list.
 Yes I know that github already provides a list of contributors, but I feel that I must mention who helps.
+
 [Davide Rosa](https://github.com/dddomodossola)
 
 [John Stowers](https://github.com/nzjrs)
@@ -316,6 +317,12 @@ Yes I know that github already provides a list of contributors, but I feel that 
 Projects using Remi
 ===
 [Web based dynamic reconfigure for ROS robots](https://github.com/awesomebytes/web_dyn_reconf)
+
+[razmq](https://github.com/MrYsLab/razmq)
+
+[Espresso-ARM](http://hallee.github.io/espresso-arm/)
+
+[PiPresents](https://github.com/KenT2/pipresents-gapless)
 
 
 Other Implementations
