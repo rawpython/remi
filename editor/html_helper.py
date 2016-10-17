@@ -106,6 +106,7 @@ editorAttributeDictionary = {
     'top':{'type':'css_size', 'description':'Widget top.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
     'right':{'type':'css_size', 'description':'Widget right.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
     'bottom':{'type':'css_size', 'description':'Widget bottom.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}},
+    'overflow':{'type':gui.DropDown, 'description':'Visibility behavior in case of content does not fit in size.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'possible_values':('visible','hidden','scroll','auto')}},
 
     'background-color':{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
     'background-image':{'type':'url_editor', 'description':'An optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}},
