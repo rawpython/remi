@@ -44,12 +44,20 @@ class ResizeHelper(gui.Widget):
         #refWidget is the target widget that will be resized
         #newParent is the container
         if self.parent:
-            self.parent.remove_child(self)
+            try:
+                self.parent.remove_child(self)
+            except:
+                #there was no ResizeHelper placed
+                pass
         if newParent==None:
             return
         self.parent = newParent
         self.refWidget = refWidget
-        self.parent.append(self)
+        try:
+            self.parent.append(self)
+        except:
+            #the selected widget's parent can't contain a ResizeHelper
+            pass
         self.update_position()
             
     def on_dropped(self, left, top):
@@ -488,11 +496,11 @@ class Editor(App):
         key = "root" if parent==self.project else widget.identifier
         if root_tree_node:
             parent.append(widget,key)
-        for child in widget.children.values():
+        dcopy = widget.children.copy()
+        for child in dcopy.values():
             if type(child) == str:
                 continue
             self.add_widget_to_editor(child, widget, False)
-            
         self.instancesWidget.update(self.project, self.selectedWidget)
         self.on_widget_selection(widget)
     
