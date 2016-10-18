@@ -206,7 +206,7 @@ class Project(gui.Widget):
                 #if the member is decorated by decorate_set_on_listener and the function is referred to this event
                 if hasattr(setOnEventListenerFunc, '_event_listener') and setOnEventListenerFunc._event_listener['eventName']==registered_event_name:
                     listenerPrototype = setOnEventListenerFunc._event_listener['prototype']
-                    listener = widget.eventManager.listeners[registered_event_name]['instance']
+                    listener = widget.eventManager.listeners[registered_event_name]['callback']
                     listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
@@ -325,25 +325,25 @@ class Editor(App):
         
         self.toolbar = editor_widgets.ToolBar(width='100%', height='30px', margin='0px 0px')
         self.toolbar.style['border-bottom'] = '1px solid rgba(0,0,0,.12)'
-        self.toolbar.add_command('/res/delete.png', self, 'toolbar_delete_clicked', 'Delete Widget')
-        self.toolbar.add_command('/res/cut.png', self, 'menu_cut_selection_clicked', 'Cut Widget')
-        self.toolbar.add_command('/res/paste.png', self, 'menu_paste_selection_clicked', 'Paste Widget')
+        self.toolbar.add_command('/res/delete.png', self.toolbar_delete_clicked, 'Delete Widget')
+        self.toolbar.add_command('/res/cut.png', self.menu_cut_selection_clicked, 'Cut Widget')
+        self.toolbar.add_command('/res/paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
         
         self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
-        self.fileOpenDialog.set_on_confirm_value_listener(self, 'on_open_dialog_confirm')
+        self.fileOpenDialog.set_on_confirm_value_listener(self.on_open_dialog_confirm)
         
         self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog('Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
         self.fileSaveAsDialog.add_fileinput_field('untitled.py')
-        self.fileSaveAsDialog.set_on_confirm_value_listener(self, 'on_saveas_dialog_confirm')        
+        self.fileSaveAsDialog.set_on_confirm_value_listener(self.on_saveas_dialog_confirm)        
 
-        m10.set_on_click_listener(self, 'menu_new_clicked')
-        m11.set_on_click_listener(self.fileOpenDialog, 'show')
-        m121.set_on_click_listener(self, 'menu_save_clicked')
-        m122.set_on_click_listener(self.fileSaveAsDialog, 'show')
-        m21.set_on_click_listener(self, 'menu_cut_selection_clicked')
-        m22.set_on_click_listener(self, 'menu_paste_selection_clicked')
+        m10.set_on_click_listener(self.menu_new_clicked)
+        m11.set_on_click_listener(self.fileOpenDialog.show)
+        m121.set_on_click_listener(self.menu_save_clicked)
+        m122.set_on_click_listener(self.fileSaveAsDialog.show)
+        m21.set_on_click_listener(self.menu_cut_selection_clicked)
+        m22.set_on_click_listener(self.menu_paste_selection_clicked)
         
-        m3.set_on_click_listener(self, 'menu_project_config_clicked')
+        m3.set_on_click_listener(self.menu_project_config_clicked)
         
         self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style['position'] = 'relative'
@@ -418,7 +418,7 @@ class Editor(App):
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
-        self.instancesWidget.dropDown.set_on_change_listener(self, 'on_widget_selection')
+        self.instancesWidget.dropDown.set_on_change_listener(self.on_widget_selection)
         
         self.subContainerRight.append(self.instancesWidget)
         self.subContainerRight.append(self.attributeEditor)
@@ -429,7 +429,7 @@ class Editor(App):
         self.project.style['position'] = 'relative'
         
         self.resizeHelper = ResizeHelper(width=16, height=16)
-        self.menu_new_clicked()
+        self.menu_new_clicked(None)
         
         self.projectPathFilename = ''
         self.editCuttedWidget = None #cut operation, contains the cutted tag
@@ -516,7 +516,7 @@ class Editor(App):
         self.instancesWidget.update(self.project, self.selectedWidget)
         print("selected widget: " + widget.identifier)
         
-    def menu_new_clicked(self):
+    def menu_new_clicked(self, widget):
         print('new project')
         self.project.new()
         self.tabindex = 0 #incremental number to allow widgets selection
@@ -525,14 +525,14 @@ class Editor(App):
         if 'root' in self.project.children.keys():
             self.project.remove_child( self.project.children['root'] )
 
-    def on_open_dialog_confirm(self, filelist):
+    def on_open_dialog_confirm(self, widget, filelist):
         if len(filelist):
             widgetTree = self.project.load(filelist[0], self.projectConfiguration)
             if widgetTree!=None:
                 self.add_widget_to_editor( widgetTree )
             self.projectPathFilename = filelist[0]
         
-    def menu_save_clicked(self):
+    def menu_save_clicked(self, widget):
         #the resizeHelper have to be removed
         self.resizeHelper.setup(None, None)
         if self.projectPathFilename == '':
@@ -545,7 +545,7 @@ class Editor(App):
         if 'box-shadow' in self.selectedWidget.style.keys():
             del self.selectedWidget.style['box-shadow']
         
-    def on_saveas_dialog_confirm(self, path):
+    def on_saveas_dialog_confirm(self, widget, path):
         #the resizeHelper have to be removed
         self.resizeHelper.setup(None, None)
         if len(path):
@@ -554,7 +554,7 @@ class Editor(App):
             self.remove_box_shadow_selected_widget()
             self.project.save(self.projectPathFilename, self.projectConfiguration)
             
-    def menu_cut_selection_clicked(self):
+    def menu_cut_selection_clicked(self, widget):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
@@ -565,17 +565,17 @@ class Editor(App):
         self.instancesWidget.update(self.project, self.selectedWidget)
         print("tag cutted:" + self.editCuttedWidget.identifier)
 
-    def menu_paste_selection_clicked(self):
+    def menu_paste_selection_clicked(self, widget):
         if self.editCuttedWidget != None:
             key = "root" if self.selectedWidget==self.project else self.editCuttedWidget.identifier
             self.selectedWidget.append(self.editCuttedWidget, key)
             self.editCuttedWidget = None
             self.instancesWidget.update(self.project, self.selectedWidget)
 
-    def menu_project_config_clicked(self):
+    def menu_project_config_clicked(self, widget):
         self.projectConfiguration.show(self)
 
-    def toolbar_delete_clicked(self):
+    def toolbar_delete_clicked(self, widget):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
@@ -585,7 +585,7 @@ class Editor(App):
         self.selectedWidget = parent
         print("tag deleted")
         
-    def onkeydown(self, keypressed):
+    def onkeydown(self, widget, keypressed):
         if keypressed==46: #46 the delete keycode
             self.toolbar_delete_clicked()
         print("Key pressed: " + str(keypressed))

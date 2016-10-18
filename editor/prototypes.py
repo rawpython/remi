@@ -61,4 +61,4 @@ proto_style_setup = """%(varname)s.style['%(attrname)s'] = "%(attrvalue)s"\n    
 
 proto_layout_append = "%(parentname)s.append(%(varname)s)\n        "
 
-proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s,'%(listener_function)s')\n        "
+proto_set_listener = "%(sourcename)s.%(register_function)s(%(listenername)s.%(listener_function)s)\n        "
