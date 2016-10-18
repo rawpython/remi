@@ -45,7 +45,7 @@ class InstancesDropDown(gui.DropDown):
     
     def onchange(self, value):
         self.select_by_value(value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [self._selected_item.instance])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (self._selected_item.instance,))
         
     def append_instances_from_tree(self, node):
         if not hasattr(node, 'attributes'):
@@ -540,15 +540,15 @@ class EditorAttributes(gui.VBox):
     #this function is called by an EditorAttributeInput change event and propagates to the listeners 
     #adding as first parameter the tag to which it refers
     #widgetAttributeMember can be 'style' or 'attributes'
-    def onattribute_changed(self, widgetAttributeMember, attributeName, newValue):
+    def onattribute_changed(self, widget, widgetAttributeMember, attributeName, newValue):
         print("setting attribute name: %s    value: %s    attributeMember: %s"%(attributeName, newValue, widgetAttributeMember))
         getattr(self.targetWidget, widgetAttributeMember)[attributeName] = str(newValue)
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [widgetAttributeMember, attributeName, newValue])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, (widgetAttributeMember, attributeName, newValue))
         
-    def onattribute_remove(self, widgetAttributeMember, attributeName):
+    def onattribute_remove(self, widget, widgetAttributeMember, attributeName):
         if attributeName in getattr(self.targetWidget, widgetAttributeMember):
             del getattr(self.targetWidget, widgetAttributeMember)[attributeName]
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [widgetAttributeMember, attributeName])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, (widgetAttributeMember, attributeName))
     
     def set_widget(self, widget):
         self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
@@ -581,7 +581,7 @@ class CssSizeInput(gui.Widget):
     
     def on_value_changed(self, widget, new_value):
         new_size = str(self.numInput.get_value()) + str(self.dropMeasureUnit.get_value())
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_size])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_size,))
         
     def set_on_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
@@ -627,7 +627,7 @@ class UrlPathInput(gui.Widget):
         self.selectionDialog.set_on_confirm_value_listener(self.file_dialog_confirmed)
     
     def on_txt_changed(self, widget, value):
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
     
     def on_file_selection_bt_pressed(self, widget):
         self.selectionDialog.show(self.appInstance)
@@ -635,7 +635,7 @@ class UrlPathInput(gui.Widget):
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
             self.txtInput.set_value("url('/res/" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
-            return self.eventManager.propagate(self.EVENT_ONCHANGE, [self.txtInput.get_value()])
+            return self.eventManager.propagate(self.EVENT_ONCHANGE, (self.txtInput.get_value(),))
             
     def set_on_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
@@ -665,7 +665,7 @@ class StringEditor(gui.TextInput):
             """if((event.charCode||event.keyCode)==13){event.keyCode = 0;event.charCode = 0; return false;}""" % {'id': self.identifier}
             
     def onkeyup(self, new_value):
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
         
 
 #widget that allows to edit a specific html and css attributes
@@ -733,7 +733,7 @@ class EditorAttributeInput(gui.Widget):
         
     def on_attribute_remove(self, widget):
         self.set_valid(False)
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONREMOVE, [self.attributeDict['affected_widget_attribute'], self.attributeName])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONREMOVE, (self.attributeDict['affected_widget_attribute'], self.attributeName))
     
     def set_on_attribute_remove_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONREMOVE, callback, *userdata)
@@ -751,7 +751,7 @@ class EditorAttributeInput(gui.Widget):
     
     def on_attribute_changed(self, widget, value):
         self.set_valid()
-        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, [self.attributeDict['affected_widget_attribute'], self.attributeName, value])
+        return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, (self.attributeDict['affected_widget_attribute'], self.attributeName, value))
         
     def set_on_attribute_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, callback, *userdata)
