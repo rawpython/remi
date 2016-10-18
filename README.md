@@ -4,6 +4,31 @@
 [![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
+Notice
+===
+*2016 October 18* - event API change
+Event registration now have to be done with callbacks instead of passing listener instance and function name.
+i.e.
+```
+widget.set_on_click_listener(listener.my_callback)
+```
+
+The callback function now receives the emitter instance as first parameter.
+i.e.
+```
+def my_callback(self, widget):
+    pass
+```
+
+Event listener registration now accepts user data extra parameters.
+i.e.
+```
+widget.set_on_click_listener(listener.my_callback, user_param1, user_param2)
+def my_callback(self, widget, user_param1, user_param2):
+    pass
+```
+
+
 Getting Started
 ===
 [Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
