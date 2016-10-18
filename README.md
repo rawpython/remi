@@ -6,7 +6,7 @@ Remi is a GUI library for Python applications which transpiles an application's 
 
 Notices
 ===
-*2016 October 18* - event API change.
+*2016 October 18* - event API change. BROKEN BACKWARD COMPATIBILITY.
 
 Event registration now have to be done with callbacks instead of passing listener instance and function name.
 i.e.
@@ -28,6 +28,8 @@ widget.set_on_click_listener(listener.my_callback, user_param1, user_param2)
 def my_callback(self, widget, user_param1, user_param2):
     pass
 ```
+
+Do you need support? Reach us on [Gitter chat](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge).
 
 
 Getting Started
