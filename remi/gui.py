@@ -1340,7 +1340,7 @@ class InputDialog(GenericDialog):
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (value,))
 
-    def confirm_value(self):
+    def confirm_value(self, widget):
         """Event called pressing on OK button."""
         self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (self.inputText.get_text(),))
@@ -1437,7 +1437,7 @@ class ListView(Widget, _SyncableValuesMixin):
         self._selected_key = None
         super(ListView, self).empty()
 
-    def onselection(self, clicked_item):
+    def onselection(self, widget, clicked_item):
         """Called when a new item gets selected in the list."""
         self._selected_key = None
         for k in self.children:
@@ -2094,7 +2094,7 @@ class FileFolderNavigator(Widget):
             self.itemContainer.append(fi)
         self.append(self.itemContainer, key='items')  # replace the old widget
 
-    def dir_go_back(self):
+    def dir_go_back(self, widget):
         curpath = os.getcwd()  # backup the path
         try:
             os.chdir(self.pathEditor.get_text())
@@ -2105,7 +2105,7 @@ class FileFolderNavigator(Widget):
             log.error('error changing directory', exc_info=True)
         os.chdir(curpath)  # restore the path
 
-    def dir_go(self):
+    def dir_go(self, widget):
         # when the GO button is pressed, it is supposed that the pathEditor is changed
         curpath = os.getcwd()  # backup the path
         try:
@@ -2129,7 +2129,7 @@ class FileFolderNavigator(Widget):
         self.pathEditor.set_text(directory)
         os.chdir(curpath)  # restore the path
 
-    def on_folder_item_selected(self, folderitem):
+    def on_folder_item_selected(self, widget, folderitem):
         if folderitem.isFolder and (not self.allow_folder_selection):
             folderitem.set_selected(False)
             return
@@ -2147,7 +2147,7 @@ class FileFolderNavigator(Widget):
         else:
             self.selectionlist.append(f)
 
-    def on_folder_item_click(self, folderitem):
+    def on_folder_item_click(self, widget, folderitem):
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
@@ -2184,7 +2184,7 @@ class FileFolderItem(Widget):
         self.append(self.label, key='text')
         self.selected = False
 
-    def onclick(self):
+    def onclick(self, widget):
         return self.eventManager.propagate(self.EVENT_ONCLICK, (self,))
 
     @decorate_set_on_listener("onclick", "(self,emitter,folderItemInstance)")
@@ -2195,7 +2195,7 @@ class FileFolderItem(Widget):
         self.selected = selected
         self.label.style['font-weight'] = 'bold' if self.selected else 'normal'
 
-    def onselection(self):
+    def onselection(self, widget):
         self.set_selected(not self.selected)
         return self.eventManager.propagate(self.EVENT_ONSELECTION, (self,))
 
