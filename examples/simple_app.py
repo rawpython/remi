@@ -31,12 +31,11 @@ class MyApp(App):
         # setting the listener for the onclick event of the button
         self.npressed = 0
 
-        bt.set_on_click_listener(self, 'on_button_pressed', lbl)
-        bt.set_on_mousedown_listener(self, 'on_button_mousedown', 'data1', 2,'three')
+        bt.set_on_click_listener(self.on_button_pressed, lbl)
+        bt.set_on_mousedown_listener(self.on_button_mousedown, 'data1', 2,'three')
         
         #this will never be called, can't register an event more than one time
-        bt.set_on_mouseup_listener(self, 'on_button_mouseup', 'data1') 
-        bt.set_on_mouseup_listener(self, 'on_button_mouseup2')
+        bt.set_on_mouseup_listener(self.on_button_mouseup, 'data1') 
 
         # appending a widget to another, the first argument is a string key
         wid.append(lbl)
