@@ -1433,11 +1433,11 @@ class ListView(Widget, _SyncableValuesMixin):
         self._selected_key = None
         super(ListView, self).empty()
 
-    def onselection(self, widget, clicked_item):
+    def onselection(self, widget):
         """Called when a new item gets selected in the list."""
         self._selected_key = None
         for k in self.children:
-            if self.children[k] == clicked_item:
+            if self.children[k] == widget: #widget is the selected ListItem
                 self._selected_key = k
                 if (self._selected_item is not None) and self._selectable:
                     self._selected_item.attributes['selected'] = False
@@ -1557,7 +1557,7 @@ class ListItem(Widget):
 
     def onclick(self):
         """Called when the item gets clicked. It is managed by the container ListView."""
-        return self.eventManager.propagate(self.EVENT_ONCLICK, (self,))
+        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
 
 
 class DropDown(Widget, _SyncableValuesMixin):
@@ -2125,7 +2125,7 @@ class FileFolderNavigator(Widget):
         self.pathEditor.set_text(directory)
         os.chdir(curpath)  # restore the path
 
-    def on_folder_item_selected(self, widget, folderitem):
+    def on_folder_item_selected(self, folderitem):
         if folderitem.isFolder and (not self.allow_folder_selection):
             folderitem.set_selected(False)
             return
@@ -2181,9 +2181,9 @@ class FileFolderItem(Widget):
         self.selected = False
 
     def onclick(self, widget):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, (self,))
+        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
 
-    @decorate_set_on_listener("onclick", "(self,emitter,folderItemInstance)")
+    @decorate_set_on_listener("onclick", "(self,emitter)")
     def set_on_click_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCLICK, callback, *userdata)
 
@@ -2193,9 +2193,9 @@ class FileFolderItem(Widget):
 
     def onselection(self, widget):
         self.set_selected(not self.selected)
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, (self,))
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, ())
 
-    @decorate_set_on_listener("onselection", "(self,emitter,folderItemInstance)")
+    @decorate_set_on_listener("onselection", "(self,emitter)")
     def set_on_selection_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONSELECTION, callback, *userdata)
 
