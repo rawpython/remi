@@ -448,7 +448,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onfocus", "(self,emitter)")
     def set_on_focus_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onfocus event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_focus(self, widget).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -466,6 +468,8 @@ class Widget(Tag):
     def set_on_blur_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onblur event.
 
+        Note: the listener prototype have to be in the form on_widget_blur(self, widget).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -483,6 +487,8 @@ class Widget(Tag):
     def set_on_click_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onclick event.
 
+        Note: the listener prototype have to be in the form on_widget_click(self, widget).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -499,7 +505,9 @@ class Widget(Tag):
     @decorate_set_on_listener("oncontextmenu", "(self,emitter)")
     def set_on_contextmenu_listener(self, callback, *userdata):
         """Registers the listener for the Widget.oncontextmenu event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_contextmenu(self, widget).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -511,13 +519,19 @@ class Widget(Tag):
 
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
+        
+        Args:
+            x (int): position of the mouse inside the widget
+            y (int): position of the mouse inside the widget
         """
         return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, (x, y))
 
     @decorate_set_on_listener("onmousedown", "(self,emitter,x,y)")
     def set_on_mousedown_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmousedown event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_mousedown(self, widget, x, y).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -532,6 +546,10 @@ class Widget(Tag):
 
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
+        
+        Args:
+            x (int): position of the mouse inside the widget
+            y (int): position of the mouse inside the widget
         """
         return self.eventManager.propagate(self.EVENT_ONMOUSEUP, (x, y))
 
@@ -539,6 +557,8 @@ class Widget(Tag):
     def set_on_mouseup_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseup event.
 
+        Note: the listener prototype have to be in the form on_widget_mouseup(self, widget, x, y).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -562,7 +582,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onmouseout", "(self,emitter)")
     def set_on_mouseout_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseout event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_mouseout(self, widget).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -586,7 +608,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onmouseleave", "(self,emitter)")
     def set_on_mouseleave_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseleave event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_mouseleave(self, widget).
+        
         Args:
             callback (function): Callback function pointer.
         """
@@ -608,7 +632,7 @@ class Widget(Tag):
     @decorate_set_on_listener("onmousemove", "(self,emitter,x,y)")
     def set_on_mousemove_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmousemove event.
-        Note: the listener prototype have to be in the form on_widget_mousemove(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_mousemove(self, widget, x, y)
 
         Args:
             callback (function): Callback function pointer.
@@ -634,7 +658,7 @@ class Widget(Tag):
     @decorate_set_on_listener("ontouchmove", "(self,emitter,x,y)")
     def set_on_touchmove_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchmove event.
-        Note: the listener prototype have to be in the form on_widget_touchmove(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchmove(self, widget, x, y)
 
         Args:
             callback (function): Callback function pointer.
@@ -660,7 +684,7 @@ class Widget(Tag):
     @decorate_set_on_listener("ontouchstart", "(self,emitter,x,y)")
     def set_on_touchstart_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchstart event.
-        Note: the listener prototype have to be in the form on_widget_touchstart(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchstart(self, widget, x, y)
 
         Args:
             callback (function): Callback function pointer.
@@ -686,7 +710,7 @@ class Widget(Tag):
     @decorate_set_on_listener("ontouchend", "(self,emitter,x,y)")
     def set_on_touchend_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchend event.
-        Note: the listener prototype have to be in the form on_widget_touchend(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchend(self, widget, x, y)
 
         Args:
             callback (function): Callback function pointer.
@@ -713,7 +737,7 @@ class Widget(Tag):
     def set_on_touchenter_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchenter event.
 
-        Note: the listener prototype have to be in the form on_widget_touchenter(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchenter(self, widget, x, y)
 
         Args:
             callback (function): Callback function pointer.
@@ -735,7 +759,7 @@ class Widget(Tag):
     @decorate_set_on_listener("ontouchleave", "(self,emitter)")
     def set_on_touchleave_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchleave event.
-        Note: the listener prototype have to be in the form on_widget_touchleave(self)
+        Note: the listener prototype have to be in the form on_widget_touchleave(self, widget)
 
         Args:
             callback (function): Callback function pointer.
@@ -756,7 +780,7 @@ class Widget(Tag):
     def set_on_touchcancel_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchcancel event.
 
-        Note: the listener prototype have to be in the form on_widget_touchcancel(self)
+        Note: the listener prototype have to be in the form on_widget_touchcancel(self, widget)
 
         Args:
             callback (function): Callback function pointer.
@@ -1039,7 +1063,7 @@ class TextInput(Widget):
     def set_on_change_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onchange event.
 
-        Note: the listener prototype have to be in the form on_textinput_change(self, new_value) where new_value is the
+        Note: the listener prototype have to be in the form on_textinput_change(self, widget, new_value) where new_value is the
             new text content of the TextInput.
 
         Args:
@@ -1062,7 +1086,7 @@ class TextInput(Widget):
     def set_on_key_down_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onkeydown event.
 
-        Note: the listener prototype have to be in the form on_textinput_key_down(self, new_value) where new_value is
+        Note: the listener prototype have to be in the form on_textinput_key_down(self, widget, new_value) where new_value is
             the new text content of the TextInput.
 
         Note: Overwrites Widget.onenter.
@@ -1090,7 +1114,7 @@ class TextInput(Widget):
     def set_on_enter_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onenter event.
 
-        Note: the listener prototype have to be in the form on_textinput_enter(self, new_value) where new_value is
+        Note: the listener prototype have to be in the form on_textinput_enter(self, widget, new_value) where new_value is
             the new text content of the TextInput.
 
         Note: Overwrites Widget.onkeydown.
@@ -1268,7 +1292,7 @@ class GenericDialog(Widget):
     def set_on_confirm_dialog_listener(self, callback, *userdata):
         """Registers the listener for the GenericDialog.confirm_dialog event.
 
-        Note: The prototype of the listener have to be like my_on_confirm_dialog(self).
+        Note: The prototype of the listener have to be like my_on_confirm_dialog(self, widget).
 
         Args:
             callback (function): Callback function pointer.
@@ -1284,7 +1308,7 @@ class GenericDialog(Widget):
     def set_on_cancel_dialog_listener(self, callback, *userdata):
         """Registers the listener for the GenericDialog.cancel_dialog event.
 
-        Note: The prototype of the listener have to be like my_on_cancel_dialog(self).
+        Note: The prototype of the listener have to be like my_on_cancel_dialog(self, widget).
 
         Args:
             callback (function): Callback function pointer.
@@ -1322,13 +1346,13 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(title, message, **kwargs)
 
         self.inputText = TextInput()
-        self.inputText.set_on_enter_listener(self, 'on_text_enter_listener')
+        self.inputText.set_on_enter_listener(self.on_text_enter_listener)
         self.add_field('textinput', self.inputText)
         self.inputText.set_text(initial_value)
 
         self.set_on_confirm_dialog_listener(self.confirm_value)
 
-    def on_text_enter_listener(self, value):
+    def on_text_enter_listener(self, widget, value):
         """event called pressing on ENTER key.
 
         propagates the string content of the input field
@@ -1345,7 +1369,7 @@ class InputDialog(GenericDialog):
     def set_on_confirm_value_listener(self, callback, *userdata):
         """Registers the listener for the InputDialog.confirm_value event.
 
-        Note: The prototype of the listener have to be like my_on_confirm_dialog(self, confirmed_value), where
+        Note: The prototype of the listener have to be like my_on_confirm_dialog(self, widget, confirmed_value), where
             confirmed_value is the text content of the input field.
 
         Args:
@@ -1451,7 +1475,7 @@ class ListView(Widget, _SyncableValuesMixin):
     def set_on_selection_listener(self, callback, *userdata):
         """Registers the listener for the ListView.onselection event.
 
-        Note: The prototype of the listener have to be like my_list_onselection(self, selectedKey). Where selectedKey is
+        Note: The prototype of the listener have to be like my_list_onselection(self, widget, selectedKey). Where selectedKey is
         the unique string identifier for the selected item. To access the item use ListView.children[key], or its value
         directly by ListView.get_value.
 
@@ -1665,7 +1689,7 @@ class DropDown(Widget, _SyncableValuesMixin):
     def set_on_change_listener(self, callback, *userdata):
         """Registers the listener for the DropDown.onchange event.
 
-        Note: The prototype of the listener have to be like my_dropdown_onchange(self, value). Where value is
+        Note: The prototype of the listener have to be like my_dropdown_onchange(self, widget, value). Where value is
         the textual content of the selected item.
 
         Args:
@@ -1836,7 +1860,10 @@ class Input(Widget):
 
     @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
     def set_on_change_listener(self, callback, *userdata):
-        """register the listener for the onchange event."""
+        """Register the listener for the onchange event.
+        
+        Note: the listener prototype have to be in the form on_input_changed(self, widget, value).
+        """
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
     def set_read_only(self, readonly):
@@ -1955,6 +1982,10 @@ class Slider(Input):
 
     @decorate_set_on_listener("oninput", "(self,emitter,new_value)")
     def set_oninput_listener(self, callback, *userdata):
+        """Register the listener for the oninput event.
+        
+        Note: the listener prototype have to be in the form on_slider_input(self, widget, value).
+        """
         self.attributes[self.EVENT_ONINPUT] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONINPUT}
@@ -2235,6 +2266,10 @@ class FileSelectionDialog(GenericDialog):
 
     @decorate_set_on_listener("confirm_value", "(self,emitter,fileList)")
     def set_on_confirm_value_listener(self, callback, *userdata):
+        """Register the listener for the on_confirm event.
+        
+        Note: the listener prototype have to be in the form on_file_selection_confirm(self, widget, selectedFileStringList).
+        """
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, callback, *userdata)
 
 
@@ -2383,6 +2418,10 @@ class FileUploader(Widget):
 
     @decorate_set_on_listener("onsuccess", "(self,emitter,filename)")
     def set_on_success_listener(self, callback, *userdata):
+        """Register the listener for the onsuccess event.
+        
+        Note: the listener prototype have to be in the form on_fileupload_success(self, widget, filename).
+        """
         self.eventManager.register_listener(
                 self.EVENT_ON_SUCCESS, callback, *userdata)
 
@@ -2391,6 +2430,10 @@ class FileUploader(Widget):
 
     @decorate_set_on_listener("onfailed", "(self,emitter,filename)")
     def set_on_failed_listener(self, callback, *userdata):
+        """Register the listener for the onfailed event.
+        
+        Note: the listener prototype have to be in the form on_fileupload_failed(self, widget, filename).
+        """
         self.eventManager.register_listener(self.EVENT_ON_FAILED, callback, *userdata)
         
     def ondata(self, filedata, filename):
@@ -2400,6 +2443,11 @@ class FileUploader(Widget):
 
     @decorate_set_on_listener("ondata", "(self,emitter,filedata, filename)")
     def set_on_data_listener(self, callback, *userdata):
+        """Register the listener for the ondata event.
+        
+        Note: the listener prototype have to be in the form on_fileupload_data(self, widget, filedata, filename), 
+            where filedata is the bytearray chunk.
+        """
         self.eventManager.register_listener(self.EVENT_ON_DATA, callback, *userdata)
 
 
