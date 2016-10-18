@@ -75,7 +75,7 @@ class MyApp(App):
         
         bt = gui.Button('Data', width=100, height=30)
         bt.style['margin'] = '10px'
-        bt.set_on_click_listener(self, 'on_button_pressed')
+        bt.set_on_click_listener(self.on_button_pressed)
 
         self.plot_data = [0, 1]
         self.mpl = MatplotImage(width=250, height=250)
@@ -89,7 +89,7 @@ class MyApp(App):
 
         return wid
 
-    def on_button_pressed(self):
+    def on_button_pressed(self, widget):
         self.plot_data.append(random.random())
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()

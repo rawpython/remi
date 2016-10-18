@@ -30,7 +30,7 @@ class MyApp(App):
         self.bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_click_listener(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)
@@ -40,7 +40,7 @@ class MyApp(App):
         return wid
 
     # listener function
-    def on_button_pressed(self):
+    def on_button_pressed(self, widget):
         self.lbl.set_text('A notification message should appear.')
         self.bt.set_text('Hi!')
         self.notification_message("Message title", "Hello world!", "")

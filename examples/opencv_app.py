@@ -82,8 +82,8 @@ class MyApp(App):
         m1 = gui.MenuItem('Video', width=100, height=30)
         m11 = gui.MenuItem('Play', width=100, height=30)
         m12 = gui.MenuItem('Stop', width=100, height=30)
-        m11.set_on_click_listener(self, 'menu_play_clicked')
-        m12.set_on_click_listener(self, 'menu_stop_clicked')
+        m11.set_on_click_listener(self.menu_play_clicked)
+        m12.set_on_click_listener(self.menu_stop_clicked)
 
         menu.append(m1)
         m1.append(m11)
@@ -95,10 +95,10 @@ class MyApp(App):
         # returning the root widget
         return wid
 
-    def menu_play_clicked(self):
+    def menu_play_clicked(self, widget):
         self.opencvideo_widget.play()
 
-    def menu_stop_clicked(self):
+    def menu_stop_clicked(self, widget):
         self.opencvideo_widget.stop()
 
 

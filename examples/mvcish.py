@@ -31,7 +31,7 @@ class MyApp(App):
         self.bt = gui.Button('Update Models', width=200, height=30)
         self.bt.style['margin'] = 'auto 50px'
 
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_click_listener(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.dd)
@@ -43,7 +43,7 @@ class MyApp(App):
         return wid
 
     # listener function
-    def on_button_pressed(self):
+    def on_button_pressed(self, widget):
         txt = self.ent.get_text()
         if txt:
             self._items = tuple("/test/%s" % i for i in txt.split(' '))

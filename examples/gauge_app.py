@@ -28,20 +28,20 @@ class InputGauge(gui.Widget):
         self.gauge.set_value(_min)
         self.append(self.gauge)
         
-        self.set_on_mousedown_listener(self, "confirm_value")
-        self.set_on_mousemove_listener(self.gauge, "onmousemove")
+        self.set_on_mousedown_listener(self.confirm_value)
+        self.set_on_mousemove_listener(self.gauge.onmousemove)
     
-    def confirm_value(self, x, y):
+    def confirm_value(self, widget, x, y):
         """event called clicking on the gauge and so changing its value.
            propagates the new value
         """
-        self.gauge.onmousedown(x, y)
-        params = [self.gauge.value]
+        self.gauge.onmousedown(self.gauge, x, y)
+        params = (self.gauge.value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
 
-    #@decorate_set_on_listener("confirm_value", "(value)")
-    def set_on_confirm_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+    #@decorate_set_on_listener("confirm_value", "(value, widget)")
+    def set_on_confirm_value_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
     
 
 
@@ -145,11 +145,11 @@ class Gauge(gui.Svg):
         xy = self.value_to_xy_tuple(value, self.radius-10)
         self.arrow_preview.attributes['transform'] = "translate(%s,%s) rotate(%s)" % (xy[0], xy[1], math.degrees(-angle))
 
-    def onmousedown(self, x, y):
+    def onmousedown(self, widget, x, y):
         value = self.xy_tuple_to_value([int(x)-self.radius, -(int(y)-self.radius)])
         self.set_value(value)
 
-    def onmousemove(self, x, y):
+    def onmousemove(self, widget, x, y):
         value = self.xy_tuple_to_value([int(x)-self.radius, -(int(y)-self.radius)])
         self.set_value_preview(value)
 

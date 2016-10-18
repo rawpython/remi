@@ -123,18 +123,16 @@ class Project(gui.Widget):
             if force or (hasattr(event['eventsource'],'path_to_this_widget') and hasattr(event['eventlistener'],'path_to_this_widget')):
                 if (force or (widget.attributes['editor_varname'] in event['eventsource'].path_to_this_widget and widget.attributes['editor_varname'] in event['eventlistener'].path_to_this_widget)) and event['done']==False:
                     #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
-                    if not event['eventsource'] in self.known_project_children or not event['eventlistener'] in self.known_project_children:
-                        continue
                     event['done'] = True
                     
                     source_filtered_path=event['eventsource'].path_to_this_widget[:]
                     listener_filtered_path=event['eventlistener'].path_to_this_widget[:]
                     for v in widget.path_to_this_widget:
-                        if v in source_filtered_path:
-                            source_filtered_path.remove(v)
-                            listener_filtered_path.remove(v)
-                    event['eventsource'].path_to_this_widget = source_filtered_path
-                    event['eventlistener'].path_to_this_widget = listener_filtered_path
+                        #if v in source_filtered_path:
+                        source_filtered_path.remove(v)
+                        listener_filtered_path.remove(v)
+                    #event['eventsource'].path_to_this_widget = source_filtered_path
+                    #event['eventlistener'].path_to_this_widget = listener_filtered_path
 
                     sourcename = widgetVarName
                     if len(source_filtered_path)>0:
@@ -171,7 +169,7 @@ class Project(gui.Widget):
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
                     self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
-        
+    
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
         self.known_project_children.append(widget)
         if hasattr(widget, 'path_to_this_widget'):

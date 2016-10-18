@@ -882,18 +882,17 @@ class TabBox(Widget):
             li.style['float'] = "left"
             li.style['width'] = "%.1f%%" % tab_w
 
-    def _on_tab_pressed(self, tab_identifier):
+    def _on_tab_pressed(self, widget, _a, _li, _holder):
         # remove active on all tabs, and hide their contents
         for a, li, holder in self._tabs.values():
             a.remove_class('active')
             holder.style['display'] = 'none'
-        # add it on the current one
-        a, li, holder = self._tabs[tab_identifier]
-        a.add_class('active')
-        holder.style['display'] = 'block'
+        
+        _a.add_class('active')
+        _holder.style['display'] = 'block'
 
         # call other callbacks
-        cb = self._tab_cbs[tab_identifier]
+        cb = self._tab_cbs[_holder.identifier]
         if cb is not None:
             cb()
 
@@ -919,12 +918,9 @@ class TabBox(Widget):
         a.attributes['href'] = 'javascript:void(0);'
 
         a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
-        # fixme: userdata in callbacks
-        f = lambda _id=holder.identifier: self._on_tab_pressed(_id)
-        fname = 'on_tab_pressed_%s' % holder.identifier
-        setattr(self, fname, f)
+        
         self._tab_cbs[holder.identifier] = tab_cb
-        a.eventManager.register_listener(a.EVENT_ONCLICK, self, fname)
+        a.eventManager.register_listener(a.EVENT_ONCLICK, self._on_tab_pressed, a, li, holder)
 
         a.add_child('text', name)
         li.add_child('a', a)
