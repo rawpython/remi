@@ -29,7 +29,9 @@ class MyApp(App):
 
         # setting the listener for the onclick event of the button
         self.npressed = 0
-        self.bt.set_on_click_listener(self, 'on_button_pressed', 'userdata1', 2)
+        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_mousedown_listener(self, 'on_button_mousedown', 'data1', 2,'three')
+        self.bt.set_on_mouseup_listener(self, 'on_button_mouseup', 'data1')
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)
@@ -39,14 +41,20 @@ class MyApp(App):
         return wid
 
     # listener function
-    def on_button_pressed(self, userdata1=None, userdata2=None):
+    def on_button_pressed(self):
         self.npressed += 1
-        self.lbl.set_text('Button pressed %s times. Userdata: %s - %s' % (self.npressed, userdata1, userdata2))
+        self.lbl.set_text('Button pressed %s times.' % self.npressed)
         self.bt.set_text('Hi!')
+        
+    def on_button_mousedown(self, x, y, mydata1, mydata2, mydata3):
+        print("x:%s  y:%s  data1:%s  data2:%s  data3:%s"%(x, y, mydata1, mydata2, mydata3))
+        
+    def on_button_mouseup(self, x, y, mydata1):
+        print("x:%s  y:%s  data1:%s"%(x, y, mydata1))
 
 
 if __name__ == "__main__":
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp, debug=True)
+    start(MyApp, debug=False)

@@ -519,7 +519,7 @@ class Widget(Tag):
         return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, (x, y))
 
     @decorate_set_on_listener("onmousedown", "(self,x,y)")
-    def set_on_mousedown_listener(self, listener, funcname):
+    def set_on_mousedown_listener(self, listener, funcname, *userdata):
         """Registers the listener for the Widget.onmousedown event.
 
         Args:
@@ -533,7 +533,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSEDOWN)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname, *userdata)
 
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
@@ -541,7 +541,7 @@ class Widget(Tag):
         return self.eventManager.propagate(self.EVENT_ONMOUSEUP, (x, y))
 
     @decorate_set_on_listener("onmouseup", "(self,x,y)")
-    def set_on_mouseup_listener(self, listener, funcname):
+    def set_on_mouseup_listener(self, listener, funcname, *userdata):
         """Registers the listener for the Widget.onmouseup event.
 
         Args:
@@ -555,7 +555,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSEUP)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname, *userdata)
 
     def onmouseout(self):
         """Called when the mouse cursor moves outside a Widget.
