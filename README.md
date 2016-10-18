@@ -4,6 +4,34 @@
 [![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
+Notices
+===
+*2016 October 18* - event API change. BROKEN BACKWARD COMPATIBILITY.
+
+Event registration now have to be done with callbacks instead of passing listener instance and function name.
+i.e.
+```
+widget.set_on_click_listener(listener.my_callback)
+```
+
+The callback function now receives the emitter instance as first parameter.
+i.e.
+```
+def my_callback(self, widget):
+    pass
+```
+
+Event listener registration now accepts user data extra parameters.
+i.e.
+```
+widget.set_on_click_listener(listener.my_callback, user_param1, user_param2)
+def my_callback(self, widget, user_param1, user_param2):
+    pass
+```
+
+Do you need support? Reach us on [Gitter chat](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge).
+
+
 Getting Started
 ===
 [Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
@@ -70,7 +98,7 @@ class MyApp(App):
         self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_click_listener(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         container.append(self.lbl)
@@ -80,7 +108,7 @@ class MyApp(App):
         return container
 
     # listener function
-    def on_button_pressed(self):
+    def on_button_pressed(self, widget):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
@@ -176,7 +204,7 @@ Such events are a convenient way to define the application behavior.
 Each widget has its own callbacks, depending on the type of user interaction it allows.
 The specific callbacks for the widgets will be illustrated later.
 
-In order to register a function as an event listener you have to call a function like set_on_xxx_listener passing as parameters the instance of widget that will manage the event and the literal string name of the listener function.
+In order to register a function as an event listener you have to call a function like set_on_xxx_listener passing as parameters the callback that will manage the event.
 Follows an example:
 
 ```py
@@ -193,7 +221,7 @@ class MyApp(App):
         self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_click_listener(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         container.append(self.lbl)
@@ -203,7 +231,7 @@ class MyApp(App):
         return container
 
     # listener function
-    def on_button_pressed(self):
+    def on_button_pressed(self, widget):
         self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
@@ -211,8 +239,10 @@ class MyApp(App):
 start(MyApp)
 ```
 
-In the shown example *self.bt.set_on_click_listener(self, 'on_button_pressed')* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
+In the shown example *self.bt.set_on_click_listener(self.on_button_pressed)* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
 Simple, easy.
+
+Listener's callbacks will receive the emitter's instance firstly, then all other parameters provided by the specific event.
 
 
 HTML Attribute accessibility

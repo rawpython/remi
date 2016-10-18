@@ -127,25 +127,26 @@ class _VersionedDictionary(dict):
 class _EventManager(object):
     """Manages the event propagation to the listeners functions"""
 
-    def __init__(self):
+    def __init__(self, emitter):
         self.listeners = {}
+        self.emitter = emitter
 
     def propagate(self, eventname, params):
         # if for an event there is a listener, it calls the listener passing the parameters
         if eventname not in self.listeners:
             return
         listener = self.listeners[eventname]
-        return getattr(listener['instance'], listener['funcname'])(*params)
+        return listener['callback'](self.emitter, *(params+listener['userdata']))
 
-    def register_listener(self, eventname, instance, funcname):
+    def register_listener(self, eventname, callback, *userdata):
         """register a listener for a specific event
 
         Args:
             eventname (str): The event identifier, like Widget.EVENT_ONCLICK that is 'onclick'.
-            instance (Widget or App): The widget or app instance that will listen for an event.
-            funcname (str): The literal function name, member of *instance* that will be called on event.
+            callback (function): Function pointer to the callback function.
+            userdata (tuple): Extra optional userdata that will be passed to the listener.
         """
-        self.listeners[eventname] = {'instance': instance, 'funcname': funcname}
+        self.listeners[eventname] = {'callback': callback, 'userdata': userdata}
 
 
 class Tag(object):
@@ -352,7 +353,7 @@ class Widget(Tag):
 
         super(Widget, self).__init__(**kwargs)
 
-        self.eventManager = _EventManager()
+        self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
         self.style['margin'] = kwargs.get('margin', '0px auto')  # centers the div
@@ -442,88 +443,97 @@ class Widget(Tag):
 
     def onfocus(self):
         """Called when the Widget gets focus."""
-        return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
+        return self.eventManager.propagate(self.EVENT_ONFOCUS, ())
 
-    @decorate_set_on_listener("onfocus", "(self)")
-    def set_on_focus_listener(self, listener, funcname):
+    @decorate_set_on_listener("onfocus", "(self,emitter)")
+    def set_on_focus_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onfocus event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_focus(self, widget).
+        
         Args:
-            listener (App, Widget): Instance of the listener
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONFOCUS] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONFOCUS)
-        self.eventManager.register_listener(self.EVENT_ONFOCUS, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONFOCUS, callback, *userdata)
 
     def onblur(self):
         """Called when the Widget loses focus"""
-        return self.eventManager.propagate(self.EVENT_ONBLUR, [])
+        return self.eventManager.propagate(self.EVENT_ONBLUR, ())
 
-    @decorate_set_on_listener("onblur", "(self)")
-    def set_on_blur_listener(self, listener, funcname):
+    @decorate_set_on_listener("onblur", "(self,emitter)")
+    def set_on_blur_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onblur event.
 
+        Note: the listener prototype have to be in the form on_widget_blur(self, widget).
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONBLUR] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONBLUR)
-        self.eventManager.register_listener(self.EVENT_ONBLUR, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONBLUR, callback, *userdata)
 
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
+        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
 
-    @decorate_set_on_listener("onclick", "(self)")
-    def set_on_click_listener(self, listener, funcname):
+    @decorate_set_on_listener("onclick", "(self,emitter)")
+    def set_on_click_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onclick event.
 
+        Note: the listener prototype have to be in the form on_widget_click(self, widget).
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONCLICK] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, callback, *userdata)
 
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
         """
-        return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
+        return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, ())
 
-    @decorate_set_on_listener("oncontextmenu", "(self)")
-    def set_on_contextmenu_listener(self, listener, funcname):
+    @decorate_set_on_listener("oncontextmenu", "(self,emitter)")
+    def set_on_contextmenu_listener(self, callback, *userdata):
         """Registers the listener for the Widget.oncontextmenu event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_contextmenu(self, widget).
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONCONTEXTMENU] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONCONTEXTMENU)
-        self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, callback, *userdata)
 
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
-        """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
-
-    @decorate_set_on_listener("onmousedown", "(self,x,y)")
-    def set_on_mousedown_listener(self, listener, funcname):
-        """Registers the listener for the Widget.onmousedown event.
-
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            x (int): position of the mouse inside the widget
+            y (int): position of the mouse inside the widget
+        """
+        return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, (x, y))
+
+    @decorate_set_on_listener("onmousedown", "(self,emitter,x,y)")
+    def set_on_mousedown_listener(self, callback, *userdata):
+        """Registers the listener for the Widget.onmousedown event.
+        
+        Note: the listener prototype have to be in the form on_widget_mousedown(self, widget, x, y).
+        
+        Args:
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONMOUSEDOWN] = \
             "var params={};" \
@@ -532,20 +542,25 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSEDOWN)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, callback, *userdata)
 
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
+        
+        Args:
+            x (int): position of the mouse inside the widget
+            y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEUP, (x, y))
 
-    @decorate_set_on_listener("onmouseup", "(self,x,y)")
-    def set_on_mouseup_listener(self, listener, funcname):
+    @decorate_set_on_listener("onmouseup", "(self,emitter,x,y)")
+    def set_on_mouseup_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseup event.
 
+        Note: the listener prototype have to be in the form on_widget_mouseup(self, widget, x, y).
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONMOUSEUP] = \
             "var params={};" \
@@ -554,7 +569,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSEUP)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEUP, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEUP, callback, *userdata)
 
     def onmouseout(self):
         """Called when the mouse cursor moves outside a Widget.
@@ -562,21 +577,22 @@ class Widget(Tag):
         Note: This event is often used together with the Widget.onmouseover event, which occurs when the pointer is
             moved onto a Widget, or onto one of its children.
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, ())
 
-    @decorate_set_on_listener("onmouseout", "(self)")
-    def set_on_mouseout_listener(self, listener, funcname):
+    @decorate_set_on_listener("onmouseout", "(self,emitter)")
+    def set_on_mouseout_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseout event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_mouseout(self, widget).
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONMOUSEOUT] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSEOUT)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, callback, *userdata)
 
     def onmouseleave(self):
         """Called when the mouse cursor moves outside a Widget.
@@ -587,21 +603,22 @@ class Widget(Tag):
         Note: The Widget.onmouseleave event is similar to the Widget.onmouseout event. The only difference is that the
             onmouseleave event does not bubble (does not propagate up the Widgets tree).
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
+        return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, ())
 
-    @decorate_set_on_listener("onmouseleave", "(self)")
-    def set_on_mouseleave_listener(self, listener, funcname):
+    @decorate_set_on_listener("onmouseleave", "(self,emitter)")
+    def set_on_mouseleave_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseleave event.
-
+        
+        Note: the listener prototype have to be in the form on_widget_mouseleave(self, widget).
+        
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONMOUSELEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSELEAVE)
-        self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, callback, *userdata)
 
     def onmousemove(self, x, y):
         """Called when the mouse cursor moves inside the Widget.
@@ -610,16 +627,15 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, (x, y))
 
-    @decorate_set_on_listener("onmousemove", "(self,x,y)")
-    def set_on_mousemove_listener(self, listener, funcname):
+    @decorate_set_on_listener("onmousemove", "(self,emitter,x,y)")
+    def set_on_mousemove_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmousemove event.
-        Note: the listener prototype have to be in the form on_widget_mousemove(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_mousemove(self, widget, x, y)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONMOUSEMOVE] = \
             "var params={};" \
@@ -628,7 +644,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONMOUSEMOVE)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, callback, *userdata)
 
     def ontouchmove(self, x, y):
         """Called continuously while a finger is dragged across the screen, over a Widget.
@@ -637,16 +653,15 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, (x, y))
 
-    @decorate_set_on_listener("ontouchmove", "(self,x,y)")
-    def set_on_touchmove_listener(self, listener, funcname):
+    @decorate_set_on_listener("ontouchmove", "(self,emitter,x,y)")
+    def set_on_touchmove_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchmove event.
-        Note: the listener prototype have to be in the form on_widget_touchmove(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchmove(self, widget, x, y)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONTOUCHMOVE] = \
             "var params={};" \
@@ -655,7 +670,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONTOUCHMOVE)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, callback, *userdata)
 
     def ontouchstart(self, x, y):
         """Called when a finger touches the widget.
@@ -664,16 +679,15 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, (x, y))
 
-    @decorate_set_on_listener("ontouchstart", "(self,x,y)")
-    def set_on_touchstart_listener(self, listener, funcname):
+    @decorate_set_on_listener("ontouchstart", "(self,emitter,x,y)")
+    def set_on_touchstart_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchstart event.
-        Note: the listener prototype have to be in the form on_widget_touchstart(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchstart(self, widget, x, y)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONTOUCHSTART] = \
             "var params={};" \
@@ -682,7 +696,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONTOUCHSTART)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHSTART, callback, *userdata)
 
     def ontouchend(self, x, y):
         """Called when a finger is released from the widget.
@@ -691,16 +705,15 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHEND, (x, y))
 
-    @decorate_set_on_listener("ontouchend", "(self,x,y)")
-    def set_on_touchend_listener(self, listener, funcname):
+    @decorate_set_on_listener("ontouchend", "(self,emitter,x,y)")
+    def set_on_touchend_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchend event.
-        Note: the listener prototype have to be in the form on_widget_touchend(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchend(self, widget, x, y)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONTOUCHEND] = \
             "var params={};" \
@@ -709,7 +722,7 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONTOUCHEND)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHEND, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHEND, callback, *userdata)
 
     def ontouchenter(self, x, y):
         """Called when a finger touches from outside to inside the widget.
@@ -718,17 +731,16 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, (x, y))
 
-    @decorate_set_on_listener("ontouchenter", "(self,x,y)")
-    def set_on_touchenter_listener(self, listener, funcname):
+    @decorate_set_on_listener("ontouchenter", "(self,emitter,x,y)")
+    def set_on_touchenter_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchenter event.
 
-        Note: the listener prototype have to be in the form on_widget_touchenter(self, x, y)
+        Note: the listener prototype have to be in the form on_widget_touchenter(self, widget, x, y)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONTOUCHENTER] = \
             "var params={};" \
@@ -737,49 +749,47 @@ class Widget(Tag):
             "sendCallbackParam('%s','%s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONTOUCHENTER)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHENTER, callback, *userdata)
 
     def ontouchleave(self):
         """Called when a finger touches from inside to outside the widget.
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, ())
 
-    @decorate_set_on_listener("ontouchleave", "(self)")
-    def set_on_touchleave_listener(self, listener, funcname):
+    @decorate_set_on_listener("ontouchleave", "(self,emitter)")
+    def set_on_touchleave_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchleave event.
-        Note: the listener prototype have to be in the form on_widget_touchleave(self)
+        Note: the listener prototype have to be in the form on_widget_touchleave(self, widget)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONTOUCHLEAVE] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONTOUCHLEAVE)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHLEAVE, callback, *userdata)
 
     def ontouchcancel(self):
         """Called when a touch point has been disrupted in an implementation-specific manner
         (for example, too many touch points are created).
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, ())
 
-    @decorate_set_on_listener("ontouchcancel", "(self)")
-    def set_on_touchcancel_listener(self, listener, funcname):
+    @decorate_set_on_listener("ontouchcancel", "(self,emitter)")
+    def set_on_touchcancel_listener(self, callback, *userdata):
         """Registers the listener for the Widget.ontouchcancel event.
 
-        Note: the listener prototype have to be in the form on_widget_touchcancel(self)
+        Note: the listener prototype have to be in the form on_widget_touchcancel(self, widget)
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONTOUCHCANCEL] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;" % (self.identifier, self.EVENT_ONTOUCHCANCEL)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, callback, *userdata)
 
 
 class HBox(Widget):
@@ -896,18 +906,17 @@ class TabBox(Widget):
             li.style['float'] = "left"
             li.style['width'] = "%.1f%%" % tab_w
 
-    def _on_tab_pressed(self, tab_identifier):
+    def _on_tab_pressed(self, widget, _a, _li, _holder):
         # remove active on all tabs, and hide their contents
         for a, li, holder in self._tabs.values():
             a.remove_class('active')
             holder.style['display'] = 'none'
-        # add it on the current one
-        a, li, holder = self._tabs[tab_identifier]
-        a.add_class('active')
-        holder.style['display'] = 'block'
+        
+        _a.add_class('active')
+        _holder.style['display'] = 'block'
 
         # call other callbacks
-        cb = self._tab_cbs[tab_identifier]
+        cb = self._tab_cbs[_holder.identifier]
         if cb is not None:
             cb()
 
@@ -933,12 +942,9 @@ class TabBox(Widget):
         a.attributes['href'] = 'javascript:void(0);'
 
         a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
-        # fixme: userdata in callbacks
-        f = lambda _id=holder.identifier: self._on_tab_pressed(_id)
-        fname = 'on_tab_pressed_%s' % holder.identifier
-        setattr(self, fname, f)
+        
         self._tab_cbs[holder.identifier] = tab_cb
-        a.eventManager.register_listener(a.EVENT_ONCLICK, self, fname)
+        a.eventManager.register_listener(a.EVENT_ONCLICK, self._on_tab_pressed, a, li, holder)
 
         a.add_child('text', name)
         li.add_child('a', a)
@@ -1051,20 +1057,19 @@ class TextInput(Widget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_text(new_value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
 
-    @decorate_set_on_listener("onchange", "(self,new_value)")
-    def set_on_change_listener(self, listener, funcname):
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onchange event.
 
-        Note: the listener prototype have to be in the form on_textinput_change(self, new_value) where new_value is the
+        Note: the listener prototype have to be in the form on_textinput_change(self, widget, new_value) where new_value is the
             new text content of the TextInput.
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
     def onkeydown(self, new_value):
         """Called when the user types a key into the TextInput.
@@ -1075,26 +1080,25 @@ class TextInput(Widget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_text(new_value)
-        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
-    @decorate_set_on_listener("onkeydown", "(self,new_value)")
-    def set_on_key_down_listener(self, listener, funcname):
+    @decorate_set_on_listener("onkeydown", "(self,emitter,new_value)")
+    def set_on_key_down_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onkeydown event.
 
-        Note: the listener prototype have to be in the form on_textinput_key_down(self, new_value) where new_value is
+        Note: the listener prototype have to be in the form on_textinput_key_down(self, widget, new_value) where new_value is
             the new text content of the TextInput.
 
         Note: Overwrites Widget.onenter.
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);if((event.charCode||event.keyCode)==13){" \
             "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur(); return false;}" % {'id': self.identifier, 'evt': self.EVENT_ONKEYDOWN}
-        self.eventManager.register_listener(self.EVENT_ONKEYDOWN, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONKEYDOWN, callback, *userdata)
 
     def onenter(self, new_value):
         """Called when the user types an ENTER into the TextInput.
@@ -1104,20 +1108,19 @@ class TextInput(Widget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_text(new_value)
-        return self.eventManager.propagate(self.EVENT_ONENTER, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
-    @decorate_set_on_listener("onenter", "(self,new_value)")
-    def set_on_enter_listener(self, listener, funcname):
+    @decorate_set_on_listener("onenter", "(self,emitter,new_value)")
+    def set_on_enter_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onenter event.
 
-        Note: the listener prototype have to be in the form on_textinput_enter(self, new_value) where new_value is
+        Note: the listener prototype have to be in the form on_textinput_enter(self, widget, new_value) where new_value is
             the new text content of the TextInput.
 
         Note: Overwrites Widget.onkeydown.
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self.attributes[self.EVENT_ONKEYDOWN] = """
             if (event.keyCode == 13) {
@@ -1128,7 +1131,7 @@ class TextInput(Widget):
                 sendCallbackParam('%(id)s','%(evt)s',params);
                 return false;
             }""" % {'id': self.identifier, 'evt': self.EVENT_ONENTER}
-        self.eventManager.register_listener(self.EVENT_ONENTER, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONENTER, callback, *userdata)
 
 
 class Label(Widget):
@@ -1283,36 +1286,34 @@ class GenericDialog(Widget):
         """Event generated by the OK button click.
         """
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRM, [])
+        return self.eventManager.propagate(self.EVENT_ONCONFIRM, ())
 
-    @decorate_set_on_listener("confirm_dialog", "(self)")
-    def set_on_confirm_dialog_listener(self, listener, funcname):
+    @decorate_set_on_listener("confirm_dialog", "(self,emitter)")
+    def set_on_confirm_dialog_listener(self, callback, *userdata):
         """Registers the listener for the GenericDialog.confirm_dialog event.
 
-        Note: The prototype of the listener have to be like my_on_confirm_dialog(self).
+        Note: The prototype of the listener have to be like my_on_confirm_dialog(self, widget).
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
-        self.eventManager.register_listener(self.EVENT_ONCONFIRM, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCONFIRM, callback, *userdata)
 
     def cancel_dialog(self):
         """Event generated by the Cancel button click."""
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCANCEL, [])
+        return self.eventManager.propagate(self.EVENT_ONCANCEL, ())
 
-    @decorate_set_on_listener("cancel_dialog", "(self)")
-    def set_on_cancel_dialog_listener(self, listener, funcname):
+    @decorate_set_on_listener("cancel_dialog", "(self,emitter)")
+    def set_on_cancel_dialog_listener(self, callback, *userdata):
         """Registers the listener for the GenericDialog.cancel_dialog event.
 
-        Note: The prototype of the listener have to be like my_on_cancel_dialog(self).
+        Note: The prototype of the listener have to be like my_on_cancel_dialog(self, widget).
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
-        self.eventManager.register_listener(self.EVENT_ONCANCEL, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCANCEL, callback, *userdata)
 
     def show(self, baseAppInstance):
         self.baseAppInstance = baseAppInstance
@@ -1345,37 +1346,36 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(title, message, **kwargs)
 
         self.inputText = TextInput()
-        self.inputText.set_on_enter_listener(self, 'on_text_enter_listener')
+        self.inputText.set_on_enter_listener(self.on_text_enter_listener)
         self.add_field('textinput', self.inputText)
         self.inputText.set_text(initial_value)
 
-        self.set_on_confirm_dialog_listener(self, 'confirm_value')
+        self.set_on_confirm_dialog_listener(self.confirm_value)
 
-    def on_text_enter_listener(self, value):
+    def on_text_enter_listener(self, widget, value):
         """event called pressing on ENTER key.
 
         propagates the string content of the input field
         """
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (value,))
 
-    def confirm_value(self):
+    def confirm_value(self, widget):
         """Event called pressing on OK button."""
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [self.inputText.get_text()])
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (self.inputText.get_text(),))
 
-    @decorate_set_on_listener("confirm_value", "(self,value)")
-    def set_on_confirm_value_listener(self, listener, funcname):
+    @decorate_set_on_listener("confirm_value", "(self,emitter,value)")
+    def set_on_confirm_value_listener(self, callback, *userdata):
         """Registers the listener for the InputDialog.confirm_value event.
 
-        Note: The prototype of the listener have to be like my_on_confirm_dialog(self, confirmed_value), where
+        Note: The prototype of the listener have to be like my_on_confirm_dialog(self, widget, confirmed_value), where
             confirmed_value is the text content of the input field.
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
-        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, callback, *userdata)
 
 
 # noinspection PyUnresolvedReferences
@@ -1447,7 +1447,7 @@ class ListView(Widget, _SyncableValuesMixin):
             raise ValueError("item must be text or a ListItem instance")
         # if an event listener is already set for the added item, it will not generate a selection event
         if item.attributes[self.EVENT_ONCLICK] == '':
-            item.set_on_click_listener(self, self.EVENT_ONSELECTION)
+            item.set_on_click_listener(self.onselection)
         item.attributes['selected'] = False
         super(ListView, self).append(item, key=key)
 
@@ -1457,11 +1457,11 @@ class ListView(Widget, _SyncableValuesMixin):
         self._selected_key = None
         super(ListView, self).empty()
 
-    def onselection(self, clicked_item):
+    def onselection(self, widget):
         """Called when a new item gets selected in the list."""
         self._selected_key = None
         for k in self.children:
-            if self.children[k] == clicked_item:
+            if self.children[k] == widget: #widget is the selected ListItem
                 self._selected_key = k
                 if (self._selected_item is not None) and self._selectable:
                     self._selected_item.attributes['selected'] = False
@@ -1469,22 +1469,21 @@ class ListView(Widget, _SyncableValuesMixin):
                 if self._selectable:
                     self._selected_item.attributes['selected'] = True
                 break
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self._selected_key])
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, (self._selected_key,))
 
-    @decorate_set_on_listener("onselection", "(self,selectedKey)")
-    def set_on_selection_listener(self, listener, funcname):
+    @decorate_set_on_listener("onselection", "(self,emitter,selectedKey)")
+    def set_on_selection_listener(self, callback, *userdata):
         """Registers the listener for the ListView.onselection event.
 
-        Note: The prototype of the listener have to be like my_list_onselection(self, selectedKey). Where selectedKey is
+        Note: The prototype of the listener have to be like my_list_onselection(self, widget, selectedKey). Where selectedKey is
         the unique string identifier for the selected item. To access the item use ListView.children[key], or its value
         directly by ListView.get_value.
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
         self._selectable = True
-        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONSELECTION, callback, *userdata)
 
     def get_value(self):
         """
@@ -1582,7 +1581,7 @@ class ListItem(Widget):
 
     def onclick(self):
         """Called when the item gets clicked. It is managed by the container ListView."""
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
 
 
 class DropDown(Widget, _SyncableValuesMixin):
@@ -1684,20 +1683,19 @@ class DropDown(Widget, _SyncableValuesMixin):
         """
         log.debug('combo box. selected %s' % value)
         self.select_by_value(value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
-    @decorate_set_on_listener("onchange", "(self,new_value)")
-    def set_on_change_listener(self, listener, funcname):
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
         """Registers the listener for the DropDown.onchange event.
 
-        Note: The prototype of the listener have to be like my_dropdown_onchange(self, value). Where value is
+        Note: The prototype of the listener have to be like my_dropdown_onchange(self, widget, value). Where value is
         the textual content of the selected item.
 
         Args:
-            listener (App, Widget): Instance of the listener. It can be the App or a Widget.
-            funcname (str): Literal name of the listener function, member of the listener instance
+            callback (function): Callback function pointer.
         """
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
 
 class DropDownItem(Widget):
@@ -1858,12 +1856,15 @@ class Input(Widget):
     def onchange(self, value):
         #self.attributes.__setitem__('value', value, 0)
         self.attributes['value'] = value
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
-    @decorate_set_on_listener("onchange", "(self,new_value)")
-    def set_on_change_listener(self, listener, funcname):
-        """register the listener for the onchange event."""
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, listener, funcname)
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
+        """Register the listener for the onchange event.
+        
+        Note: the listener prototype have to be in the form on_input_changed(self, widget, value).
+        """
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
     def set_read_only(self, readonly):
         if readonly:
@@ -1918,7 +1919,7 @@ class CheckBox(Input):
 
     def onchange(self, value):
         self.set_value(value in ('True', 'true'))
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
     def set_value(self, checked, update_ui = 1):
         if checked:
@@ -1977,14 +1978,18 @@ class Slider(Input):
         self.attributes['step'] = str(step)
 
     def oninput(self, value):
-        return self.eventManager.propagate(self.EVENT_ONINPUT, [value])
+        return self.eventManager.propagate(self.EVENT_ONINPUT, (value,))
 
-    @decorate_set_on_listener("oninput", "(self,new_value)")
-    def set_oninput_listener(self, listener, funcname):
+    @decorate_set_on_listener("oninput", "(self,emitter,new_value)")
+    def set_oninput_listener(self, callback, *userdata):
+        """Register the listener for the oninput event.
+        
+        Note: the listener prototype have to be in the form on_slider_input(self, widget, value).
+        """
         self.attributes[self.EVENT_ONINPUT] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONINPUT}
-        self.eventManager.register_listener(self.EVENT_ONINPUT, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONINPUT, callback, *userdata)
 
 
 class ColorPicker(Input):
@@ -2044,10 +2049,10 @@ class FileFolderNavigator(Widget):
         self.controlsContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.controlBack = Button('Up')
         self.controlBack.set_size('10%', '100%')
-        self.controlBack.set_on_click_listener(self, 'dir_go_back')
+        self.controlBack.set_on_click_listener(self.dir_go_back)
         self.controlGo = Button('Go >>')
         self.controlGo.set_size('10%', '100%')
-        self.controlGo.set_on_click_listener(self, 'dir_go')
+        self.controlGo.set_on_click_listener(self.dir_go)
         self.pathEditor = TextInput()
         self.pathEditor.set_size('80%', '100%')
         self.pathEditor.style['resize'] = 'none'
@@ -2110,13 +2115,13 @@ class FileFolderNavigator(Widget):
                 continue
             fi = FileFolderItem(i, is_folder)
             fi.style['display'] = 'block'
-            fi.set_on_click_listener(self, 'on_folder_item_click')  # navigation purpose
-            fi.set_on_selection_listener(self, 'on_folder_item_selected')  # selection purpose
+            fi.set_on_click_listener(self.on_folder_item_click)  # navigation purpose
+            fi.set_on_selection_listener(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
             self.itemContainer.append(fi)
         self.append(self.itemContainer, key='items')  # replace the old widget
 
-    def dir_go_back(self):
+    def dir_go_back(self, widget):
         curpath = os.getcwd()  # backup the path
         try:
             os.chdir(self.pathEditor.get_text())
@@ -2127,7 +2132,7 @@ class FileFolderNavigator(Widget):
             log.error('error changing directory', exc_info=True)
         os.chdir(curpath)  # restore the path
 
-    def dir_go(self):
+    def dir_go(self, widget):
         # when the GO button is pressed, it is supposed that the pathEditor is changed
         curpath = os.getcwd()  # backup the path
         try:
@@ -2169,7 +2174,7 @@ class FileFolderNavigator(Widget):
         else:
             self.selectionlist.append(f)
 
-    def on_folder_item_click(self, folderitem):
+    def on_folder_item_click(self, widget, folderitem):
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
@@ -2196,34 +2201,34 @@ class FileFolderItem(Widget):
         self.icon.set_size(30, 30)
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
-            self.icon.set_on_click_listener(self, self.EVENT_ONCLICK)
+            self.icon.set_on_click_listener(self.onclick)
         icon_file = '/res/folder.png' if is_folder else '/res/file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.set_size(400, 30)
-        self.label.set_on_click_listener(self, self.EVENT_ONSELECTION)
+        self.label.set_on_click_listener(self.onselection)
         self.append(self.icon, key='icon')
         self.append(self.label, key='text')
         self.selected = False
 
-    def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+    def onclick(self, widget):
+        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
 
-    @decorate_set_on_listener("onclick", "(self,folderItemInstance)")
-    def set_on_click_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+    @decorate_set_on_listener("onclick", "(self,emitter)")
+    def set_on_click_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.EVENT_ONCLICK, callback, *userdata)
 
     def set_selected(self, selected):
         self.selected = selected
         self.label.style['font-weight'] = 'bold' if self.selected else 'normal'
 
-    def onselection(self):
+    def onselection(self, widget):
         self.set_selected(not self.selected)
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self])
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, ())
 
-    @decorate_set_on_listener("onselection", "(self,folderItemInstance)")
-    def set_on_selection_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONSELECTION, listener, funcname)
+    @decorate_set_on_listener("onselection", "(self,emitter)")
+    def set_on_selection_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.EVENT_ONSELECTION, callback, *userdata)
 
     def set_text(self, t):
         self.children['text'].set_text(t)
@@ -2249,19 +2254,23 @@ class FileSelectionDialog(GenericDialog):
                                                        allow_file_selection,
                                                        allow_folder_selection)
         self.add_field('fileFolderNavigator', self.fileFolderNavigator)
-        self.set_on_confirm_dialog_listener(self, 'confirm_value')
+        self.set_on_confirm_dialog_listener(self.confirm_value)
 
-    def confirm_value(self):
+    def confirm_value(self, widget):
         """event called pressing on OK button.
            propagates the string content of the input field
         """
         self.hide()
-        params = [self.fileFolderNavigator.get_selection_list()]
+        params = (self.fileFolderNavigator.get_selection_list(),)
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
-    @decorate_set_on_listener("confirm_value", "(self,fileList)")
-    def set_on_confirm_value_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, listener, funcname)
+    @decorate_set_on_listener("confirm_value", "(self,emitter,fileList)")
+    def set_on_confirm_value_listener(self, callback, *userdata):
+        """Register the listener for the on_confirm event.
+        
+        Note: the listener prototype have to be in the form on_file_selection_confirm(self, widget, selectedFileStringList).
+        """
+        self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, callback, *userdata)
 
 
 class MenuBar(Widget):
@@ -2405,28 +2414,41 @@ class FileUploader(Widget):
                 'evt_data': self.EVENT_ON_DATA}
 
     def onsuccess(self, filename):
-        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
+        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, (filename,))
 
-    @decorate_set_on_listener("onsuccess", "(self,filename)")
-    def set_on_success_listener(self, listener, funcname):
+    @decorate_set_on_listener("onsuccess", "(self,emitter,filename)")
+    def set_on_success_listener(self, callback, *userdata):
+        """Register the listener for the onsuccess event.
+        
+        Note: the listener prototype have to be in the form on_fileupload_success(self, widget, filename).
+        """
         self.eventManager.register_listener(
-                self.EVENT_ON_SUCCESS, listener, funcname)
+                self.EVENT_ON_SUCCESS, callback, *userdata)
 
     def onfailed(self, filename):
-        return self.eventManager.propagate(self.EVENT_ON_FAILED, [filename])
+        return self.eventManager.propagate(self.EVENT_ON_FAILED, (filename,))
 
-    @decorate_set_on_listener("onfailed", "(self,filename)")
-    def set_on_failed_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ON_FAILED, listener, funcname)
+    @decorate_set_on_listener("onfailed", "(self,emitter,filename)")
+    def set_on_failed_listener(self, callback, *userdata):
+        """Register the listener for the onfailed event.
+        
+        Note: the listener prototype have to be in the form on_fileupload_failed(self, widget, filename).
+        """
+        self.eventManager.register_listener(self.EVENT_ON_FAILED, callback, *userdata)
         
     def ondata(self, filedata, filename):
         with open(self._savepath+filename,'wb') as f:
             f.write(filedata)
-        return self.eventManager.propagate(self.EVENT_ON_DATA, [filedata, filename])
+        return self.eventManager.propagate(self.EVENT_ON_DATA, (filedata, filename))
 
-    @decorate_set_on_listener("ondata", "(self,filedata, filename)")
-    def set_on_data_listener(self, listener, funcname):
-        self.eventManager.register_listener(self.EVENT_ON_DATA, listener, funcname)
+    @decorate_set_on_listener("ondata", "(self,emitter,filedata, filename)")
+    def set_on_data_listener(self, callback, *userdata):
+        """Register the listener for the ondata event.
+        
+        Note: the listener prototype have to be in the form on_fileupload_data(self, widget, filedata, filename), 
+            where filedata is the bytearray chunk.
+        """
+        self.eventManager.register_listener(self.EVENT_ON_DATA, callback, *userdata)
 
 
 class FileDownloader(Widget):

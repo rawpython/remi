@@ -22,27 +22,42 @@ class MyApp(App):
 
     def main(self, name='world'):
         wid = gui.VBox(width=300, height=200)
-        self.lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
-        self.lbl.style['margin'] = 'auto'
-        self.bt = gui.Button('Press me!', width=200, height=30)
-        self.bt.style['margin'] = 'auto 50px'
+        lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
+        lbl.style['margin'] = 'auto'
+
+        bt = gui.Button('Press me!', width=200, height=30)
+        bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
         self.npressed = 0
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+
+        bt.set_on_click_listener(self.on_button_pressed, lbl)
+        bt.set_on_mousedown_listener(self.on_button_mousedown, 'data1', 2,'three')
+        
+        #this will never be called, can't register an event more than one time
+        bt.set_on_mouseup_listener(self.on_button_mouseup, 'data1') 
 
         # appending a widget to another, the first argument is a string key
-        wid.append(self.lbl)
-        wid.append(self.bt)
+        wid.append(lbl)
+        wid.append(bt)
 
         # returning the root widget
         return wid
 
     # listener function
-    def on_button_pressed(self):
+    def on_button_pressed(self, widget, lbl):
         self.npressed += 1
-        self.lbl.set_text('Button pressed %s times' % self.npressed)
-        self.bt.set_text('Hi!')
+        lbl.set_text('Button pressed %s times.' % self.npressed)
+        widget.set_text('Hi!')
+        
+    def on_button_mousedown(self, widget, x, y, mydata1, mydata2, mydata3):
+        print("x:%s  y:%s  data1:%s  data2:%s  data3:%s"%(x, y, mydata1, mydata2, mydata3))
+        
+    def on_button_mouseup(self, widget, x, y, mydata1):
+        print("x:%s  y:%s  data1:%s"%(x, y, mydata1))
+
+    def on_button_mouseup2(self, widget, x, y):
+        print("x:%s  y:%s  no userdata"%(x, y))
 
 
 if __name__ == "__main__":

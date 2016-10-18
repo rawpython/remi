@@ -43,10 +43,10 @@ class Cell(gui.Widget):
             self.style['background-color'] = 'rgb(255,255,255)'
         else:
             self.style['background-color'] = 'rgb(245,245,240)'
-        self.set_on_contextmenu_listener(self, 'on_right_click')
-        self.set_on_click_listener(self, "check_mine")
+        self.set_on_contextmenu_listener(self.on_right_click)
+        self.set_on_click_listener(self.check_mine)
 
-    def on_right_click(self):
+    def on_right_click(self, widget):
         """ Here with right click the change of cell is changed """
         if self.opened:
             return
@@ -54,7 +54,7 @@ class Cell(gui.Widget):
         self.set_icon()
         self.game.check_if_win()
 
-    def check_mine(self, notify_game=True):
+    def check_mine(self, widget, notify_game=True):
         if self.state == 1:
             return
         if self.opened:
@@ -126,7 +126,7 @@ class MyApp(App):
 
         self.btReset = gui.Button('Restart')
         self.btReset.set_size(100, 30)
-        self.btReset.set_on_click_listener(self, "new_game")
+        self.btReset.set_on_click_listener(self.new_game)
 
         self.horizontal_container = gui.Widget()
         self.horizontal_container.style['display'] = 'block'
@@ -157,7 +157,7 @@ class MyApp(App):
         self.main_container.append(self.horizontal_container)
         self.main_container.append(self.link)
 
-        self.new_game()
+        self.new_game(self)
 
         self.display_time()
         # returning the root widget
@@ -168,7 +168,7 @@ class MyApp(App):
         h = len(self.mine_matrix) if h is None else h
         return not (x > w - 1 or y > h - 1 or x < 0 or y < 0)
 
-    def new_game(self):
+    def new_game(self, widget):
         self.time_count = 0
         self.mine_table = gui.Table()#900, 450
         self.mine_matrix = self.build_mine_matrix(30, 15, 60)
@@ -218,8 +218,8 @@ class MyApp(App):
         self.lblFlagCount.set_text("%s" % self.flagcount)
         if win:
             self.dialog = gui.GenericDialog(title='You Win!', message='Game done in %s seconds' % self.time_count)
-            self.dialog.set_on_confirm_dialog_listener(self, 'new_game')
-            self.dialog.set_on_cancel_dialog_listener(self, 'new_game')
+            self.dialog.set_on_confirm_dialog_listener(self.new_game)
+            self.dialog.set_on_cancel_dialog_listener(self.new_game)
             self.set_root_widget(self.dialog)
 
     def fill_void_cells(self, cell):
@@ -235,7 +235,7 @@ class MyApp(App):
                             continue
 
                         if not self.mine_matrix[cell.y + _y][cell.x + _x].opened:
-                            self.mine_matrix[cell.y + _y][cell.x + _x].check_mine(False)
+                            self.mine_matrix[cell.y + _y][cell.x + _x].check_mine(None, False)
                             checked_cells.append(self.mine_matrix[cell.y + _y][cell.x + _x])
 
     def explosion(self, cell):
@@ -245,7 +245,7 @@ class MyApp(App):
         for x in range(0, len(self.mine_matrix[0])):
             for y in range(0, len(self.mine_matrix)):
                 self.mine_matrix[y][x].style['background-color'] = 'red'
-                self.mine_matrix[y][x].check_mine(False)
+                self.mine_matrix[y][x].check_mine(None, False)
         self.mine_table.from_2d_matrix(self.mine_matrix, False)
 
 

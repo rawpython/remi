@@ -58,11 +58,11 @@ class MyApp(App):
         m1 = gui.MenuItem('File', width=100, height=30)
         m11 = gui.MenuItem('Save', width=100, height=30)
         m12 = gui.MenuItem('Open', width=100, height=30)
-        m12.set_on_click_listener(self, 'menu_open_clicked')
+        m12.set_on_click_listener(self.menu_open_clicked)
         m111 = gui.MenuItem('Save', width=100, height=30)
-        m111.set_on_click_listener(self, 'menu_save_clicked')
+        m111.set_on_click_listener(self.menu_save_clicked)
         m112 = gui.MenuItem('Save as', width=100, height=30)
-        m112.set_on_click_listener(self, 'menu_saveas_clicked')
+        m112.set_on_click_listener(self.menu_saveas_clicked)
 
         self.menu.append(m1)
         m1.append(m11)
@@ -76,22 +76,28 @@ class MyApp(App):
         # returning the root widget
         return self.mainContainer
 
-    def menu_open_clicked(self):
+    def menu_open_clicked(self, widget):
         self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select an image file', False, '.')
         self.fileselectionDialog.set_on_confirm_value_listener(
-            self, 'on_image_file_selected')
+            self.on_image_file_selected)
         self.fileselectionDialog.set_on_cancel_dialog_listener(
-            self, 'on_dialog_cancel')
+            self.on_dialog_cancel)
         # here is shown the dialog as root widget
         self.fileselectionDialog.show(self)
 
-    def on_image_file_selected(self, file_list):
+    def menu_save_clicked(self, widget):
+        pass
+        
+    def menu_saveas_clicked(self, widget):
+        pass
+        
+    def on_image_file_selected(self, widget, file_list):
         if len(file_list) < 1:
             return
         self.image_widget.load(file_list[0])
         self.set_root_widget(self.mainContainer)
     
-    def on_dialog_cancel(self):
+    def on_dialog_cancel(self, widget):
         self.set_root_widget(self.mainContainer)
 
 
