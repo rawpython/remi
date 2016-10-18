@@ -135,17 +135,18 @@ class _EventManager(object):
         if eventname not in self.listeners:
             return
         listener = self.listeners[eventname]
-        return getattr(listener['instance'], listener['funcname'])(*params)
+        return getattr(listener['instance'], listener['funcname'])(*(params+listener['userdata']))
 
-    def register_listener(self, eventname, instance, funcname):
+    def register_listener(self, eventname, instance, funcname, *userdata):
         """register a listener for a specific event
 
         Args:
             eventname (str): The event identifier, like Widget.EVENT_ONCLICK that is 'onclick'.
             instance (Widget or App): The widget or app instance that will listen for an event.
             funcname (str): The literal function name, member of *instance* that will be called on event.
+            userdata (*): Extra optional userdata that will be passed to the listener.
         """
-        self.listeners[eventname] = {'instance': instance, 'funcname': funcname}
+        self.listeners[eventname] = {'instance': instance, 'funcname': funcname, 'userdata': userdata}
 
 
 class Tag(object):
@@ -442,7 +443,7 @@ class Widget(Tag):
 
     def onfocus(self):
         """Called when the Widget gets focus."""
-        return self.eventManager.propagate(self.EVENT_ONFOCUS, [])
+        return self.eventManager.propagate(self.EVENT_ONFOCUS, ())
 
     @decorate_set_on_listener("onfocus", "(self)")
     def set_on_focus_listener(self, listener, funcname):
@@ -460,7 +461,7 @@ class Widget(Tag):
 
     def onblur(self):
         """Called when the Widget loses focus"""
-        return self.eventManager.propagate(self.EVENT_ONBLUR, [])
+        return self.eventManager.propagate(self.EVENT_ONBLUR, ())
 
     @decorate_set_on_listener("onblur", "(self)")
     def set_on_blur_listener(self, listener, funcname):
@@ -478,10 +479,10 @@ class Widget(Tag):
 
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [])
+        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
 
     @decorate_set_on_listener("onclick", "(self)")
-    def set_on_click_listener(self, listener, funcname):
+    def set_on_click_listener(self, listener, funcname, *userdata):
         """Registers the listener for the Widget.onclick event.
 
         Args:
@@ -491,12 +492,12 @@ class Widget(Tag):
         self.attributes[self.EVENT_ONCLICK] = \
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname)
+        self.eventManager.register_listener(self.EVENT_ONCLICK, listener, funcname, *userdata)
 
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
         """
-        return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, [])
+        return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, ())
 
     @decorate_set_on_listener("oncontextmenu", "(self)")
     def set_on_contextmenu_listener(self, listener, funcname):
@@ -515,7 +516,7 @@ class Widget(Tag):
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, (x, y))
 
     @decorate_set_on_listener("onmousedown", "(self,x,y)")
     def set_on_mousedown_listener(self, listener, funcname):
@@ -537,7 +538,7 @@ class Widget(Tag):
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEUP, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEUP, (x, y))
 
     @decorate_set_on_listener("onmouseup", "(self,x,y)")
     def set_on_mouseup_listener(self, listener, funcname):
@@ -562,7 +563,7 @@ class Widget(Tag):
         Note: This event is often used together with the Widget.onmouseover event, which occurs when the pointer is
             moved onto a Widget, or onto one of its children.
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, [])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, ())
 
     @decorate_set_on_listener("onmouseout", "(self)")
     def set_on_mouseout_listener(self, listener, funcname):
@@ -587,7 +588,7 @@ class Widget(Tag):
         Note: The Widget.onmouseleave event is similar to the Widget.onmouseout event. The only difference is that the
             onmouseleave event does not bubble (does not propagate up the Widgets tree).
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, [])
+        return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, ())
 
     @decorate_set_on_listener("onmouseleave", "(self)")
     def set_on_mouseleave_listener(self, listener, funcname):
@@ -610,7 +611,7 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, (x, y))
 
     @decorate_set_on_listener("onmousemove", "(self,x,y)")
     def set_on_mousemove_listener(self, listener, funcname):
@@ -637,7 +638,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, (x, y))
 
     @decorate_set_on_listener("ontouchmove", "(self,x,y)")
     def set_on_touchmove_listener(self, listener, funcname):
@@ -664,7 +665,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHSTART, (x, y))
 
     @decorate_set_on_listener("ontouchstart", "(self,x,y)")
     def set_on_touchstart_listener(self, listener, funcname):
@@ -691,7 +692,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHEND, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHEND, (x, y))
 
     @decorate_set_on_listener("ontouchend", "(self,x,y)")
     def set_on_touchend_listener(self, listener, funcname):
@@ -718,7 +719,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, [x, y])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHENTER, (x, y))
 
     @decorate_set_on_listener("ontouchenter", "(self,x,y)")
     def set_on_touchenter_listener(self, listener, funcname):
@@ -742,7 +743,7 @@ class Widget(Tag):
     def ontouchleave(self):
         """Called when a finger touches from inside to outside the widget.
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, [])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHLEAVE, ())
 
     @decorate_set_on_listener("ontouchleave", "(self)")
     def set_on_touchleave_listener(self, listener, funcname):
@@ -763,7 +764,7 @@ class Widget(Tag):
         """Called when a touch point has been disrupted in an implementation-specific manner
         (for example, too many touch points are created).
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, [])
+        return self.eventManager.propagate(self.EVENT_ONTOUCHCANCEL, ())
 
     @decorate_set_on_listener("ontouchcancel", "(self)")
     def set_on_touchcancel_listener(self, listener, funcname):
@@ -1051,7 +1052,7 @@ class TextInput(Widget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_text(new_value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
@@ -1075,7 +1076,7 @@ class TextInput(Widget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_text(new_value)
-        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
     @decorate_set_on_listener("onkeydown", "(self,new_value)")
     def set_on_key_down_listener(self, listener, funcname):
@@ -1104,7 +1105,7 @@ class TextInput(Widget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_text(new_value)
-        return self.eventManager.propagate(self.EVENT_ONENTER, [new_value])
+        return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
     @decorate_set_on_listener("onenter", "(self,new_value)")
     def set_on_enter_listener(self, listener, funcname):
@@ -1283,7 +1284,7 @@ class GenericDialog(Widget):
         """Event generated by the OK button click.
         """
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRM, [])
+        return self.eventManager.propagate(self.EVENT_ONCONFIRM, ())
 
     @decorate_set_on_listener("confirm_dialog", "(self)")
     def set_on_confirm_dialog_listener(self, listener, funcname):
@@ -1300,7 +1301,7 @@ class GenericDialog(Widget):
     def cancel_dialog(self):
         """Event generated by the Cancel button click."""
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCANCEL, [])
+        return self.eventManager.propagate(self.EVENT_ONCANCEL, ())
 
     @decorate_set_on_listener("cancel_dialog", "(self)")
     def set_on_cancel_dialog_listener(self, listener, funcname):
@@ -1357,12 +1358,12 @@ class InputDialog(GenericDialog):
         propagates the string content of the input field
         """
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (value,))
 
     def confirm_value(self):
         """Event called pressing on OK button."""
         self.hide()
-        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, [self.inputText.get_text()])
+        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (self.inputText.get_text(),))
 
     @decorate_set_on_listener("confirm_value", "(self,value)")
     def set_on_confirm_value_listener(self, listener, funcname):
@@ -1469,7 +1470,7 @@ class ListView(Widget, _SyncableValuesMixin):
                 if self._selectable:
                     self._selected_item.attributes['selected'] = True
                 break
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self._selected_key])
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, (self._selected_key,))
 
     @decorate_set_on_listener("onselection", "(self,selectedKey)")
     def set_on_selection_listener(self, listener, funcname):
@@ -1582,7 +1583,7 @@ class ListItem(Widget):
 
     def onclick(self):
         """Called when the item gets clicked. It is managed by the container ListView."""
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+        return self.eventManager.propagate(self.EVENT_ONCLICK, (self,))
 
 
 class DropDown(Widget, _SyncableValuesMixin):
@@ -1684,7 +1685,7 @@ class DropDown(Widget, _SyncableValuesMixin):
         """
         log.debug('combo box. selected %s' % value)
         self.select_by_value(value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
@@ -1858,7 +1859,7 @@ class Input(Widget):
     def onchange(self, value):
         #self.attributes.__setitem__('value', value, 0)
         self.attributes['value'] = value
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
     @decorate_set_on_listener("onchange", "(self,new_value)")
     def set_on_change_listener(self, listener, funcname):
@@ -1918,7 +1919,7 @@ class CheckBox(Input):
 
     def onchange(self, value):
         self.set_value(value in ('True', 'true'))
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, [value])
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
     def set_value(self, checked, update_ui = 1):
         if checked:
@@ -1977,7 +1978,7 @@ class Slider(Input):
         self.attributes['step'] = str(step)
 
     def oninput(self, value):
-        return self.eventManager.propagate(self.EVENT_ONINPUT, [value])
+        return self.eventManager.propagate(self.EVENT_ONINPUT, (value,))
 
     @decorate_set_on_listener("oninput", "(self,new_value)")
     def set_oninput_listener(self, listener, funcname):
@@ -2207,7 +2208,7 @@ class FileFolderItem(Widget):
         self.selected = False
 
     def onclick(self):
-        return self.eventManager.propagate(self.EVENT_ONCLICK, [self])
+        return self.eventManager.propagate(self.EVENT_ONCLICK, (self,))
 
     @decorate_set_on_listener("onclick", "(self,folderItemInstance)")
     def set_on_click_listener(self, listener, funcname):
@@ -2219,7 +2220,7 @@ class FileFolderItem(Widget):
 
     def onselection(self):
         self.set_selected(not self.selected)
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, [self])
+        return self.eventManager.propagate(self.EVENT_ONSELECTION, (self,))
 
     @decorate_set_on_listener("onselection", "(self,folderItemInstance)")
     def set_on_selection_listener(self, listener, funcname):
@@ -2256,7 +2257,7 @@ class FileSelectionDialog(GenericDialog):
            propagates the string content of the input field
         """
         self.hide()
-        params = [self.fileFolderNavigator.get_selection_list()]
+        params = (self.fileFolderNavigator.get_selection_list(),)
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
 
     @decorate_set_on_listener("confirm_value", "(self,fileList)")
@@ -2405,7 +2406,7 @@ class FileUploader(Widget):
                 'evt_data': self.EVENT_ON_DATA}
 
     def onsuccess(self, filename):
-        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, [filename])
+        return self.eventManager.propagate(self.EVENT_ON_SUCCESS, (filename,))
 
     @decorate_set_on_listener("onsuccess", "(self,filename)")
     def set_on_success_listener(self, listener, funcname):
@@ -2413,7 +2414,7 @@ class FileUploader(Widget):
                 self.EVENT_ON_SUCCESS, listener, funcname)
 
     def onfailed(self, filename):
-        return self.eventManager.propagate(self.EVENT_ON_FAILED, [filename])
+        return self.eventManager.propagate(self.EVENT_ON_FAILED, (filename,))
 
     @decorate_set_on_listener("onfailed", "(self,filename)")
     def set_on_failed_listener(self, listener, funcname):
@@ -2422,7 +2423,7 @@ class FileUploader(Widget):
     def ondata(self, filedata, filename):
         with open(self._savepath+filename,'wb') as f:
             f.write(filedata)
-        return self.eventManager.propagate(self.EVENT_ON_DATA, [filedata, filename])
+        return self.eventManager.propagate(self.EVENT_ON_DATA, (filedata, filename))
 
     @decorate_set_on_listener("ondata", "(self,filedata, filename)")
     def set_on_data_listener(self, listener, funcname):

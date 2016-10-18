@@ -29,7 +29,7 @@ class MyApp(App):
 
         # setting the listener for the onclick event of the button
         self.npressed = 0
-        self.bt.set_on_click_listener(self, 'on_button_pressed')
+        self.bt.set_on_click_listener(self, 'on_button_pressed', 'userdata1', 2)
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)
@@ -39,9 +39,9 @@ class MyApp(App):
         return wid
 
     # listener function
-    def on_button_pressed(self):
+    def on_button_pressed(self, userdata1=None, userdata2=None):
         self.npressed += 1
-        self.lbl.set_text('Button pressed %s times' % self.npressed)
+        self.lbl.set_text('Button pressed %s times. Userdata: %s - %s' % (self.npressed, userdata1, userdata2))
         self.bt.set_text('Hi!')
 
 
