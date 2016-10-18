@@ -32,7 +32,10 @@ class MyApp(App):
         self.npressed = 0
         self.bt.set_on_click_listener(self, 'on_button_pressed', lbl)
         self.bt.set_on_mousedown_listener(self, 'on_button_mousedown', 'data1', 2,'three')
-        self.bt.set_on_mouseup_listener(self, 'on_button_mouseup', 'data1')
+        
+        #this will never be called, can't register an event more than one time
+        self.bt.set_on_mouseup_listener(self, 'on_button_mouseup', 'data1') 
+        
         self.bt.set_on_mouseup_listener(self, 'on_button_mouseup2')
 
         # appending a widget to another, the first argument is a string key
@@ -43,19 +46,21 @@ class MyApp(App):
         return wid
 
     # listener function
-    def on_button_pressed(self, lbl):
+    def on_button_pressed(self, widget, lbl):
         self.npressed += 1
         lbl.set_text('Button pressed %s times.' % self.npressed)
         self.bt.set_text('Hi!')
         
-    def on_button_mousedown(self, x, y, mydata1, mydata2, mydata3):
+    def on_button_mousedown(self, widget, x, y, mydata1, mydata2, mydata3):
         print("x:%s  y:%s  data1:%s  data2:%s  data3:%s"%(x, y, mydata1, mydata2, mydata3))
+        widget.style['background-color'] = 'red'
         
-    def on_button_mouseup(self, x, y, mydata1):
+    def on_button_mouseup(self, widget, x, y, mydata1):
         print("x:%s  y:%s  data1:%s"%(x, y, mydata1))
 
-    def on_button_mouseup2(self, x, y):
+    def on_button_mouseup2(self, widget, x, y):
         print("x:%s  y:%s  no userdata"%(x, y))
+        widget.style['background-color'] = 'green'
 
 
 if __name__ == "__main__":

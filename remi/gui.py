@@ -127,15 +127,16 @@ class _VersionedDictionary(dict):
 class _EventManager(object):
     """Manages the event propagation to the listeners functions"""
 
-    def __init__(self):
+    def __init__(self, emitter):
         self.listeners = {}
+        self.emitter = emitter
 
     def propagate(self, eventname, params):
         # if for an event there is a listener, it calls the listener passing the parameters
         if eventname not in self.listeners:
             return
         listener = self.listeners[eventname]
-        return getattr(listener['instance'], listener['funcname'])(*(params+listener['userdata']))
+        return getattr(listener['instance'], listener['funcname'])(self.emitter, *(params+listener['userdata']))
 
     def register_listener(self, eventname, instance, funcname, *userdata):
         """register a listener for a specific event
@@ -353,7 +354,7 @@ class Widget(Tag):
 
         super(Widget, self).__init__(**kwargs)
 
-        self.eventManager = _EventManager()
+        self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
         self.style['margin'] = kwargs.get('margin', '0px auto')  # centers the div
