@@ -121,14 +121,9 @@ class SignalConnection(gui.Widget):
             ddi = gui.DropDownItem(w.attributes['editor_varname'])
             ddi.listenerInstance = w
             self.dropdown.append(ddi)
-        #selecting in the dropdown the already connected varname
         if self.eventConnectionFunc._event_listener['eventName'] in self.refWidget.eventManager.listeners.keys(): 
-            if self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'] in self.listenersList:
-                connectedListenerName = self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'].attributes['editor_varname']
-                self.dropdown.set_value( connectedListenerName )
-    
-    def fakeListenerFunc(self,*args):
-        print('event trap')
+            connectedListenerName = self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'].__self__.attributes['editor_varname']
+            self.dropdown.set_value( connectedListenerName )
     
     def on_connection(self, widget, dropDownValue):
         if self.dropdown.get_value()=='None':
@@ -137,10 +132,12 @@ class SignalConnection(gui.Widget):
         listener = self.dropdown._selected_item.listenerInstance
         listener.attributes['editor_newclass'] = "True"
         print("signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
-        listener.fakeListenerFunc = self.fakeListenerFunc
-        getattr(self.refWidget, self.eventConnectionFuncName)(listener, "fakeListenerFunc")
+        listener.__class__.fakeListenerFunc = fakeListenerFunc
+        getattr(self.refWidget, self.eventConnectionFuncName)(listener.fakeListenerFunc)
 
-
+def fakeListenerFunc(self,*args):
+    print('event trap')
+    
 class SignalConnectionManager(gui.Widget):
     """ This class allows to interconnect event signals """
     def __init__(self, **kwargs):

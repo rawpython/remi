@@ -110,11 +110,25 @@ class Project(gui.Widget):
         
         #finding App class
         clsmembers = inspect.getmembers(_module, inspect.isclass)
+        
+        app_init_fnc = None
         for (name, value) in clsmembers:
             if issubclass(value,App) and name!='App':
-                return value.construct_ui(self)
-        return None                                           
-            
+                app_init_fnc = value
+                
+        if app_init_fnc==None:
+            return None
+
+        members_list = inspect.getmembers(app_init_fnc(editing_mode=True), inspect.ismethod)
+        #print(members_list)
+        for (name, member) in members_list:
+            #print("SETTING MEMBER: " + name)
+            setattr(self, name, self.fakeListenerFunc)
+        return app_init_fnc.construct_ui(self)
+
+    def fakeListenerFunc(*args):
+        pass
+        
     def check_pending_listeners(self, widget, widgetVarName, force=False):
         code_nested_listener = ''
         #checking if pending listeners code production can be solved
@@ -124,6 +138,9 @@ class Project(gui.Widget):
                 if (force or (widget.attributes['editor_varname'] in event['eventsource'].path_to_this_widget and widget.attributes['editor_varname'] in event['eventlistener'].path_to_this_widget)) and event['done']==False:
                     #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
                     event['done'] = True
+                    
+                    if not hasattr(event['eventlistener'],'path_to_this_widget'):
+                        event['eventlistener'].path_to_this_widget = []
                     
                     source_filtered_path=event['eventsource'].path_to_this_widget[:]
                     listener_filtered_path=event['eventlistener'].path_to_this_widget[:]
@@ -204,7 +221,7 @@ class Project(gui.Widget):
                 #if the member is decorated by decorate_set_on_listener and the function is referred to this event
                 if hasattr(setOnEventListenerFunc, '_event_listener') and setOnEventListenerFunc._event_listener['eventName']==registered_event_name:
                     listenerPrototype = setOnEventListenerFunc._event_listener['prototype']
-                    listener = widget.eventManager.listeners[registered_event_name]['callback']
+                    listener = widget.eventManager.listeners[registered_event_name]['callback'].__self__
                     listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
