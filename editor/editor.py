@@ -113,8 +113,8 @@ class Project(gui.Widget):
         for (name, value) in clsmembers:
             if issubclass(value,App) and name!='App':
                 self.appendix = value()
-                self.projectRoot = value.construct_ui(self.appendix)
-                return self.projectRoot #value.construct_ui(self)
+                self.append(value.construct_ui(self.appendix),'App')
+                return self.children['App'] #value.construct_ui(self)
         return None                                           
             
     def check_pending_listeners(self, widget, widgetVarName, force=False):
