@@ -369,7 +369,7 @@ class WidgetHelper(gui.HBox):
     def on_dropped(self, left, top):
         self.optional_style_dict['left'] = gui.to_pix(left)
         self.optional_style_dict['top'] = gui.to_pix(top)
-        self.prompt_new_widget()
+        self.prompt_new_widget(None)
         
     def on_dialog_confirm(self, widget):
         """ Here the widget is allocated
