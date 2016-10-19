@@ -206,7 +206,7 @@ class Project(gui.Widget):
                 #if the member is decorated by decorate_set_on_listener and the function is referred to this event
                 if hasattr(setOnEventListenerFunc, '_event_listener') and setOnEventListenerFunc._event_listener['eventName']==registered_event_name:
                     listenerPrototype = setOnEventListenerFunc._event_listener['prototype']
-                    listener = widget.eventManager.listeners[registered_event_name]['callback']
+                    listener = widget.eventManager.listeners[registered_event_name]['callback'].__self__
                     listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
