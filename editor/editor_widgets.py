@@ -123,8 +123,8 @@ class SignalConnection(gui.Widget):
             self.dropdown.append(ddi)
         #selecting in the dropdown the already connected varname
         if self.eventConnectionFunc._event_listener['eventName'] in self.refWidget.eventManager.listeners.keys(): 
-            if self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'] in self.listenersList:
-                connectedListenerName = self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'].attributes['editor_varname']
+            if self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'].__self__ in self.listenersList:
+                connectedListenerName = self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'].__self__.attributes['editor_varname']
                 self.dropdown.set_value( connectedListenerName )
     
     def fakeListenerFunc(self,*args):
