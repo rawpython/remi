@@ -83,6 +83,67 @@ class ResizeHelper(gui.Widget):
                 self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
         except:
             self.style['display'] = 'none'
+            
+
+class DragHelper(gui.Widget):
+    def __init__(self, **kwargs):
+        super(DragHelper, self).__init__(**kwargs)
+        self.style['float'] = 'none'
+        self.style['background-image'] = "url('/res/drag.png')"
+        self.style['background-color'] = "rgba(255,255,255,0.5)"
+        self.style['position'] = 'absolute'
+        self.style['left']='0px'
+        self.style['top']='0px'
+        self.attributes['draggable'] = 'true'
+        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['resize',event.target.id,(event.clientX),(event.clientY)]));"
+        self.attributes['ondragover'] = "event.preventDefault();"   
+        self.attributes['ondrop'] = "event.preventDefault();return false;"
+        self.parent = None
+        self.refWidget = None
+        
+    def setup(self, refWidget, newParent):
+        #refWidget is the target widget that will be resized
+        #newParent is the container
+        if self.parent:
+            try:
+                self.parent.remove_child(self)
+            except:
+                #there was no DragHelper placed
+                pass
+        if newParent==None:
+            return
+        self.parent = newParent
+        self.refWidget = refWidget
+        try:
+            self.parent.append(self)
+        except:
+            #the selected widget's parent can't contain a DragHelper
+            pass
+        self.update_position()
+            
+    def on_dropped(self, left, top):
+        try:
+            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
+                self.refWidget.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
+                self.refWidget.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
+        except:
+            pass
+        self.update_position()
+        
+    def update_position(self):
+        if self.refWidget == None:
+            return
+        if self.refWidget.style['position'] != 'absolute' or ('right' in self.refWidget.style) or ('bottom' in self.refWidget.style):
+            self.style['display'] = 'none'
+            return
+        try:
+            self.style['position'] = 'absolute'
+            self.style['display'] = 'block'
+            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
+                self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
+                self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
+        except:
+            self.style['display'] = 'none'
 
 
 class Project(gui.Widget):
@@ -303,6 +364,7 @@ class Editor(App):
 
     def idle(self):
         self.resizeHelper.update_position()
+        self.dragHelper.update_position()
 
     def main(self):
         self.mainContainer = gui.Widget(width='100%', height='100%', layout_orientation=gui.Widget.LAYOUT_VERTICAL)
@@ -445,6 +507,7 @@ class Editor(App):
         self.project.style['position'] = 'relative'
         
         self.resizeHelper = ResizeHelper(width=16, height=16)
+        self.dragHelper = DragHelper(width=15, height=15)
         self.menu_new_clicked(None)
         
         self.projectPathFilename = ''
@@ -532,6 +595,7 @@ class Editor(App):
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
         self.resizeHelper.setup(widget,parent)
+        self.dragHelper.setup(widget,parent)
         self.instancesWidget.update(self.project, self.selectedWidget)
         print("selected widget: " + widget.identifier)
         
@@ -541,6 +605,7 @@ class Editor(App):
         self.tabindex = 0 #incremental number to allow widgets selection
         self.selectedWidget = self.project
         self.resizeHelper.setup(None, None)
+        self.dragHelper.setup(None, None)
         if 'root' in self.project.children.keys():
             self.project.remove_child( self.project.children['root'] )
 
@@ -552,8 +617,9 @@ class Editor(App):
             self.projectPathFilename = filelist[0]
         
     def menu_save_clicked(self, widget):
-        #the resizeHelper have to be removed
+        #the dragHelper have to be removed
         self.resizeHelper.setup(None, None)
+        self.dragHelper.setup(None, None)
         if self.projectPathFilename == '':
             self.fileSaveAsDialog.show()
         else:
@@ -567,6 +633,7 @@ class Editor(App):
     def on_saveas_dialog_confirm(self, widget, path):
         #the resizeHelper have to be removed
         self.resizeHelper.setup(None, None)
+        self.dragHelper.setup(None, None)
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
             print("file:%s"%self.projectPathFilename)
@@ -577,6 +644,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
+        self.dragHelper.setup(None, None)
         parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
@@ -598,6 +666,7 @@ class Editor(App):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
+        self.dragHelper.setup(None, None)
         parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
         parent.remove_child(self.selectedWidget)
         self.instancesWidget.update(self.project, self.selectedWidget)
