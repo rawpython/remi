@@ -1007,14 +1007,17 @@ class TextInput(Widget):
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
-        self.set_text('')
-
+        
+        self.single_line = single_line
         if single_line:
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
             self.attributes[self.EVENT_ONKEYDOWN] = "if((event.charCode||event.keyCode)==13){" \
                 "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur();" \
                 "return false;}" % {'id': self.identifier}
+        
+        self.set_text('')
+        
         if hint:
             self.attributes['placeholder'] = hint
 
@@ -1026,6 +1029,8 @@ class TextInput(Widget):
         Args:
             text (str): The string content that have to be appended as standard child identified by the key 'text'
         """
+        if self.single_line:
+            text = text.replace('\n','')
         self.add_child('text', str(text))
 
     def get_text(self):
