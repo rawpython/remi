@@ -96,6 +96,7 @@ class Project(gui.Widget):
         self.style['position'] = 'relative'    
         self.style['overflow'] = 'auto'
         self.style['background-color'] = 'rgb(250,248,240)'
+        self.style['background-image'] = "url('/res/background.png')"
     
     def new(self):
         #remove the main widget
