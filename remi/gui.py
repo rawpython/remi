@@ -2174,7 +2174,7 @@ class FileFolderNavigator(Widget):
         else:
             self.selectionlist.append(f)
 
-    def on_folder_item_click(self, widget, folderitem):
+    def on_folder_item_click(self, folderitem):
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
