@@ -434,7 +434,7 @@ class Editor(App):
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
-        self.instancesWidget.dropDown.set_on_change_listener(self.on_widget_selection)
+        self.instancesWidget.dropDown.set_on_change_listener(self.on_instances_widget_selection)
         
         self.subContainerRight.append(self.instancesWidget)
         self.subContainerRight.append(self.attributeEditor)
@@ -520,6 +520,9 @@ class Editor(App):
                 continue
             self.add_widget_to_editor(child, widget, False)
         self.instancesWidget.update(self.project, self.selectedWidget)
+    
+    def on_instances_widget_selection(self, instancesWidgetItem, selectedWidget):
+        self.on_widget_selection(selectedWidget)
     
     def on_widget_selection(self, widget):
         self.remove_box_shadow_selected_widget()
