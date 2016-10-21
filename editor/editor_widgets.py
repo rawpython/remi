@@ -481,6 +481,7 @@ class EditorAttributesGroup(gui.Widget):
         self.title.style['background-image'] = "url('/res/minus.png')"
         self.title.style['background-repeat'] = 'no-repeat'
         self.title.style['background-position'] = '5px'
+        self.title.style['border-bottom'] = '1px solid lightgray'
         self.title.set_on_click_listener(self.openClose)
         self.append(self.title, '0')
         

@@ -29,7 +29,7 @@ class ResizeHelper(gui.Widget):
         super(ResizeHelper, self).__init__(**kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/resize.png')"
-        self.style['background-color'] = "rgba(255,255,255,0.5)"
+        self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
@@ -90,7 +90,7 @@ class DragHelper(gui.Widget):
         super(DragHelper, self).__init__(**kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/drag.png')"
-        self.style['background-color'] = "rgba(255,255,255,0.5)"
+        self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
