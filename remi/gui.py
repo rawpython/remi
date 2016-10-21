@@ -1860,9 +1860,16 @@ class CheckBoxLabel(Widget):
 
         self.set_value = self._checkbox.set_value
         self.get_value = self._checkbox.get_value
-        self.set_on_change_listener = self._checkbox.set_on_change_listener
-        self.onchange = self._checkbox.onchange
+        
+        self._checkbox.set_on_change_listener(self.onchange)
 
+    def onchange(self, widget, value):
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
+        
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+        
 
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
