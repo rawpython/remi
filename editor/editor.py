@@ -302,6 +302,8 @@ class Project(gui.Widget):
             if type(child)==str:
                 #children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
                 continue
+            if 'editor_varname' not in child.attributes.keys():
+                continue
             child.path_to_this_widget = widget.path_to_this_widget[:]
             children_code_nested += self.repr_widget_for_editor(child)
             children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"%s,'%s'"%(child.attributes['editor_varname'],child.attributes['editor_varname'])}
