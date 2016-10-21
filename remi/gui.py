@@ -1626,7 +1626,7 @@ class DropDown(Widget, _SyncableValuesMixin):
         self._selected_item = None
         for k in self.children:
             item = self.children[k]
-            if item.attributes['value'] == value:
+            if item.get_text() == value:
                 item.attributes['selected'] = 'selected'
                 self._selected_key = k
                 self._selected_item = item
