@@ -958,7 +958,27 @@ class TabBox(Widget):
         return holder.identifier
 
 
-class Button(Widget):
+class MixinTextualWidget(object):
+    def set_text(self, text):
+        """
+        Sets the text label for the Widget.
+
+        Args:
+            text (str): The string label of the Widget.
+        """
+        self.add_child('text', text)
+    
+    def get_text(self):
+        """
+        Returns:
+            str: The text content of the Widget. You can set the text content with set_text(text).
+        """
+        if 'text' not in self.children.keys():
+            return ''
+        return self.get_child('text')
+
+        
+class Button(Widget, MixinTextualWidget):
     """The Button widget. Have to be used in conjunction with its event onclick.
     Use Widget.set_on_click_listener in order to register the listener.
     """
@@ -974,17 +994,8 @@ class Button(Widget):
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
 
-    def set_text(self, text):
-        """
-        Sets the text label for the button.
 
-        Args:
-            text (str): The string label of the button.
-        """
-        self.add_child('text', text)
-
-
-class TextInput(Widget):
+class TextInput(Widget, MixinTextualWidget):
     """Editable multiline/single_line text area widget. You can set the content by means of the function set_text or
      retrieve its content with get_text.
     """
@@ -1016,29 +1027,12 @@ class TextInput(Widget):
                 "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur();" \
                 "return false;}" % {'id': self.identifier}
         
-        self.set_text('')
+        self.set_value('')
         
         if hint:
             self.attributes['placeholder'] = hint
 
         self.attributes['autocomplete'] = 'off'
-
-    def set_text(self, text):
-        """Sets the text content.
-
-        Args:
-            text (str): The string content that have to be appended as standard child identified by the key 'text'
-        """
-        if self.single_line:
-            text = text.replace('\n','')
-        self.add_child('text', str(text))
-
-    def get_text(self):
-        """
-        Returns:
-            str: The text content of the TextInput. You can set the text content with set_text(text).
-        """
-        return self.get_child('text')
 
     def set_value(self, text):
         """Sets the text content.
@@ -1046,6 +1040,8 @@ class TextInput(Widget):
         Args:
             text (str): The string content that have to be appended as standard child identified by the key 'text'
         """
+        if self.single_line:
+            text = text.replace('\n','')
         self.set_text(text)
 
     def get_value(self):
@@ -1061,7 +1057,7 @@ class TextInput(Widget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
-        self.set_text(new_value)
+        self.set_value(new_value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
 
     @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
@@ -1084,7 +1080,7 @@ class TextInput(Widget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
-        self.set_text(new_value)
+        self.set_value(new_value)
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
     @decorate_set_on_listener("onkeydown", "(self,emitter,new_value)")
@@ -1112,7 +1108,7 @@ class TextInput(Widget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
-        self.set_text(new_value)
+        self.set_value(new_value)
         return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
     @decorate_set_on_listener("onenter", "(self,emitter,new_value)")
@@ -1139,7 +1135,7 @@ class TextInput(Widget):
         self.eventManager.register_listener(self.EVENT_ONENTER, callback, *userdata)
 
 
-class Label(Widget):
+class Label(Widget, MixinTextualWidget):
     """Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
     function get_text.
     """
@@ -1153,21 +1149,6 @@ class Label(Widget):
         super(Label, self).__init__(**kwargs)
         self.type = 'p'
         self.set_text(text)
-
-    def set_text(self, text):
-        """Sets the text content.
-
-        Args:
-            text (str): The string content that have to be appended as standard child identified by the key 'text'
-        """
-        self.add_child('text', text)
-
-    def get_text(self):
-        """
-        Returns:
-            str: The text content of the label. You can set the text content with set_text(text).
-        """
-        return self.get_child('text')
 
 
 class GenericDialog(Widget):
@@ -1542,7 +1523,7 @@ class ListView(Widget, _SyncableValuesMixin):
                 self._selected_item.attributes['selected'] = True
 
 
-class ListItem(Widget):
+class ListItem(Widget, MixinTextualWidget):
     """List item widget for the ListView.
 
     ListItems are characterized by a textual content. They can be selected from
@@ -1562,20 +1543,6 @@ class ListItem(Widget):
 
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
-
-    def set_text(self, text):
-        """
-        Args:
-            text (str):
-        """
-        self.add_child('text', text)
-
-    def get_text(self):
-        """
-        Returns:
-            str: The text content of the ListItem
-        """
-        return self.get_child('text')
 
     def get_value(self):
         """
@@ -1703,7 +1670,7 @@ class DropDown(Widget, _SyncableValuesMixin):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
 
-class DropDownItem(Widget):
+class DropDownItem(Widget, MixinTextualWidget):
     """item widget for the DropDown"""
 
     @decorate_constructor_parameter_types([str])
@@ -1716,13 +1683,6 @@ class DropDownItem(Widget):
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
-
-    def set_text(self, text):
-        self.attributes['value'] = text
-        self.add_child('text', text)
-
-    def get_text(self):
-        return self.attributes['value']
 
     def set_value(self, text):
         return self.set_text(text)
@@ -2304,7 +2264,7 @@ class Menu(Widget):
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
 
-class MenuItem(Widget):
+class MenuItem(Widget, MixinTextualWidget):
     """MenuItem widget can contain other MenuItem."""
 
     @decorate_constructor_parameter_types([str])
@@ -2325,12 +2285,6 @@ class MenuItem(Widget):
             self.sub_container = Menu()
             super(MenuItem, self).append(self.sub_container, key='subcontainer')
         self.sub_container.append(value, key=key)
-
-    def set_text(self, text):
-        self.add_child('text', text)
-
-    def get_text(self):
-        return self.get_child('text')
         
         
 class TreeView(Widget):
@@ -2346,7 +2300,7 @@ class TreeView(Widget):
         self.type = 'ul'
 
 
-class TreeItem(Widget):
+class TreeItem(Widget, MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
     @decorate_constructor_parameter_types([str])
@@ -2373,12 +2327,6 @@ class TreeItem(Widget):
             self.sub_container = TreeView()
             super(TreeItem, self).append(self.sub_container, key='subcontainer')
         self.sub_container.append(value, key=key)
-
-    def set_text(self, text):
-        self.add_child('text', text)
-
-    def get_text(self):
-        return self.get_child('text')
 
     def onclick(self):
         self.treeopen = not self.treeopen
@@ -2456,7 +2404,7 @@ class FileUploader(Widget):
         self.eventManager.register_listener(self.EVENT_ON_DATA, callback, *userdata)
 
 
-class FileDownloader(Widget):
+class FileDownloader(Widget, MixinTextualWidget):
     """FileDownloader widget. Allows to start a file download."""
 
     @decorate_constructor_parameter_types([str, str, str])
@@ -2469,9 +2417,6 @@ class FileDownloader(Widget):
         self._filename = filename
         self._path_separator = path_separator
 
-    def set_text(self, t):
-        self.add_child('text', t)
-
     def download(self):
         with open(self._filename, 'r+b') as f:
             content = f.read()
@@ -2480,7 +2425,7 @@ class FileDownloader(Widget):
         return [content, headers]
 
 
-class Link(Widget):
+class Link(Widget, MixinTextualWidget):
     @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
         super(Link, self).__init__(**kwargs)
@@ -2489,12 +2434,6 @@ class Link(Widget):
         if open_new_window:
             self.attributes['target'] = "_blank"
         self.set_text(text)
-
-    def set_text(self, t):
-        self.add_child('text', t)
-
-    def get_text(self):
-        return self.get_child('text')
 
     def get_url(self):
         return self.attributes['href']
@@ -2741,7 +2680,7 @@ class SvgPolyline(Widget):
         self.style['stroke-width'] = str(width)
 
 
-class SvgText(SvgShape):
+class SvgText(SvgShape, MixinTextualWidget):
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
         super(SvgText, self).__init__(x, y, **kwargs)
@@ -2750,7 +2689,5 @@ class SvgText(SvgShape):
         self.set_stroke(0)
         self.set_text(text)
 
-    def set_text(self, text):
-        self.add_child('text', text)
 
  
