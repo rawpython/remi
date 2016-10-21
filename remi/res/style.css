@@ -629,7 +629,7 @@ ul.TreeView{
 }
 .TreeItem{
     background-repeat: no-repeat;
-    padding-left: 18px;
+    text-indent: 18px;
     display: block;
 }
 .TreeItem[has-subtree='true'][treeopen='false']{
@@ -646,6 +646,9 @@ ul.TreeView{
 }
 .TreeItem[treeopen="false"] .TreeView{
     display: none;
+}
+.TreeItem[treeopen="true"] .TreeView{
+    padding-left: 18px;
 }
 .TreeItem:hover {
     background-color: rgba(33, 150, 243, .26);
