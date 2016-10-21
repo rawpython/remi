@@ -2496,14 +2496,54 @@ class Link(Widget):
 
 
 class VideoPlayer(Widget):
-    @decorate_constructor_parameter_types([str, str])
-    def __init__(self, video, poster=None, **kwargs):
+    # some constants for the events
+    EVENT_ONENDED = 'onended'
+    
+    @decorate_constructor_parameter_types([str, str, bool, bool])
+    def __init__(self, video, poster=None, autoplay=False, loop=False, **kwargs):
         super(VideoPlayer, self).__init__(**kwargs)
         self.type = 'video'
         self.attributes['src'] = video
         self.attributes['preload'] = 'auto'
         self.attributes['controls'] = None
         self.attributes['poster'] = poster
+        self.set_autoplay(autoplay)
+        self.set_loop(loop)
+
+    def set_autoplay(self, autoplay):
+        if autoplay:
+            self.attributes['autoplay'] = 'true'
+        else:
+            if 'autoplay' in self.attributes.keys():
+                self.attributes['autoplay']
+
+    def set_loop(self, loop):
+        """Sets the VideoPlayer to restart video when finished.
+        
+        Note: If set as True the event onended will not fire."""
+        
+        if loop:
+            self.attributes['loop'] = 'true'
+        else:
+            if 'loop' in self.attributes.keys():
+                self.attributes['loop']
+                
+    def onended(self):
+        """Called when the media has been played and reached the end."""
+        return self.eventManager.propagate(self.EVENT_ONENDED, ())
+
+    @decorate_set_on_listener("onended", "(self,emitter)")
+    def set_on_ended_listener(self, callback, *userdata):
+        """Registers the listener for the VideoPlayer.onended event.
+
+        Note: the listener prototype have to be in the form on_video_ended(self, widget).
+        
+        Args:
+            callback (function): Callback function pointer.
+        """
+        self.attributes['onended'] = "sendCallback('%s','%s');" \
+            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONENDED)
+        self.eventManager.register_listener(self.EVENT_ONENDED, callback, *userdata)
 
 
 class Svg(Widget):
