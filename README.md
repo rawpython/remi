@@ -343,6 +343,8 @@ Yes I know that github already provides a list of contributors, but I feel that 
 
 [Chris Braun](https://github.com/cryzed)
 
+[Alan Yorinks](https://github.com/MrYsLab)
+
 
 Projects using Remi
 ===
