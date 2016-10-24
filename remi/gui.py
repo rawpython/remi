@@ -906,7 +906,7 @@ class TabBox(Widget):
             li.style['float'] = "left"
             li.style['width'] = "%.1f%%" % tab_w
 
-    def _on_tab_pressed(self, widget, _a, _li, _holder):
+    def _on_tab_pressed(self, _a, _li, _holder):
         # remove active on all tabs, and hide their contents
         for a, li, holder in self._tabs.values():
             a.remove_class('active')
@@ -919,6 +919,13 @@ class TabBox(Widget):
         cb = self._tab_cbs[_holder.identifier]
         if cb is not None:
             cb()
+
+    def show_tab(self, widget):
+        """ shows a tab identified by the contained widget """
+        for a, li, holder in self._tabs.values():
+            if holder.children['content'] == widget:
+                self._on_tab_pressed(a, li, holder)
+                return
 
     def add_tab(self, widget, name, tab_cb):
 
@@ -944,7 +951,8 @@ class TabBox(Widget):
         a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
         
         self._tab_cbs[holder.identifier] = tab_cb
-        a.eventManager.register_listener(a.EVENT_ONCLICK, self._on_tab_pressed, a, li, holder)
+        #a.eventManager.register_listener(a.EVENT_ONCLICK, self._on_tab_pressed, a, li, holder)
+        a.set_on_click_listener(self._on_tab_pressed, li, holder)
 
         a.add_child('text', name)
         li.add_child('a', a)
