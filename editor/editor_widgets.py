@@ -291,6 +291,135 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         params = (self.fileFolderNavigator.pathEditor.get_text(),)
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
         
+        
+class WidgetHelper(gui.HBox):
+    """ Allocates the Widget to which it refers, 
+        interfacing to the user in order to obtain the necessary attribute values
+        obtains the constructor parameters, asks for them in a dialog
+        puts the values in an attribute called constructor
+    """
+
+    def __init__(self, appInstance, widgetClass, **kwargs_to_widget):
+        self.kwargs_to_widget = kwargs_to_widget
+        self.appInstance = appInstance
+        self.widgetClass = widgetClass
+        super(WidgetHelper, self).__init__()
+        self.style['display'] = 'block'
+        self.style['background-color'] = 'white'
+        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__, width='auto', margin='2px')
+        self.icon.style['max-width'] = '100%'
+        self.icon.style['image-rendering'] = 'auto'
+        self.icon.attributes['draggable'] = 'false'
+        self.icon.attributes['ondragstart'] = "event.preventDefault();"
+        self.append(self.icon)
+        
+        self.attributes['draggable'] = 'true'
+        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));"
+        self.attributes['ondragover'] = "event.preventDefault();"   
+        self.attributes['ondrop'] = "event.preventDefault();return false;"
+        
+        self.optional_style_dict = {} #this dictionary will contain optional style attributes that have to be added to the widget once created
+        
+        self.set_on_click_listener(self.prompt_new_widget)
+        
+    def build_widget_name_list_from_tree(self, node):
+        if not hasattr(node, 'attributes'):
+            return
+        if not 'editor_varname' in node.attributes.keys():
+            return
+        self.varname_list.append(node.attributes['editor_varname'])
+        for child in node.children.values():
+            self.build_widget_name_list_from_tree(child)
+        
+    def prompt_new_widget(self, widget):
+        self.varname_list = list()
+        
+        self.build_widget_name_list_from_tree(self.appInstance.project)
+        
+        self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
+        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
+        self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list', width='40%')
+        varNameTextInput = gui.TextInput()
+        varNameTextInput.attributes['tabindex'] = '1'
+        varNameTextInput.attributes['autofocus'] = 'autofocus'
+        self.dialog.add_field_with_label('name', 'Variable name', varNameTextInput)
+        #for param in self.constructor_parameters_list:
+        for index in range(0,len(self.widgetClass.__init__._constructor_types)):
+            param = self.constructor_parameters_list[index]
+            _typ = self.widgetClass.__init__._constructor_types[index]
+            note = ' (%s)'%_typ.__name__
+            editWidget = None
+            if _typ==int:
+                editWidget = gui.SpinBox('0',-65536,65535)
+            elif _typ==bool:
+                editWidget = gui.CheckBox()
+            else:
+                editWidget = gui.TextInput()
+
+            editWidget.attributes['tabindex'] = str(index+2)
+            self.dialog.add_field_with_label(param, param + note, editWidget)
+            
+        self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
+        self.dialog.set_on_confirm_dialog_listener(self.on_dialog_confirm)
+        self.dialog.show(self.appInstance)
+
+    def on_dropped(self, left, top):
+        self.optional_style_dict['left'] = gui.to_pix(left)
+        self.optional_style_dict['top'] = gui.to_pix(top)
+        self.prompt_new_widget(None)
+        
+    def on_dialog_confirm(self, widget):
+        """ Here the widget is allocated
+        """
+        variableName = str(self.dialog.get_field("name").get_value())
+        if re.match('(^[a-zA-Z][a-zA-Z0-9_]*)|(^[_][a-zA-Z0-9_]+)', variableName) == None:
+            self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=350,height=120)
+            self.errorDialog.show(self.appInstance)
+            return
+        
+        if variableName in self.varname_list:
+            self.errorDialog = gui.GenericDialog("Error", "The typed variable name is already used. Please specify a new name.", width=350,height=150)
+            self.errorDialog.show(self.appInstance)
+            return
+        
+        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
+        param_values = []
+        param_for_constructor = []
+        for index in range(0,len(self.widgetClass.__init__._constructor_types)):
+            param = self.constructor_parameters_list[index]
+            _typ = self.widgetClass.__init__._constructor_types[index]
+            if _typ==int:
+                param_for_constructor.append(self.dialog.get_field(param).get_value())
+            elif _typ==bool:
+                param_for_constructor.append(self.dialog.get_field(param).get_value())
+            else:#if _typ==str:
+                param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
+            #else:
+            #    param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
+            param_values.append(self.dialog.get_field(param).get_value())
+        print(self.constructor_parameters_list)
+        print(param_values)
+        #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
+        constructor = '(%s)'%(','.join(map(lambda v: str(v), param_for_constructor)))
+        #here we create and decorate the widget
+        widget = self.widgetClass(*param_values, **self.kwargs_to_widget)
+        widget.attributes['editor_constructor'] = constructor
+        widget.attributes['editor_varname'] = variableName
+        widget.attributes['editor_tag_type'] = 'widget'
+        widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
+        widget.attributes['editor_baseclass'] = widget.__class__.__name__ #__class__.__bases__[0].__name__
+        #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
+        if not 'position' in widget.style:
+            widget.style['position'] = 'absolute'
+        if not 'display' in widget.style:
+            widget.style['display'] = 'block'
+            
+        for key in self.optional_style_dict:
+            widget.style[key] = self.optional_style_dict[key]
+        self.optional_style_dict = {}
+        
+        self.appInstance.add_widget_to_editor(widget)
+
 
 class WidgetCollection(gui.Widget):
     def __init__(self, appInstance, **kwargs):

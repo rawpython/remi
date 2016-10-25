@@ -470,8 +470,6 @@ function websocketOnMessage (evt){
         if(comTimeout!=null)clearTimeout(comTimeout);
     }else if( received_msg[0]=='4' ){ /*ping*/
         ws.send('pong');
-    }else{
-        console.debug("websocketOnMessage");
     }
 };
 
@@ -502,7 +500,6 @@ function renewConnection(){
     //A value of 1 indicates that the connection is established and communication is possible.
     //A value of 2 indicates that the connection is going through the closing handshake.
     //A value of 3 indicates that the connection has been closed or could not be opened.
-    console.debug("renewConnection");
     if( ws.readyState == 1){
         try{
             ws.close();
