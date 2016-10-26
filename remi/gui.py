@@ -1254,6 +1254,7 @@ class GenericDialog(Widget):
         label.style['margin'] = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
+        container.style['justify-content'] = 'space-between'
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
         container.append(label, key='lbl' + key)
@@ -1271,11 +1272,10 @@ class GenericDialog(Widget):
             field (Widget): The widget to be added to the dialog, TextInput or any Widget for example.
         """
         self.inputs[key] = field
-        container = Widget()
-        container.style['display'] = 'block'
+        container = HBox()
+        container.style['justify-content'] = 'space-between'
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
-        container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -2032,6 +2032,7 @@ class FileFolderNavigator(Widget):
     def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.style['width'] = '100%'
 
         self.multiple_selection = multiple_selection
         self.allow_file_selection = allow_file_selection
@@ -2040,7 +2041,7 @@ class FileFolderNavigator(Widget):
         self.controlsContainer = Widget()
         self.controlsContainer.set_size('100%', '30px')
         self.controlsContainer.style['display'] = 'flex'
-        self.controlsContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.controlsContainer.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self.controlBack = Button('Up')
         self.controlBack.set_size('10%', '100%')
         self.controlBack.set_on_click_listener(self.dir_go_back)
@@ -2055,7 +2056,7 @@ class FileFolderNavigator(Widget):
         self.controlsContainer.append(self.pathEditor)
         self.controlsContainer.append(self.controlGo)
 
-        self.itemContainer = Widget()
+        self.itemContainer = Widget(width='100%',height=300)
 
         self.append(self.controlsContainer)
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
@@ -2095,11 +2096,10 @@ class FileFolderNavigator(Widget):
         # this speeds up the navigation
         self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
-        self.itemContainer = Widget()
+        self.itemContainer = Widget(width='100%',height=300)
         self.itemContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
-        self.itemContainer.style['height'] = '300px'
         self.itemContainer.style['display'] = 'block'
 
         for i in l:
