@@ -183,9 +183,12 @@ class untitled(App):
         mainContainer.append(lblTitle)
 
 
-        #the HBOX container contains initially children with left and right margin set to 'auto'
-        #this inhibits the alignment. In order to allow alignment we must remove the margin setting it to 0px
+        #In order to allow alignment we must remove the margin setting it to 0px
         for child in hbox.children.values():
+            child.style['margin'] = '0px'
+
+        #In order to allow alignment we must remove the margin setting it to 0px
+        for child in vbox.children.values():
             child.style['margin'] = '0px'
 
         self.mainContainer = mainContainer
