@@ -70,7 +70,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        wid = gui.Widget(width=320, height=320)
+        wid = gui.VBox(width=320, height=320, margin='0px auto')
         wid.style['text-align'] = 'center'
         
         bt = gui.Button('Data', width=100, height=30)

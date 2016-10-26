@@ -21,7 +21,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        wid = gui.VBox(width=300, height=300)
+        wid = gui.VBox(width=300, height=300, margin='0px auto')
 
         self._items = ("/test/1", "/test/7")
 

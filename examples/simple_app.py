@@ -21,7 +21,8 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        wid = gui.VBox(width=300, height=200)
+        #margin 0px auto allows to center the app to the screen
+        wid = gui.VBox(width=300, height=200, margin='0px auto')
         lbl = gui.Label('Hello %s!' % name, width='80%', height='50%')
         lbl.style['margin'] = 'auto'
 

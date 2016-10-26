@@ -56,7 +56,6 @@ class untitled(App):
         vbox.style['flex-direction'] = "column"
         bt1 = Button('bt1')
         bt1.style['order'] = "-1"
-        bt1.style['margin'] = "0px auto"
         bt1.style['-webkit-order'] = "-1"
         bt1.style['position'] = "static"
         bt1.style['top'] = "1px"
@@ -67,7 +66,6 @@ class untitled(App):
         vbox.append(bt1,'bt1')
         bt3 = Button('bt3')
         bt3.style['order'] = "-1"
-        bt3.style['margin'] = "0px auto"
         bt3.style['-webkit-order'] = "-1"
         bt3.style['position'] = "static"
         bt3.style['top'] = "1px"
@@ -78,7 +76,6 @@ class untitled(App):
         vbox.append(bt3,'bt3')
         bt2 = Button('bt2')
         bt2.style['order'] = "-1"
-        bt2.style['margin'] = "0px auto"
         bt2.style['-webkit-order'] = "-1"
         bt2.style['position'] = "static"
         bt2.style['top'] = "1px"
@@ -106,14 +103,12 @@ class untitled(App):
         lbl1.style['-webkit-order'] = "-1"
         lbl1.style['width'] = "50px"
         lbl1.style['display'] = "block"
-        lbl1.style['margin'] = "0px auto"
         lbl1.style['overflow'] = "auto"
         lbl1.style['background-color'] = "#ffb509"
         lbl1.style['height'] = "50px"
         hbox.append(lbl1,'lbl1')
         lbl2 = Label('lbl2')
         lbl2.style['order'] = "-1"
-        lbl2.style['margin'] = "0px auto"
         lbl2.style['-webkit-order'] = "-1"
         lbl2.style['width'] = "50px"
         lbl2.style['overflow'] = "auto"
@@ -123,7 +118,6 @@ class untitled(App):
         hbox.append(lbl2,'lbl2')
         lbl3 = Label('lbl3')
         lbl3.style['order'] = "-1"
-        lbl3.style['margin'] = "0px auto"
         lbl3.style['-webkit-order'] = "-1"
         lbl3.style['width'] = "50px"
         lbl3.style['overflow'] = "auto"
@@ -181,15 +175,6 @@ class untitled(App):
         lblTitle.style['left'] = "0px"
         lblTitle.style['top'] = "0px"
         mainContainer.append(lblTitle)
-
-
-        #In order to allow alignment we must remove the margin setting it to 0px
-        for child in hbox.children.values():
-            child.style['margin'] = '0px'
-
-        #In order to allow alignment we must remove the margin setting it to 0px
-        for child in vbox.children.values():
-            child.style['margin'] = '0px'
 
         self.mainContainer = mainContainer
         return self.mainContainer

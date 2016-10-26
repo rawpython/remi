@@ -100,7 +100,7 @@ class MyApp(App):
 
     def main(self):
         # the arguments are    width - height - layoutOrientationOrizontal
-        self.main_container = gui.Widget()
+        self.main_container = gui.Widget(margin='0px auto')
         self.main_container.set_size(1020, 600)
         self.main_container.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
         
@@ -170,7 +170,7 @@ class MyApp(App):
 
     def new_game(self, widget):
         self.time_count = 0
-        self.mine_table = gui.Table()#900, 450
+        self.mine_table = gui.Table(margin='0px auto')#900, 450
         self.mine_matrix = self.build_mine_matrix(30, 15, 60)
         self.mine_table.from_2d_matrix(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")

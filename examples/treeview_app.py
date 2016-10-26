@@ -21,11 +21,11 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        wid = gui.VBox(width=300, height=400)
+        wid = gui.VBox(width=350, height=400, margin='0px auto')
         
-        self.tree = gui.TreeView(width=200, height=300)
-        self.tree.append(gui.TreeItem("item1", width=100))
-        it2 = gui.TreeItem("item2", width=100)
+        self.tree = gui.TreeView(width=300, height=300)
+        self.tree.append(gui.TreeItem("item1"))
+        it2 = gui.TreeItem("item2")
         self.tree.append(it2)
         
         it2.append(gui.TreeItem("sub item1"))

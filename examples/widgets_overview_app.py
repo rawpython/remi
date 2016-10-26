@@ -22,7 +22,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        verticalContainer = gui.Widget(width=540)
+        verticalContainer = gui.Widget(width=540, margin='0px auto') #the margin 0px auto centers the main container
         verticalContainer.style['display'] = 'block'
         verticalContainer.style['overflow'] = 'hidden'
 

@@ -75,7 +75,7 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        wid = gui.Widget(width=640, height=600)
+        wid = gui.Widget(width=640, height=600, margin='0px auto')
         self.opencvideo_widget = OpencvVideoWidget(0, 10, width=620, height=530)
         self.opencvideo_widget.style['margin'] = '10px'
         menu = gui.Menu(width=620, height=30)

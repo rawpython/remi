@@ -356,7 +356,7 @@ class Widget(Tag):
         self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.style['margin'] = kwargs.get('margin', '0px auto')  # centers the div
+        self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
 
@@ -1184,6 +1184,7 @@ class GenericDialog(Widget):
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'auto'
+        self.style['margin'] = '0px auto'
 
         if len(title) > 0:
             t = Label(title)
