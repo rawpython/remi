@@ -27,19 +27,27 @@ class MyApp(App):
         tb = gui.TabBox(width='80%')
         tb.add_tab(b1, 'First', None)
 
-        b2 = gui.Button('Second Button', width=200, height=30)
+        b2 = gui.Button('Show third tab', width=200, height=30)
         tb.add_tab(b2, 'Second', None)
 
-        b3 = gui.Button('Third Button', width=200, height=30)
+        b3 = gui.Button('Show first tab', width=200, height=30)
         tb.add_tab(b3, 'Third', None)
         
         b1.set_on_click_listener(self.on_bt1_pressed, tb, b2)
+        b2.set_on_click_listener(self.on_bt2_pressed, tb, 'Third')
+        b3.set_on_click_listener(self.on_bt3_pressed, tb, 0)
 
         return tb
 
     def on_bt1_pressed(self, widget, tabbox, refWidgetTab):
-        tabbox.show_tab(refWidgetTab)
+        tabbox.select_by_widget(refWidgetTab)
+
+    def on_bt2_pressed(self, widget, tabbox, refWidgetTabName):
+        tabbox.select_by_name(refWidgetTabName)
     
+    def on_bt3_pressed(self, widget, tabbox, tabIndex):
+        tabbox.select_by_index(tabIndex)
+
 if __name__ == "__main__":
     start(MyApp, title="Tab Demo", standalone=False)
 

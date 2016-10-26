@@ -900,6 +900,8 @@ class TabBox(Widget):
         # maps tabs to their corresponding tab header
         self._tabs = {}
 
+        self._tablist = list()
+
     def _fix_tab_widths(self):
         tab_w = 100.0 / len(self._tabs)
         for a, li, holder in self._tabs.values():
@@ -920,13 +922,24 @@ class TabBox(Widget):
         if cb is not None:
             cb()
 
-    def show_tab(self, widget):
+    def select_by_widget(self, widget):
         """ shows a tab identified by the contained widget """
         for a, li, holder in self._tabs.values():
             if holder.children['content'] == widget:
                 self._on_tab_pressed(a, li, holder)
                 return
 
+    def select_by_name(self, name):
+        """ shows a tab identified by the name """
+        for a, li, holder in self._tabs.values():
+            if a.children['text'] == name:
+                self._on_tab_pressed(a, li, holder)
+                return
+
+    def select_by_index(self, index):
+        """ shows a tab identified by its index """
+        self._on_tab_pressed(*self._tablist[index])
+                
     def add_tab(self, widget, name, tab_cb):
 
         holder = Tag(_type='div', _class='')
@@ -962,7 +975,7 @@ class TabBox(Widget):
 
         self._tabs[holder.identifier] = (a, li, holder)
         self._fix_tab_widths()
-
+        self._tablist.append((a, li, holder))
         return holder.identifier
 
 
