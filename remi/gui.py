@@ -207,7 +207,11 @@ class Tag(object):
             elif isinstance(s, type(u'')):
                 innerHTML = innerHTML + s.encode('utf-8')
             else:
-                innerHTML = innerHTML + s.repr(client, local_changed_widgets)
+                try:
+                    innerHTML = innerHTML + s.repr(client,
+                                                   local_changed_widgets)
+                except:
+                    innerHTML = innerHTML + repr(s)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self.attributes['style'] = jsonize(self.style)
