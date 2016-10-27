@@ -1017,6 +1017,8 @@ def start(mainGuiClass, **kwargs):
     standalone = kwargs.pop('standalone', False)
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(name)-16s %(levelname)-8s %(message)s')
+    logging.getLogger('remi').setLevel(
+            level=logging.DEBUG if debug else logging.INFO)
     if standalone:
         s = StandaloneServer(mainGuiClass, start=True, **kwargs)
     else:
