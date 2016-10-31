@@ -1743,24 +1743,58 @@ class Table(Widget):
         self.type = 'table'
         self.style['float'] = 'none'
 
-    def from_2d_matrix(self, _matrix, fill_title=True):
+    @classmethod
+    def new_from_list(cls, content, fill_title=True, **kwargs):
+        """Populates the Table with a list of tuples of strings.
+
+        Args:
+            content (list): list of tuples of strings. Each tuple is a row.
+            fill_title (bool): if true, the first tuple in the list will 
+                be set as title
         """
-        Fills the table with the data contained in the provided 2d _matrix
-        The first row of the matrix is set as table title
+        obj = cls(**kwargs)
+        obj.append_from_list(content, fill_title)
+        return obj
+        
+    def append_from_list(self, content, fill_title=False):
         """
-        for child_keys in list(self.children):
-            self.remove_child(self.children[child_keys])
+        Appends rows created from the data contained in the provided 
+        list of tuples of strings. The first tuple of the list can be 
+        set as table title.
+        
+        Args:
+            content (list): list of tuples of strings. Each tuple is a row.
+            fill_title (bool): if true, the first tuple in the list will 
+                be set as title.
+        """
         first_row = True
-        for row in _matrix:
+        for row in content:
+            key = ''
             tr = TableRow()
             for item in row:
                 if first_row and fill_title:
                     ti = TableTitle(item)
+                    key = 'title'
                 else:
                     ti = TableItem(item)
                 tr.append(ti)
-            self.append(tr)
+            self.append(tr, key)
             first_row = False
+    
+    def empty(self, keep_title=False):
+        """
+        Deletes the table rows.
+        
+        Args:
+            keep_title (bool): whether to delete all the content except 
+                the title.
+        """
+        title = None
+        if 'title' in self.children.keys():
+            title = self.children['title']
+        super(Table, self).empty()
+        if keep_title and title != None:
+            self.append(title, 'title')
 
 
 class TableRow(Widget):
