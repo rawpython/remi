@@ -210,7 +210,7 @@ class Tag(object):
                 try:
                     innerHTML = innerHTML + s.repr(client,
                                                    local_changed_widgets)
-                except:
+                except AttributeError:
                     innerHTML = innerHTML + repr(s)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
