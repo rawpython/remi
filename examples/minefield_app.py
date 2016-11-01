@@ -172,7 +172,8 @@ class MyApp(App):
         self.time_count = 0
         self.mine_table = gui.Table(margin='0px auto')#900, 450
         self.mine_matrix = self.build_mine_matrix(30, 15, 60)
-        self.mine_table.from_2d_matrix(self.mine_matrix, False)
+        self.mine_table.empty()
+        self.mine_table.append_from_list(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
         self.check_if_win()
         self.set_root_widget(self.main_container)
@@ -246,7 +247,8 @@ class MyApp(App):
             for y in range(0, len(self.mine_matrix)):
                 self.mine_matrix[y][x].style['background-color'] = 'red'
                 self.mine_matrix[y][x].check_mine(None, False)
-        self.mine_table.from_2d_matrix(self.mine_matrix, False)
+        self.mine_table.empty()
+        self.mine_table.append_from_list(self.mine_matrix, False)
 
 
 if __name__ == "__main__":
