@@ -201,7 +201,8 @@ class Tag(object):
         """
         local_changed_widgets = {}
         innerHTML = ''
-        for s in self._render_children_list:
+        for k in self._render_children_list:
+            s = self.children[k]
             if isinstance(s, type('')):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
@@ -249,8 +250,8 @@ class Tag(object):
             child.attributes['data-parent-widget'] = self.identifier
 
         if key in self.children:
-            self._render_children_list.remove(self.children[key])
-        self._render_children_list.append(child)
+            self._render_children_list.remove(key)
+        self._render_children_list.append(key)
 
         self.children[key] = child
 
@@ -274,11 +275,10 @@ class Tag(object):
             child (Tag): The child to be removed.
         """
         if child in self.children.values():
-            self._render_children_list.remove(child)
             for k in self.children.keys():
                 if self.children[k].identifier == child.identifier:
                     if k in self._render_children_list:
-                        self._render_children_list.remove(self.children[k])
+                        self._render_children_list.remove(k)
                     self.children.pop(k)
                     # when the child is removed we stop the iteration
                     # this implies that a child replication should not be allowed
