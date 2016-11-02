@@ -916,6 +916,7 @@ class Server(object):
         self._websocket_port = websocket_port
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
+        self._userdata = userdata
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
         else:
@@ -925,7 +926,7 @@ class Server(object):
             raise ValueError('userdata must be a tuple')
 
         if start:
-            self.start(*userdata)
+            self.start()
             self.serve_forever()
 
     @property
@@ -936,7 +937,7 @@ class Server(object):
     def address(self):
         return self._base_address
 
-    def start(self, *userdata):
+    def start(self):
         # here the websocket is started on an ephemereal port
         self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
                                                  self._multiple_instance)
@@ -953,7 +954,7 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
-                                           self._title, *userdata)
+                                           self._title, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
