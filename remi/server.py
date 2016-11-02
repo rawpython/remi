@@ -60,6 +60,10 @@ update_thread = None
 
 log = logging.getLogger('remi.server')
 
+_MSG_PING = '4'
+_MSG_ACK = '3'
+_MSG_JS = '2'
+_MSG_UPDATE = '1'
 
 def to_websocket(data):
     # encoding end decoding utility function
@@ -178,13 +182,13 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         t = time.time()
         if (t - self.last_ping) > (0.5*self.timeout):
             self.last_ping = t
-            self.send_message('4') #4==ping
+            self.send_message(_MSG_PING)
 
     def send_message(self, message):
         if not self.handshake_done:
             self.log.warning("ignoring message %s (handshake not done)" % message[:10])
 
-        if message != '4': #4==ping
+        if message != _MSG_PING:
             self.log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
@@ -224,7 +228,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if message == 'pong':
             return
 
-        self.send_message('3') #3==ack
+        self.send_message(_MSG_ACK)
 
         with update_lock:
             # noinspection PyBroadException
@@ -285,9 +289,9 @@ def gui_updater(client, node):
         html = changed_widgets[widget]
         __id = str(widget.identifier)
         for ws in client.websockets:
-            log.debug('update_widget: %s type: %s' %(__id, type(widget)))
+            log.debug('update_widget: %s type: %s' % (__id, type(widget)))
             try:
-                ws.send_message('1' + __id + ',' + to_websocket(html)) #1==update_widget message
+                ws.send_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
             except:
                 client.websockets.remove(ws)
 
@@ -327,6 +331,7 @@ class _UpdateThread(threading.Thread):
                 update_event.clear()
 
 
+# noinspection PyPep8Naming
 class App(BaseHTTPRequestHandler, object):
 
     """
@@ -678,7 +683,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         update_event.clear()
 
     def execute_javascript(self, code):
-        self._send_spontaneous_websocket_message('2' + code)
+        self._send_spontaneous_websocket_message(_MSG_JS + code)
 
     def notification_message(self, title, content, icon=""):
         """This function sends "javascript" message to the client, that executes its content.
@@ -700,7 +705,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     }
                 });
             }
-        """%{'title': title, 'content': content, 'icon': icon}
+        """ % {'title': title, 'content': content, 'icon': icon}
         self.execute_javascript(code)
 
     def do_POST(self):
@@ -838,7 +843,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write(content)
         elif attr_call:
             param_dict = parse_qs(urlparse(function).query)
-            #parse_qs returns patameters as list, here we take the first element
+            # parse_qs returns patameters as list, here we take the first element
             for k in param_dict:
                 param_dict[k] = param_dict[k][0]
 
@@ -871,6 +876,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     daemon_threads = True
 
+    # noinspection PyPep8Naming
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
@@ -889,6 +895,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 
 class Server(object):
+    # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
@@ -1008,7 +1015,9 @@ class StandaloneServer(Server):
             webview.create_window(self.title, self.address, **self._application_conf)
             Server.stop(self)
         except ImportError:
-            raise ImportError('PyWebView is missing. Please install it by:\n    pip install pywebview\n    more info at https://github.com/r0x0r/pywebview')
+            raise ImportError('PyWebView is missing. Please install it by:\n    '
+                              'pip install pywebview\n    '
+                              'more info at https://github.com/r0x0r/pywebview')
 
 
 def start(mainGuiClass, **kwargs):
@@ -1021,6 +1030,3 @@ def start(mainGuiClass, **kwargs):
         s = StandaloneServer(mainGuiClass, start=True, **kwargs)
     else:
         s = Server(mainGuiClass, start=True, **kwargs)
-
-
-
