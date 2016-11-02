@@ -842,28 +842,29 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 content = f.read()
                 self.wfile.write(content)
         elif attr_call:
-            param_dict = parse_qs(urlparse(function).query)
-            # parse_qs returns patameters as list, here we take the first element
-            for k in param_dict:
-                param_dict[k] = param_dict[k][0]
+            with update_lock:
+                param_dict = parse_qs(urlparse(function).query)
+                # parse_qs returns patameters as list, here we take the first element
+                for k in param_dict:
+                    param_dict[k] = param_dict[k][0]
 
-            widget, function = attr_call.group(1, 2)
-            try:
-                content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
-                if content is None:
+                widget, function = attr_call.group(1, 2)
+                try:
+                    content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
+                    if content is None:
+                        self.send_response(503)
+                        return
+                    self.send_response(200)
+                except IOError:
+                    self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
+                    self.send_response(404)
+                    return
+                except (TypeError, AttributeError):
+                    self.log.error('attr %s/%s not available' % (widget, function))
                     self.send_response(503)
                     return
-                self.send_response(200)
-            except IOError:
-                self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
-                self.send_response(404)
-                return
-            except (TypeError, AttributeError):
-                self.log.error('attr %s/%s not available' % (widget, function))
-                self.send_response(503)
-                return
 
-            for k in headers.keys():
+            for k in headers:
                 self.send_header(k, headers[k])
             self.end_headers()
             try:
