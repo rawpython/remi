@@ -312,7 +312,7 @@ class _UpdateThread(threading.Thread):
                     for client in clients.values():
                         if not hasattr(client, 'root'):
                             continue
-                        
+
                         if client.websockets:
                             gui_updater(client, client.root)
 
@@ -320,7 +320,7 @@ class _UpdateThread(threading.Thread):
                                 ws.ping()
 
                         client.idle()
-                        
+
                 except Exception:
                     log.error('error updating gui', exc_info=True)
 
@@ -379,7 +379,7 @@ class App(BaseHTTPRequestHandler, object):
             runtimeInstances[str(id(self))] = self
             clients[k] = self
         wshost, wsport = self.server.websocket_address
-        
+
         net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
@@ -392,7 +392,7 @@ class App(BaseHTTPRequestHandler, object):
         clients[k].js_body_end = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
-// using UTF8 strings I noticed that the javascript .length of a string returned less 
+// using UTF8 strings I noticed that the javascript .length of a string returned less
 // characters than they actually were
 var pendingSendMessages = [];
 var ws = null;
@@ -443,7 +443,7 @@ function websocketOnMessage (evt){
         var index = received_msg.indexOf(',')+1;
         /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
         var content = received_msg.substr(index,received_msg.length-index);
-    
+
         document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
         document.body.innerHTML += decodeURIComponent(content);
     }else if( received_msg[0]=='1' ){ /*update_widget*/
@@ -455,7 +455,7 @@ function websocketOnMessage (evt){
         var elem = document.getElementById(idElem);
         elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
         elem.parentElement.removeChild(elem);
-        
+
         var elemToFocus = document.getElementById(focusedElement);
         if( elemToFocus != null ){
             document.getElementById(focusedElement).focus();
@@ -515,7 +515,7 @@ function renewConnection(){
 
 function checkTimeout(){
     if(pendingSendMessages.length>0)
-        renewConnection();    
+        renewConnection();
 };
 
 function websocketOnClose(evt){
@@ -650,7 +650,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Useful to schedule tasks. """
         pass
-    
+
     def set_root_widget(self, widget):
         global update_lock, update_event
         #update_event.wait()
@@ -1021,6 +1021,6 @@ def start(mainGuiClass, **kwargs):
         s = StandaloneServer(mainGuiClass, start=True, **kwargs)
     else:
         s = Server(mainGuiClass, start=True, **kwargs)
-	
+
 
 
