@@ -773,10 +773,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write('not authenticated')
 
         if do_process:
+            path = str(unquote(self.path))
             # noinspection PyBroadException
             try:
                 self._instance()
-                path = str(unquote(self.path))
+                # build the page (call main()) in user code, if not built yet
+                with update_lock:
+                    # build the root page once if necessary
+                    if not hasattr(self.client, 'root'):
+                        self.log.info('built UI (path=%s)' % path)
+                        self.client.root = self.main(*self.server.userdata)
                 self._process_all(path)
             except:
                 self.log.error('error processing GET request', exc_info=True)
@@ -799,10 +805,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
         if (function == '/') or (not function):
             with update_lock:
-                # build the root page once if necessary
-                should_call_main = not hasattr(self.client, 'root')
-                if should_call_main:
-                    self.client.root = self.main(*self.server.userdata)
                 # render the HTML
                 html = self.client.root.repr(self.client)
 
