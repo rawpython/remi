@@ -43,6 +43,7 @@ class MyApp(App):
                                    ('103', 'Lars', 'Gordon'),
                                    ('104', 'Roberto', 'Robitaille'),
                                    ('105', 'Maria', 'Papadopoulos')], width=300, height=200, margin='10px')
+        self.table.set_on_table_row_click_listener(self.on_table_click)
 
         # the arguments are	width - height - layoutOrientationOrizontal
         subContainerRight = gui.Widget()
@@ -256,6 +257,9 @@ class MyApp(App):
     # listener function
     def on_img_clicked(self, widget):
         self.lbl.set_text('Image clicked!')
+
+    def on_table_click(self, table, row, item):
+        self.lbl.set_text('Table Item clicked: ' + item.get_text())
 
     def on_button_pressed(self, widget):
         self.lbl.set_text('Button pressed! ')

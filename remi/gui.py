@@ -1741,6 +1741,7 @@ class Table(Widget):
     """
     table widget - it will contains TableRow
     """
+    EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
@@ -1805,11 +1806,34 @@ class Table(Widget):
         if keep_title and (title is not None):
             self.append(title, 'title')
 
+    def append(self, row, key=''):
+        super(Table, self).append(row, key)
+        row.set_on_row_item_click_listener(self.on_table_row_click)
+
+    def on_table_row_click(self, row, item):
+        self.eventManager.propagate(self.EVENT_ON_TABLE_ROW_CLICK, (row,item))
+    
+    @decorate_set_on_listener("on_table_row_click", "(self,table,row,item)")
+    def set_on_table_row_click_listener(self, callback, *userdata):
+        """Registers the listener for the Table.on_table_row_click event.
+
+        Note: The prototype of the listener have to be like 
+            on_table_row_click(self, table, row, item).
+
+        Args:
+            callback (function): Callback function pointer.
+            table (Table): The emitter of the event.
+            row (TableRow): The TableRow containing the clicked TableItem.
+            item (TableItem): The clicked TableItem.
+        """
+        self.eventManager.register_listener(self.EVENT_ON_TABLE_ROW_CLICK, callback, *userdata)
+
 
 class TableRow(Widget):
     """
     row widget for the Table - it will contains TableItem
     """
+    EVENT_ON_ROW_ITEM_CLICK = 'on_row_item_click'
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
@@ -1821,8 +1845,32 @@ class TableRow(Widget):
         self.type = 'tr'
         self.style['float'] = 'none'
 
+    def append(self, item, key=''):
+        super(TableRow, self).append(item, key)
+        item.set_on_click_listener(self.on_row_item_click)
 
-class TableItem(Widget):
+    def on_row_item_click(self, item):
+        self.eventManager.propagate(self.EVENT_ON_ROW_ITEM_CLICK, (item,))
+    
+    @decorate_set_on_listener("on_row_item_click", "(self,row,item)")
+    def set_on_row_item_click_listener(self, callback, *userdata):
+        """Registers the listener for the TableRow.on_row_item_click event.
+
+        Note: This is internally used by the Table widget in order to generate the 
+            Table.on_table_row_click event. 
+            Use Table.set_on_table_row_click_listener instead.
+        Note: The prototype of the listener have to be like 
+            on_row_item_click(self, row, item).
+
+        Args:
+            callback (function): Callback function pointer.
+            row (TableRow): The emitter of the event.
+            item (TableItem): The clicked TableItem.
+        """
+        self.eventManager.register_listener(self.EVENT_ON_ROW_ITEM_CLICK, callback, *userdata)
+
+
+class TableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
@@ -1835,7 +1883,7 @@ class TableItem(Widget):
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
         self.style['float'] = 'none'
-        self.add_child('text', text)
+        self.set_text(text)
 
 
 class TableTitle(Widget):
