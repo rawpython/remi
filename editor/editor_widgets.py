@@ -520,19 +520,21 @@ class EditorAttributes(gui.VBox):
         #load editable attributes
         self.append(self.titleLabel)
         self.attributeGroups = {}
-        for attributeName in html_helper.editorAttributeDictionary.keys():
-            attributeEditor = EditorAttributeInput(attributeName, html_helper.editorAttributeDictionary[attributeName], appInstance)
+        for attribute in html_helper.editorAttributeList:
+            attributeName = attribute[0]
+            attributeValue = attribute[1]
+            attributeEditor = EditorAttributeInput(attributeName, attributeValue, appInstance)
             attributeEditor.set_on_attribute_change_listener(self.onattribute_changed)
             attributeEditor.set_on_attribute_remove_listener(self.onattribute_remove)
             #attributeEditor.style['display'] = 'none'
-            if not html_helper.editorAttributeDictionary[attributeName]['group'] in self.attributeGroups.keys():
-                groupContainer = EditorAttributesGroup(html_helper.editorAttributeDictionary[attributeName]['group'], width='100%')
-                self.attributeGroups[html_helper.editorAttributeDictionary[attributeName]['group']] = groupContainer
+            if not attributeValue['group'] in self.attributeGroups.keys():
+                groupContainer = EditorAttributesGroup(attributeValue['group'], width='100%')
+                self.attributeGroups[attributeValue['group']] = groupContainer
                 self.append(groupContainer)
-                groupContainer.style['order'] = str(html_helper.editorAttributesGroupOrdering[html_helper.editorAttributeDictionary[attributeName]['group']])
-                groupContainer.style['-webkit-order'] = str(html_helper.editorAttributesGroupOrdering[html_helper.editorAttributeDictionary[attributeName]['group']])
+                groupContainer.style['order'] = str(html_helper.editorAttributesGroupOrdering[attributeValue['group']])
+                groupContainer.style['-webkit-order'] = str(html_helper.editorAttributesGroupOrdering[attributeValue['group']])
 
-            self.attributeGroups[html_helper.editorAttributeDictionary[attributeName]['group']].append(attributeEditor)
+            self.attributeGroups[attributeValue['group']].append(attributeEditor)
             self.attributesInputs.append(attributeEditor)
     
     #this function is called by an EditorAttributeInput change event and propagates to the listeners 
