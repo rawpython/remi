@@ -1882,24 +1882,22 @@ class TableItem(Widget, _MixinTextualWidget):
         """
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
-        self.style['float'] = 'none'
         self.set_text(text)
 
 
-class TableTitle(Widget):
+class TableTitle(Widget, _MixinTextualWidget):
     """title widget for the table."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, title='', **kwargs):
+    def __init__(self, text='', **kwargs):
         """
         Args:
-            title (str):
+            text (str):
             kwargs: See Widget.__init__()
         """
         super(TableTitle, self).__init__(**kwargs)
         self.type = 'th'
-        self.style['float'] = 'none'
-        self.add_child('text', title)
+        self.set_text(text)
 
 
 class Input(Widget):
