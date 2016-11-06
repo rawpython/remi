@@ -277,15 +277,16 @@ class Tag(object):
         Args:
             child (Tag): The child to be removed.
         """
-        if child in self.children.values():
+        if child in self.children.values() and hasattr(child, 'identifier'):
             for k in self.children.keys():
-                if self.children[k].identifier == child.identifier:
-                    if k in self._render_children_list:
-                        self._render_children_list.remove(k)
-                    self.children.pop(k)
-                    # when the child is removed we stop the iteration
-                    # this implies that a child replication should not be allowed
-                    break
+                if hasattr(self.children[k], 'identifier'):
+                    if self.children[k].identifier == child.identifier:
+                        if k in self._render_children_list:
+                            self._render_children_list.remove(k)
+                        self.children.pop(k)
+                        # when the child is removed we stop the iteration
+                        # this implies that a child replication should not be allowed
+                        break
 
     def _ischanged(self):
         return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
