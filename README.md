@@ -301,12 +301,30 @@ start(MyApp, username='myusername', password='mypassword')
 
 Styling
 ===
-It's possible to change the style of the gui editing the style.css file. Here you can define the css properties of each gui widget.
+In order to define a new style for your app you have to do the following.
+Create a *res* folder and pass it to your App class constructor:
+```python
+class MyApp(App):
+    def __init__(self, *args):
+        res_path = os.path.join(os.path.dirname(__file__), 'res')
+        super(MyApp, self).__init__(*args, static_file_path=res_path)
+``` 
+
+Make a copy the standard style.css from the remi folder and paste it inside your *res* folder. Edit it in order to customize.
+This way the standard *style.css* file gets overridden by the one you created.
 
 
 Compatibility
 ===
 Remi is made to be compatible from Python2.7 to Python3.X . Please notify compatibility issues.
+
+
+Security
+===
+Remi should be intended as a standard desktop gui framework. 
+The library itself don't implements security strategies, and so it's advisable to don't expose its access to unsafe public networks.
+
+When loading data from external sources, consider to protect the application from potential javascript injection before displaying the content directly.
 
 
 Contributors
@@ -344,6 +362,8 @@ Yes I know that github already provides a list of contributors, but I feel that 
 [Chris Braun](https://github.com/cryzed)
 
 [Alan Yorinks](https://github.com/MrYsLab)
+
+[Bernhard E. Reiter](https://github.com/bernhardreiter)
 
 
 Projects using Remi
