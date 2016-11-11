@@ -764,13 +764,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             if not ('Authorization' in self.headers) or self.headers['Authorization'] is None:
                 self.log.info("Authenticating")
                 self.do_AUTHHEAD()
-                self.wfile.write('no auth header received')
+                self.wfile.write(encode_text('no auth header received'))
             elif self.headers['Authorization'] == 'Basic ' + self.server.auth.decode():
                 do_process = True
             else:
                 self.do_AUTHHEAD()
-                self.wfile.write(self.headers['Authorization'])
-                self.wfile.write('not authenticated')
+                self.wfile.write(encode_text(self.headers['Authorization']))
+                self.wfile.write(encode_text('not authenticated'))
 
         if do_process:
             path = str(unquote(self.path))
