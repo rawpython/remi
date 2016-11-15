@@ -241,7 +241,7 @@ class MyApp(App):
 
     def explosion(self, cell):
         print("explosion")
-        self.mine_table = gui.Table()
+        self.mine_table = gui.Table(margin='0px auto')
         self.main_container.append(self.mine_table, key="mine_table")
         for x in range(0, len(self.mine_matrix[0])):
             for y in range(0, len(self.mine_matrix)):
