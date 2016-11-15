@@ -22,10 +22,12 @@ from .server import runtimeInstances, update_event
 
 log = logging.getLogger('remi.gui')
 
+
 def uid(obj):
     if not hasattr(obj,'identifier'):
-        return str(id(obj)) 
+        return str(id(obj))
     return obj.identifier
+
 
 def debounce_button(btn_attr_name, t=2, final_value=True):
     def wrapper(f):
@@ -51,6 +53,7 @@ def decorate_set_on_listener(event_name, params):
         params (str): The list of parameters for the listener function (es. "(self, new_value)")
     """
 
+    # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(function):
         function._event_listener = {}
         function._event_listener['eventName'] = event_name
@@ -106,19 +109,19 @@ class _VersionedDictionary(dict):
             return
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).__delitem__(key)
-    
+
     def pop(self, key, d=None, version_increment=1):
         if key not in self:
             return
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).pop(key, d)
-        
+
     def clear(self, version_increment=1):
         self.__version__ += version_increment
         return super(_VersionedDictionary, self).clear()
 
     def ischanged(self):
-        return self.__version__!=self.__lastversion__
+        return self.__version__ != self.__lastversion__
 
     def align_version(self):
         self.__lastversion__ = self.__version__
@@ -201,7 +204,8 @@ class Tag(object):
         """
         local_changed_widgets = {}
         innerHTML = ''
-        for s in self._render_children_list:
+        for k in self._render_children_list:
+            s = self.children[k]
             if isinstance(s, type('')):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
@@ -221,7 +225,7 @@ class Tag(object):
                                     innerHTML,
                                     self.type)
         if self._ischanged():
-            #if self changed, no matter about the children because will be updated the entire parent
+            # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
             changed_widgets[self] = self._backup_repr
             self._set_updated()
@@ -253,8 +257,8 @@ class Tag(object):
             child.attributes['data-parent-widget'] = self.identifier
 
         if key in self.children:
-            self._render_children_list.remove(self.children[key])
-        self._render_children_list.append(child)
+            self._render_children_list.remove(key)
+        self._render_children_list.append(key)
 
         self.children[key] = child
 
@@ -277,16 +281,16 @@ class Tag(object):
         Args:
             child (Tag): The child to be removed.
         """
-        if child in self.children.values():
-            self._render_children_list.remove(child)
+        if child in self.children.values() and hasattr(child, 'identifier'):
             for k in self.children.keys():
-                if self.children[k].identifier == child.identifier:
-                    if k in self._render_children_list:
-                        self._render_children_list.remove(self.children[k])
-                    self.children.pop(k)
-                    # when the child is removed we stop the iteration
-                    # this implies that a child replication should not be allowed
-                    break
+                if hasattr(self.children[k], 'identifier'):
+                    if self.children[k].identifier == child.identifier:
+                        if k in self._render_children_list:
+                            self._render_children_list.remove(k)
+                        self.children.pop(k)
+                        # when the child is removed we stop the iteration
+                        # this implies that a child replication should not be allowed
+                        break
 
     def _ischanged(self):
         return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
@@ -307,7 +311,7 @@ class Widget(Tag):
     passing as parameter Widget.LAYOUT_HORIZONTAL or Widget.LAYOUT_VERTICAL.
 
     Tips:
-    In html, it is a DIV tag    
+    In html, it is a DIV tag
     The self.type attribute specifies the HTML tag representation
     The self.attributes[] attribute specifies the HTML attributes like 'style' 'class' 'id'
     The self.style[] attribute specifies the CSS style content like 'font' 'color'. It will be packed together with
@@ -360,7 +364,7 @@ class Widget(Tag):
         self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.style['margin'] = kwargs.get('margin', '0px auto')  # centers the div
+        self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
 
@@ -452,9 +456,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onfocus", "(self,emitter)")
     def set_on_focus_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onfocus event.
-        
+
         Note: the listener prototype have to be in the form on_widget_focus(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -473,7 +477,7 @@ class Widget(Tag):
         """Registers the listener for the Widget.onblur event.
 
         Note: the listener prototype have to be in the form on_widget_blur(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -492,7 +496,7 @@ class Widget(Tag):
         """Registers the listener for the Widget.onclick event.
 
         Note: the listener prototype have to be in the form on_widget_click(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -509,9 +513,9 @@ class Widget(Tag):
     @decorate_set_on_listener("oncontextmenu", "(self,emitter)")
     def set_on_contextmenu_listener(self, callback, *userdata):
         """Registers the listener for the Widget.oncontextmenu event.
-        
+
         Note: the listener prototype have to be in the form on_widget_contextmenu(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -523,7 +527,7 @@ class Widget(Tag):
 
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
-        
+
         Args:
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
@@ -533,9 +537,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onmousedown", "(self,emitter,x,y)")
     def set_on_mousedown_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmousedown event.
-        
+
         Note: the listener prototype have to be in the form on_widget_mousedown(self, widget, x, y).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -550,7 +554,7 @@ class Widget(Tag):
 
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
-        
+
         Args:
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
@@ -562,7 +566,7 @@ class Widget(Tag):
         """Registers the listener for the Widget.onmouseup event.
 
         Note: the listener prototype have to be in the form on_widget_mouseup(self, widget, x, y).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -586,9 +590,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onmouseout", "(self,emitter)")
     def set_on_mouseout_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseout event.
-        
+
         Note: the listener prototype have to be in the form on_widget_mouseout(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -612,9 +616,9 @@ class Widget(Tag):
     @decorate_set_on_listener("onmouseleave", "(self,emitter)")
     def set_on_mouseleave_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onmouseleave event.
-        
+
         Note: the listener prototype have to be in the form on_widget_mouseleave(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -824,7 +828,8 @@ class HBox(Widget):
 
         Args:
             value (Widget): Child instance to be appended.
-            key (int): Unique identifier for the child. It have to be integer, and the value determines the order in the layout
+            key (int): Unique identifier for the child. It have to be integer, and the value determines the order
+            in the layout
         """
         key = str(key)
         if not isinstance(value, Widget):
@@ -873,7 +878,7 @@ class VBox(HBox):
         super(VBox, self).__init__(**kwargs)
         self.style['flex-direction'] = 'column'
 
-         
+
 class TabBox(Widget):
 
     # create a structure like the following
@@ -904,6 +909,8 @@ class TabBox(Widget):
         # maps tabs to their corresponding tab header
         self._tabs = {}
 
+        self._tablist = list()
+
     def _fix_tab_widths(self):
         tab_w = 100.0 / len(self._tabs)
         for a, li, holder in self._tabs.values():
@@ -915,7 +922,7 @@ class TabBox(Widget):
         for a, li, holder in self._tabs.values():
             a.remove_class('active')
             holder.style['display'] = 'none'
-        
+
         _a.add_class('active')
         _holder.style['display'] = 'block'
 
@@ -924,12 +931,23 @@ class TabBox(Widget):
         if cb is not None:
             cb()
 
-    def show_tab(self, widget):
+    def select_by_widget(self, widget):
         """ shows a tab identified by the contained widget """
         for a, li, holder in self._tabs.values():
             if holder.children['content'] == widget:
                 self._on_tab_pressed(a, li, holder)
                 return
+
+    def select_by_name(self, name):
+        """ shows a tab identified by the name """
+        for a, li, holder in self._tabs.values():
+            if a.children['text'] == name:
+                self._on_tab_pressed(a, li, holder)
+                return
+
+    def select_by_index(self, index):
+        """ shows a tab identified by its index """
+        self._on_tab_pressed(*self._tablist[index])
 
     def add_tab(self, widget, name, tab_cb):
 
@@ -953,9 +971,8 @@ class TabBox(Widget):
         a.attributes['href'] = 'javascript:void(0);'
 
         a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
-        
+
         self._tab_cbs[holder.identifier] = tab_cb
-        #a.eventManager.register_listener(a.EVENT_ONCLICK, self._on_tab_pressed, a, li, holder)
         a.set_on_click_listener(self._on_tab_pressed, li, holder)
 
         a.add_child('text', name)
@@ -966,11 +983,12 @@ class TabBox(Widget):
 
         self._tabs[holder.identifier] = (a, li, holder)
         self._fix_tab_widths()
-
+        self._tablist.append((a, li, holder))
         return holder.identifier
 
 
-class MixinTextualWidget(object):
+# noinspection PyUnresolvedReferences
+class _MixinTextualWidget(object):
     def set_text(self, text):
         """
         Sets the text label for the Widget.
@@ -979,7 +997,7 @@ class MixinTextualWidget(object):
             text (str): The string label of the Widget.
         """
         self.add_child('text', text)
-    
+
     def get_text(self):
         """
         Returns:
@@ -989,8 +1007,8 @@ class MixinTextualWidget(object):
             return ''
         return self.get_child('text')
 
-        
-class Button(Widget, MixinTextualWidget):
+
+class Button(Widget, _MixinTextualWidget):
     """The Button widget. Have to be used in conjunction with its event onclick.
     Use Widget.set_on_click_listener in order to register the listener.
     """
@@ -1007,7 +1025,7 @@ class Button(Widget, MixinTextualWidget):
         self.set_text(text)
 
 
-class TextInput(Widget, MixinTextualWidget):
+class TextInput(Widget, _MixinTextualWidget):
     """Editable multiline/single_line text area widget. You can set the content by means of the function set_text or
      retrieve its content with get_text.
     """
@@ -1030,7 +1048,7 @@ class TextInput(Widget, MixinTextualWidget):
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
-        
+
         self.single_line = single_line
         if single_line:
             self.style['resize'] = 'none'
@@ -1038,9 +1056,9 @@ class TextInput(Widget, MixinTextualWidget):
             self.attributes[self.EVENT_ONKEYDOWN] = "if((event.charCode||event.keyCode)==13){" \
                 "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur();" \
                 "return false;}" % {'id': self.identifier}
-        
+
         self.set_value('')
-        
+
         if hint:
             self.attributes['placeholder'] = hint
 
@@ -1053,7 +1071,7 @@ class TextInput(Widget, MixinTextualWidget):
             text (str): The string content that have to be appended as standard child identified by the key 'text'
         """
         if self.single_line:
-            text = text.replace('\n','')
+            text = text.replace('\n', '')
         self.set_text(text)
 
     def get_value(self):
@@ -1076,8 +1094,8 @@ class TextInput(Widget, MixinTextualWidget):
     def set_on_change_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onchange event.
 
-        Note: the listener prototype have to be in the form on_textinput_change(self, widget, new_value) where new_value is the
-            new text content of the TextInput.
+        Note: the listener prototype have to be in the form on_textinput_change(self, widget, new_value) where
+        new_value is the new text content of the TextInput.
 
         Args:
             callback (function): Callback function pointer.
@@ -1099,8 +1117,8 @@ class TextInput(Widget, MixinTextualWidget):
     def set_on_key_down_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onkeydown event.
 
-        Note: the listener prototype have to be in the form on_textinput_key_down(self, widget, new_value) where new_value is
-            the new text content of the TextInput.
+        Note: the listener prototype have to be in the form on_textinput_key_down(self, widget, new_value) where
+        new_value is the new text content of the TextInput.
 
         Note: Overwrites Widget.onenter.
 
@@ -1110,7 +1128,8 @@ class TextInput(Widget, MixinTextualWidget):
         self.attributes[self.EVENT_ONKEYDOWN] = \
             "var params={};params['new_value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);if((event.charCode||event.keyCode)==13){" \
-            "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur(); return false;}" % {'id': self.identifier, 'evt': self.EVENT_ONKEYDOWN}
+            "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur(); return false;}" % {
+                'id': self.identifier, 'evt': self.EVENT_ONKEYDOWN}
         self.eventManager.register_listener(self.EVENT_ONKEYDOWN, callback, *userdata)
 
     def onenter(self, new_value):
@@ -1127,8 +1146,8 @@ class TextInput(Widget, MixinTextualWidget):
     def set_on_enter_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onenter event.
 
-        Note: the listener prototype have to be in the form on_textinput_enter(self, widget, new_value) where new_value is
-            the new text content of the TextInput.
+        Note: the listener prototype have to be in the form on_textinput_enter(self, widget, new_value) where
+        new_value is the new text content of the TextInput.
 
         Note: Overwrites Widget.onkeydown.
 
@@ -1147,7 +1166,7 @@ class TextInput(Widget, MixinTextualWidget):
         self.eventManager.register_listener(self.EVENT_ONENTER, callback, *userdata)
 
 
-class Label(Widget, MixinTextualWidget):
+class Label(Widget, _MixinTextualWidget):
     """Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
     function get_text.
     """
@@ -1188,6 +1207,7 @@ class GenericDialog(Widget):
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'auto'
+        self.style['margin'] = '0px auto'
 
         if len(title) > 0:
             t = Label(title)
@@ -1226,7 +1246,8 @@ class GenericDialog(Widget):
 
         self.inputs = {}
 
-        self.baseAppInstance = None
+        self._base_app_instance = None
+        self._old_root_widget = None
 
     def add_field_with_label(self, key, label_description, field):
         """
@@ -1237,13 +1258,15 @@ class GenericDialog(Widget):
         Args:
             key (str): The unique identifier for the field.
             label_description (str): The string content of the description label.
-            field (Widget): The instance of the field Widget. It can be for example a TextInput or maybe a custom widget.
+            field (Widget): The instance of the field Widget. It can be for example a TextInput or maybe
+            a custom widget.
         """
         self.inputs[key] = field
         label = Label(label_description)
         label.style['margin'] = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
+        container.style['justify-content'] = 'space-between'
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
         container.append(label, key='lbl' + key)
@@ -1261,11 +1284,10 @@ class GenericDialog(Widget):
             field (Widget): The widget to be added to the dialog, TextInput or any Widget for example.
         """
         self.inputs[key] = field
-        container = Widget()
-        container.style['display'] = 'block'
+        container = HBox()
+        container.style['justify-content'] = 'space-between'
         container.style['overflow'] = 'auto'
         container.style['padding'] = '3px'
-        container.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -1313,13 +1335,13 @@ class GenericDialog(Widget):
         """
         self.eventManager.register_listener(self.EVENT_ONCANCEL, callback, *userdata)
 
-    def show(self, baseAppInstance):
-        self.baseAppInstance = baseAppInstance
-        self.old_root_widget = self.baseAppInstance.root
-        self.baseAppInstance.set_root_widget(self)
-    
+    def show(self, base_app_instance):
+        self._base_app_instance = base_app_instance
+        self._old_root_widget = self._base_app_instance.root
+        self._base_app_instance.set_root_widget(self)
+
     def hide(self):
-        self.baseAppInstance.set_root_widget(self.old_root_widget)
+        self._base_app_instance.set_root_widget(self._old_root_widget)
 
 
 class InputDialog(GenericDialog):
@@ -1459,7 +1481,7 @@ class ListView(Widget, _SyncableValuesMixin):
         """Called when a new item gets selected in the list."""
         self._selected_key = None
         for k in self.children:
-            if self.children[k] == widget: #widget is the selected ListItem
+            if self.children[k] == widget:  # widget is the selected ListItem
                 self._selected_key = k
                 if (self._selected_item is not None) and self._selectable:
                     self._selected_item.attributes['selected'] = False
@@ -1473,9 +1495,9 @@ class ListView(Widget, _SyncableValuesMixin):
     def set_on_selection_listener(self, callback, *userdata):
         """Registers the listener for the ListView.onselection event.
 
-        Note: The prototype of the listener have to be like my_list_onselection(self, widget, selectedKey). Where selectedKey is
-        the unique string identifier for the selected item. To access the item use ListView.children[key], or its value
-        directly by ListView.get_value.
+        Note: The prototype of the listener have to be like my_list_onselection(self, widget, selectedKey). Where
+        selectedKey is the unique string identifier for the selected item. To access the item use
+        ListView.children[key], or its value directly by ListView.get_value.
 
         Args:
             callback (function): Callback function pointer.
@@ -1514,10 +1536,10 @@ class ListView(Widget, _SyncableValuesMixin):
             self.children[key].attributes['selected'] = True
             self._selected_key = key
             self._selected_item = self.children[key]
-            
+
     def set_value(self, value):
         self.select_by_value(value)
-        
+
     def select_by_value(self, value):
         """Selects an item by the text content of the child.
 
@@ -1535,7 +1557,7 @@ class ListView(Widget, _SyncableValuesMixin):
                 self._selected_item.attributes['selected'] = True
 
 
-class ListItem(Widget, MixinTextualWidget):
+class ListItem(Widget, _MixinTextualWidget):
     """List item widget for the ListView.
 
     ListItems are characterized by a textual content. They can be selected from
@@ -1591,13 +1613,15 @@ class DropDown(Widget, _SyncableValuesMixin):
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
+        item = None
         obj = cls(**kwargs)
         for item in items:
             obj.append(DropDownItem(item))
-        try:
-            obj.select_by_value(item)  # ensure one is selected
-        except UnboundLocalError:
-            pass
+        if item is not None:
+            try:
+                obj.select_by_value(item)  # ensure one is selected
+            except UnboundLocalError:
+                pass
         return obj
 
     def append(self, item, key=''):
@@ -1627,7 +1651,7 @@ class DropDown(Widget, _SyncableValuesMixin):
 
     def set_value(self, value):
         self.select_by_value(value)
-    
+
     def select_by_value(self, value):
         """Selects a DropDownItem by means of the contained text-
 
@@ -1682,7 +1706,7 @@ class DropDown(Widget, _SyncableValuesMixin):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
 
-class DropDownItem(Widget, MixinTextualWidget):
+class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
 
     @decorate_constructor_parameter_types([str])
@@ -1733,24 +1757,58 @@ class Table(Widget):
         self.type = 'table'
         self.style['float'] = 'none'
 
-    def from_2d_matrix(self, _matrix, fill_title=True):
+    @classmethod
+    def new_from_list(cls, content, fill_title=True, **kwargs):
+        """Populates the Table with a list of tuples of strings.
+
+        Args:
+            content (list): list of tuples of strings. Each tuple is a row.
+            fill_title (bool): if true, the first tuple in the list will
+                be set as title
         """
-        Fills the table with the data contained in the provided 2d _matrix
-        The first row of the matrix is set as table title
+        obj = cls(**kwargs)
+        obj.append_from_list(content, fill_title)
+        return obj
+
+    def append_from_list(self, content, fill_title=False):
         """
-        for child_keys in list(self.children):
-            self.remove_child(self.children[child_keys])
+        Appends rows created from the data contained in the provided
+        list of tuples of strings. The first tuple of the list can be
+        set as table title.
+
+        Args:
+            content (list): list of tuples of strings. Each tuple is a row.
+            fill_title (bool): if true, the first tuple in the list will
+                be set as title.
+        """
         first_row = True
-        for row in _matrix:
+        for row in content:
+            key = ''
             tr = TableRow()
             for item in row:
                 if first_row and fill_title:
                     ti = TableTitle(item)
+                    key = 'title'
                 else:
                     ti = TableItem(item)
                 tr.append(ti)
-            self.append(tr)
+            self.append(tr, key)
             first_row = False
+
+    def empty(self, keep_title=False):
+        """
+        Deletes the table rows.
+
+        Args:
+            keep_title (bool): whether to delete all the content except
+                the title.
+        """
+        title = None
+        if 'title' in self.children.keys():
+            title = self.children['title']
+        super(Table, self).empty()
+        if keep_title and (title is not None):
+            self.append(title, 'title')
 
 
 class TableRow(Widget):
@@ -1831,14 +1889,13 @@ class Input(Widget):
         return self.attributes['value']
 
     def onchange(self, value):
-        #self.attributes.__setitem__('value', value, 0)
         self.attributes['value'] = value
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
     @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
     def set_on_change_listener(self, callback, *userdata):
         """Register the listener for the onchange event.
-        
+
         Note: the listener prototype have to be in the form on_input_changed(self, widget, value).
         """
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
@@ -1872,16 +1929,16 @@ class CheckBoxLabel(Widget):
 
         self.set_value = self._checkbox.set_value
         self.get_value = self._checkbox.get_value
-        
+
         self._checkbox.set_on_change_listener(self.onchange)
 
     def onchange(self, widget, value):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
-        
+
     @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
     def set_on_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
-        
+
 
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
@@ -1905,7 +1962,7 @@ class CheckBox(Input):
         self.set_value(value in ('True', 'true'))
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
 
-    def set_value(self, checked, update_ui = 1):
+    def set_value(self, checked, update_ui=1):
         if checked:
             self.attributes['checked'] = 'checked'
         else:
@@ -1924,6 +1981,7 @@ class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
 
+    # noinspection PyShadowingBuiltins
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='100', min=100, max=5000, step=1, **kwargs):
         """
@@ -1946,6 +2004,7 @@ class Slider(Input):
 
     EVENT_ONINPUT = 'oninput'
 
+    # noinspection PyShadowingBuiltins
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='', min=0, max=10000, step=1, **kwargs):
         """
@@ -1967,7 +2026,7 @@ class Slider(Input):
     @decorate_set_on_listener("oninput", "(self,emitter,new_value)")
     def set_oninput_listener(self, callback, *userdata):
         """Register the listener for the oninput event.
-        
+
         Note: the listener prototype have to be in the form on_slider_input(self, widget, value).
         """
         self.attributes[self.EVENT_ONINPUT] = \
@@ -2022,6 +2081,7 @@ class FileFolderNavigator(Widget):
     def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.style['width'] = '100%'
 
         self.multiple_selection = multiple_selection
         self.allow_file_selection = allow_file_selection
@@ -2030,7 +2090,7 @@ class FileFolderNavigator(Widget):
         self.controlsContainer = Widget()
         self.controlsContainer.set_size('100%', '30px')
         self.controlsContainer.style['display'] = 'flex'
-        self.controlsContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+        self.controlsContainer.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self.controlBack = Button('Up')
         self.controlBack.set_size('10%', '100%')
         self.controlBack.set_on_click_listener(self.dir_go_back)
@@ -2045,7 +2105,7 @@ class FileFolderNavigator(Widget):
         self.controlsContainer.append(self.pathEditor)
         self.controlsContainer.append(self.controlGo)
 
-        self.itemContainer = Widget()
+        self.itemContainer = Widget(width='100%',height=300)
 
         self.append(self.controlsContainer)
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
@@ -2054,6 +2114,7 @@ class FileFolderNavigator(Widget):
 
         # fixme: we should use full paths and not all this chdir stuff
         self.chdir(selection_folder)  # move to actual working directory
+        self._last_valid_path = selection_folder
 
     def get_selection_list(self):
         return self.selectionlist
@@ -2080,16 +2141,15 @@ class FileFolderNavigator(Widget):
         l.sort(key=functools.cmp_to_key(_sort_files))
 
         # used to restore a valid path after a wrong edit in the path editor
-        self.lastValidPath = directory
+        self._last_valid_path = directory
         # we remove the container avoiding graphic update adding items
         # this speeds up the navigation
         self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
-        self.itemContainer = Widget()
+        self.itemContainer = Widget(width='100%', height=300)
         self.itemContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.itemContainer.style['overflow-y'] = 'scroll'
         self.itemContainer.style['overflow-x'] = 'hidden'
-        self.itemContainer.style['height'] = '300px'
         self.itemContainer.style['display'] = 'block'
 
         for i in l:
@@ -2112,7 +2172,7 @@ class FileFolderNavigator(Widget):
             os.chdir('..')
             self.chdir(os.getcwd())
         except Exception as e:
-            self.pathEditor.set_text(self.lastValidPath)
+            self.pathEditor.set_text(self._last_valid_path)
             log.error('error changing directory', exc_info=True)
         os.chdir(curpath)  # restore the path
 
@@ -2124,7 +2184,7 @@ class FileFolderNavigator(Widget):
             self.chdir(os.getcwd())
         except Exception as e:
             log.error('error going to directory', exc_info=True)
-            self.pathEditor.set_text(self.lastValidPath)
+            self.pathEditor.set_text(self._last_valid_path)
         os.chdir(curpath)  # restore the path
 
     def chdir(self, directory):
@@ -2251,8 +2311,9 @@ class FileSelectionDialog(GenericDialog):
     @decorate_set_on_listener("confirm_value", "(self,emitter,fileList)")
     def set_on_confirm_value_listener(self, callback, *userdata):
         """Register the listener for the on_confirm event.
-        
-        Note: the listener prototype have to be in the form on_file_selection_confirm(self, widget, selectedFileStringList).
+
+        Note: the listener prototype have to be in the form
+        on_file_selection_confirm(self, widget, selectedFileStringList).
         """
         self.eventManager.register_listener(self.EVENT_ONCONFIRMVALUE, callback, *userdata)
 
@@ -2283,7 +2344,7 @@ class Menu(Widget):
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
 
-class MenuItem(Widget, MixinTextualWidget):
+class MenuItem(Widget, _MixinTextualWidget):
     """MenuItem widget can contain other MenuItem."""
 
     @decorate_constructor_parameter_types([str])
@@ -2304,8 +2365,8 @@ class MenuItem(Widget, MixinTextualWidget):
             self.sub_container = Menu()
             super(MenuItem, self).append(self.sub_container, key='subcontainer')
         self.sub_container.append(value, key=key)
-        
-        
+
+
 class TreeView(Widget):
     """TreeView widget can contain TreeItem."""
 
@@ -2319,7 +2380,7 @@ class TreeView(Widget):
         self.type = 'ul'
 
 
-class TreeItem(Widget, MixinTextualWidget):
+class TreeItem(Widget, _MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
     @decorate_constructor_parameter_types([str])
@@ -2349,7 +2410,7 @@ class TreeItem(Widget, MixinTextualWidget):
 
     def onclick(self):
         self.treeopen = not self.treeopen
-        if(self.treeopen):
+        if self.treeopen:
             self.attributes['treeopen'] = 'true'
         else:
             self.attributes['treeopen'] = 'false'
@@ -2391,7 +2452,7 @@ class FileUploader(Widget):
     @decorate_set_on_listener("onsuccess", "(self,emitter,filename)")
     def set_on_success_listener(self, callback, *userdata):
         """Register the listener for the onsuccess event.
-        
+
         Note: the listener prototype have to be in the form on_fileupload_success(self, widget, filename).
         """
         self.eventManager.register_listener(
@@ -2403,27 +2464,27 @@ class FileUploader(Widget):
     @decorate_set_on_listener("onfailed", "(self,emitter,filename)")
     def set_on_failed_listener(self, callback, *userdata):
         """Register the listener for the onfailed event.
-        
+
         Note: the listener prototype have to be in the form on_fileupload_failed(self, widget, filename).
         """
         self.eventManager.register_listener(self.EVENT_ON_FAILED, callback, *userdata)
-        
+
     def ondata(self, filedata, filename):
-        with open(self._savepath+filename,'wb') as f:
+        with open(self._savepath+filename, 'wb') as f:
             f.write(filedata)
         return self.eventManager.propagate(self.EVENT_ON_DATA, (filedata, filename))
 
     @decorate_set_on_listener("ondata", "(self,emitter,filedata, filename)")
     def set_on_data_listener(self, callback, *userdata):
         """Register the listener for the ondata event.
-        
-        Note: the listener prototype have to be in the form on_fileupload_data(self, widget, filedata, filename), 
+
+        Note: the listener prototype have to be in the form on_fileupload_data(self, widget, filedata, filename),
             where filedata is the bytearray chunk.
         """
         self.eventManager.register_listener(self.EVENT_ON_DATA, callback, *userdata)
 
 
-class FileDownloader(Widget, MixinTextualWidget):
+class FileDownloader(Widget, _MixinTextualWidget):
     """FileDownloader widget. Allows to start a file download."""
 
     @decorate_constructor_parameter_types([str, str, str])
@@ -2444,7 +2505,7 @@ class FileDownloader(Widget, MixinTextualWidget):
         return [content, headers]
 
 
-class Link(Widget, MixinTextualWidget):
+class Link(Widget, _MixinTextualWidget):
     @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
         super(Link, self).__init__(**kwargs)
@@ -2461,7 +2522,7 @@ class Link(Widget, MixinTextualWidget):
 class VideoPlayer(Widget):
     # some constants for the events
     EVENT_ONENDED = 'onended'
-    
+
     @decorate_constructor_parameter_types([str, str, bool, bool])
     def __init__(self, video, poster=None, autoplay=False, loop=False, **kwargs):
         super(VideoPlayer, self).__init__(**kwargs)
@@ -2477,20 +2538,18 @@ class VideoPlayer(Widget):
         if autoplay:
             self.attributes['autoplay'] = 'true'
         else:
-            if 'autoplay' in self.attributes.keys():
-                self.attributes['autoplay']
+            self.attributes.pop('autoplay', None)
 
     def set_loop(self, loop):
         """Sets the VideoPlayer to restart video when finished.
-        
+
         Note: If set as True the event onended will not fire."""
-        
+
         if loop:
             self.attributes['loop'] = 'true'
         else:
-            if 'loop' in self.attributes.keys():
-                self.attributes['loop']
-                
+            self.attributes.pop('loop', None)
+
     def onended(self):
         """Called when the media has been played and reached the end."""
         return self.eventManager.propagate(self.EVENT_ONENDED, ())
@@ -2500,7 +2559,7 @@ class VideoPlayer(Widget):
         """Registers the listener for the VideoPlayer.onended event.
 
         Note: the listener prototype have to be in the form on_video_ended(self, widget).
-        
+
         Args:
             callback (function): Callback function pointer.
         """
@@ -2511,7 +2570,7 @@ class VideoPlayer(Widget):
 
 class Svg(Widget):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
-    
+
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, **kwargs):
         """
@@ -2538,10 +2597,10 @@ class Svg(Widget):
         self.attributes['viewBox'] = "%s %s %s %s" % (x, y, w, h)
         self.attributes['preserveAspectRatio'] = 'none'
 
-        
+
 class SvgShape(Widget):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
-    
+
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, **kwargs):
         """
@@ -2553,20 +2612,20 @@ class SvgShape(Widget):
         super(SvgShape, self).__init__(**kwargs)
         self.set_position(x, y)
         self.set_stroke()
-    
+
     def set_position(self, x, y):
         """Sets the shape position.
-        
+
         Args:
             x (int): the x coordinate
             y (int): the y coordinate
         """
         self.attributes['x'] = str(x)
         self.attributes['y'] = str(y)
-    
+
     def set_stroke(self, width=1, color='black'):
         """Sets the stroke properties.
-        
+
         Args:
             width (int): stroke width
             color (str): stroke color
@@ -2576,16 +2635,16 @@ class SvgShape(Widget):
 
     def set_fill(self, color='black'):
         """Sets the fill color.
-        
+
         Args:
             color (str): stroke color
         """
         self.attributes['fill'] = color
-        
-        
+
+
 class SvgRectangle(SvgShape):
     """svg rectangle - a rectangle represented filled and with a stroke."""
-    
+
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, w, h, **kwargs):
         """
@@ -2599,22 +2658,21 @@ class SvgRectangle(SvgShape):
         super(SvgRectangle, self).__init__(x, y, **kwargs)
         self.set_size(w, h)
         self.type = 'rect'
-    
+
     def set_size(self, w, h):
         """ Sets the rectangle size.
-        
+
         Args:
             w (int): width of the rectangle
             h (int): height of the rectangle
-            kwargs: See Widget.__init__()
         """
         self.attributes['width'] = str(w)
         self.attributes['height'] = str(h)
-        
+
 
 class SvgCircle(SvgShape):
     """svg circle - a circle represented filled and with a stroke."""
-    
+
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, radius, **kwargs):
         """
@@ -2630,7 +2688,7 @@ class SvgCircle(SvgShape):
 
     def set_radius(self, radius):
         """Sets the circle radius.
-        
+
         Args:
             radius (int): the circle radius
         """
@@ -2638,7 +2696,7 @@ class SvgCircle(SvgShape):
 
     def set_position(self, x, y):
         """Sets the circle position.
-        
+
         Args:
             x (int): the x coordinate
             y (int): the y coordinate
@@ -2699,7 +2757,7 @@ class SvgPolyline(Widget):
         self.style['stroke-width'] = str(width)
 
 
-class SvgText(SvgShape, MixinTextualWidget):
+class SvgText(SvgShape, _MixinTextualWidget):
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
         super(SvgText, self).__init__(x, y, **kwargs)
@@ -2707,6 +2765,3 @@ class SvgText(SvgShape, MixinTextualWidget):
         self.set_fill()
         self.set_stroke(0)
         self.set_text(text)
-
-
- 

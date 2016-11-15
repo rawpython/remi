@@ -22,7 +22,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        verticalContainer = gui.Widget(width=540)
+        verticalContainer = gui.Widget(width=540, margin='0px auto') #the margin 0px auto centers the main container
         verticalContainer.style['display'] = 'block'
         verticalContainer.style['overflow'] = 'hidden'
 
@@ -37,13 +37,12 @@ class MyApp(App):
         self.img = gui.Image('/res/logo.png', width=100, height=100, margin='10px')
         self.img.set_on_click_listener(self.on_img_clicked)
 
-        self.table = gui.Table(width=300, height=200, margin='10px')
-        self.table.from_2d_matrix([['ID', 'First Name', 'Last Name'],
-                                   ['101', 'Danny', 'Young'],
-                                   ['102', 'Christine', 'Holand'],
-                                   ['103', 'Lars', 'Gordon'],
-                                   ['104', 'Roberto', 'Robitaille'],
-                                   ['105', 'Maria', 'Papadopoulos']])
+        self.table = gui.Table.new_from_list([('ID', 'First Name', 'Last Name'),
+                                   ('101', 'Danny', 'Young'),
+                                   ('102', 'Christine', 'Holand'),
+                                   ('103', 'Lars', 'Gordon'),
+                                   ('104', 'Roberto', 'Robitaille'),
+                                   ('105', 'Maria', 'Papadopoulos')], width=300, height=200, margin='10px')
 
         # the arguments are	width - height - layoutOrientationOrizontal
         subContainerRight = gui.Widget()

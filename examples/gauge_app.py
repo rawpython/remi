@@ -19,7 +19,7 @@ from threading import Timer
 import random
 
 
-class InputGauge(gui.Widget):
+class InputGauge(gui.VBox):
     #@decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, width, height, _min, _max, **kwargs):
         super(InputGauge, self).__init__(**kwargs)
@@ -159,7 +159,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        self.wid = gui.Widget()
+        self.wid = gui.VBox(margin='0px auto') #margin 0px auto to center the screen
         self.wid.set_size(620, 620)
         
         self.gauge = InputGauge(200, 200, 1000, 10000)

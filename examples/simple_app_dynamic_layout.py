@@ -23,7 +23,7 @@ class MyApp(App):
     def main(self, name='world'):
         # Add the widget, it's the white background
         # self is for making the widget part of the class to be able to modify it
-        self.wid = gui.Widget()
+        self.wid = gui.VBox(margin='0px auto')
         self.wid.set_size(400,300)
         self.wid.style['text-align'] = 'center'
         

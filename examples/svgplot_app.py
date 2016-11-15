@@ -126,7 +126,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        self.wid = gui.Widget()
+        self.wid = gui.VBox(margin='0px auto')
         self.wid.set_size(620, 620)
 
         self.svgplot = SvgPlot(600, 600)

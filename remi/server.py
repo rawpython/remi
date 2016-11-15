@@ -60,6 +60,10 @@ update_thread = None
 
 log = logging.getLogger('remi.server')
 
+_MSG_PING = '4'
+_MSG_ACK = '3'
+_MSG_JS = '2'
+_MSG_UPDATE = '1'
 
 def to_websocket(data):
     # encoding end decoding utility function
@@ -178,13 +182,13 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         t = time.time()
         if (t - self.last_ping) > (0.5*self.timeout):
             self.last_ping = t
-            self.send_message('4') #4==ping
+            self.send_message(_MSG_PING)
 
     def send_message(self, message):
         if not self.handshake_done:
             self.log.warning("ignoring message %s (handshake not done)" % message[:10])
 
-        if message != '4': #4==ping
+        if message != _MSG_PING:
             self.log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
@@ -224,7 +228,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if message == 'pong':
             return
 
-        self.send_message('3') #3==ack
+        self.send_message(_MSG_ACK)
 
         with update_lock:
             # noinspection PyBroadException
@@ -285,9 +289,9 @@ def gui_updater(client, node):
         html = changed_widgets[widget]
         __id = str(widget.identifier)
         for ws in client.websockets:
-            log.debug('update_widget: %s type: %s' %(__id, type(widget)))
+            log.debug('update_widget: %s type: %s' % (__id, type(widget)))
             try:
-                ws.send_message('1' + __id + ',' + to_websocket(html)) #1==update_widget message
+                ws.send_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
             except:
                 client.websockets.remove(ws)
 
@@ -312,7 +316,7 @@ class _UpdateThread(threading.Thread):
                     for client in clients.values():
                         if not hasattr(client, 'root'):
                             continue
-                        
+
                         if client.websockets:
                             gui_updater(client, client.root)
 
@@ -320,13 +324,14 @@ class _UpdateThread(threading.Thread):
                                 ws.ping()
 
                         client.idle()
-                        
+
                 except Exception:
                     log.error('error updating gui', exc_info=True)
 
                 update_event.clear()
 
 
+# noinspection PyPep8Naming
 class App(BaseHTTPRequestHandler, object):
 
     """
@@ -379,7 +384,7 @@ class App(BaseHTTPRequestHandler, object):
             runtimeInstances[str(id(self))] = self
             clients[k] = self
         wshost, wsport = self.server.websocket_address
-        
+
         net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
@@ -392,7 +397,7 @@ class App(BaseHTTPRequestHandler, object):
         clients[k].js_body_end = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
-// using UTF8 strings I noticed that the javascript .length of a string returned less 
+// using UTF8 strings I noticed that the javascript .length of a string returned less
 // characters than they actually were
 var pendingSendMessages = [];
 var ws = null;
@@ -443,7 +448,7 @@ function websocketOnMessage (evt){
         var index = received_msg.indexOf(',')+1;
         /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
         var content = received_msg.substr(index,received_msg.length-index);
-    
+
         document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
         document.body.innerHTML += decodeURIComponent(content);
     }else if( received_msg[0]=='1' ){ /*update_widget*/
@@ -455,7 +460,7 @@ function websocketOnMessage (evt){
         var elem = document.getElementById(idElem);
         elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
         elem.parentElement.removeChild(elem);
-        
+
         var elemToFocus = document.getElementById(focusedElement);
         if( elemToFocus != null ){
             document.getElementById(focusedElement).focus();
@@ -515,7 +520,7 @@ function renewConnection(){
 
 function checkTimeout(){
     if(pendingSendMessages.length>0)
-        renewConnection();    
+        renewConnection();
 };
 
 function websocketOnClose(evt){
@@ -650,7 +655,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Useful to schedule tasks. """
         pass
-    
+
     def set_root_widget(self, widget):
         global update_lock, update_event
         #update_event.wait()
@@ -678,7 +683,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         update_event.clear()
 
     def execute_javascript(self, code):
-        self._send_spontaneous_websocket_message('2' + code)
+        self._send_spontaneous_websocket_message(_MSG_JS + code)
 
     def notification_message(self, title, content, icon=""):
         """This function sends "javascript" message to the client, that executes its content.
@@ -700,7 +705,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     }
                 });
             }
-        """%{'title': title, 'content': content, 'icon': icon}
+        """ % {'title': title, 'content': content, 'icon': icon}
         self.execute_javascript(code)
 
     def do_POST(self):
@@ -759,19 +764,25 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             if not ('Authorization' in self.headers) or self.headers['Authorization'] is None:
                 self.log.info("Authenticating")
                 self.do_AUTHHEAD()
-                self.wfile.write('no auth header received')
+                self.wfile.write(encode_text('no auth header received'))
             elif self.headers['Authorization'] == 'Basic ' + self.server.auth.decode():
                 do_process = True
             else:
                 self.do_AUTHHEAD()
-                self.wfile.write(self.headers['Authorization'])
-                self.wfile.write('not authenticated')
+                self.wfile.write(encode_text(self.headers['Authorization']))
+                self.wfile.write(encode_text('not authenticated'))
 
         if do_process:
+            path = str(unquote(self.path))
             # noinspection PyBroadException
             try:
                 self._instance()
-                path = str(unquote(self.path))
+                # build the page (call main()) in user code, if not built yet
+                with update_lock:
+                    # build the root page once if necessary
+                    if not hasattr(self.client, 'root'):
+                        self.log.info('built UI (path=%s)' % path)
+                        self.client.root = self.main(*self.server.userdata)
                 self._process_all(path)
             except:
                 self.log.error('error processing GET request', exc_info=True)
@@ -794,10 +805,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
         if (function == '/') or (not function):
             with update_lock:
-                # build the root page once if necessary
-                should_call_main = not hasattr(self.client, 'root')
-                if should_call_main:
-                    self.client.root = self.main(*self.server.userdata)
                 # render the HTML
                 html = self.client.root.repr(self.client)
 
@@ -837,28 +844,29 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 content = f.read()
                 self.wfile.write(content)
         elif attr_call:
-            param_dict = parse_qs(urlparse(function).query)
-            #parse_qs returns patameters as list, here we take the first element
-            for k in param_dict:
-                param_dict[k] = param_dict[k][0]
+            with update_lock:
+                param_dict = parse_qs(urlparse(function).query)
+                # parse_qs returns patameters as list, here we take the first element
+                for k in param_dict:
+                    param_dict[k] = param_dict[k][0]
 
-            widget, function = attr_call.group(1, 2)
-            try:
-                content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
-                if content is None:
+                widget, function = attr_call.group(1, 2)
+                try:
+                    content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
+                    if content is None:
+                        self.send_response(503)
+                        return
+                    self.send_response(200)
+                except IOError:
+                    self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
+                    self.send_response(404)
+                    return
+                except (TypeError, AttributeError):
+                    self.log.error('attr %s/%s not available' % (widget, function))
                     self.send_response(503)
                     return
-                self.send_response(200)
-            except IOError:
-                self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
-                self.send_response(404)
-                return
-            except (TypeError, AttributeError):
-                self.log.error('attr %s/%s not available' % (widget, function))
-                self.send_response(503)
-                return
 
-            for k in headers.keys():
+            for k in headers:
                 self.send_header(k, headers[k])
             self.end_headers()
             try:
@@ -871,6 +879,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     daemon_threads = True
 
+    # noinspection PyPep8Naming
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
@@ -889,6 +898,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 
 class Server(object):
+    # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
@@ -908,6 +918,7 @@ class Server(object):
         self._websocket_port = websocket_port
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
+        self._userdata = userdata
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
         else:
@@ -917,7 +928,7 @@ class Server(object):
             raise ValueError('userdata must be a tuple')
 
         if start:
-            self.start(*userdata)
+            self.start()
             self.serve_forever()
 
     @property
@@ -928,7 +939,7 @@ class Server(object):
     def address(self):
         return self._base_address
 
-    def start(self, *userdata):
+    def start(self):
         # here the websocket is started on an ephemereal port
         self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
                                                  self._multiple_instance)
@@ -945,7 +956,7 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
-                                           self._title, *userdata)
+                                           self._title, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
@@ -1008,7 +1019,9 @@ class StandaloneServer(Server):
             webview.create_window(self.title, self.address, **self._application_conf)
             Server.stop(self)
         except ImportError:
-            raise ImportError('PyWebView is missing. Please install it by:\n    pip install pywebview\n    more info at https://github.com/r0x0r/pywebview')
+            raise ImportError('PyWebView is missing. Please install it by:\n    '
+                              'pip install pywebview\n    '
+                              'more info at https://github.com/r0x0r/pywebview')
 
 
 def start(mainGuiClass, **kwargs):
@@ -1023,6 +1036,3 @@ def start(mainGuiClass, **kwargs):
         s = StandaloneServer(mainGuiClass, start=True, **kwargs)
     else:
         s = Server(mainGuiClass, start=True, **kwargs)
-	
-
-
