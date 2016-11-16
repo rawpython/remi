@@ -126,7 +126,7 @@ h6 {
     margin: 24px 0 16px
 }
 h6 {
-    font-size: 114%x;
+    font-size: 114%;
     letter-spacing: .04em
 }
 h6,
@@ -201,7 +201,8 @@ div {
     list-style: none;
 }
 option:hover {
-    background: rgba(33, 150, 243, .26) outline: 1px solid red;
+    background: rgba(33, 150, 243, .26);
+    outline: 1px solid red;
 }
 .ListItem:hover {
     background: rgba(33, 150, 243, .26)
