@@ -49,6 +49,7 @@ except ImportError:
 import cgi
 import weakref
 
+http_server_instance = None
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
 
@@ -64,6 +65,7 @@ _MSG_PING = '4'
 _MSG_ACK = '3'
 _MSG_JS = '2'
 _MSG_UPDATE = '1'
+
 
 def to_websocket(data):
     # encoding end decoding utility function
@@ -111,7 +113,7 @@ def get_instance_key(handler):
 
 class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
-    daemon_threads = True
+    daemon_threads = False
 
     def __init__(self, server_address, RequestHandlerClass, multiple_instance):
         socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
@@ -299,12 +301,16 @@ def gui_updater(client, node):
 class _UpdateThread(threading.Thread):
     def __init__(self, interval):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.daemon = False
         self._interval = interval
+        self._alive = True
         self.start()
+    
+    def stop(self):
+        self._alive = False
 
     def run(self):
-        while True:
+        while self._alive:
             global clients, runtimeInstances
             global update_lock, update_event
 
@@ -329,6 +335,7 @@ class _UpdateThread(threading.Thread):
                     log.error('error updating gui', exc_info=True)
 
                 update_event.clear()
+        log.debug('stopped update thread')
 
 
 # noinspection PyPep8Naming
@@ -874,10 +881,18 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             except:
                 self.wfile.write(encode_text(content))
 
+    def close(self):
+        global http_server_instance
+        http_server_instance.stop()
+        update_thread.stop()
+        for ws in self.client.websockets:
+            ws.finish()
+            ws.server.shutdown()
+
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
-    daemon_threads = True
+    daemon_threads = False
 
     # noinspection PyPep8Naming
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
@@ -903,6 +918,9 @@ class Server(object):
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
                  pending_messages_queue_length=1000, userdata=()):
+        global http_server_instance
+        http_server_instance = self
+
         self._gui = gui_class
         self._title = title or gui_class.__name__
         self._wsserver = self._sserver = None
@@ -927,6 +945,7 @@ class Server(object):
         if not isinstance(userdata, tuple):
             raise ValueError('userdata must be a tuple')
 
+        self._alive = True
         if start:
             self.start()
             self.serve_forever()
@@ -946,7 +965,7 @@ class Server(object):
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
         log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
-        self._wsth.daemon = True
+        self._wsth.daemon = False
         self._wsth.start()
 
         # Create a web server and define the handler to manage the incoming
@@ -974,7 +993,7 @@ class Server(object):
                 else:
                     webbrowser.open(self._base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
-        self._sth.daemon = True
+        self._sth.daemon = False
         self._sth.start()
 
     def serve_forever(self):
@@ -982,16 +1001,17 @@ class Server(object):
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:
-            while True:
+            while self._alive:
                 signal.pause()
         except Exception:
             # signal.pause() is missing for Windows; wait 1ms and loop instead
-            while True:
+            while self._alive:
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
 
     def stop(self):
+        self._alive = False
         self._wsserver.shutdown()
         self._wsth.join()
         self._sserver.shutdown()
