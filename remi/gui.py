@@ -1997,7 +1997,8 @@ class SpinBox(Input):
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
         self.attributes[self.EVENT_ONKEYPRESS] = \
-            'return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46 || event.charCode == 13;'
+            """return event.charCode >= 45 && event.charCode <= 57 || event.charCode == 44 
+            || event.charCode == 45 || event.charCode == 46 || event.charCode == 13;"""
 
 
 class Slider(Input):

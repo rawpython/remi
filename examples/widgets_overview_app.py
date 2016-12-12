@@ -63,7 +63,7 @@ class MyApp(App):
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self.on_text_area_change)
 
-        self.spin = gui.SpinBox(100, width=200, height=30, margin='10px')
+        self.spin = gui.SpinBox(-10, -100, 1000, width=200, height=30, margin='10px')
         self.spin.set_on_change_listener(self.on_spin_change)
 
         self.check = gui.CheckBoxLabel('Label checkbox', True, width=200, height=30, margin='10px')
