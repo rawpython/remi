@@ -29,7 +29,7 @@ class MyApp(App):
         horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px')
         horizontalContainer.style['display'] = 'block'
         horizontalContainer.style['overflow'] = 'auto'
-        
+
         subContainerLeft = gui.Widget(width=320)
         subContainerLeft.style['display'] = 'block'
         subContainerLeft.style['overflow'] = 'auto'
@@ -53,7 +53,7 @@ class MyApp(App):
         self.count = 0
         self.counter = gui.Label('', width=200, height=30, margin='10px')
 
-        self.lbl = gui.Label('This is a LABEL!', width=200, height=30, margin='10px')
+        self.lbl = gui.Label('This is a LABEL!', width=200, height=30, margin='10px', id="main-output-label")
 
         self.bt = gui.Button('Press me!', width=200, height=30, margin='10px')
         # setting the listener for the onclick event of the button
@@ -102,7 +102,7 @@ class MyApp(App):
         self.video = gui.VideoPlayer('http://www.w3schools.com/tags/movie.mp4',
                                      'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg',
                                      width=300, height=270, margin='10px')
-                                     
+
         self.tree = gui.TreeView(width='100%', height=300)
         ti1 = gui.TreeItem("Item1")
         ti2 = gui.TreeItem("Item2")
@@ -124,7 +124,7 @@ class MyApp(App):
         subti4.append(subsubti1)
         subti4.append(subsubti2)
         subti4.append(subsubti3)
-        
+
         # appending a widget to another, the first argument is a string key
         subContainerRight.append(self.counter)
         subContainerRight.append(self.lbl)
@@ -258,7 +258,7 @@ class MyApp(App):
         self.lbl.set_text('Image clicked!')
 
     def on_button_pressed(self, widget):
-        self.lbl.set_text('Button pressed! ')
+        self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
     def on_text_area_change(self, widget, newValue):
@@ -272,7 +272,7 @@ class MyApp(App):
 
     def open_input_dialog(self, widget):
         self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?',
-                                           initial_value='type here', 
+                                           initial_value='type here',
                                            width=500, height=160)
         self.inputDialog.set_on_confirm_value_listener(
             self.on_input_dialog_confirm)

@@ -73,9 +73,15 @@ def test_server():
 
         client.log_current_page(output_basename="before-button-click")
 
+        label_element = driver.find_element_by_css_selector('#main-output-label')
+        assert label_element.text == 'This is a LABEL!'
+
         element = driver.find_element_by_css_selector('button')
         element.click()
         client.log_current_page(output_basename="after-button-click")
+        label_element = driver.find_element_by_css_selector('#main-output-label')
+        assert label_element.text == 'Button pressed!'
+
 
     finally:
         client.finalise()
