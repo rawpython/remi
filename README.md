@@ -125,19 +125,19 @@ Useful on Raspberry Pi for Python script development. It allows to interact with
 
 FAQ
 ===
-- **Why another GUI lib?**  
+- **Why another GUI lib?**
 Kivy, PyQT and PyGObject all require native code for the host operating system, which means installing or compiling large dependencies. Remi needs only a web browser to show your GUI.
 
-- **Do I need to know HTML?**  
+- **Do I need to know HTML?**
 NO, It is not required, you have to code only in Python.
 
-- **Which browsers can I use this with?**  
+- **Which browsers can I use this with?**
 I have developed this using Chrome (on Windows, Linux and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
 
-- **Is it open source?**  
+- **Is it open source?**
 For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
 
-- **Where is the documentation?**  
+- **Where is the documentation?**
 I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
 - **Do I need some kind of webserver?**
@@ -159,10 +159,10 @@ Subclass the `App` class and declare a `main` function that will be the entry po
 class MyApp( App ):
 	def __init__( self, *args ):
 		super( MyApp, self ).__init__( *args )
-		
+
 	def main( self ):
 		lbl = gui.Label( "Hello world!", width=100, height=30 )
-		
+
 		#return of the root widget
 		return lbl
 ```
@@ -170,7 +170,7 @@ class MyApp( App ):
 Outside the main class start the application calling the function `start` passing as parameter the name of the class you declared previously.
 
 ```py
-#starts the webserver	
+#starts the webserver
 start( MyApp )
 ```
 
@@ -179,7 +179,7 @@ Run the script. If all it's OK the gui will be opened automatically in your brow
 You can customize optional parameters in the `start` call like.
 
 ```py
-start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True) 
+start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
 ```
 
 Parameters:
@@ -199,7 +199,7 @@ All widgets constructors accepts two standard **kwargs that are:
 
 Events and callbacks
 ===
-Widgets exposes a set of events that happens during user interaction. 
+Widgets exposes a set of events that happens during user interaction.
 Such events are a convenient way to define the application behavior.
 Each widget has its own callbacks, depending on the type of user interaction it allows.
 The specific callbacks for the widgets will be illustrated later.
@@ -278,15 +278,15 @@ If you are using your REMI app remotely, with a DNS and a behind a firewall, you
 - **host_name**: a string containing the host name or remote ip address that allows to access to your app.
 
 ```py
-start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhostname.net') 
+start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhostname.net')
 ```
 
 
 Standalone Execution
 ===
-Remi is an effective solution for building your Remote Interface, but what about standalone execution? 
+Remi is an effective solution for building your Remote Interface, but what about standalone execution?
 Sure you can use it with your browser, but for applications where remote access is not required, than the native GUI is the best.
-This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview). 
+This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview).
 Here is an example about this [desktop_app.py](https://github.com/dddomodossola/remi/blob/master/examples/desktop_app.py).
 
 
@@ -295,7 +295,7 @@ Authentication
 In order to limit the remote access to your interface you can define a username and password. It consists in a simple authentication process.
 Just define the parameters **username** and **password** in the start call:
 ```py
-start(MyApp, username='myusername', password='mypassword') 
+start(MyApp, username='myusername', password='mypassword')
 ```
 
 
@@ -308,10 +308,40 @@ class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(MyApp, self).__init__(*args, static_file_path=res_path)
-``` 
+```
 
 Make a copy the standard style.css from the remi folder and paste it inside your *res* folder. Edit it in order to customize.
 This way the standard *style.css* file gets overridden by the one you created.
+
+Tests
+===
+
+In order to run the test suite you need to install test requirements:
+
+```shell
+pip install -r test_requirements.text
+```
+
+You will also need to install `phantomjs`.
+You can either install this globally, or you can install it into a local `node_modules/.bin/` directory:
+
+```shell
+npm install phantomjs
+```
+
+You then need to ensure that this is in your PATH. Something like:
+
+```shell
+export PATH=$PATH:./node_modules/.bin/
+```
+
+The tests take screenshots which are written to files in a `generated` directory. This will fail if the directory does not exist. So you should create it before the tests are run.
+
+Finally to run the tests:
+
+```shell
+py.test remi/test.py
+```
 
 
 Compatibility
@@ -321,7 +351,7 @@ Remi is made to be compatible from Python2.7 to Python3.X . Please notify compat
 
 Security
 ===
-Remi should be intended as a standard desktop gui framework. 
+Remi should be intended as a standard desktop gui framework.
 The library itself don't implements security strategies, and so it's advisable to don't expose its access to unsafe public networks.
 
 When loading data from external sources, consider to protect the application from potential javascript injection before displaying the content directly.
