@@ -1,5 +1,6 @@
 import logging
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 import pytest
 # Currently just used for the temporary hack to quit the phantomjs process
 # see below in quit_driver.
@@ -78,9 +79,21 @@ def test_server():
 
         element = driver.find_element_by_css_selector('button')
         element.click()
-        client.log_current_page(output_basename="after-button-click")
         label_element = driver.find_element_by_css_selector('#main-output-label')
         assert label_element.text == 'Button pressed!'
+
+        file_menu = driver.find_element_by_css_selector('#file-menu-item')
+        file_save_menu = driver.find_element_by_css_selector('#file-save-menu-item')
+        file_save_save_menu = driver.find_element_by_css_selector('#file-save-save-menu-item')
+
+        ActionChains(driver).move_to_element(file_menu)\
+                            .move_to_element(file_save_menu)\
+                            .click(file_save_save_menu)\
+                            .perform()
+
+        client.log_current_page(output_basename="after-button-click")
+        label_element = driver.find_element_by_css_selector('#main-output-label')
+        assert label_element.text == 'Menu clicked: Save'
 
 
     finally:
