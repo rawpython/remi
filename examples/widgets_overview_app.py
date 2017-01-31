@@ -59,7 +59,7 @@ class MyApp(App):
         # setting the listener for the onclick event of the button
         self.bt.set_on_click_listener(self.on_button_pressed)
 
-        self.txt = gui.TextInput(width=200, height=30, margin='10px')
+        self.txt = gui.TextInput(width=200, height=30, margin='10px', id="text-area-input")
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self.on_text_area_change)
 
@@ -343,4 +343,4 @@ if __name__ == "__main__":
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
 
-    start(MyApp, debug=True, address='0.0.0.0')
+    start(MyApp, debug=True, address='0.0.0.0', start_browser=False, websocket_port=8080)

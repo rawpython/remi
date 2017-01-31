@@ -95,6 +95,12 @@ def test_server():
         label_element = driver.find_element_by_css_selector('#main-output-label')
         assert label_element.text == 'Menu clicked: Save'
 
+        text_area = driver.find_element_by_css_selector('#text-area-input')
+        # The newline here makes sure that the change event is fired for the
+        # the text area so that the label text is updated.
+        text_area.send_keys("hello\n")
+        label_element = driver.find_element_by_css_selector('#main-output-label')
+        assert label_element.text == 'Text Area value changed!'
 
     finally:
         client.finalise()
