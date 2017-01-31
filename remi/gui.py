@@ -1983,21 +1983,28 @@ class SpinBox(Input):
 
     # noinspection PyShadowingBuiltins
     @decorate_constructor_parameter_types([str, int, int, int])
-    def __init__(self, default_value='100', min=100, max=5000, step=1, **kwargs):
+    def __init__(self, default_value='100', min=100, max=5000, step=1, allow_editing=True, **kwargs):
         """
         Args:
             default_value (str):
             min (int):
             max (int):
             step (int):
+            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (othewise
+            only allow entering numbers)
             kwargs: See Widget.__init__()
         """
         super(SpinBox, self).__init__('number', default_value, **kwargs)
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
-        self.attributes[self.EVENT_ONKEYPRESS] = \
-            'return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46 || event.charCode == 13;'
+        # eat non-numeric input (return false to stop propogation of event to onchange listener)
+        js = 'var key = event.keyCode || event.charCode;'
+        js += 'return (event.charCode >= 48 && event.charCode <= 57)'
+        if allow_editing:
+            js += ' || (key == 8 || key == 46)'  # allow backspace and delete
+            js += ' || (key == 13)'  # allow enter
+        self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
 
 
 class Slider(Input):
