@@ -209,7 +209,16 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         self._log.debug('handshake')
         data = self.request.recv(1024).strip()
-        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        decoded = data.decode()
+        data_lines = decoded.split('\r\n')
+        for line in data_lines:
+            fields = line.split(':')
+            if len(fields) != 2:
+                continue
+            name, value = fields
+            if name.lower() == 'sec-websocket-key':
+                key = value
+                break
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
         digest = base64.b64encode(digest)
