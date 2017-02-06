@@ -396,9 +396,10 @@ class App(BaseHTTPRequestHandler, object):
             clients[k] = self
         wsprotocol, wshost, wsport = self.server.websocket_address
 
-        net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
+        else:
+            net_interface_ip = self.connection.getsockname()[0]
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
