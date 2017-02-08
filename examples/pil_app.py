@@ -18,7 +18,8 @@ import io
 import PIL.Image
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 
 class PILImageViewverWidget(gui.Image):
@@ -102,4 +103,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp)
+    start_app(MyApp)
