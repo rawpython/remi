@@ -17,7 +17,8 @@ import random
 import threading
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 
 class Cell(gui.Widget):
@@ -252,4 +253,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, multiple_instance=False, address='0.0.0.0', port=8081, debug=False)
+    start_app(MyApp)

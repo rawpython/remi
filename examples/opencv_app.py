@@ -17,7 +17,8 @@ import io
 
 import cv2
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 
 class OpencvVideoWidget(gui.Image):
@@ -103,6 +104,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    # optional parameters
-    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp)
+    start_app(MyApp)
