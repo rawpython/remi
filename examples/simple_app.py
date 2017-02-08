@@ -13,7 +13,7 @@
 """
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
 from cli import start_app
 
 
