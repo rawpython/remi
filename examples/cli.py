@@ -3,7 +3,7 @@ programs to provide a common cli interface.
 """
 import remi
 
-def start_app(application):
+def start_app(application, **start_app_kwargs):
     try:
         import click
 
@@ -15,6 +15,9 @@ def start_app(application):
         # *avoid* giving a True or False default.
         @click.option('--start-browser/--no-start-browser', default=None)
         @click.option('--debug/--no-debug', default=None)
+        # Note, if you specify 'standalone' then some of the other arguements
+        # are not applicable, we should somehow state this.
+        @click.option('--standalone/--no-standalone', default=None)
         @click.option('--address')
         @click.option('--port', type=int)
         @click.option('--websocket-protocol')
@@ -30,8 +33,13 @@ def start_app(application):
         @click.option('--websocket_protocol')
         @click.option('--pending_messages_queue_length', type=int)
         def run(**kwargs):
-            kwargs = {name: value for name, value in kwargs.items() if value is not None}
-            remi.start(application, **kwargs)
+            # So if a command-line argument is explicitly given by the user then
+            # that overrides whatever was passed to 'start_app' (usually from
+            # the code of the example application).
+            for keyword, value in kwargs.items():
+                if value is not None:
+                    start_app_kwargs[keyword] = value
+            remi.start(application, **start_app_kwargs)
 
     except ImportError:
         import sys
