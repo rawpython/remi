@@ -22,7 +22,8 @@ import threading
 import random
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -96,4 +97,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, debug=True)
+    start_app(MyApp, debug=True)
