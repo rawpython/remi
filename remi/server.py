@@ -1020,7 +1020,7 @@ class StandaloneServer(Server):
         Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
                         password=None,
                         multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                        websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                        websocket_timeout_timer_ms=1000, websocket_protocol='ws', websocket_port=0, host_name=None,
                         pending_messages_queue_length=1000, userdata=userdata)
 
         self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
