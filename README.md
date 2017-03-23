@@ -343,6 +343,17 @@ Finally to run the tests:
 py.test remi/test.py
 ```
 
+The `test_requirements.text` file contains `coverage` and `pytest-cov` so that you can run coverage analysis over the test suite with:
+
+```shell
+py.test --cov=remi/ remi/test.py 
+```
+
+and then if you want a nicer HTML view of the code:
+
+```shell
+coverage html
+```
 
 Compatibility
 ===
