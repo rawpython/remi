@@ -174,16 +174,16 @@ class Tag(object):
         innerHTML = ''
         for s in self._render_children_list:
             if isinstance(s, type('')):
-                innerHTML = innerHTML + s
+                innerHTML = innerHTML + unicode(s)
             elif isinstance(s, type(u'')):
-                innerHTML = innerHTML + s.encode('utf-8')
+                innerHTML = innerHTML + s
             elif include_children:
                 innerHTML = innerHTML + s.repr(client)
 
-        html = '<%s %s %s>%s</%s>' % (self.type,
-                                   ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
+        html = u'<%s %s %s>%s</%s>' % (self.type,
+                                   u' '.join(u'%s="%s"' % (k, v) if v is not None else k for k, v in
                                             self.attributes.items()),
-                                   ('class="%s"' % ' '.join(self._classes)) if self._classes else '',
+                                   (u'class="%s"' % u' '.join(self._classes)) if self._classes else u'',
                                    innerHTML,
                                    self.type)
         return html

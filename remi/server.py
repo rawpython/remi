@@ -51,6 +51,9 @@ except ImportError:
 import cgi
 import weakref
 
+import traceback
+
+
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
 
@@ -66,7 +69,7 @@ log = logging.getLogger('remi.server')
 def to_websocket(data):
     # encoding end decoding utility function
     if pyLessThan3:
-        return quote(data)
+        return quote(data.encode('utf-8'))
     return quote(data, encoding='utf-8')
 
 
@@ -78,7 +81,7 @@ def from_websocket(data):
 
 
 def encode_text(data):
-    if not pyLessThan3:
+    if not pyLessThan3 or True:
         return data.encode('utf-8')
     return data
 
@@ -155,6 +158,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.handshake_done = False
         self.handshaking = False
         self.log = logging.getLogger('remi.server.ws')
+        self.pending_fragments = []
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
     def setup(self):
@@ -177,7 +181,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             else:
                 if not self.read_next_message():
                     k = get_instance_key(self)
-                    clients[k].websockets.remove(self)
+                    try:
+                        clients[k].websockets.remove(self)
+                    except:
+                        """ Non-existent websocket destination for client being removed """
                     self.handshake_done = False
                     self.log.debug('ws ending websocket service')
                     break
@@ -190,18 +197,45 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def read_next_message(self):
         self.log.debug('read_next_message')
-        length = self.rfile.read(2)
         try:
-            length = self.bytetonum(length[1]) & 127
+            # handle multi-part messsages as described in:
+            # https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_servers
+            flags = self.rfile.read(2)
+            if not flags:
+                # empty message!?
+                return True
+            fin = self.bytetonum(flags[0]) & 128 != 0
+            op = self.bytetonum(flags[0]) & int(0B1111)
+            mask = self.bytetonum(flags[1]) & 128 != 0
+            length = self.bytetonum(flags[1]) & 127
+
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
             elif length == 127:
                 length = struct.unpack('>Q', self.rfile.read(8))[0]
+                
+            # print "FIN: {} OP:{} LEN:{}".format(fin, op, length) 
+            
             masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
             decoded = ''
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-            self.on_message(from_websocket(decoded))
+            decoded = from_websocket(decoded)
+
+            if op < 8:
+                # non-control or continuation 
+                if not fin:
+                    # push this whole message back into memory for later consumption
+                    self.pending_fragments.append(decoded)
+                    return True
+                else:
+                    decoded = ''.join(self.pending_fragments) + decoded
+                    self.pending_fragments = []
+            else:
+                # a control frame
+                pass
+            
+            self.on_message(decoded)
         except Exception as e:
             self.log.error("Exception parsing websocket", exc_info=True)
             return False
@@ -278,7 +312,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         callback = get_method_by_name(runtimeInstances[widget_id], function_name)
                         if callback is not None:
                             callback(**param_dict)
-
+            except IndexError:
+                raise IndexError
             except Exception as e:
                 self.log.error('error parsing websocket', exc_info=True)
 
@@ -297,8 +332,13 @@ def parse_parametrs(p):
         l = int(s[0])  # length of param field
         if l > 0:
             p = p[len(s[0]) + 1:]
+            if len(p) < l:
+                # TODO this is currently just saying, 'hey, problem.' but should prompt putting the unconsumed data back 
+                # into a stack.
+                raise IndexError
             field_name = p.split('|')[0].split('=')[0]
             field_value = p[len(field_name) + 1:l]
+            
             p = p[l + 1:]
             if field_value.count("'") == 0 and field_value.count('"') == 0:
                 try:
@@ -366,7 +406,8 @@ def gui_updater(client, leaf, no_update_because_new_subchild=False):
             try:
                 html = leaf.repr(client)
                 ws.send_message('update_widget,' + __id + ',' + to_websocket(html))
-            except:
+            except Exception as ex:
+                log.error(traceback.format_exc())
                 client.websockets.remove(ws)
         
         # update children dictionaries __version__ in order to avoid nested updates
@@ -413,7 +454,11 @@ class _UpdateThread(threading.Thread):
                                     html = client.root.repr(client)
                                     ws.send_message('show_window,' + str(id(client.root)) + ',' + to_websocket(html))
                                 except:
-                                    client.websockets.remove(ws)
+                                    try:
+                                        client.websockets.remove(ws)
+                                    except:
+                                        """ Removal of websocket failed """
+                                        print 'ws remove failed'
                         client.old_root_window = client.root
                         client.idle()
                         gui_updater(client, client.root)
@@ -488,6 +533,7 @@ function byteLength(str) {
     else if (code > 0x7ff && code <= 0xffff) s+=2;
     if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
   }
+  console.debug(s);
   return s;
 }
 
@@ -780,7 +826,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def process_all(self, function):
         self.log.debug('get: %s' % function)
-        static_file = re.match(r"^/*res\/(.*)$", function)
+        static_file = re.match(r"^/*res\/(.*?)(?:\?.*)?$", function)
         attr_call = re.match(r"^\/*(\w+)\/(\w+)\?{0,1}(\w*\={1}\w+\${0,1})*$", function)
         if (function == '/') or (not function):
             # build the root page once if necessary
@@ -862,7 +908,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def get_orphaned_listeners(self):
         # this doesn't allow for stuff indirectly owned by an App instance
-	return [v.eventManager.listeners for v in runtimeInstances.values() if
+	    return [v.eventManager.listeners for v in runtimeInstances.values() if
 	       getattr(v, 'eventManager', None) and v.eventManager.listeners 
 	       and any(l['instance'] not in clients.values() for l in v.eventManager.listeners.values())]
 
