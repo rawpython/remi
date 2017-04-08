@@ -162,7 +162,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def read_next_message(self):
         # noinspection PyBroadException
         try:
-            length = self.rfile.read(2)
+            try:
+                length = self.rfile.read(2)
+            except ValueError:
+                # socket was closed, just return without errors
+                return False
             length = self.bytetonum(length[1]) & 127
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
@@ -174,10 +178,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(from_websocket(decoded))
         except socket.timeout as e:
-            self._log.debug('socket timed out: %s' % e)
             return False
         except Exception:
-            self._log.error("error parsing websocket", exc_info=True)
             return False
         return True
 
@@ -339,7 +341,7 @@ class _UpdateThread(threading.Thread):
                     self._log.error('error updating gui', exc_info=True)
 
                 update_event.clear()
-        log.debug('stopped update thread')
+        self._log.debug('stopped update thread')
 
 
 # noinspection PyPep8Naming
@@ -887,12 +889,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def close(self):
         global http_server_instance
+        self._log.debug('shutting down...')
         http_server_instance.stop()
         update_thread.stop()
         for ws in self.client.websockets:
             ws.finish()
             ws.server.shutdown()
-
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
@@ -952,6 +954,7 @@ class Server(object):
         self._log = logging.getLogger('remi.server')
         self._alive = True
         if start:
+            self._myid = threading.get_ident()
             self.start()
             self.serve_forever()
 
@@ -1006,6 +1009,9 @@ class Server(object):
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:
+            def null_handler(sig, _):
+                pass
+            signal.signal(signal.SIGUSR1, null_handler)
             while self._alive:
                 signal.pause()
         except Exception:
@@ -1021,6 +1027,7 @@ class Server(object):
         self._wsth.join()
         self._sserver.shutdown()
         self._sth.join()
+        signal.pthread_kill(self._myid, signal.SIGUSR1)
 
 
 class StandaloneServer(Server):
