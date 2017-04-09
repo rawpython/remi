@@ -252,4 +252,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, multiple_instance=False, address='0.0.0.0', port=8081, debug=False)
+    start(MyApp, multiple_instance=False, address='0.0.0.0', port=8081, debug=False, start_browser=True )
