@@ -13,6 +13,7 @@
 """
 
 import os
+import sys
 import logging
 import functools
 import threading
@@ -22,6 +23,7 @@ from .server import runtimeInstances, update_event
 
 log = logging.getLogger('remi.gui')
 
+pyLessThan3 = sys.version_info < (3,)
 
 def uid(obj):
     if not hasattr(obj,'identifier'):
@@ -2143,7 +2145,10 @@ class FileFolderNavigator(Widget):
                     return a > b
 
         log.debug("FileFolderNavigator - populate_folder_items")
-
+        
+        if pyLessThan3:
+            directory = directory.decode('utf-8')
+        
         l = os.listdir(directory)
         l.sort(key=functools.cmp_to_key(_sort_files))
 
