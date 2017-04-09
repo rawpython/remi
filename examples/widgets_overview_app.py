@@ -63,7 +63,7 @@ class MyApp(App):
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self.on_text_area_change)
 
-        self.spin = gui.SpinBox(100, width=200, height=30, margin='10px')
+        self.spin = gui.SpinBox(-10, -100, 1000, width=200, height=30, margin='10px')
         self.spin.set_on_change_listener(self.on_spin_change)
 
         self.check = gui.CheckBoxLabel('Label checkbox', True, width=200, height=30, margin='10px')
@@ -343,4 +343,4 @@ if __name__ == "__main__":
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
 
-    start(MyApp, debug=True, address='0.0.0.0')
+    start(MyApp, debug=True, address='0.0.0.0', start_browser=False)

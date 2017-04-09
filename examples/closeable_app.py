@@ -21,7 +21,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self, name='world'):
-        #margin 0px auto allows to center the app to the screen
+        # margin 0px auto allows to center the app to the screen
         wid = gui.VBox(width=300, height=200, margin='0px auto')
 
         bt = gui.Button('Close App', width=200, height=30)
@@ -36,12 +36,12 @@ class MyApp(App):
         return wid
 
     # listener function
-    def on_button_pressed(self, widget):
-        self.close() #closes the application
+    def on_button_pressed(self, _):
+        self.close()  # closes the application
 
 
 if __name__ == "__main__":
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp, debug=True)
+    start(MyApp, debug=True, address='0.0.0.0', start_browser=True)
