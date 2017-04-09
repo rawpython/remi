@@ -962,7 +962,7 @@ class Server(object):
         self._log = logging.getLogger('remi.server')
         self._alive = True
         if start:
-            self._myid = threading.get_ident()
+            self._myid = threading.Thread.ident
             self.start()
             self.serve_forever()
 
