@@ -177,4 +177,4 @@ if __name__ == "__main__":
     # starts the webserver
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,
     #        enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp, debug=False, port=8081, address='127.0.0.1', start_browser=True)
+    start(MyApp, debug=False, port=8081, address='0.0.0.0', start_browser=False)

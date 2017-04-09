@@ -16,11 +16,11 @@
 import logging
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
-except:
+except ImportError:
     from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 try:
     import socketserver
-except:
+except ImportError:
     import SocketServer as socketserver
 import mimetypes
 import webbrowser
@@ -34,7 +34,6 @@ import signal
 import time
 import os
 import re
-from threading import Timer
 try:
     from urllib import unquote
     from urllib import quote
@@ -177,7 +176,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(from_websocket(decoded))
-        except socket.timeout as e:
+        except socket.timeout:
             return False
         except Exception:
             return False
@@ -312,7 +311,7 @@ class _UpdateThread(threading.Thread):
                 self._log.debug('update_widget: %s type: %s' % (__id, type(widget)))
                 try:
                     ws.send_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
-                except:
+                except Exception:
                     client.websockets.remove(ws)
 
     def run(self):
@@ -361,6 +360,7 @@ class App(BaseHTTPRequestHandler, object):
     def __init__(self, request, client_address, server, **app_args):
         self._app_args = app_args
         self.client = None
+        self.root = None
         self._log = logging.getLogger('remi.request')
         super(App, self).__init__(request, client_address, server)
 
@@ -664,6 +664,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             update_thread = _UpdateThread(interval)
             update_event.set()  # update now
 
+    def main(self, *_):
+        """ Subclasses of App class *must* declare a main function
+            that will be the entry point of the application.
+            Inside the main function you have to declare the GUI structure
+            and return the root widget. """
+        raise NotImplementedError("Applications must implement 'main()' function.")
+
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Useful to schedule tasks. """
@@ -671,16 +678,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def set_root_widget(self, widget):
         global update_lock, update_event
-        #update_event.wait()
+        # update_event.wait()
         self.root = widget
         # here we check if the root window has changed
         for ws in self.websockets:
             try:
                 html = self.root.repr(self)
-                ws.send_message('0' + self.root.identifier + ',' + to_websocket(html)) ##0==show_window message
-            except:
+                ws.send_message('0' + self.root.identifier + ',' + to_websocket(html))  # #0==show_window message
+            except Exception:
                 self.websockets.remove(ws)
-        #update_event.clear()
+        # update_event.clear()
 
     def _send_spontaneous_websocket_message(self, message):
         global update_lock
@@ -724,8 +731,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     def do_POST(self):
         self._instance()
         file_data = None
-        listener_widget = None
-        listener_function = None
+        # listener_widget = None
+        # listener_function = None
         try:
             # Parse the form data posted
             filename = self.headers['filename']
@@ -752,7 +759,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 # the filedata is sent to the listener
                 self._log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
                 self.send_response(200)
-        except Exception as e:
+        except Exception:
             self._log.error('post: failed', exc_info=True)
             self.send_response(400)
         self.send_header('Content-type', 'text/plain')
@@ -793,7 +800,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 # build the page (call main()) in user code, if not built yet
                 with update_lock:
                     # build the root page once if necessary
-                    if not hasattr(self.client, 'root'):
+                    if not hasattr(self.client, 'root') or self.client.root is None:
                         self._log.info('built UI (path=%s)' % path)
                         self.client.root = self.main(*self.server.userdata)
                 self._process_all(path)
@@ -808,15 +815,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             if os.path.exists(path):
                 return path
 
-    def _process_all(self, function):
+    def _process_all(self, func):
         global update_lock
 
-        self._log.debug('get: %s' % function)
+        self._log.debug('get: %s' % func)
 
-        static_file = self.re_static_file.match(function)
-        attr_call = self.re_attr_call.match(function)
+        static_file = self.re_static_file.match(func)
+        attr_call = self.re_attr_call.match(func)
 
-        if (function == '/') or (not function):
+        if (func == '/') or (not func):
             with update_lock:
                 # render the HTML
                 html = self.client.root.repr(self.client)
@@ -858,24 +865,24 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write(content)
         elif attr_call:
             with update_lock:
-                param_dict = parse_qs(urlparse(function).query)
+                param_dict = parse_qs(urlparse(func).query)
                 # parse_qs returns patameters as list, here we take the first element
                 for k in param_dict:
                     param_dict[k] = param_dict[k][0]
 
-                widget, function = attr_call.group(1, 2)
+                widget, func = attr_call.group(1, 2)
                 try:
-                    content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
+                    content, headers = get_method_by_name(get_method_by_id(widget), func)(**param_dict)
                     if content is None:
                         self.send_response(503)
                         return
                     self.send_response(200)
                 except IOError:
-                    self._log.error('attr %s/%s call error' % (widget, function), exc_info=True)
+                    self._log.error('attr %s/%s call error' % (widget, func), exc_info=True)
                     self.send_response(404)
                     return
                 except (TypeError, AttributeError):
-                    self._log.error('attr %s/%s not available' % (widget, function))
+                    self._log.error('attr %s/%s not available' % (widget, func))
                     self.send_response(503)
                     return
 
@@ -884,7 +891,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.end_headers()
             try:
                 self.wfile.write(content)
-            except:
+            except TypeError:
                 self.wfile.write(encode_text(content))
 
     def close(self):
@@ -895,6 +902,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         for ws in self.client.websockets:
             ws.finish()
             ws.server.shutdown()
+
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
@@ -1009,17 +1017,20 @@ class Server(object):
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:
-            def null_handler(sig, _):
-                pass
-            signal.signal(signal.SIGUSR1, null_handler)
+            def sig_ignore(sig, _):
+                self._log.info('*** signal %d ignored.' % sig)
+                return signal.SIG_IGN
+            signal.signal(signal.SIGINT, sig_ignore)
             while self._alive:
                 signal.pause()
+                self._log.debug(' ** signal received')
         except Exception:
             # signal.pause() is missing for Windows; wait 1ms and loop instead
             while self._alive:
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
+        self._log.debug(' ** serve_forever() quitting')
 
     def stop(self):
         self._alive = False
@@ -1027,7 +1038,7 @@ class Server(object):
         self._wsth.join()
         self._sserver.shutdown()
         self._sth.join()
-        signal.pthread_kill(self._myid, signal.SIGUSR1)
+        signal.pthread_kill(self._myid, signal.SIGINT)
 
 
 class StandaloneServer(Server):
@@ -1039,7 +1050,7 @@ class StandaloneServer(Server):
                         websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
                         pending_messages_queue_length=1000, userdata=userdata)
 
-        self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
+        self._application_conf = {'width': width, 'height': height, 'resizable': resizable, 'fullscreen': fullscreen}
 
         if start:
             self.serve_forever()
@@ -1047,16 +1058,17 @@ class StandaloneServer(Server):
     def serve_forever(self):
         try:
             import webview
-            Server.start(self)
-            webview.create_window(self.title, self.address, **self._application_conf)
-            Server.stop(self)
         except ImportError:
             raise ImportError('PyWebView is missing. Please install it by:\n    '
                               'pip install pywebview\n    '
                               'more info at https://github.com/r0x0r/pywebview')
+        else:
+            Server.start(self)
+            webview.create_window(self.title, self.address, **self._application_conf)
+            Server.stop(self)
 
 
-def start(mainGuiClass, **kwargs):
+def start(main_gui_class, **kwargs):
     """This method starts the webserver with a specific App subclass."""
     debug = kwargs.pop('debug', False)
     standalone = kwargs.pop('standalone', False)
@@ -1067,7 +1079,7 @@ def start(mainGuiClass, **kwargs):
             level=logging.DEBUG if debug else logging.INFO)
 
     if standalone:
-        s = StandaloneServer(mainGuiClass, start=True, **kwargs)
+        s = StandaloneServer(main_gui_class, start=True, **kwargs)
     else:
-        s = Server(mainGuiClass, start=True, **kwargs)
+        s = Server(main_gui_class, start=True, **kwargs)
 
