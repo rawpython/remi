@@ -72,15 +72,18 @@ def decorate_constructor_parameter_types(type_list):
 
 
 def allow_style(fn):
+    @functools.wraps(fn)
     def decorated(self, *args, **kwargs):
         style = kwargs.pop('style', None)
         fn(self, *args, **kwargs)
         if style is not None:
-            for s in style.split(';'):
-                k, v = s.split(':', 1)
-                self.style[k.strip()] = v.strip()
+            try:
+                self.style.update(style)
+            except ValueError:
+                for s in style.split(';'):
+                    k, v = s.split(':', 1)
+                    self.style[k.strip()] = v.strip()
     return decorated
-
 
 
 def to_pix(x):
