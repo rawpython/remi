@@ -14,13 +14,8 @@ class untitled(App):
         pass
     
     def main(self):
-        mainContainer = Widget(width=706, height=445, margin='0px auto')
-        mainContainer.style["position"] = "relative"
-        subContainer = HBox(width=630, height=277)
-        subContainer.style['position'] = "absolute"
-        subContainer.style['left'] = "40px"
-        subContainer.style['top'] = "150px"
-        subContainer.style['background-color'] = "#b6b6b6"
+        mainContainer = Widget(width=706, height=445, margin='0px auto', style="position: relative")
+        subContainer = HBox(width=630, height=277, style='position: absolute; left: 40px; top: 150px; background-color: #b6b6b6')
         vbox = VBox(width=300, height=250)
         bt1 = Button('bt1', width=100, height=30)
         vbox.append(bt1,'bt1')
@@ -30,52 +25,29 @@ class untitled(App):
         vbox.append(bt2,'bt2')
         subContainer.append(vbox,'vbox')
         hbox = HBox(width=300, height=250)
-        lbl1 = Label('lbl1', width=50, height=50)
-        lbl1.style['background-color'] = "#ffb509"
+        lbl1 = Label('lbl1', width=50, height=50, style='background-color: #ffb509')
         hbox.append(lbl1,'lbl1')
-        lbl2 = Label('lbl2', width=50, height=50)
-        lbl2.style['background-color'] = "#40ff2b"
+        lbl2 = Label('lbl2', width=50, height=50, style='background-color: #40ff2b')
         hbox.append(lbl2,'lbl2')
-        lbl3 = Label('lbl3', width=50, height=50)
-        lbl3.style['background-color'] = "#e706ff"
+        lbl3 = Label('lbl3', width=50, height=50, style='background-color: #e706ff')
         hbox.append(lbl3,'lbl3')
         subContainer.append(hbox,'hbox')
         mainContainer.append(subContainer,'subContainer')
-        comboJustifyContent = gui.DropDown.new_from_list(('flex-start','flex-end','center','space-between','space-around'))
-        comboJustifyContent.style['left'] = "160px"
-        comboJustifyContent.style['position'] = "absolute"
-        comboJustifyContent.style['top'] = "60px"
-        comboJustifyContent.style['width'] = "148px"
-        comboJustifyContent.style['height'] = "30px"
+        comboJustifyContent = gui.DropDown.new_from_list(('flex-start','flex-end','center','space-between','space-around'),
+                                    style='left: 160px; position: absolute; top: 60px; width: 148px; height: 30px')
         mainContainer.append(comboJustifyContent,'comboJustifyContent')
-        lblJustifyContent = Label('justify-content')
-        lblJustifyContent.style['left'] = "40px"
-        lblJustifyContent.style['position'] = "absolute"
-        lblJustifyContent.style['top'] = "60px"
-        lblJustifyContent.style['width'] = "100px"
-        lblJustifyContent.style['height'] = "30px"
+        lblJustifyContent = Label('justify-content', style='left: 40px; position: absolute; top: 60px; width: 100px; height: 30px')
         mainContainer.append(lblJustifyContent,'lblJustifyContent')
-        comboAlignItems = gui.DropDown.new_from_list(('stretch','center','flex-start','flex-end','baseline'))
-        comboAlignItems.style['left'] = "160px"
-        comboAlignItems.style['position'] = "absolute"
-        comboAlignItems.style['top'] = "100px"
-        comboAlignItems.style['width'] = "152px"
-        comboAlignItems.style['height'] = "30px"
+        comboAlignItems = gui.DropDown.new_from_list(('stretch','center','flex-start','flex-end','baseline'),
+                                    style='left:160px; position:absolute; top:100px; width:152px; height: 30px')
         mainContainer.append(comboAlignItems,'comboAlignItems')
-        lblAlignItems = Label('align-items')
-        lblAlignItems.style['left'] = "40px"
-        lblAlignItems.style['position'] = "absolute"
-        lblAlignItems.style['top'] = "100px"
-        lblAlignItems.style['width'] = "100px"
-        lblAlignItems.style['height'] = "30px"
+        lblAlignItems = Label('align-items', style='left:40px; position:absolute; top:100px; width:100px; height:30px')
         mainContainer.append(lblAlignItems,'lblAlignItems')
         mainContainer.children['comboJustifyContent'].set_on_change_listener(self.onchange_comboJustifyContent,vbox,hbox)
         mainContainer.children['comboAlignItems'].set_on_change_listener(self.onchange_comboAlignItems,vbox,hbox)
 
-        lblTitle = gui.Label("The following example shows the two main layout style properties for the VBox and HBox containers. Change the value of the two combo boxes.")
-        lblTitle.style['position'] = "absolute"
-        lblTitle.style['left'] = "0px"
-        lblTitle.style['top'] = "0px"
+        lblTitle = gui.Label("The following example shows the two main layout style properties for the VBox and HBox containers. Change the value of the two combo boxes.",
+                                    style='position:absolute; left:0px; top:0px')
         mainContainer.append(lblTitle)
 
         self.mainContainer = mainContainer
