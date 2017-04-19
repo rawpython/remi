@@ -675,9 +675,9 @@ class Editor(App):
         self.selectedWidget = parent
         print("tag deleted")
         
-    def onkeydown(self, widget, keypressed):
-        if keypressed==46: #46 the delete keycode
-            self.toolbar_delete_clicked()
+    def onkeydown(self, keypressed):
+        if str(keypressed)=='46': #46 the delete keycode
+            self.toolbar_delete_clicked(None)
         print("Key pressed: " + str(keypressed))
 
         

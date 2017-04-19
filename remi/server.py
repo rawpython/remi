@@ -16,11 +16,11 @@
 import logging
 try:
     from http.server import HTTPServer, BaseHTTPRequestHandler
-except:
+except ImportError:
     from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 try:
     import socketserver
-except:
+except ImportError:
     import SocketServer as socketserver
 import mimetypes
 import webbrowser
@@ -34,7 +34,6 @@ import signal
 import time
 import os
 import re
-from threading import Timer
 try:
     from urllib import unquote
     from urllib import quote
@@ -49,6 +48,7 @@ except ImportError:
 import cgi
 import weakref
 
+http_server_instance = None
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
 
@@ -58,12 +58,12 @@ update_lock = threading.RLock()
 update_event = threading.Event()
 update_thread = None
 
-log = logging.getLogger('remi.server')
 
 _MSG_PING = '4'
 _MSG_ACK = '3'
 _MSG_JS = '2'
 _MSG_UPDATE = '1'
+
 
 def to_websocket(data):
     # encoding end decoding utility function
@@ -109,9 +109,10 @@ def get_instance_key(handler):
     return ip, unique_port
 
 
+# noinspection PyPep8Naming
 class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
-    daemon_threads = True
+    daemon_threads = False
 
     def __init__(self, server_address, RequestHandlerClass, multiple_instance):
         socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
@@ -126,19 +127,20 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def __init__(self, *args, **kwargs):
         self.last_ping = time.time()
         self.handshake_done = False
-        self.log = logging.getLogger('remi.server.ws')
+        self._log = logging.getLogger('remi.server.ws')
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        self.log.info('connection established: %r' % (self.client_address,))
+        self._log.info('connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
-        self.log.debug('handle')
+        self._log.debug('handle')
         # on some systems like ROS, the default socket timeout
         # is less than expected, we force it to infinite (None) as default socket value
+        self.request.settimeout(None)
         while True:
             if not self.handshake_done:
                 self.handshake()
@@ -147,7 +149,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                     k = get_instance_key(self)
                     clients[k].websockets.remove(self)
                     self.handshake_done = False
-                    self.log.debug('ws ending websocket service')
+                    self._log.debug('ws ending websocket service')
                     break
 
     @staticmethod
@@ -159,7 +161,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def read_next_message(self):
         # noinspection PyBroadException
         try:
-            length = self.rfile.read(2)
+            try:
+                length = self.rfile.read(2)
+            except ValueError:
+                # socket was closed, just return without errors
+                return False
             length = self.bytetonum(length[1]) & 127
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
@@ -170,11 +176,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
             self.on_message(from_websocket(decoded))
-        except socket.timeout as e:
-            self.log.debug('socket timed out: %s' % e)
+        except socket.timeout:
             return False
         except Exception:
-            self.log.error("error parsing websocket", exc_info=True)
             return False
         return True
 
@@ -186,10 +190,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def send_message(self, message):
         if not self.handshake_done:
-            self.log.warning("ignoring message %s (handshake not done)" % message[:10])
+            self._log.warning("ignoring message %s (handshake not done)" % message[:10])
 
         if message != _MSG_PING:
-            self.log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
+            self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
         length = len(message)
@@ -207,7 +211,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        self.log.debug('handshake')
+        self._log.debug('handshake')
         data = self.request.recv(1024).strip()
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
@@ -217,7 +221,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
         response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
-        self.log.info('handshake complete')
+        self._log.info('handshake complete')
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
@@ -240,7 +244,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
                 # parsing messages
                 chunks = message.split('/')
-                self.log.debug('on_message: %s' % chunks[0])
+                self._log.debug('on_message: %s' % chunks[0])
 
                 if len(chunks) > 3:  # msgtype,widget,function,params
                     # if this is a callback
@@ -258,7 +262,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                             callback(**param_dict)
 
             except Exception:
-                self.log.error('error parsing websocket', exc_info=True)
+                self._log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
 
@@ -282,29 +286,36 @@ def parse_parametrs(p):
     return ret
 
 
-def gui_updater(client, node):
-    changed_widgets = {} #key = widget instance, value = html representation
-    node.repr(client, changed_widgets)
-    for widget in changed_widgets.keys():
-        html = changed_widgets[widget]
-        __id = str(widget.identifier)
-        for ws in client.websockets:
-            log.debug('update_widget: %s type: %s' % (__id, type(widget)))
-            try:
-                ws.send_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
-            except:
-                client.websockets.remove(ws)
-
-
 class _UpdateThread(threading.Thread):
+
+    daemon = True
+
     def __init__(self, interval):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.daemon = False
         self._interval = interval
+        self._log = logging.getLogger('remi.update')
+        self._alive = True
         self.start()
 
+    def stop(self):
+        self._alive = False
+
+    def _update_gui(self, client, node):
+        changed_widgets = {}  # key = widget instance, value = html representation
+        node.repr(client, changed_widgets)
+        for widget in changed_widgets.keys():
+            html = changed_widgets[widget]
+            __id = str(widget.identifier)
+            for ws in client.websockets:
+                self._log.debug('update_widget: %s type: %s' % (__id, type(widget)))
+                try:
+                    ws.send_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
+                except Exception:
+                    client.websockets.remove(ws)
+
     def run(self):
-        while True:
+        while self._alive:
             global clients, runtimeInstances
             global update_lock, update_event
 
@@ -318,7 +329,7 @@ class _UpdateThread(threading.Thread):
                             continue
 
                         if client.websockets:
-                            gui_updater(client, client.root)
+                            self._update_gui(client, client.root)
 
                             for ws in client.websockets:
                                 ws.ping()
@@ -326,9 +337,10 @@ class _UpdateThread(threading.Thread):
                         client.idle()
 
                 except Exception:
-                    log.error('error updating gui', exc_info=True)
+                    self._log.error('error updating gui', exc_info=True)
 
                 update_event.clear()
+        self._log.debug('stopped update thread')
 
 
 # noinspection PyPep8Naming
@@ -342,13 +354,14 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
-    re_static_file = re.compile(r"^/res/([-_.\w\d]+)\?{0,1}(?:[\w\d]*)")  # https://regex101.com/r/uK1sX1/1
+    re_static_file = re.compile(r"^/res/([-_. \w\d]+)\?{0,1}(?:[\w\d]*)")  # https://regex101.com/r/uK1sX1/1
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
         self._app_args = app_args
         self.client = None
-        self.log = logging.getLogger('remi.server.http')
+        self.root = None
+        self._log = logging.getLogger('remi.request')
         super(App, self).__init__(request, client_address, server)
 
     def _get_list_from_app_args(self, name):
@@ -364,11 +377,11 @@ class App(BaseHTTPRequestHandler, object):
 
     def log_message(self, format_string, *args):
         msg = format_string % args
-        self.log.debug("%s %s" % (self.address_string(), msg))
+        self._log.debug("%s %s" % (self.address_string(), msg))
 
     def log_error(self, format_string, *args):
         msg = format_string % args
-        self.log.error("%s %s" % (self.address_string(), msg))
+        self._log.error("%s %s" % (self.address_string(), msg))
 
     def _instance(self):
         global clients
@@ -651,6 +664,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             update_thread = _UpdateThread(interval)
             update_event.set()  # update now
 
+    def main(self, *_):
+        """ Subclasses of App class *must* declare a main function
+            that will be the entry point of the application.
+            Inside the main function you have to declare the GUI structure
+            and return the root widget. """
+        raise NotImplementedError("Applications must implement 'main()' function.")
+
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Useful to schedule tasks. """
@@ -658,16 +678,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def set_root_widget(self, widget):
         global update_lock, update_event
-        #update_event.wait()
+        # update_event.wait()
         self.root = widget
         # here we check if the root window has changed
         for ws in self.websockets:
             try:
                 html = self.root.repr(self)
-                ws.send_message('0' + self.root.identifier + ',' + to_websocket(html)) ##0==show_window message
-            except:
+                ws.send_message('0' + self.root.identifier + ',' + to_websocket(html))  # #0==show_window message
+            except Exception:
                 self.websockets.remove(ws)
-        #update_event.clear()
+        # update_event.clear()
 
     def _send_spontaneous_websocket_message(self, message):
         global update_lock
@@ -675,10 +695,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             for ws in self.client.websockets:
                 # noinspection PyBroadException
                 try:
-                    self.log.debug("sending websocket spontaneous message")
+                    self._log.debug("sending websocket spontaneous message")
                     ws.send_message(message)
                 except:
-                    self.log.error("sending websocket spontaneous message", exc_info=True)
+                    self._log.error("sending websocket spontaneous message", exc_info=True)
                     self.client.websockets.remove(ws)
         update_event.clear()
 
@@ -711,8 +731,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     def do_POST(self):
         self._instance()
         file_data = None
-        listener_widget = None
-        listener_function = None
+        # listener_widget = None
+        # listener_function = None
         try:
             # Parse the form data posted
             filename = self.headers['filename']
@@ -729,18 +749,18 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     # The field contains an uploaded file
                     file_data = field_item.file.read()
                     file_len = len(file_data)
-                    self.log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
+                    self._log.debug('post: uploaded %s as "%s" (%d bytes)\n' % (field, field_item.filename, file_len))
                     get_method_by_name(listener_widget, listener_function)(file_data, filename)
                 else:
                     # Regular form value
-                    self.log.debug('post: %s=%s\n' % (field, form[field].value))
+                    self._log.debug('post: %s=%s\n' % (field, form[field].value))
 
             if file_data is not None:
                 # the filedata is sent to the listener
-                self.log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
+                self._log.debug('GUI - server.py do_POST: fileupload name= %s' % (filename))
                 self.send_response(200)
-        except Exception as e:
-            self.log.error('post: failed', exc_info=True)
+        except Exception:
+            self._log.error('post: failed', exc_info=True)
             self.send_response(400)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
@@ -762,15 +782,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             do_process = True
         else:
             if not ('Authorization' in self.headers) or self.headers['Authorization'] is None:
-                self.log.info("Authenticating")
+                self._log.info("Authenticating")
                 self.do_AUTHHEAD()
-                self.wfile.write('no auth header received')
+                self.wfile.write(encode_text('no auth header received'))
             elif self.headers['Authorization'] == 'Basic ' + self.server.auth.decode():
                 do_process = True
             else:
                 self.do_AUTHHEAD()
-                self.wfile.write(self.headers['Authorization'])
-                self.wfile.write('not authenticated')
+                self.wfile.write(encode_text(self.headers['Authorization']))
+                self.wfile.write(encode_text('not authenticated'))
 
         if do_process:
             path = str(unquote(self.path))
@@ -780,12 +800,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 # build the page (call main()) in user code, if not built yet
                 with update_lock:
                     # build the root page once if necessary
-                    if not hasattr(self.client, 'root'):
-                        self.log.info('built UI (path=%s)' % path)
+                    if not hasattr(self.client, 'root') or self.client.root is None:
+                        self._log.info('built UI (path=%s)' % path)
                         self.client.root = self.main(*self.server.userdata)
                 self._process_all(path)
             except:
-                self.log.error('error processing GET request', exc_info=True)
+                self._log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
         static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
@@ -795,15 +815,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             if os.path.exists(path):
                 return path
 
-    def _process_all(self, function):
+    def _process_all(self, func):
         global update_lock
 
-        self.log.debug('get: %s' % function)
+        self._log.debug('get: %s' % func)
 
-        static_file = self.re_static_file.match(function)
-        attr_call = self.re_attr_call.match(function)
+        static_file = self.re_static_file.match(func)
+        attr_call = self.re_attr_call.match(func)
 
-        if (function == '/') or (not function):
+        if (func == '/') or (not func):
             with update_lock:
                 # render the HTML
                 html = self.client.root.repr(self.client)
@@ -845,24 +865,24 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self.wfile.write(content)
         elif attr_call:
             with update_lock:
-                param_dict = parse_qs(urlparse(function).query)
+                param_dict = parse_qs(urlparse(func).query)
                 # parse_qs returns patameters as list, here we take the first element
                 for k in param_dict:
                     param_dict[k] = param_dict[k][0]
 
-                widget, function = attr_call.group(1, 2)
+                widget, func = attr_call.group(1, 2)
                 try:
-                    content, headers = get_method_by_name(get_method_by_id(widget), function)(**param_dict)
+                    content, headers = get_method_by_name(get_method_by_id(widget), func)(**param_dict)
                     if content is None:
                         self.send_response(503)
                         return
                     self.send_response(200)
                 except IOError:
-                    self.log.error('attr %s/%s call error' % (widget, function), exc_info=True)
+                    self._log.error('attr %s/%s call error' % (widget, func), exc_info=True)
                     self.send_response(404)
                     return
                 except (TypeError, AttributeError):
-                    self.log.error('attr %s/%s not available' % (widget, function))
+                    self._log.error('attr %s/%s not available' % (widget, func))
                     self.send_response(503)
                     return
 
@@ -871,13 +891,22 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             self.end_headers()
             try:
                 self.wfile.write(content)
-            except:
+            except TypeError:
                 self.wfile.write(encode_text(content))
+
+    def close(self):
+        global http_server_instance
+        self._log.debug('shutting down...')
+        http_server_instance.stop()
+        update_thread.stop()
+        for ws in self.client.websockets:
+            ws.finish()
+            ws.server.shutdown()
 
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
-    daemon_threads = True
+    daemon_threads = False
 
     # noinspection PyPep8Naming
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
@@ -903,6 +932,9 @@ class Server(object):
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
                  pending_messages_queue_length=1000, userdata=()):
+        global http_server_instance
+        http_server_instance = self
+
         self._gui = gui_class
         self._title = title or gui_class.__name__
         self._wsserver = self._sserver = None
@@ -927,7 +959,10 @@ class Server(object):
         if not isinstance(userdata, tuple):
             raise ValueError('userdata must be a tuple')
 
+        self._log = logging.getLogger('remi.server')
+        self._alive = True
         if start:
+            self._myid = threading.Thread.ident
             self.start()
             self.serve_forever()
 
@@ -944,9 +979,9 @@ class Server(object):
         self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
                                                  self._multiple_instance)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
-        log.info('Started websocket server %s:%s' % (wshost, wsport))
+        self._log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
-        self._wsth.daemon = True
+        self._wsth.daemon = False
         self._wsth.start()
 
         # Create a web server and define the handler to manage the incoming
@@ -962,7 +997,7 @@ class Server(object):
         if shost == '0.0.0.0':
             shost = '127.0.0.1'
         self._base_address = 'http://%s:%s/' % (shost,sport)
-        log.info('Started httpserver %s' % self._base_address)
+        self._log.info('Started httpserver %s' % self._base_address)
         if self._start_browser:
             try:
                 import android
@@ -974,7 +1009,7 @@ class Server(object):
                 else:
                     webbrowser.open(self._base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
-        self._sth.daemon = True
+        self._sth.daemon = False
         self._sth.start()
 
     def serve_forever(self):
@@ -982,20 +1017,31 @@ class Server(object):
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:
-            while True:
+            def sig_ignore(sig, _):
+                self._log.info('*** signal %d ignored.' % sig)
+                return signal.SIG_IGN
+            signal.signal(signal.SIGINT, sig_ignore)
+            while self._alive:
                 signal.pause()
+                self._log.debug(' ** signal received')
         except Exception:
             # signal.pause() is missing for Windows; wait 1ms and loop instead
-            while True:
+            while self._alive:
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
+        self._log.debug(' ** serve_forever() quitting')
 
     def stop(self):
+        self._alive = False
         self._wsserver.shutdown()
         self._wsth.join()
         self._sserver.shutdown()
         self._sth.join()
+        try:
+            signal.pthread_kill(self._myid, signal.SIGINT)
+        except Exception:
+            pass
 
 
 class StandaloneServer(Server):
@@ -1007,7 +1053,7 @@ class StandaloneServer(Server):
                         websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
                         pending_messages_queue_length=1000, userdata=userdata)
 
-        self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
+        self._application_conf = {'width': width, 'height': height, 'resizable': resizable, 'fullscreen': fullscreen}
 
         if start:
             self.serve_forever()
@@ -1015,22 +1061,28 @@ class StandaloneServer(Server):
     def serve_forever(self):
         try:
             import webview
-            Server.start(self)
-            webview.create_window(self.title, self.address, **self._application_conf)
-            Server.stop(self)
         except ImportError:
             raise ImportError('PyWebView is missing. Please install it by:\n    '
                               'pip install pywebview\n    '
                               'more info at https://github.com/r0x0r/pywebview')
+        else:
+            Server.start(self)
+            webview.create_window(self.title, self.address, **self._application_conf)
+            Server.stop(self)
 
 
-def start(mainGuiClass, **kwargs):
+def start(main_gui_class, **kwargs):
     """This method starts the webserver with a specific App subclass."""
     debug = kwargs.pop('debug', False)
     standalone = kwargs.pop('standalone', False)
+
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(name)-16s %(levelname)-8s %(message)s')
+    logging.getLogger('remi').setLevel(
+            level=logging.DEBUG if debug else logging.INFO)
+
     if standalone:
-        s = StandaloneServer(mainGuiClass, start=True, **kwargs)
+        s = StandaloneServer(main_gui_class, start=True, **kwargs)
     else:
-        s = Server(mainGuiClass, start=True, **kwargs)
+        s = Server(main_gui_class, start=True, **kwargs)
+
