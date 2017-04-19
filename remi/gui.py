@@ -1782,12 +1782,16 @@ class TableWidget(Table):
 
     @allow_style
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, row_count, column_count, **kwargs):
         """
         Args:
+            row_count (int): number of rows to create
+            column_count (int): number of columns to create
             kwargs: See Widget.__init__()
         """
         super(TableWidget, self).__init__(**kwargs)
+        self.set_column_count(column_count)
+        self.set_row_count(row_count)
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
@@ -1821,9 +1825,6 @@ class TableWidget(Table):
         """
         return len(self.children)
 
-    def append(self, row):
-        super(Table, self).append(row, str(self.row_count))
-
     def set_row_count(self, count):
         """Sets the table row count.
 
@@ -1855,8 +1856,9 @@ class TableWidget(Table):
                 for i in range(current_column_count, count+1):
                     row.append(TableItem(), str(i))
         elif count < current_column_count:
-            for i in range(count, current_row_count):
-                self.remove_child(self.children[str(i)])
+            for row in self.children.values():
+                for i in range(count, current_column_count):
+                    row.remove_child(row.children[str(i)])
 
 
 class Table(Widget):
