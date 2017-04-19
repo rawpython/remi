@@ -1774,6 +1774,91 @@ class Image(Widget):
         self.attributes['src'] = filename
 
 
+class TableWidget(Table):
+    """
+    Basic table model widget.
+    Each item is addressed by stringified integer key in the children dictionary.
+    """
+
+    @allow_style
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        """
+        Args:
+            kwargs: See Widget.__init__()
+        """
+        super(TableWidget, self).__init__(**kwargs)
+
+    def item_at(self, row, column):
+        """Returns the TableItem instance at row, column cordinates
+
+        Args:
+            row (int): zero based index
+            column (int): zero based index
+        """
+        return self.children[str(row)].children[str(column)]
+
+    def item_coords(self, table_item):
+        """Returns table_item's (row, column) cordinates.
+        Returns None in case of item not found.
+
+        Args:
+            table_item (TableItem): an item instance
+        """
+        for row_key in self.children.keys():
+            for item_key in self.children[row_key].children.keys():
+                if self.children[row_key].children[item_key] == table_item:
+                    return (int(row_key), int(column_key))
+        return None
+
+    def column_count(self):
+        """Returns table's columns count.
+        """
+        return len(self.children[self.children.keys()[0]].children)
+
+    def row_count(self):
+        """Returns table's rows count (the title is considered as a row).
+        """
+        return len(self.children)
+
+    def append(self, row):
+        super(Table, self).append(row, str(self.row_count))
+
+    def set_row_count(self, count):
+        """Sets the table row count.
+
+        Args:
+            count (int): number of rows
+        """
+        current_row_count = self.row_count()
+        current_column_count = self.column_count()
+        if count > current_row_count:
+            for i in range(current_row_count, count+1):
+                tr = TableRow()
+                for c in range(0, current_column_count):
+                    tr.append(TableItem(), str(c))
+                self.append(tr, str(i))
+        elif count < current_row_count:
+            for i in range(count, current_row_count):
+                self.remove_child(self.children[str(i)])
+
+    def set_column_count(self, count):
+        """Sets the table column count.
+
+        Args:
+            count (int): column of rows
+        """
+        current_row_count = self.row_count()
+        current_column_count = self.column_count()
+        if count > current_column_count:
+            for row in self.children.values():
+                for i in range(current_column_count, count+1):
+                    row.append(TableItem(), str(i))
+        elif count < current_column_count:
+            for i in range(count, current_row_count):
+                self.remove_child(self.children[str(i)])
+
+
 class Table(Widget):
     """
     table widget - it will contains TableRow
@@ -1815,47 +1900,32 @@ class Table(Widget):
             fill_title (bool): if true, the first tuple in the list will
                 be set as title.
         """
-        first_row = True
+        row_index = 0
         for row in content:
-            key = ''
             tr = TableRow()
+            column_index = 0
             for item in row:
-                if first_row and fill_title:
+                if row_index == 0 and fill_title:
                     ti = TableTitle(item)
-                    key = 'title'
                 else:
                     ti = TableItem(item)
-                tr.append(ti)
-            self.append(tr, key)
-            first_row = False
-
-    def empty(self, keep_title=False):
-        """
-        Deletes the table rows.
-
-        Args:
-            keep_title (bool): whether to delete all the content except
-                the title.
-        """
-        title = None
-        if 'title' in self.children.keys():
-            title = self.children['title']
-        super(Table, self).empty()
-        if keep_title and (title is not None):
-            self.append(title, 'title')
+                tr.append(ti, str(column_index))
+                column_index = column_index + 1
+            self.append(tr, str(row_index))
+            row_index = row_index + 1
 
     def append(self, row, key=''):
         super(Table, self).append(row, key)
         row.set_on_row_item_click_listener(self.on_table_row_click)
 
     def on_table_row_click(self, row, item):
-        self.eventManager.propagate(self.EVENT_ON_TABLE_ROW_CLICK, (row,item))
-    
+        self.eventManager.propagate(self.EVENT_ON_TABLE_ROW_CLICK, (row, item))
+
     @decorate_set_on_listener("on_table_row_click", "(self,table,row,item)")
     def set_on_table_row_click_listener(self, callback, *userdata):
         """Registers the listener for the Table.on_table_row_click event.
 
-        Note: The prototype of the listener have to be like 
+        Note: The prototype of the listener have to be like
             on_table_row_click(self, table, row, item).
 
         Args:
@@ -1890,15 +1960,15 @@ class TableRow(Widget):
 
     def on_row_item_click(self, item):
         self.eventManager.propagate(self.EVENT_ON_ROW_ITEM_CLICK, (item,))
-    
+
     @decorate_set_on_listener("on_row_item_click", "(self,row,item)")
     def set_on_row_item_click_listener(self, callback, *userdata):
         """Registers the listener for the TableRow.on_row_item_click event.
 
-        Note: This is internally used by the Table widget in order to generate the 
-            Table.on_table_row_click event. 
+        Note: This is internally used by the Table widget in order to generate the
+            Table.on_table_row_click event.
             Use Table.set_on_table_row_click_listener instead.
-        Note: The prototype of the listener have to be like 
+        Note: The prototype of the listener have to be like
             on_row_item_click(self, row, item).
 
         Args:
