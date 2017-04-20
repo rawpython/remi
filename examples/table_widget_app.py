@@ -22,7 +22,14 @@ class MyApp(App):
 
     def main(self, name='world'):
         #margin 0px auto allows to center the app to the screen
-        wid = gui.VBox(width=500, height=400, margin='0px auto')
+        wid = gui.VBox(width=500, height=500, style={'margin':'5px auto', 'padding': '10px'})
+        
+        lbl_description = gui.Label("""Example about TableWidget usage.
+                                    Change rows and columns count in order to see the behaviour. 
+                                    After changing the size, 'Fill the table' content by means of the button.""")
+        
+        wid.append(lbl_description)
+
         table = gui.TableWidget(10, 3, True, width=300, height=300)
         table.style['font-size'] = '8px'
         
@@ -50,6 +57,7 @@ class MyApp(App):
         chk_use_title.set_on_change_listener(self.on_use_title_change, table)
         wid.append(chk_use_title)
 
+        self.fill_table(table, table)
         
         wid.append(table)
         # returning the root widget
