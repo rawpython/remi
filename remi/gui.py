@@ -1860,7 +1860,7 @@ class TableWidget(Table):
 
     @allow_style
     @decorate_constructor_parameter_types([])
-    def __init__(self, n_rows, n_columns, use_title, **kwargs):
+    def __init__(self, n_rows, n_columns, use_title=True, editable=False, **kwargs):
         """
         Args:
             use_title (bool): enable title bar. Note that the title bar is 
@@ -1871,9 +1871,19 @@ class TableWidget(Table):
         """
         super(TableWidget, self).__init__(**kwargs)
         self.set_use_title(use_title)
+        self.set_editable(editable)
         self._column_count = 0
         self.set_column_count(n_columns)
         self.set_row_count(n_rows)
+
+    def set_editable(self, editable):
+        self._editable = editable
+        for r in self.children.values():
+            for c in r.children.values():
+                if self._editable:
+                    c.attributes['contenteditable'] = 'true'
+                else:
+                    del c.attributes['contenteditable']
 
     def set_use_title(self, use_title):
         """Returns the TableItem instance at row, column cordinates
@@ -1891,9 +1901,10 @@ class TableWidget(Table):
 
         if len(self.children) > 0:
             for c_key in self.children['0'].children.keys():
-                print("c_key: " + c_key + "  text: " + self.children['0'].children[c_key].get_text())
                 instance = cl(self.children['0'].children[c_key].get_text())
                 self.children['0'].children[c_key] = instance
+                if self._editable:
+                    instance.attributes['contenteditable'] = 'true'
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
@@ -1940,6 +1951,8 @@ class TableWidget(Table):
                 tr = TableRow()
                 for c in range(0, current_column_count):
                     tr.append(TableItem(), str(c))
+                    if self._editable:
+                        tr.children[str(c)].attributes['contenteditable'] = 'true'
                 self.append(tr, str(i))
             self._update_first_row()
         elif count < current_row_count:
@@ -1958,6 +1971,8 @@ class TableWidget(Table):
             for row in self.children.values():
                 for i in range(current_column_count, count):
                     row.append(TableItem(), str(i))
+                    if self._editable:
+                        row.children[str(i)].attributes['contenteditable'] = 'true'
             self._update_first_row()
         elif count < current_column_count:
             for row in self.children.values():
@@ -2022,6 +2037,11 @@ class TableItem(Widget, _MixinTextualWidget):
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
         self.set_text(text)
+        self.attributes[self.EVENT_ONBLUR] = """var params={};params['new_value']=document.getElementById('%(id)s').innerText;
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONBLUR}
+
+    def onblur(self, new_value):
+        self.set_text(new_value)
 
 
 class TableTitle(Widget, _MixinTextualWidget):

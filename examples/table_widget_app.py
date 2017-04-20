@@ -57,8 +57,12 @@ class MyApp(App):
         chk_use_title.set_on_change_listener(self.on_use_title_change, table)
         wid.append(chk_use_title)
 
+        chk_editable = gui.CheckBoxLabel('Allow editing', False)
+        chk_editable.set_on_change_listener(self.on_editable_change, table)
+        wid.append(chk_editable)
+
         self.fill_table(table, table)
-        
+
         wid.append(table)
         # returning the root widget
         return wid
@@ -72,12 +76,15 @@ class MyApp(App):
     def fill_table(self, emitter, table):
         for ri in range(0, table.row_count()):
             for ci in range(0, table.column_count()):
-                table.item_at(ri, ci).set_text("row:%s,column:%s"%(str(ri),str(ci))) 
+                table.item_at(ri, ci).set_text("row:%s,column:%s"%(str(ri),str(ci)))
 
     def on_use_title_change(self, emitter, value, table):
-        value = value=='true'
-        print("CHECK BOX: " + str(type(value)) + '-' + str(value))
+        value = value == 'true'
         table.set_use_title(value)
+
+    def on_editable_change(self, emitter, value, table):
+        value = value == 'true'
+        table.set_editable(value)
 
 
 if __name__ == "__main__":
