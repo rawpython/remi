@@ -1857,6 +1857,7 @@ class TableWidget(Table):
     Basic table model widget.
     Each item is addressed by stringified integer key in the children dictionary.
     """
+    EVENT_ON_ITEM_CHANGED = 'on_item_changed'
 
     @allow_style
     @decorate_constructor_parameter_types([])
@@ -1878,10 +1879,13 @@ class TableWidget(Table):
 
     def set_editable(self, editable):
         self._editable = editable
-        for r in self.children.values():
-            for c in r.children.values():
+        for r_key in self.children.keys():
+            r = self.children[r_key]
+            for c_key in r.children.keys():
+                c = r.children[c_key]
                 if self._editable:
                     c.attributes['contenteditable'] = 'true'
+                    c.set_on_change_listener(self.on_item_changed, int(r_key), int(c_key))
                 else:
                     del c.attributes['contenteditable']
 
@@ -1905,6 +1909,7 @@ class TableWidget(Table):
                 self.children['0'].children[c_key] = instance
                 if self._editable:
                     instance.attributes['contenteditable'] = 'true'
+                    instance.set_on_change_listener(self.on_item_changed, 0, int(c_key))
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
@@ -1953,6 +1958,7 @@ class TableWidget(Table):
                     tr.append(TableItem(), str(c))
                     if self._editable:
                         tr.children[str(c)].attributes['contenteditable'] = 'true'
+                        tr.children[str(c)].set_on_change_listener(self.on_item_changed, int(i), int(c))
                 self.append(tr, str(i))
             self._update_first_row()
         elif count < current_row_count:
@@ -1968,17 +1974,39 @@ class TableWidget(Table):
         current_row_count = self.row_count()
         current_column_count = self.column_count()
         if count > current_column_count:
-            for row in self.children.values():
+            for r_key in self.children.values():
+                row = self.children[r_key]
                 for i in range(current_column_count, count):
                     row.append(TableItem(), str(i))
                     if self._editable:
                         row.children[str(i)].attributes['contenteditable'] = 'true'
+                        row.children[str(i)].set_on_change_listener(self.on_item_changed, int(r_key), int(i))
             self._update_first_row()
         elif count < current_column_count:
             for row in self.children.values():
                 for i in range(count, current_column_count):
                     row.remove_child(row.children[str(i)])
         self._column_count = count
+
+    def on_item_changed(self, item, new_value, row, column):
+        self.eventManager.propagate(self.EVENT_ON_ITEM_CHANGED, (item, new_value, row, column))
+
+    @decorate_set_on_listener("on_item_changed", "(self,table,item,new_value,row,column)")
+    def set_on_item_changed_listener(self, callback, *userdata):
+        """Registers the listener for the Table.on_item_changed event.
+
+        Note: The prototype of the listener have to be like
+            on_item_changed(self, item, new_value, row, column).
+
+        Args:
+            callback (function): Callback function pointer.
+            table (TableWidget): The emitter of the event.
+            item (TableItem): The TableItem instance.
+            new_value (str): New text content.
+            row (int): row index.
+            column (int): column index.
+        """
+        self.eventManager.register_listener(self.EVENT_ON_ITEM_CHANGED, callback, *userdata)
 
 
 class TableRow(Widget):
@@ -2041,10 +2069,21 @@ class TableItem(Widget, _MixinTextualWidget):
             sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONBLUR}
 
     def onblur(self, new_value):
-        self.set_text(new_value)
+        if not (self.get_text() == new_value):
+            self.set_text(new_value)
+            return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
+        return None
+
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
+        """Register the listener for the onchange event.
+
+        Note: the listener prototype have to be in the form on_item_changed(self, widget, value).
+        """
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
 
-class TableTitle(Widget, _MixinTextualWidget):
+class TableTitle(TableItem, _MixinTextualWidget):
     """title widget for the table."""
 
     @allow_style
@@ -2055,9 +2094,8 @@ class TableTitle(Widget, _MixinTextualWidget):
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(TableTitle, self).__init__(**kwargs)
+        super(TableTitle, self).__init__(text, **kwargs)
         self.type = 'th'
-        self.set_text(text)
 
 
 class Input(Widget):

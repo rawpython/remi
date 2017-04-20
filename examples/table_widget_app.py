@@ -63,6 +63,8 @@ class MyApp(App):
 
         self.fill_table(table, table)
 
+        table.set_on_item_changed_listener(self.on_table_item_changed)
+
         wid.append(table)
         # returning the root widget
         return wid
@@ -85,6 +87,9 @@ class MyApp(App):
     def on_editable_change(self, emitter, value, table):
         value = value == 'true'
         table.set_editable(value)
+
+    def on_table_item_changed(self, table, item, new_value, row, column):
+        print("text: %s    row: %s    column: %s"%(new_value, row, column))
 
 
 if __name__ == "__main__":
