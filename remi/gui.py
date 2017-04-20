@@ -1891,8 +1891,9 @@ class TableWidget(Table):
 
         if len(self.children) > 0:
             for c_key in self.children['0'].children.keys():
+                print("c_key: " + c_key + "  text: " + self.children['0'].children[c_key].get_text())
                 instance = cl(self.children['0'].children[c_key].get_text())
-                self.children['0'].append(instance, c_key)
+                self.children['0'].children[c_key] = instance
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
@@ -1955,7 +1956,7 @@ class TableWidget(Table):
         current_column_count = self.column_count()
         if count > current_column_count:
             for row in self.children.values():
-                for i in range(current_column_count, count+1):
+                for i in range(current_column_count, count):
                     row.append(TableItem(), str(i))
             self._update_first_row()
         elif count < current_column_count:
