@@ -1774,93 +1774,6 @@ class Image(Widget):
         self.attributes['src'] = filename
 
 
-class TableWidget(Table):
-    """
-    Basic table model widget.
-    Each item is addressed by stringified integer key in the children dictionary.
-    """
-
-    @allow_style
-    @decorate_constructor_parameter_types([])
-    def __init__(self, row_count, column_count, **kwargs):
-        """
-        Args:
-            row_count (int): number of rows to create
-            column_count (int): number of columns to create
-            kwargs: See Widget.__init__()
-        """
-        super(TableWidget, self).__init__(**kwargs)
-        self.set_column_count(column_count)
-        self.set_row_count(row_count)
-
-    def item_at(self, row, column):
-        """Returns the TableItem instance at row, column cordinates
-
-        Args:
-            row (int): zero based index
-            column (int): zero based index
-        """
-        return self.children[str(row)].children[str(column)]
-
-    def item_coords(self, table_item):
-        """Returns table_item's (row, column) cordinates.
-        Returns None in case of item not found.
-
-        Args:
-            table_item (TableItem): an item instance
-        """
-        for row_key in self.children.keys():
-            for item_key in self.children[row_key].children.keys():
-                if self.children[row_key].children[item_key] == table_item:
-                    return (int(row_key), int(column_key))
-        return None
-
-    def column_count(self):
-        """Returns table's columns count.
-        """
-        return len(self.children[self.children.keys()[0]].children)
-
-    def row_count(self):
-        """Returns table's rows count (the title is considered as a row).
-        """
-        return len(self.children)
-
-    def set_row_count(self, count):
-        """Sets the table row count.
-
-        Args:
-            count (int): number of rows
-        """
-        current_row_count = self.row_count()
-        current_column_count = self.column_count()
-        if count > current_row_count:
-            for i in range(current_row_count, count+1):
-                tr = TableRow()
-                for c in range(0, current_column_count):
-                    tr.append(TableItem(), str(c))
-                self.append(tr, str(i))
-        elif count < current_row_count:
-            for i in range(count, current_row_count):
-                self.remove_child(self.children[str(i)])
-
-    def set_column_count(self, count):
-        """Sets the table column count.
-
-        Args:
-            count (int): column of rows
-        """
-        current_row_count = self.row_count()
-        current_column_count = self.column_count()
-        if count > current_column_count:
-            for row in self.children.values():
-                for i in range(current_column_count, count+1):
-                    row.append(TableItem(), str(i))
-        elif count < current_column_count:
-            for row in self.children.values():
-                for i in range(count, current_column_count):
-                    row.remove_child(row.children[str(i)])
-
-
 class Table(Widget):
     """
     table widget - it will contains TableRow
@@ -1937,6 +1850,119 @@ class Table(Widget):
             item (TableItem): The clicked TableItem.
         """
         self.eventManager.register_listener(self.EVENT_ON_TABLE_ROW_CLICK, callback, *userdata)
+
+
+class TableWidget(Table):
+    """
+    Basic table model widget.
+    Each item is addressed by stringified integer key in the children dictionary.
+    """
+
+    @allow_style
+    @decorate_constructor_parameter_types([])
+    def __init__(self, n_rows, n_columns, use_title, **kwargs):
+        """
+        Args:
+            use_title (bool): enable title bar. Note that the title bar is 
+                treated as a row (it is comprised in n_rows count) 
+            n_rows (int): number of rows to create
+            n_columns (int): number of columns to create
+            kwargs: See Widget.__init__()
+        """
+        super(TableWidget, self).__init__(**kwargs)
+        self.set_use_title(use_title)
+        self._column_count = 0
+        self.set_column_count(n_columns)
+        self.set_row_count(n_rows)
+
+    def set_use_title(self, use_title):
+        """Returns the TableItem instance at row, column cordinates
+
+        Args:
+            use_title (bool): enable title bar.
+        """
+        self._use_title = use_title
+        self._update_first_row()
+
+    def _update_first_row(self):
+        cl = TableItem
+        if self._use_title:
+            cl = TableTitle
+
+        if len(self.children) > 0:
+            for c_key in self.children['0'].children.keys():
+                instance = cl(self.children['0'].children[c_key].get_text())
+                self.children['0'].append(instance, c_key)
+
+    def item_at(self, row, column):
+        """Returns the TableItem instance at row, column cordinates
+
+        Args:
+            row (int): zero based index
+            column (int): zero based index
+        """
+        return self.children[str(row)].children[str(column)]
+
+    def item_coords(self, table_item):
+        """Returns table_item's (row, column) cordinates.
+        Returns None in case of item not found.
+
+        Args:
+            table_item (TableItem): an item instance
+        """
+        for row_key in self.children.keys():
+            for item_key in self.children[row_key].children.keys():
+                if self.children[row_key].children[item_key] == table_item:
+                    return (int(row_key), int(column_key))
+        return None
+
+    def column_count(self):
+        """Returns table's columns count.
+        """
+        return self._column_count
+
+    def row_count(self):
+        """Returns table's rows count (the title is considered as a row).
+        """
+        return len(self.children)
+
+    def set_row_count(self, count):
+        """Sets the table row count.
+
+        Args:
+            count (int): number of rows
+        """
+        current_row_count = self.row_count()
+        current_column_count = self.column_count()
+        if count > current_row_count:
+            for i in range(current_row_count, count):
+                tr = TableRow()
+                for c in range(0, current_column_count):
+                    tr.append(TableItem(), str(c))
+                self.append(tr, str(i))
+            self._update_first_row()
+        elif count < current_row_count:
+            for i in range(count, current_row_count):
+                self.remove_child(self.children[str(i)])
+
+    def set_column_count(self, count):
+        """Sets the table column count.
+
+        Args:
+            count (int): column of rows
+        """
+        current_row_count = self.row_count()
+        current_column_count = self.column_count()
+        if count > current_column_count:
+            for row in self.children.values():
+                for i in range(current_column_count, count+1):
+                    row.append(TableItem(), str(i))
+            self._update_first_row()
+        elif count < current_column_count:
+            for row in self.children.values():
+                for i in range(count, current_column_count):
+                    row.remove_child(row.children[str(i)])
+        self._column_count = count
 
 
 class TableRow(Widget):
