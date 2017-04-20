@@ -1974,7 +1974,7 @@ class TableWidget(Table):
         current_row_count = self.row_count()
         current_column_count = self.column_count()
         if count > current_column_count:
-            for r_key in self.children.values():
+            for r_key in self.children.keys():
                 row = self.children[r_key]
                 for i in range(current_column_count, count):
                     row.append(TableItem(), str(i))
