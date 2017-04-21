@@ -1864,30 +1864,18 @@ class TableWidget(Table):
     def __init__(self, n_rows, n_columns, use_title=True, editable=False, **kwargs):
         """
         Args:
-            use_title (bool): enable title bar. Note that the title bar is 
-                treated as a row (it is comprised in n_rows count) 
+            use_title (bool): enable title bar. Note that the title bar is
+                treated as a row (it is comprised in n_rows count)
             n_rows (int): number of rows to create
             n_columns (int): number of columns to create
             kwargs: See Widget.__init__()
         """
         super(TableWidget, self).__init__(**kwargs)
         self.set_use_title(use_title)
-        self.set_editable(editable)
+        self._editable = editable
         self._column_count = 0
         self.set_column_count(n_columns)
         self.set_row_count(n_rows)
-
-    def set_editable(self, editable):
-        self._editable = editable
-        for r_key in self.children.keys():
-            r = self.children[r_key]
-            for c_key in r.children.keys():
-                c = r.children[c_key]
-                if self._editable:
-                    c.attributes['contenteditable'] = 'true'
-                    c.set_on_change_listener(self.on_item_changed, int(r_key), int(c_key))
-                else:
-                    del c.attributes['contenteditable']
 
     def set_use_title(self, use_title):
         """Returns the TableItem instance at row, column cordinates
@@ -1907,9 +1895,6 @@ class TableWidget(Table):
             for c_key in self.children['0'].children.keys():
                 instance = cl(self.children['0'].children[c_key].get_text())
                 self.children['0'].children[c_key] = instance
-                if self._editable:
-                    instance.attributes['contenteditable'] = 'true'
-                    instance.set_on_change_listener(self.on_item_changed, 0, int(c_key))
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
@@ -1952,13 +1937,14 @@ class TableWidget(Table):
         current_row_count = self.row_count()
         current_column_count = self.column_count()
         if count > current_row_count:
+            cl = TableEditableItem if self._editable else TableItem
             for i in range(current_row_count, count):
                 tr = TableRow()
                 for c in range(0, current_column_count):
-                    tr.append(TableItem(), str(c))
+                    tr.append(cl(), str(c))
                     if self._editable:
-                        tr.children[str(c)].attributes['contenteditable'] = 'true'
-                        tr.children[str(c)].set_on_change_listener(self.on_item_changed, int(i), int(c))
+                        tr.children[str(c)].set_on_change_listener(
+                            self.on_item_changed, int(i), int(c))
                 self.append(tr, str(i))
             self._update_first_row()
         elif count < current_row_count:
@@ -1974,13 +1960,14 @@ class TableWidget(Table):
         current_row_count = self.row_count()
         current_column_count = self.column_count()
         if count > current_column_count:
+            cl = TableEditableItem if self._editable else TableItem
             for r_key in self.children.keys():
                 row = self.children[r_key]
                 for i in range(current_column_count, count):
-                    row.append(TableItem(), str(i))
+                    row.append(cl(), str(i))
                     if self._editable:
-                        row.children[str(i)].attributes['contenteditable'] = 'true'
-                        row.children[str(i)].set_on_change_listener(self.on_item_changed, int(r_key), int(i))
+                        row.children[str(i)].set_on_change_listener(
+                            self.on_item_changed, int(r_key), int(i))
             self._update_first_row()
         elif count < current_column_count:
             for row in self.children.values():
@@ -2051,6 +2038,38 @@ class TableRow(Widget):
         self.eventManager.register_listener(self.EVENT_ON_ROW_ITEM_CLICK, callback, *userdata)
 
 
+class TableEditableItem(Widget, _MixinTextualWidget):
+    """item widget for the TableRow."""
+
+    @allow_style
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text='', **kwargs):
+        """
+        Args:
+            text (str):
+            kwargs: See Widget.__init__()
+        """
+        super(TableEditableItem, self).__init__(**kwargs)
+        self.type = 'td'
+        self.editInput = TextInput()
+        self.append(self.editInput)
+        self.editInput.set_on_change_listener(self.onchange)
+        self.get_text = self.editInput.get_text
+        self.set_text = self.editInput.set_text
+        self.set_text(text)
+
+    def onchange(self, emitter, new_value):
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
+
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
+        """Register the listener for the onchange event.
+
+        Note: the listener prototype have to be in the form on_item_changed(self, widget, value).
+        """
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+
+
 class TableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
@@ -2065,22 +2084,6 @@ class TableItem(Widget, _MixinTextualWidget):
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
         self.set_text(text)
-        self.attributes[self.EVENT_ONBLUR] = """var params={};params['new_value']=document.getElementById('%(id)s').innerText;
-            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONBLUR}
-
-    def onblur(self, new_value):
-        if not (self.get_text() == new_value):
-            self.set_text(new_value)
-            return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
-        return None
-
-    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
-    def set_on_change_listener(self, callback, *userdata):
-        """Register the listener for the onchange event.
-
-        Note: the listener prototype have to be in the form on_item_changed(self, widget, value).
-        """
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
 
 class TableTitle(TableItem, _MixinTextualWidget):
