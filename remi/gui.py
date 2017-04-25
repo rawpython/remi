@@ -1871,8 +1871,8 @@ class TableWidget(Table):
             kwargs: See Widget.__init__()
         """
         super(TableWidget, self).__init__(**kwargs)
-        self.set_use_title(use_title)
         self._editable = editable
+        self.set_use_title(use_title)
         self._column_count = 0
         self.set_column_count(n_columns)
         self.set_row_count(n_rows)
@@ -1887,7 +1887,7 @@ class TableWidget(Table):
         self._update_first_row()
 
     def _update_first_row(self):
-        cl = TableItem
+        cl = TableEditableItem if self._editable else TableItem
         if self._use_title:
             cl = TableTitle
 

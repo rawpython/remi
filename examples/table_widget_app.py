@@ -20,22 +20,21 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
-    def main(self, name='world'):
-        #margin 0px auto allows to center the app to the screen
+    def main(self):
         wid = gui.VBox(width=500, height=500, style={'margin':'5px auto', 'padding': '10px'})
-        
+
         lbl_description = gui.Label("""Example about TableWidget usage.
                                     Change rows and columns count in order to see the behaviour. 
                                     After changing the size, 'Fill the table' content by means of the button.""")
-        
+
         wid.append(lbl_description)
 
-        table = gui.TableWidget(10, 3, True, width=300, height=300)
+        table = gui.TableWidget(10, 3, True, True, width=300, height=300)
         table.style['font-size'] = '8px'
-        
+
         container = gui.HBox(width='100%')
         lbl_row_count = gui.Label('Rows:')
-        spin_row_count = gui.SpinBox(10,0,15)
+        spin_row_count = gui.SpinBox(10, 0, 15)
         spin_row_count.set_on_change_listener(self.on_row_count_change, table)
         container.append(lbl_row_count)
         container.append(spin_row_count)
@@ -56,10 +55,6 @@ class MyApp(App):
         chk_use_title = gui.CheckBoxLabel('Use title', True)
         chk_use_title.set_on_change_listener(self.on_use_title_change, table)
         wid.append(chk_use_title)
-
-        chk_editable = gui.CheckBoxLabel('Allow editing', False)
-        chk_editable.set_on_change_listener(self.on_editable_change, table)
-        wid.append(chk_editable)
 
         self.fill_table(table, table)
 
@@ -83,10 +78,6 @@ class MyApp(App):
     def on_use_title_change(self, emitter, value, table):
         value = value == 'true'
         table.set_use_title(value)
-
-    def on_editable_change(self, emitter, value, table):
-        value = value == 'true'
-        table.set_editable(value)
 
     def on_table_item_changed(self, table, item, new_value, row, column):
         print("text: %s    row: %s    column: %s"%(new_value, row, column))
