@@ -2477,7 +2477,7 @@ class FileUploader(Widget):
         self.eventManager.register_listener(self.EVENT_ON_FAILED, callback, *userdata)
 
     def ondata(self, filedata, filename):
-        with open(self._savepath+filename, 'wb') as f:
+        with open(os.path.join(self._savepath, filename), 'wb') as f:
             f.write(filedata)
         return self.eventManager.propagate(self.EVENT_ON_DATA, (filedata, filename))
 
