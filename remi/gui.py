@@ -1400,7 +1400,6 @@ class InputDialog(GenericDialog):
 
     def confirm_value(self, widget):
         """Event called pressing on OK button."""
-        self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (self.inputText.get_text(),))
 
     @decorate_set_on_listener("confirm_value", "(self,emitter,value)")
