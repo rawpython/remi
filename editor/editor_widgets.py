@@ -390,13 +390,16 @@ class WidgetHelper(gui.HBox):
             _typ = self.widgetClass.__init__._constructor_types[index]
             if _typ==int:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
+                param_values.append(int(self.dialog.get_field(param).get_value()))
             elif _typ==bool:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
+                param_values.append(bool(self.dialog.get_field(param).get_value()))
             else:#if _typ==str:
                 param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
+                param_values.append(self.dialog.get_field(param).get_value())
             #else:
             #    param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
-            param_values.append(self.dialog.get_field(param).get_value())
+
         print(self.constructor_parameters_list)
         print(param_values)
         #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))

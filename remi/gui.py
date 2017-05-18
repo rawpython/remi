@@ -1843,8 +1843,7 @@ class TableWidget(Table):
     """
     EVENT_ON_ITEM_CHANGED = 'on_item_changed'
 
-    @allow_style
-    @decorate_constructor_parameter_types([[int, int, bool, bool]])
+    @decorate_constructor_parameter_types([int, int, bool, bool])
     def __init__(self, n_rows, n_columns, use_title=True, editable=False, **kwargs):
         """
         Args:
@@ -2024,7 +2023,6 @@ class TableRow(Widget):
 class TableEditableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
         """
@@ -2101,6 +2099,7 @@ class Input(Widget):
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier,
                                                                'evt': self.EVENT_ONCHANGE}
+
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
         self.attributes['autocomplete'] = 'off'
@@ -2556,7 +2555,7 @@ class FileSelectionDialog(GenericDialog):
 
 
 class MenuBar(Widget):
-    
+
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
