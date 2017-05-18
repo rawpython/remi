@@ -1860,7 +1860,7 @@ class TableWidget(Table):
     EVENT_ON_ITEM_CHANGED = 'on_item_changed'
 
     @allow_style
-    @decorate_constructor_parameter_types([])
+    @decorate_constructor_parameter_types([[int, int, bool, bool]])
     def __init__(self, n_rows, n_columns, use_title=True, editable=False, **kwargs):
         """
         Args:
@@ -2394,10 +2394,10 @@ class FileFolderNavigator(Widget):
                     return a > b
 
         log.debug("FileFolderNavigator - populate_folder_items")
-        
+
         if pyLessThan3:
             directory = directory.decode('utf-8')
-        
+
         l = os.listdir(directory)
         l.sort(key=functools.cmp_to_key(_sort_files))
 
