@@ -2229,6 +2229,12 @@ class SpinBox(Input):
             js += ' || (key == 8 || key == 46)'  # allow backspace and delete
             js += ' || (key == 13)'  # allow enter
         self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
+        #FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
+        self.attributes[self.EVENT_ONKEYUP] = \
+            "var key = event.keyCode || event.charCode;" \
+            "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
+            "sendCallbackParam('%(id)s','%(evt)s',params); return true;}" \
+            "return false;" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
 
 
 class Slider(Input):
