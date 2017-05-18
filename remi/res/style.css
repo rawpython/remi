@@ -1,4 +1,4 @@
-@charset "UTF-8";
+﻿@charset "UTF-8";
 /* latin */
 
 @font-face {
@@ -372,6 +372,7 @@ ul.Menu {
     height: auto !important;
     position: absolute;
     top: 100%;
+    z-index: 1;
 }
 .MenuBar>.Menu>.MenuItem {
     border-bottom: 0;

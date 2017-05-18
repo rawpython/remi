@@ -51,7 +51,8 @@ def decorate_set_on_listener(event_name, params):
     """ private decorator for use in the editor
 
     Args:
-        event_name (str): Name of the event to which it refers (es. For set_on_click_listener the event_name is "onclick"
+        event_name (str): Name of the event to which it refers
+        (es. For set_on_click_listener the event_name is "onclick"
         params (str): The list of parameters for the listener function (es. "(self, new_value)")
     """
 
@@ -71,21 +72,6 @@ def decorate_constructor_parameter_types(type_list):
         return function
 
     return add_annotation
-
-
-def allow_style(fn):
-    @functools.wraps(fn)
-    def decorated(self, *args, **kwargs):
-        style = kwargs.pop('style', None)
-        fn(self, *args, **kwargs)
-        if style is not None:
-            try:
-                self.style.update(style)
-            except ValueError:
-                for s in style.split(';'):
-                    k, v = s.split(':', 1)
-                    self.style[k.strip()] = v.strip()
-    return decorated
 
 
 def to_pix(x):
@@ -363,7 +349,6 @@ class Widget(Tag):
     EVENT_ONCONTEXTMENU = "oncontextmenu"
     EVENT_ONUPDATE = 'onupdate'
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -385,6 +370,20 @@ class Widget(Tag):
         self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
+        self.set_style(kwargs.pop('style', None))
+
+    def set_style(self, style):
+        """ Allows to set style properties for the widget.
+            Args:
+                style (str or dict): The style property dictionary or json string.
+        """
+        if style is not None:
+            try:
+                self.style.update(style)
+            except ValueError:
+                for s in style.split(';'):
+                    k, v = s.split(':', 1)
+                    self.style[k.strip()] = v.strip()
 
     def set_enabled(self, enabled):
         if enabled:
@@ -828,7 +827,6 @@ class HBox(Widget):
     Note: If you would absolute positioning, use the Widget container instead.
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(HBox, self).__init__(**kwargs)
@@ -892,7 +890,6 @@ class VBox(HBox):
     Note: If you would absolute positioning, use the Widget container instead.
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(VBox, self).__init__(**kwargs)
@@ -914,7 +911,6 @@ class TabBox(Widget):
     # <section id="first-tab-group">
     #   <div id="tab1">
 
-    @allow_style
     def __init__(self, **kwargs):
         super(TabBox, self).__init__(**kwargs)
 
@@ -1033,7 +1029,6 @@ class Button(Widget, _MixinTextualWidget):
     """The Button widget. Have to be used in conjunction with its event onclick.
     Use Widget.set_on_click_listener in order to register the listener.
     """
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
         """
@@ -1054,7 +1049,6 @@ class TextInput(Widget, _MixinTextualWidget):
 
     EVENT_ONENTER = 'onenter'
 
-    @allow_style
     @decorate_constructor_parameter_types([bool, str])
     def __init__(self, single_line=True, hint='', **kwargs):
         """
@@ -1194,7 +1188,6 @@ class Label(Widget, _MixinTextualWidget):
     function get_text.
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -1220,7 +1213,6 @@ class GenericDialog(Widget):
     EVENT_ONCONFIRM = 'confirm_dialog'
     EVENT_ONCANCEL = 'cancel_dialog'
 
-    @allow_style
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, title='', message='', **kwargs):
         """
@@ -1380,7 +1372,6 @@ class InputDialog(GenericDialog):
 
     EVENT_ONCONFIRMVALUE = 'confirm_value'
 
-    @allow_style
     @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, title='Title', message='Message', initial_value='', **kwargs):
         """
@@ -1409,7 +1400,6 @@ class InputDialog(GenericDialog):
 
     def confirm_value(self, widget):
         """Event called pressing on OK button."""
-        self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (self.inputText.get_text(),))
 
     @decorate_set_on_listener("confirm_value", "(self,emitter,value)")
@@ -1457,7 +1447,6 @@ class ListView(Widget, _SyncableValuesMixin):
 
     EVENT_ONSELECTION = 'onselection'
 
-    @allow_style
     @decorate_constructor_parameter_types([bool])
     def __init__(self, selectable=True, **kwargs):
         """
@@ -1593,7 +1582,6 @@ class ListItem(Widget, _MixinTextualWidget):
     the ListView.
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -1624,7 +1612,6 @@ class DropDown(Widget, _SyncableValuesMixin):
     by means of the function DropDown.set_on_change_listener.
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -1739,7 +1726,6 @@ class DropDown(Widget, _SyncableValuesMixin):
 class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -1761,7 +1747,6 @@ class DropDownItem(Widget, _MixinTextualWidget):
 class Image(Widget):
     """image widget."""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """
@@ -1780,7 +1765,6 @@ class Table(Widget):
     """
     EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -2002,7 +1986,6 @@ class TableRow(Widget):
     """
     EVENT_ON_ROW_ITEM_CLICK = 'on_row_item_click'
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -2073,7 +2056,6 @@ class TableEditableItem(Widget, _MixinTextualWidget):
 class TableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
         """
@@ -2089,7 +2071,6 @@ class TableItem(Widget, _MixinTextualWidget):
 class TableTitle(TableItem, _MixinTextualWidget):
     """title widget for the table."""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text='', **kwargs):
         """
@@ -2102,7 +2083,7 @@ class TableTitle(TableItem, _MixinTextualWidget):
 
 
 class Input(Widget):
-    @allow_style
+
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, input_type='', default_value='', **kwargs):
         """
@@ -2154,7 +2135,7 @@ class Input(Widget):
 
 
 class CheckBoxLabel(Widget):
-    @allow_style
+
     @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data='', **kwargs):
         """
@@ -2187,7 +2168,6 @@ class CheckBoxLabel(Widget):
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
 
-    @allow_style
     @decorate_constructor_parameter_types([bool, str])
     def __init__(self, checked=False, user_data='', **kwargs):
         """
@@ -2227,7 +2207,6 @@ class SpinBox(Input):
     """
 
     # noinspection PyShadowingBuiltins
-    @allow_style
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='100', min=100, max=5000, step=1, allow_editing=True, **kwargs):
         """
@@ -2258,7 +2237,6 @@ class Slider(Input):
     EVENT_ONINPUT = 'oninput'
 
     # noinspection PyShadowingBuiltins
-    @allow_style
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, default_value='', min=0, max=10000, step=1, **kwargs):
         """
@@ -2290,7 +2268,7 @@ class Slider(Input):
 
 
 class ColorPicker(Input):
-    @allow_style
+
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='#995500', **kwargs):
         """
@@ -2302,7 +2280,7 @@ class ColorPicker(Input):
 
 
 class Date(Input):
-    @allow_style
+
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='2015-04-13', **kwargs):
         """
@@ -2318,7 +2296,6 @@ class GenericObject(Widget):
     GenericObject widget - allows to show embedded object like pdf,swf..
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """
@@ -2334,7 +2311,6 @@ class GenericObject(Widget):
 class FileFolderNavigator(Widget):
     """FileFolderNavigator widget."""
 
-    @allow_style
     @decorate_constructor_parameter_types([bool, str, bool, bool])
     def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
@@ -2495,7 +2471,6 @@ class FileFolderItem(Widget):
 
     EVENT_ONSELECTION = 'onselection'
 
-    @allow_style
     @decorate_constructor_parameter_types([str, bool])
     def __init__(self, text, is_folder=False, **kwargs):
         super(FileFolderItem, self).__init__(**kwargs)
@@ -2549,7 +2524,6 @@ class FileSelectionDialog(GenericDialog):
 
     EVENT_ONCONFIRMVALUE = 'confirm_value'
 
-    @allow_style
     @decorate_constructor_parameter_types([str, str, bool, str, bool, bool])
     def __init__(self, title='File dialog', message='Select files and folders',
                  multiple_selection=True, selection_folder='.',
@@ -2582,7 +2556,7 @@ class FileSelectionDialog(GenericDialog):
 
 
 class MenuBar(Widget):
-    @allow_style
+    
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -2597,7 +2571,6 @@ class MenuBar(Widget):
 class Menu(Widget):
     """Menu widget can contain MenuItem."""
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -2612,7 +2585,6 @@ class Menu(Widget):
 class MenuItem(Widget, _MixinTextualWidget):
     """MenuItem widget can contain other MenuItem."""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -2636,7 +2608,6 @@ class MenuItem(Widget, _MixinTextualWidget):
 class TreeView(Widget):
     """TreeView widget can contain TreeItem."""
 
-    @allow_style
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -2650,7 +2621,6 @@ class TreeView(Widget):
 class TreeItem(Widget, _MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
-    @allow_style
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -2692,7 +2662,6 @@ class FileUploader(Widget):
         implements the onsuccess and onfailed events.
     """
 
-    @allow_style
     @decorate_constructor_parameter_types([str, bool])
     def __init__(self, savepath='./', multiple_selection_allowed=False, **kwargs):
         super(FileUploader, self).__init__(**kwargs)
@@ -2775,7 +2744,7 @@ class FileDownloader(Widget, _MixinTextualWidget):
 
 
 class Link(Widget, _MixinTextualWidget):
-    @allow_style
+
     @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
         super(Link, self).__init__(**kwargs)
@@ -2793,7 +2762,6 @@ class VideoPlayer(Widget):
     # some constants for the events
     EVENT_ONENDED = 'onended'
 
-    @allow_style
     @decorate_constructor_parameter_types([str, str, bool, bool])
     def __init__(self, video, poster=None, autoplay=False, loop=False, **kwargs):
         super(VideoPlayer, self).__init__(**kwargs)
@@ -2842,7 +2810,6 @@ class VideoPlayer(Widget):
 class Svg(Widget):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
 
-    @allow_style
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, **kwargs):
         """
@@ -2873,7 +2840,6 @@ class Svg(Widget):
 class SvgShape(Widget):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
 
-    @allow_style
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, **kwargs):
         """
@@ -2918,7 +2884,6 @@ class SvgShape(Widget):
 class SvgRectangle(SvgShape):
     """svg rectangle - a rectangle represented filled and with a stroke."""
 
-    @allow_style
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, w, h, **kwargs):
         """
@@ -2947,7 +2912,6 @@ class SvgRectangle(SvgShape):
 class SvgCircle(SvgShape):
     """svg circle - a circle represented filled and with a stroke."""
 
-    @allow_style
     @decorate_constructor_parameter_types([int, int, int])
     def __init__(self, x, y, radius, **kwargs):
         """
@@ -2981,7 +2945,7 @@ class SvgCircle(SvgShape):
 
 
 class SvgLine(Widget):
-    @allow_style
+
     @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x1, y1, x2, y2, **kwargs):
         super(SvgLine, self).__init__(**kwargs)
@@ -3007,7 +2971,7 @@ class SvgLine(Widget):
 
 
 class SvgPolyline(Widget):
-    @allow_style
+
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
         super(SvgPolyline, self).__init__(**kwargs)
@@ -3035,7 +2999,7 @@ class SvgPolyline(Widget):
 
 
 class SvgText(SvgShape, _MixinTextualWidget):
-    @allow_style
+
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
         super(SvgText, self).__init__(x, y, **kwargs)
