@@ -13,7 +13,8 @@
 """
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 
 class RemoteLabel(gui.Label):
@@ -46,7 +47,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    # starts the webserver
-    # optional parameters
-    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp, debug=True, address='127.0.0.1', port=8082)
+    start_app(MyApp, debug=True)

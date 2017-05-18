@@ -13,7 +13,8 @@
 """
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 
 class MyApp(App):
@@ -49,5 +50,5 @@ class MyApp(App):
         tabbox.select_by_index(tabIndex)
 
 if __name__ == "__main__":
-    start(MyApp, title="Tab Demo", standalone=False)
+    start_app(MyApp, title="Tab Demo")
 

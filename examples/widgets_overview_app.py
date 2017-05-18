@@ -13,8 +13,9 @@
 """
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
 from threading import Timer
+from cli import start_app
 
 
 class MyApp(App):
@@ -29,7 +30,7 @@ class MyApp(App):
         horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px')
         horizontalContainer.style['display'] = 'block'
         horizontalContainer.style['overflow'] = 'auto'
-        
+
         subContainerLeft = gui.Widget(width=320)
         subContainerLeft.style['display'] = 'block'
         subContainerLeft.style['overflow'] = 'auto'
@@ -53,13 +54,13 @@ class MyApp(App):
         self.count = 0
         self.counter = gui.Label('', width=200, height=30, margin='10px')
 
-        self.lbl = gui.Label('This is a LABEL!', width=200, height=30, margin='10px')
+        self.lbl = gui.Label('This is a LABEL!', width=200, height=30, margin='10px', id="main-output-label")
 
         self.bt = gui.Button('Press me!', width=200, height=30, margin='10px')
         # setting the listener for the onclick event of the button
         self.bt.set_on_click_listener(self.on_button_pressed)
 
-        self.txt = gui.TextInput(width=200, height=30, margin='10px')
+        self.txt = gui.TextInput(width=200, height=30, margin='10px', id="text-area-input")
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self.on_text_area_change)
 
@@ -102,7 +103,7 @@ class MyApp(App):
         self.video = gui.VideoPlayer('http://www.w3schools.com/tags/movie.mp4',
                                      'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg',
                                      width=300, height=270, margin='10px')
-                                     
+
         self.tree = gui.TreeView(width='100%', height=300)
         ti1 = gui.TreeItem("Item1")
         ti2 = gui.TreeItem("Item2")
@@ -124,7 +125,7 @@ class MyApp(App):
         subti4.append(subsubti1)
         subti4.append(subsubti2)
         subti4.append(subsubti3)
-        
+
         # appending a widget to another, the first argument is a string key
         subContainerRight.append(self.counter)
         subContainerRight.append(self.lbl)
@@ -155,13 +156,13 @@ class MyApp(App):
         horizontalContainer.append(subContainerRight)
 
         menu = gui.Menu(width='100%', height='30px')
-        m1 = gui.MenuItem('File', width=100, height=30)
+        m1 = gui.MenuItem('File', width=100, height=30, id='file-menu-item')
         m2 = gui.MenuItem('View', width=100, height=30)
         m2.set_on_click_listener(self.menu_view_clicked)
-        m11 = gui.MenuItem('Save', width=100, height=30)
+        m11 = gui.MenuItem('Save', width=100, height=30, id='file-save-menu-item')
         m12 = gui.MenuItem('Open', width=100, height=30)
         m12.set_on_click_listener(self.menu_open_clicked)
-        m111 = gui.MenuItem('Save', width=100, height=30)
+        m111 = gui.MenuItem('Save', width=100, height=30, id='file-save-save-menu-item')
         m111.set_on_click_listener(self.menu_save_clicked)
         m112 = gui.MenuItem('Save as', width=100, height=30)
         m112.set_on_click_listener(self.menu_saveas_clicked)
@@ -258,7 +259,7 @@ class MyApp(App):
         self.lbl.set_text('Image clicked!')
 
     def on_button_pressed(self, widget):
-        self.lbl.set_text('Button pressed! ')
+        self.lbl.set_text('Button pressed!')
         self.bt.set_text('Hi!')
 
     def on_text_area_change(self, widget, newValue):
@@ -272,7 +273,7 @@ class MyApp(App):
 
     def open_input_dialog(self, widget):
         self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?',
-                                           initial_value='type here', 
+                                           initial_value='type here',
                                            width=500, height=160)
         self.inputDialog.set_on_confirm_value_listener(
             self.on_input_dialog_confirm)
@@ -339,8 +340,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    # starts the webserver
-    # optional parameters
-    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-
-    start(MyApp, debug=True, address='0.0.0.0')
+    start_app(MyApp, debug=True)

@@ -13,7 +13,8 @@
 """
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
 
 
 class MyApp(App):
@@ -76,4 +77,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp)
+    start_app(MyApp)

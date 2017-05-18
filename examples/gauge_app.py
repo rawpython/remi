@@ -13,7 +13,9 @@
 """
 
 import remi.gui as gui
-from remi import start, App
+from remi import App
+from cli import start_app
+
 import math
 from threading import Timer
 import random
@@ -169,4 +171,4 @@ class MyApp(App):
         return self.wid
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0')
+    start_app(MyApp, address='0.0.0.0')

@@ -210,7 +210,16 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         self._log.debug('handshake')
         data = self.request.recv(1024).strip()
-        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        decoded = data.decode()
+        data_lines = decoded.split('\r\n')
+        for line in data_lines:
+            fields = line.split(':')
+            if len(fields) != 2:
+                continue
+            name, value = fields
+            if name.lower() == 'sec-websocket-key':
+                key = value.lstrip()
+                break
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
         digest = base64.b64encode(digest)
@@ -386,11 +395,12 @@ class App(BaseHTTPRequestHandler, object):
         if not(k in clients):
             runtimeInstances[str(id(self))] = self
             clients[k] = self
-        wshost, wsport = self.server.websocket_address
+        wsprotocol, wshost, wsport = self.server.websocket_address
 
-        net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
+        else:
+            net_interface_ip = self.connection.getsockname()[0]
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
@@ -433,7 +443,7 @@ var paramPacketize = function (ps){
 
 function openSocket(){
     try{
-        ws = new WebSocket('ws://%s:%s/');
+        ws = new WebSocket('%s://%s:%s/');
         console.debug('opening websocket');
         ws.onopen = websocketOnOpen;
         ws.onmessage = websocketOnMessage;
@@ -620,7 +630,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     fd.append('upload_file', file);
     xhr.send(fd);
 };
-</script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
+</script>""" % (wsprotocol, net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
 
         # add built in js, extend with user js
         clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
@@ -904,7 +914,7 @@ class Server(object):
     # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
-                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                 websocket_timeout_timer_ms=1000, websocket_protocol='ws', websocket_port=0, host_name=None,
                  pending_messages_queue_length=1000, userdata=()):
         self._gui = gui_class
         self._title = title or gui_class.__name__
@@ -918,6 +928,7 @@ class Server(object):
         self._update_interval = update_interval
         self._start_browser = start_browser
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
+        self._websocket_protocol = websocket_protocol
         self._websocket_port = websocket_port
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
@@ -956,8 +967,9 @@ class Server(object):
 
         # Create a web server and define the handler to manage the incoming
         # request
+        websocket_address = (self._websocket_protocol, wshost, wsport)
         self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui,
-                                           (wshost, wsport), self._auth,
+                                           websocket_address, self._auth,
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
@@ -1009,7 +1021,7 @@ class StandaloneServer(Server):
         Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
                         password=None,
                         multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                        websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                        websocket_timeout_timer_ms=1000, websocket_protocol='ws', websocket_port=0, host_name=None,
                         pending_messages_queue_length=1000, userdata=userdata)
 
         self._application_conf = {'width':width, 'height':height, 'resizable':resizable, 'fullscreen':fullscreen}
