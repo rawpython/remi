@@ -1878,6 +1878,10 @@ class TableWidget(Table):
             for c_key in self.children['0'].children.keys():
                 instance = cl(self.children['0'].children[c_key].get_text())
                 self.children['0'].children[c_key] = instance
+                #here the cells of the first row are overwritten and aren't appended by the standard Table.append
+                # method. We have to restore de standard on_click internal listener in order to make it working
+                # the Table.set_on_table_row_click_listener functionality
+                self.children['0'].children[c_key].set_on_click_listener(self.children['0'].on_row_item_click)
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
