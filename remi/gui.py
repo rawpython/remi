@@ -1898,7 +1898,7 @@ class TableWidget(Table):
         for row_key in self.children.keys():
             for item_key in self.children[row_key].children.keys():
                 if self.children[row_key].children[item_key] == table_item:
-                    return (int(row_key), int(column_key))
+                    return (int(row_key), int(item_key))
         return None
 
     def column_count(self):
