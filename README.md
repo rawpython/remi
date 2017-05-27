@@ -322,9 +322,9 @@ Remi is made to be compatible from Python2.7 to Python3.X . Please notify compat
 Security
 ===
 Remi should be intended as a standard desktop gui framework. 
-The library itself don't implements security strategies, and so it's advisable to don't expose its access to unsafe public networks.
+The library itself doesn't implement security strategies, and so it is advised to not expose its access to unsafe public networks.
 
-When loading data from external sources, consider to protect the application from potential javascript injection before displaying the content directly.
+When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
 
 
 Contributors
