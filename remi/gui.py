@@ -1978,7 +1978,7 @@ class CheckBox(Input):
 
 
 class RadioButtonLabel(Widget):
-    @decorate_constructor_parameter_types([str, bool, str])
+    @decorate_constructor_parameter_types([str, bool, str, str])
     def __init__(self, label='', checked=False, group='radio', user_data='', **kwargs):
         """
         Args:
@@ -2010,7 +2010,7 @@ class RadioButtonLabel(Widget):
 
 class RadioButton(Input):
     """Radio button widget to make sure only a single option is selected from a given group"""
-    @decorate_constructor_parameter_types([bool,str])
+    @decorate_constructor_parameter_types([bool,str, str])
     def __init__(self, checked=False, group='radio', user_data='', **kwargs):
         super(RadioButton, self).__init__('radio', user_data, **kwargs)
         self.attributes[self.EVENT_ONCHANGE] = \
