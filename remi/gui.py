@@ -862,6 +862,11 @@ class HBox(Widget):
         value.style['-webkit-order'] = '-1'
         value.style['order'] = '-1'
 
+        if key.isdigit():
+            value.style['-webkit-order'] = key
+            value.style['order'] = key
+
+
         # weight of the widget in the layout
         # value.style['-webkit-flex'] =
         # value.style['-ms-flex'] =
