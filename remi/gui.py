@@ -845,7 +845,7 @@ class HBox(Widget):
 
         Args:
             value (Widget): Child instance to be appended.
-            key (int): Unique identifier for the child. It have to be integer, and the value determines the order
+            key (str): Unique identifier for the child. If key.isdigit()==True '0' '1'.. the value determines the order
             in the layout
         """
         key = str(key)
