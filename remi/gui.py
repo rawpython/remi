@@ -1763,6 +1763,13 @@ class Image(Widget):
         self.type = 'img'
         self.attributes['src'] = filename
 
+    def set_image(self, filename):
+        """
+        Args:
+            filename (str): an url to an image
+        """
+        self.attributes['src'] = filename
+
 
 class Table(Widget):
     """
