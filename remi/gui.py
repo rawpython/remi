@@ -273,6 +273,17 @@ class Tag(object):
         """
         return self.children[key]
 
+    def get_parent(self):
+        """Returns the parent tag instance or None where not applicable
+        """
+        if hasattr(self, 'attributes'):
+            if 'data-parent-widget' in self.attributes.keys():
+                if self.attributes['data-parent-widget'] in runtimeInstances.keys():
+                    parent = runtimeInstances[self.attributes['data-parent-widget']]
+                    if self.identifier in parent.children.keys():
+                        return parent
+        return None
+
     def empty(self):
         """remove all children from the widget"""
         for k in list(self.children.keys()):
