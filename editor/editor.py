@@ -216,7 +216,7 @@ class Project(gui.Widget):
                     sourcename = widgetVarName
                     if len(source_filtered_path)>0:
                         if len(source_filtered_path)>1:
-                            sourcename = "self.children['" + "'].children['".join(source_filtered_path) + "']"
+                            sourcename = "%s.children['"%self.children['root'].attributes['editor_varname'] + "'].children['".join(source_filtered_path) + "']"
                         else:
                             sourcename = event['eventsource'].attributes['editor_varname']
                     if force==True:
@@ -229,7 +229,7 @@ class Project(gui.Widget):
                     listenername = "self"
                     if len(listener_filtered_path)>0:
                         if len(listener_filtered_path)>1:
-                            listenername = "self.children['" + "'].children['".join(listener_filtered_path) + "']"
+                            listenername = "%s.children['"%self.children['root'].attributes['editor_varname'] + "'].children['".join(listener_filtered_path) + "']"
                         else:
                             listenername = event['eventlistener'].attributes['editor_varname']
                     if force==True:
@@ -328,6 +328,7 @@ class Project(gui.Widget):
         compiled_code = ''
         code_classes = ''
         
+        #self.children['root'].path_to_this_widget = []
         ret = self.repr_widget_for_editor( self.children['root'] )
         self.path_to_this_widget = []
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
