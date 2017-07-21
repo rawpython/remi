@@ -26,8 +26,6 @@ Then start the test script:
 python widgets_overview_app.py
 ```
 
-we recommend installing Remi into a virtualenv. Remi is not yet API stable.
-
 Remi
 ===
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
