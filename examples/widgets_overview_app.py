@@ -22,18 +22,12 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        verticalContainer = gui.Widget(width=540, margin='0px auto') #the margin 0px auto centers the main container
-        verticalContainer.style['display'] = 'block'
-        verticalContainer.style['overflow'] = 'hidden'
+        # the margin 0px auto centers the main container
+        verticalContainer = gui.Widget(width=540, margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
 
-        horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px')
-        horizontalContainer.style['display'] = 'block'
-        horizontalContainer.style['overflow'] = 'auto'
+        horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px', style={'display': 'block', 'overflow': 'auto'})
         
-        subContainerLeft = gui.Widget(width=320)
-        subContainerLeft.style['display'] = 'block'
-        subContainerLeft.style['overflow'] = 'auto'
-        subContainerLeft.style['text-align'] = 'center'
+        subContainerLeft = gui.Widget(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.img = gui.Image('/res/logo.png', width=100, height=100, margin='10px')
         self.img.set_on_click_listener(self.on_img_clicked)
 
@@ -43,13 +37,10 @@ class MyApp(App):
                                    ('103', 'Lars', 'Gordon'),
                                    ('104', 'Roberto', 'Robitaille'),
                                    ('105', 'Maria', 'Papadopoulos')], width=300, height=200, margin='10px')
+        self.table.set_on_table_row_click_listener(self.on_table_row_click)
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget()
-        subContainerRight.style['width'] = '220px'
-        subContainerRight.style['display'] = 'block'
-        subContainerRight.style['overflow'] = 'auto'
-        subContainerRight.style['text-align'] = 'center'
+        subContainerRight = gui.Widget(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.count = 0
         self.counter = gui.Label('', width=200, height=30, margin='10px')
 
@@ -63,7 +54,7 @@ class MyApp(App):
         self.txt.set_text('This is a TEXTAREA')
         self.txt.set_on_change_listener(self.on_text_area_change)
 
-        self.spin = gui.SpinBox(100, width=200, height=30, margin='10px')
+        self.spin = gui.SpinBox(-10, -100, 1000, width=200, height=30, margin='10px')
         self.spin.set_on_change_listener(self.on_spin_change)
 
         self.check = gui.CheckBoxLabel('Label checkbox', True, width=200, height=30, margin='10px')
@@ -257,6 +248,9 @@ class MyApp(App):
     def on_img_clicked(self, widget):
         self.lbl.set_text('Image clicked!')
 
+    def on_table_row_click(self, table, row, item):
+        self.lbl.set_text('Table Item clicked: ' + item.get_text())
+
     def on_button_pressed(self, widget):
         self.lbl.set_text('Button pressed! ')
         self.bt.set_text('Hi!')
@@ -343,4 +337,4 @@ if __name__ == "__main__":
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
 
-    start(MyApp, debug=True, address='0.0.0.0')
+    start(MyApp, debug=True, address='0.0.0.0', start_browser=True)

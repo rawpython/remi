@@ -9,4 +9,5 @@ setup(name='remi',
       license='Apache',
       packages=['remi'],
       include_package_data=True,
+	  zip_safe=False,
 )

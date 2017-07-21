@@ -13,6 +13,7 @@
 """
 
 import os
+import sys
 import logging
 import functools
 import threading
@@ -22,6 +23,7 @@ from .server import runtimeInstances, update_event
 
 log = logging.getLogger('remi.gui')
 
+pyLessThan3 = sys.version_info < (3,)
 
 def uid(obj):
     if not hasattr(obj,'identifier'):
@@ -49,7 +51,8 @@ def decorate_set_on_listener(event_name, params):
     """ private decorator for use in the editor
 
     Args:
-        event_name (str): Name of the event to which it refers (es. For set_on_click_listener the event_name is "onclick"
+        event_name (str): Name of the event to which it refers
+        (es. For set_on_click_listener the event_name is "onclick"
         params (str): The list of parameters for the listener function (es. "(self, new_value)")
     """
 
@@ -270,6 +273,17 @@ class Tag(object):
         """
         return self.children[key]
 
+    def get_parent(self):
+        """Returns the parent tag instance or None where not applicable
+        """
+        if hasattr(self, 'attributes'):
+            if 'data-parent-widget' in self.attributes.keys():
+                if self.attributes['data-parent-widget'] in runtimeInstances.keys():
+                    parent = runtimeInstances[self.attributes['data-parent-widget']]
+                    if self.identifier in parent.children.keys():
+                        return parent
+        return None
+
     def empty(self):
         """remove all children from the widget"""
         for k in list(self.children.keys()):
@@ -367,6 +381,20 @@ class Widget(Tag):
         self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
+        self.set_style(kwargs.pop('style', None))
+
+    def set_style(self, style):
+        """ Allows to set style properties for the widget.
+            Args:
+                style (str or dict): The style property dictionary or json string.
+        """
+        if style is not None:
+            try:
+                self.style.update(style)
+            except ValueError:
+                for s in style.split(';'):
+                    k, v = s.split(':', 1)
+                    self.style[k.strip()] = v.strip()
 
     def set_enabled(self, enabled):
         if enabled:
@@ -828,7 +856,7 @@ class HBox(Widget):
 
         Args:
             value (Widget): Child instance to be appended.
-            key (int): Unique identifier for the child. It have to be integer, and the value determines the order
+            key (str): Unique identifier for the child. If key.isdigit()==True '0' '1'.. the value determines the order
             in the layout
         """
         key = str(key)
@@ -844,6 +872,11 @@ class HBox(Widget):
 
         value.style['-webkit-order'] = '-1'
         value.style['order'] = '-1'
+
+        if key.isdigit():
+            value.style['-webkit-order'] = key
+            value.style['order'] = key
+
 
         # weight of the widget in the layout
         # value.style['-webkit-flex'] =
@@ -1170,6 +1203,7 @@ class Label(Widget, _MixinTextualWidget):
     """Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
     function get_text.
     """
+
     @decorate_constructor_parameter_types([str])
     def __init__(self, text, **kwargs):
         """
@@ -1382,7 +1416,6 @@ class InputDialog(GenericDialog):
 
     def confirm_value(self, widget):
         """Event called pressing on OK button."""
-        self.hide()
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, (self.inputText.get_text(),))
 
     @decorate_set_on_listener("confirm_value", "(self,emitter,value)")
@@ -1741,11 +1774,19 @@ class Image(Widget):
         self.type = 'img'
         self.attributes['src'] = filename
 
+    def set_image(self, filename):
+        """
+        Args:
+            filename (str): an url to an image
+        """
+        self.attributes['src'] = filename
+
 
 class Table(Widget):
     """
     table widget - it will contains TableRow
     """
+    EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
@@ -1781,40 +1822,195 @@ class Table(Widget):
             fill_title (bool): if true, the first tuple in the list will
                 be set as title.
         """
-        first_row = True
+        row_index = 0
         for row in content:
-            key = ''
             tr = TableRow()
+            column_index = 0
             for item in row:
-                if first_row and fill_title:
+                if row_index == 0 and fill_title:
                     ti = TableTitle(item)
-                    key = 'title'
                 else:
                     ti = TableItem(item)
-                tr.append(ti)
-            self.append(tr, key)
-            first_row = False
+                tr.append(ti, str(column_index))
+                column_index = column_index + 1
+            self.append(tr, str(row_index))
+            row_index = row_index + 1
 
-    def empty(self, keep_title=False):
-        """
-        Deletes the table rows.
+    def append(self, row, key=''):
+        super(Table, self).append(row, key)
+        row.set_on_row_item_click_listener(self.on_table_row_click)
+
+    def on_table_row_click(self, row, item):
+        self.eventManager.propagate(self.EVENT_ON_TABLE_ROW_CLICK, (row, item))
+
+    @decorate_set_on_listener("on_table_row_click", "(self,table,row,item)")
+    def set_on_table_row_click_listener(self, callback, *userdata):
+        """Registers the listener for the Table.on_table_row_click event.
+
+        Note: The prototype of the listener have to be like
+            on_table_row_click(self, table, row, item).
 
         Args:
-            keep_title (bool): whether to delete all the content except
-                the title.
+            callback (function): Callback function pointer.
+            table (Table): The emitter of the event.
+            row (TableRow): The TableRow containing the clicked TableItem.
+            item (TableItem): The clicked TableItem.
         """
-        title = None
-        if 'title' in self.children.keys():
-            title = self.children['title']
-        super(Table, self).empty()
-        if keep_title and (title is not None):
-            self.append(title, 'title')
+        self.eventManager.register_listener(self.EVENT_ON_TABLE_ROW_CLICK, callback, *userdata)
+
+
+class TableWidget(Table):
+    """
+    Basic table model widget.
+    Each item is addressed by stringified integer key in the children dictionary.
+    """
+    EVENT_ON_ITEM_CHANGED = 'on_item_changed'
+
+    @decorate_constructor_parameter_types([int, int, bool, bool])
+    def __init__(self, n_rows, n_columns, use_title=True, editable=False, **kwargs):
+        """
+        Args:
+            use_title (bool): enable title bar. Note that the title bar is
+                treated as a row (it is comprised in n_rows count)
+            n_rows (int): number of rows to create
+            n_columns (int): number of columns to create
+            kwargs: See Widget.__init__()
+        """
+        super(TableWidget, self).__init__(**kwargs)
+        self._editable = editable
+        self.set_use_title(use_title)
+        self._column_count = 0
+        self.set_column_count(n_columns)
+        self.set_row_count(n_rows)
+
+    def set_use_title(self, use_title):
+        """Returns the TableItem instance at row, column cordinates
+
+        Args:
+            use_title (bool): enable title bar.
+        """
+        self._use_title = use_title
+        self._update_first_row()
+
+    def _update_first_row(self):
+        cl = TableEditableItem if self._editable else TableItem
+        if self._use_title:
+            cl = TableTitle
+
+        if len(self.children) > 0:
+            for c_key in self.children['0'].children.keys():
+                instance = cl(self.children['0'].children[c_key].get_text())
+                self.children['0'].children[c_key] = instance
+                #here the cells of the first row are overwritten and aren't appended by the standard Table.append
+                # method. We have to restore de standard on_click internal listener in order to make it working
+                # the Table.set_on_table_row_click_listener functionality
+                self.children['0'].children[c_key].set_on_click_listener(self.children['0'].on_row_item_click)
+
+    def item_at(self, row, column):
+        """Returns the TableItem instance at row, column cordinates
+
+        Args:
+            row (int): zero based index
+            column (int): zero based index
+        """
+        return self.children[str(row)].children[str(column)]
+
+    def item_coords(self, table_item):
+        """Returns table_item's (row, column) cordinates.
+        Returns None in case of item not found.
+
+        Args:
+            table_item (TableItem): an item instance
+        """
+        for row_key in self.children.keys():
+            for item_key in self.children[row_key].children.keys():
+                if self.children[row_key].children[item_key] == table_item:
+                    return (int(row_key), int(item_key))
+        return None
+
+    def column_count(self):
+        """Returns table's columns count.
+        """
+        return self._column_count
+
+    def row_count(self):
+        """Returns table's rows count (the title is considered as a row).
+        """
+        return len(self.children)
+
+    def set_row_count(self, count):
+        """Sets the table row count.
+
+        Args:
+            count (int): number of rows
+        """
+        current_row_count = self.row_count()
+        current_column_count = self.column_count()
+        if count > current_row_count:
+            cl = TableEditableItem if self._editable else TableItem
+            for i in range(current_row_count, count):
+                tr = TableRow()
+                for c in range(0, current_column_count):
+                    tr.append(cl(), str(c))
+                    if self._editable:
+                        tr.children[str(c)].set_on_change_listener(
+                            self.on_item_changed, int(i), int(c))
+                self.append(tr, str(i))
+            self._update_first_row()
+        elif count < current_row_count:
+            for i in range(count, current_row_count):
+                self.remove_child(self.children[str(i)])
+
+    def set_column_count(self, count):
+        """Sets the table column count.
+
+        Args:
+            count (int): column of rows
+        """
+        current_row_count = self.row_count()
+        current_column_count = self.column_count()
+        if count > current_column_count:
+            cl = TableEditableItem if self._editable else TableItem
+            for r_key in self.children.keys():
+                row = self.children[r_key]
+                for i in range(current_column_count, count):
+                    row.append(cl(), str(i))
+                    if self._editable:
+                        row.children[str(i)].set_on_change_listener(
+                            self.on_item_changed, int(r_key), int(i))
+            self._update_first_row()
+        elif count < current_column_count:
+            for row in self.children.values():
+                for i in range(count, current_column_count):
+                    row.remove_child(row.children[str(i)])
+        self._column_count = count
+
+    def on_item_changed(self, item, new_value, row, column):
+        self.eventManager.propagate(self.EVENT_ON_ITEM_CHANGED, (item, new_value, row, column))
+
+    @decorate_set_on_listener("on_item_changed", "(self,table,item,new_value,row,column)")
+    def set_on_item_changed_listener(self, callback, *userdata):
+        """Registers the listener for the Table.on_item_changed event.
+
+        Note: The prototype of the listener have to be like
+            on_item_changed(self, item, new_value, row, column).
+
+        Args:
+            callback (function): Callback function pointer.
+            table (TableWidget): The emitter of the event.
+            item (TableItem): The TableItem instance.
+            new_value (str): New text content.
+            row (int): row index.
+            column (int): column index.
+        """
+        self.eventManager.register_listener(self.EVENT_ON_ITEM_CHANGED, callback, *userdata)
 
 
 class TableRow(Widget):
     """
     row widget for the Table - it will contains TableItem
     """
+    EVENT_ON_ROW_ITEM_CLICK = 'on_row_item_click'
 
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
@@ -1826,8 +2022,63 @@ class TableRow(Widget):
         self.type = 'tr'
         self.style['float'] = 'none'
 
+    def append(self, item, key=''):
+        super(TableRow, self).append(item, key)
+        item.set_on_click_listener(self.on_row_item_click)
 
-class TableItem(Widget):
+    def on_row_item_click(self, item):
+        self.eventManager.propagate(self.EVENT_ON_ROW_ITEM_CLICK, (item,))
+
+    @decorate_set_on_listener("on_row_item_click", "(self,row,item)")
+    def set_on_row_item_click_listener(self, callback, *userdata):
+        """Registers the listener for the TableRow.on_row_item_click event.
+
+        Note: This is internally used by the Table widget in order to generate the
+            Table.on_table_row_click event.
+            Use Table.set_on_table_row_click_listener instead.
+        Note: The prototype of the listener have to be like
+            on_row_item_click(self, row, item).
+
+        Args:
+            callback (function): Callback function pointer.
+            row (TableRow): The emitter of the event.
+            item (TableItem): The clicked TableItem.
+        """
+        self.eventManager.register_listener(self.EVENT_ON_ROW_ITEM_CLICK, callback, *userdata)
+
+
+class TableEditableItem(Widget, _MixinTextualWidget):
+    """item widget for the TableRow."""
+
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, text='', **kwargs):
+        """
+        Args:
+            text (str):
+            kwargs: See Widget.__init__()
+        """
+        super(TableEditableItem, self).__init__(**kwargs)
+        self.type = 'td'
+        self.editInput = TextInput()
+        self.append(self.editInput)
+        self.editInput.set_on_change_listener(self.onchange)
+        self.get_text = self.editInput.get_text
+        self.set_text = self.editInput.set_text
+        self.set_text(text)
+
+    def onchange(self, emitter, new_value):
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
+
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
+        """Register the listener for the onchange event.
+
+        Note: the listener prototype have to be in the form on_item_changed(self, widget, value).
+        """
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+
+
+class TableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
@@ -1839,27 +2090,25 @@ class TableItem(Widget):
         """
         super(TableItem, self).__init__(**kwargs)
         self.type = 'td'
-        self.style['float'] = 'none'
-        self.add_child('text', text)
+        self.set_text(text)
 
 
-class TableTitle(Widget):
+class TableTitle(TableItem, _MixinTextualWidget):
     """title widget for the table."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, title='', **kwargs):
+    def __init__(self, text='', **kwargs):
         """
         Args:
-            title (str):
+            text (str):
             kwargs: See Widget.__init__()
         """
-        super(TableTitle, self).__init__(**kwargs)
+        super(TableTitle, self).__init__(text, **kwargs)
         self.type = 'th'
-        self.style['float'] = 'none'
-        self.add_child('text', title)
 
 
 class Input(Widget):
+
     @decorate_constructor_parameter_types([str, str])
     def __init__(self, input_type='', default_value='', **kwargs):
         """
@@ -1877,6 +2126,7 @@ class Input(Widget):
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
             "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id': self.identifier,
                                                                'evt': self.EVENT_ONCHANGE}
+
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
         self.attributes['autocomplete'] = 'off'
@@ -1911,6 +2161,7 @@ class Input(Widget):
 
 
 class CheckBoxLabel(Widget):
+
     @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data='', **kwargs):
         """
@@ -2005,6 +2256,12 @@ class SpinBox(Input):
             js += ' || (key == 8 || key == 46)'  # allow backspace and delete
             js += ' || (key == 13)'  # allow enter
         self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
+        #FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
+        self.attributes[self.EVENT_ONKEYUP] = \
+            "var key = event.keyCode || event.charCode;" \
+            "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
+            "sendCallbackParam('%(id)s','%(evt)s',params); return true;}" \
+            "return false;" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
 
 
 class Slider(Input):
@@ -2043,6 +2300,7 @@ class Slider(Input):
 
 
 class ColorPicker(Input):
+
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='#995500', **kwargs):
         """
@@ -2054,6 +2312,7 @@ class ColorPicker(Input):
 
 
 class Date(Input):
+
     @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='2015-04-13', **kwargs):
         """
@@ -2143,6 +2402,9 @@ class FileFolderNavigator(Widget):
                     return a > b
 
         log.debug("FileFolderNavigator - populate_folder_items")
+
+        if pyLessThan3:
+            directory = directory.decode('utf-8')
 
         l = os.listdir(directory)
         l.sort(key=functools.cmp_to_key(_sort_files))
@@ -2326,6 +2588,7 @@ class FileSelectionDialog(GenericDialog):
 
 
 class MenuBar(Widget):
+
     @decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         """
@@ -2513,6 +2776,7 @@ class FileDownloader(Widget, _MixinTextualWidget):
 
 
 class Link(Widget, _MixinTextualWidget):
+
     @decorate_constructor_parameter_types([str, str, bool])
     def __init__(self, url, text, open_new_window=True, **kwargs):
         super(Link, self).__init__(**kwargs)
@@ -2713,6 +2977,7 @@ class SvgCircle(SvgShape):
 
 
 class SvgLine(Widget):
+
     @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x1, y1, x2, y2, **kwargs):
         super(SvgLine, self).__init__(**kwargs)
@@ -2738,6 +3003,7 @@ class SvgLine(Widget):
 
 
 class SvgPolyline(Widget):
+
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
         super(SvgPolyline, self).__init__(**kwargs)
@@ -2765,6 +3031,7 @@ class SvgPolyline(Widget):
 
 
 class SvgText(SvgShape, _MixinTextualWidget):
+
     @decorate_constructor_parameter_types([int, int, str])
     def __init__(self, x, y, text, **kwargs):
         super(SvgText, self).__init__(x, y, **kwargs)

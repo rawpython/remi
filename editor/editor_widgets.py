@@ -22,31 +22,31 @@ class InstancesDropDown(gui.DropDown):
     def __init__(self, **kwargs):
         super(InstancesDropDown, self).__init__(**kwargs)
         self.EVENT_ONCHANGE = "on_instance_selection"
-        
+
     def append_instance(self, instance):
         item = gui.DropDownItem(instance.attributes['editor_varname'])
         self.append(item)
         item.instance = instance
-        
+
     def item_by_instance(self, instance):
         for item in self.children.values():
             if item.instance.identifier == instance.identifier:
                 return item
         return None
-    
+
     def remove_instance(self, instance):
         self.remove_child(self.item_by_instance(instance))
-        
+
     def select_instance(self, instance):
         item = self.item_by_instance(instance)
         if item is not None:
             item.set_text(instance.attributes['editor_varname'])
             self.select_by_value(item.get_value())
-    
+
     def onchange(self, value):
         self.select_by_value(value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (self._selected_item.instance,))
-        
+
     def append_instances_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
@@ -62,30 +62,30 @@ class InstancesWidget(gui.VBox):
         super(InstancesWidget, self).__init__(**kwargs)
         self.titleLabel = gui.Label('Instances list', width='100%')
         self.titleLabel.add_class("DialogTitle")
-        
+
         self.dropDown = InstancesDropDown()
-        
+
         self.append(self.titleLabel)
         self.append(self.dropDown)
-        
+
         self.titleLabel.style['order'] = '-1'
         self.titleLabel.style['-webkit-order'] = '-1'
         self.dropDown.style['order'] = '0'
         self.dropDown.style['-webkit-order'] = '0'
-    
+
     def update(self, editorProject, selectedNode):
         self.dropDown.empty()
         if 'root' in editorProject.children.keys():
             self.dropDown.append_instances_from_tree(editorProject.children['root'])
             self.dropDown.select_instance(selectedNode)
-    
+
 
 class ToolBar(gui.Widget):
     def __init__(self, **kwargs):
         super(ToolBar, self).__init__(**kwargs)
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['background-color'] = 'white'
-    
+
     def add_command(self, imagePath, callback, title):
         icon = gui.Image(imagePath, height='90%', margin='0px 1px')
         icon.style['outline'] = '1px solid lightgray'
@@ -105,13 +105,13 @@ class SignalConnection(gui.Widget):
         self.label.style['float'] = 'left'
         self.label.style['font-size'] = '10px'
         self.label.style['overflow'] = 'hidden'
-        
+
         self.dropdown = gui.DropDown(width='49%', height='100%')
         self.dropdown.set_on_change_listener(self.on_connection)
         self.append(self.label)
         self.append(self.dropdown)
         self.dropdown.style['float'] = 'right'
-        
+
         self.eventConnectionFunc = eventConnectionFunc
         self.eventConnectionFuncName = eventConnectionFuncName
         self.refWidget = widget
@@ -121,10 +121,10 @@ class SignalConnection(gui.Widget):
             ddi = gui.DropDownItem(w.attributes['editor_varname'])
             ddi.listenerInstance = w
             self.dropdown.append(ddi)
-        if self.eventConnectionFunc._event_listener['eventName'] in self.refWidget.eventManager.listeners.keys(): 
+        if self.eventConnectionFunc._event_listener['eventName'] in self.refWidget.eventManager.listeners.keys():
             connectedListenerName = self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]['callback'].__self__.attributes['editor_varname']
             self.dropdown.set_value( connectedListenerName )
-    
+
     def on_connection(self, widget, dropDownValue):
         if self.dropdown.get_value()=='None':
             del self.refWidget.eventManager.listeners[self.eventConnectionFunc._event_listener['eventName']]
@@ -137,7 +137,7 @@ class SignalConnection(gui.Widget):
 
 def fakeListenerFunc(self,*args):
     print('event trap')
-    
+
 class SignalConnectionManager(gui.Widget):
     """ This class allows to interconnect event signals """
     def __init__(self, **kwargs):
@@ -194,12 +194,12 @@ class ProjectConfigurationDialog(gui.GenericDialog):
     KEY_ENABLE_CACHE = 'config_enable_file_cache'
     KEY_START_BROWSER = 'config_start_browser'
     KEY_RESOURCEPATH = 'config_resourcepath'
-    
+
     def __init__(self, title='', message=''):
         super(ProjectConfigurationDialog, self).__init__('Project Configuration', 'Here are the configuration options of the project.', width=500)
         #standard configuration
         self.configDict = {}
-        
+
         self.configDict[self.KEY_PRJ_NAME] = 'untitled'
         self.configDict[self.KEY_ADDRESS] = '0.0.0.0'
         self.configDict[self.KEY_PORT] = 8081
@@ -216,12 +216,12 @@ class ProjectConfigurationDialog(gui.GenericDialog):
         self.add_field_with_label( self.KEY_START_BROWSER, 'Start browser automatically', gui.CheckBox(True) )
         self.add_field_with_label( self.KEY_RESOURCEPATH, 'Additional resource path', gui.TextInput() )
         self.from_dict_to_fields(self.configDict)
-    
+
     def from_dict_to_fields(self, dictionary):
         for key in self.inputs.keys():
             if key in dictionary.keys():
                 self.get_field(key).set_value( str( dictionary[key] ) )
-        
+
     def from_fields_to_dict(self):
         self.configDict[self.KEY_PRJ_NAME] = self.get_field(self.KEY_PRJ_NAME).get_value()
         self.configDict[self.KEY_ADDRESS] = self.get_field(self.KEY_ADDRESS).get_value()
@@ -230,7 +230,7 @@ class ProjectConfigurationDialog(gui.GenericDialog):
         self.configDict[self.KEY_ENABLE_CACHE] = self.get_field(self.KEY_ENABLE_CACHE).get_value()
         self.configDict[self.KEY_START_BROWSER] = self.get_field(self.KEY_START_BROWSER).get_value()
         self.configDict[self.KEY_RESOURCEPATH] = self.get_field(self.KEY_RESOURCEPATH).get_value()
-            
+
     def confirm_dialog(self):
         """event called pressing on OK button.
         """
@@ -242,47 +242,47 @@ class ProjectConfigurationDialog(gui.GenericDialog):
         """Allows to show the widget as root window"""
         self.from_dict_to_fields(self.configDict)
         super(ProjectConfigurationDialog, self).show(baseAppInstance)
-            
+
 
 class EditorFileSelectionDialog(gui.FileSelectionDialog):
-    def __init__(self, title='File dialog', message='Select files and folders', 
-                multiple_selection=True, selection_folder='.', allow_file_selection=True, 
+    def __init__(self, title='File dialog', message='Select files and folders',
+                multiple_selection=True, selection_folder='.', allow_file_selection=True,
                 allow_folder_selection=True, baseAppInstance = None):
         super(EditorFileSelectionDialog, self).__init__( title,
-                 message, multiple_selection, selection_folder, 
+                 message, multiple_selection, selection_folder,
                  allow_file_selection, allow_folder_selection)
-        
+
         self.baseAppInstance = baseAppInstance
-        
+
     def show(self, *args):
         super(EditorFileSelectionDialog, self).show(self.baseAppInstance)
 
 
 class EditorFileSaveDialog(gui.FileSelectionDialog):
-    def __init__(self, title='File dialog', message='Select files and folders', 
-                multiple_selection=True, selection_folder='.', 
+    def __init__(self, title='File dialog', message='Select files and folders',
+                multiple_selection=True, selection_folder='.',
                  allow_file_selection=True, allow_folder_selection=True, baseAppInstance = None):
-        super(EditorFileSaveDialog, self).__init__( title, message, multiple_selection, selection_folder, 
+        super(EditorFileSaveDialog, self).__init__( title, message, multiple_selection, selection_folder,
                  allow_file_selection, allow_folder_selection)
-        
+
         self.baseAppInstance = baseAppInstance
-        
+
     def show(self, *args):
         super(EditorFileSaveDialog, self).show(self.baseAppInstance)
-        
+
     def add_fileinput_field(self, defaultname='untitled'):
         self.txtFilename = gui.TextInput()
         self.txtFilename.set_on_enter_listener(self.on_enter_key_pressed)
         self.txtFilename.set_text(defaultname)
-        
+
         self.add_field_with_label("filename","Filename",self.txtFilename)
-        
+
     def get_fileinput_value(self):
         return self.get_field('filename').get_value()
-    
+
     def on_enter_key_pressed(self, widget, value):
         self.confirm_value(None)
-        
+
     def confirm_value(self, widget):
         """event called pressing on OK button.
            propagates the string content of the input field
@@ -290,10 +290,10 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         self.hide()
         params = (self.fileFolderNavigator.pathEditor.get_text(),)
         return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
-        
-        
+
+
 class WidgetHelper(gui.HBox):
-    """ Allocates the Widget to which it refers, 
+    """ Allocates the Widget to which it refers,
         interfacing to the user in order to obtain the necessary attribute values
         obtains the constructor parameters, asks for them in a dialog
         puts the values in an attribute called constructor
@@ -312,16 +312,16 @@ class WidgetHelper(gui.HBox):
         self.icon.attributes['draggable'] = 'false'
         self.icon.attributes['ondragstart'] = "event.preventDefault();"
         self.append(self.icon)
-        
+
         self.attributes['draggable'] = 'true'
         self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));"
-        self.attributes['ondragover'] = "event.preventDefault();"   
+        self.attributes['ondragover'] = "event.preventDefault();"
         self.attributes['ondrop'] = "event.preventDefault();return false;"
-        
+
         self.optional_style_dict = {} #this dictionary will contain optional style attributes that have to be added to the widget once created
-        
+
         self.set_on_click_listener(self.prompt_new_widget)
-        
+
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
@@ -330,12 +330,12 @@ class WidgetHelper(gui.HBox):
         self.varname_list.append(node.attributes['editor_varname'])
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
-        
+
     def prompt_new_widget(self, widget):
         self.varname_list = list()
-        
+
         self.build_widget_name_list_from_tree(self.appInstance.project)
-        
+
         self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list', width='40%')
@@ -358,7 +358,7 @@ class WidgetHelper(gui.HBox):
 
             editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
-            
+
         self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
         self.dialog.set_on_confirm_dialog_listener(self.on_dialog_confirm)
         self.dialog.show(self.appInstance)
@@ -367,7 +367,7 @@ class WidgetHelper(gui.HBox):
         self.optional_style_dict['left'] = gui.to_pix(left)
         self.optional_style_dict['top'] = gui.to_pix(top)
         self.prompt_new_widget(None)
-        
+
     def on_dialog_confirm(self, widget):
         """ Here the widget is allocated
         """
@@ -376,12 +376,12 @@ class WidgetHelper(gui.HBox):
             self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=350,height=120)
             self.errorDialog.show(self.appInstance)
             return
-        
+
         if variableName in self.varname_list:
             self.errorDialog = gui.GenericDialog("Error", "The typed variable name is already used. Please specify a new name.", width=350,height=150)
             self.errorDialog.show(self.appInstance)
             return
-        
+
         param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
         param_values = []
         param_for_constructor = []
@@ -390,13 +390,16 @@ class WidgetHelper(gui.HBox):
             _typ = self.widgetClass.__init__._constructor_types[index]
             if _typ==int:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
+                param_values.append(int(self.dialog.get_field(param).get_value()))
             elif _typ==bool:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
+                param_values.append(bool(self.dialog.get_field(param).get_value()))
             else:#if _typ==str:
                 param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
+                param_values.append(self.dialog.get_field(param).get_value())
             #else:
             #    param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
-            param_values.append(self.dialog.get_field(param).get_value())
+
         print(self.constructor_parameters_list)
         print(param_values)
         #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
@@ -408,16 +411,16 @@ class WidgetHelper(gui.HBox):
         widget.attributes['editor_tag_type'] = 'widget'
         widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
         widget.attributes['editor_baseclass'] = widget.__class__.__name__ #__class__.__bases__[0].__name__
-        #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"  
+        #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"
         if not 'position' in widget.style:
             widget.style['position'] = 'absolute'
         if not 'display' in widget.style:
             widget.style['display'] = 'block'
-            
+
         for key in self.optional_style_dict:
             widget.style[key] = self.optional_style_dict[key]
         self.optional_style_dict = {}
-        
+
         self.appInstance.add_widget_to_editor(widget)
 
 
@@ -435,7 +438,7 @@ class WidgetCollection(gui.Widget):
 
         self.append(self.lblTitle)
         self.append(self.widgetsContainer)
-        
+
         #load all widgets
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px')
         self.add_widget_to_collection(gui.VBox, width='250px', height='250px')
@@ -456,7 +459,8 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.Date, width='100px', height='30px')
         self.add_widget_to_collection(gui.Link, width='100px', height='30px')
         self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px')
-        
+        self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px')
+
     def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
         #create an helper that will be created on click
         #the helper have to search for function that have 'return' annotation 'event_listener_setter'
@@ -484,7 +488,7 @@ class EditorAttributesGroup(gui.Widget):
         self.title.style['border-bottom'] = '1px solid lightgray'
         self.title.set_on_click_listener(self.openClose)
         self.append(self.title, '0')
-        
+
     def openClose(self, widget):
         self.opened = not self.opened
         backgroundImage = "url('/res/minus.png')" if self.opened else "url('/res/plus.png')"
@@ -493,8 +497,8 @@ class EditorAttributesGroup(gui.Widget):
         for widget in self.children.values():
             if widget!=self.title and type(widget)!=str:
                 widget.style['display'] = display
-        
-        
+
+
 class EditorAttributes(gui.VBox):
     """ Contains EditorAttributeInput each one of which notify a new value with an event
     """
@@ -515,7 +519,7 @@ class EditorAttributes(gui.VBox):
         self.titleLabel.style['-webkit-order'] = '-1'
         self.infoLabel.style['order'] = '0'
         self.infoLabel.style['-webkit-order'] = '0'
-        
+
         self.attributesInputs = list()
         #load editable attributes
         self.append(self.titleLabel)
@@ -536,20 +540,20 @@ class EditorAttributes(gui.VBox):
 
             self.attributeGroups[attributeValue['group']].append(attributeEditor)
             self.attributesInputs.append(attributeEditor)
-    
-    #this function is called by an EditorAttributeInput change event and propagates to the listeners 
+
+    #this function is called by an EditorAttributeInput change event and propagates to the listeners
     #adding as first parameter the tag to which it refers
     #widgetAttributeMember can be 'style' or 'attributes'
     def onattribute_changed(self, widget, widgetAttributeMember, attributeName, newValue):
         print("setting attribute name: %s    value: %s    attributeMember: %s"%(attributeName, newValue, widgetAttributeMember))
         getattr(self.targetWidget, widgetAttributeMember)[attributeName] = str(newValue)
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, (widgetAttributeMember, attributeName, newValue))
-        
+
     def onattribute_remove(self, widget, widgetAttributeMember, attributeName):
         if attributeName in getattr(self.targetWidget, widgetAttributeMember):
             del getattr(self.targetWidget, widgetAttributeMember)[attributeName]
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, (widgetAttributeMember, attributeName))
-    
+
     def set_widget(self, widget):
         self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
         self.attributes['selected_widget_id'] = widget.identifier
@@ -566,28 +570,28 @@ class CssSizeInput(gui.Widget):
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
-        
+
         self.numInput = gui.SpinBox('0',-999999999, 999999999, 1, width='60%', height='100%')
         self.numInput.set_on_change_listener(self.on_value_changed)
         self.numInput.style['text-align'] = 'right'
         self.append(self.numInput)
-        
+
         self.dropMeasureUnit = gui.DropDown(width='40%', height='100%')
         self.dropMeasureUnit.append( gui.DropDownItem('px'), 'px' )
         self.dropMeasureUnit.append( gui.DropDownItem('%'), '%' )
         self.dropMeasureUnit.select_by_key('px')
         self.dropMeasureUnit.set_on_change_listener(self.on_value_changed)
         self.append(self.dropMeasureUnit)
-    
+
     def on_value_changed(self, widget, new_value):
         new_size = str(self.numInput.get_value()) + str(self.dropMeasureUnit.get_value())
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_size,))
-        
+
     def set_on_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
-    
+
     def set_value(self, value):
-        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit 
+        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit
         """
         v = 0
         measure_unit = 'px'
@@ -598,7 +602,7 @@ class CssSizeInput(gui.Widget):
                 v = int(float(value.replace('%', '')))
                 measure_unit = '%'
             except ValueError:
-                pass                
+                pass
         self.numInput.set_value(v)
         self.dropMeasureUnit.set_value(measure_unit)
 
@@ -610,36 +614,36 @@ class UrlPathInput(gui.Widget):
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
-        
+
         self.txtInput = StringEditor(width='80%', height='100%')
         self.txtInput.style['float'] = 'left'
         self.txtInput.set_on_change_listener(self.on_txt_changed)
         self.append(self.txtInput)
-        
+
         self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
         self.btFileFolderSelection.style['background-repeat'] = 'round'
         self.btFileFolderSelection.style['background-image'] = "url('/res/folder.png')"
         self.btFileFolderSelection.style['background-color'] = 'transparent'
         self.append(self.btFileFolderSelection)
         self.btFileFolderSelection.set_on_click_listener(self.on_file_selection_bt_pressed)
-        
+
         self.selectionDialog = gui.FileSelectionDialog('Select a file', '', False, './', True, False)
         self.selectionDialog.set_on_confirm_value_listener(self.file_dialog_confirmed)
-    
+
     def on_txt_changed(self, widget, value):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
-    
+
     def on_file_selection_bt_pressed(self, widget):
         self.selectionDialog.show(self.appInstance)
-        
+
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
             self.txtInput.set_value("url('/res/" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
             return self.eventManager.propagate(self.EVENT_ONCHANGE, (self.txtInput.get_value(),))
-            
+
     def set_on_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
-    
+
     def set_value(self, value):
         self.txtInput.set_value(value)
 
@@ -652,24 +656,24 @@ class StringEditor(gui.TextInput):
     def __init__(self, *args, **kwargs):
         super(StringEditor, self).__init__(True, *args, **kwargs)
         self.attributes[self.EVENT_ONBLUR] = \
-            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join(''); 
+            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join('');
             var params={};params['new_value']=elem.value;
             sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
-            
+
         self.attributes[self.EVENT_ONKEYUP] = \
-            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join(''); 
+            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join('');
             var params={};params['new_value']=elem.value;
             sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONKEYUP}
-        
+
         self.attributes[self.EVENT_ONKEYDOWN] = \
             """if((event.charCode||event.keyCode)==13){event.keyCode = 0;event.charCode = 0; return false;}""" % {'id': self.identifier}
-            
+
     def onkeyup(self, new_value):
         return self.eventManager.propagate(self.EVENT_ONCHANGE, (new_value,))
-        
+
 
 #widget that allows to edit a specific html and css attributes
-#   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title 
+#   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
 class EditorAttributeInput(gui.Widget):
     def __init__(self, attributeName, attributeDict, appInstance=None):
         super(EditorAttributeInput, self).__init__()
@@ -680,13 +684,13 @@ class EditorAttributeInput(gui.Widget):
         self.attributeName = attributeName
         self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
-        
+
         self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
         self.removeAttribute = gui.Image('/res/delete.png', width='5%')
         self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
         self.removeAttribute.set_on_click_listener(self.on_attribute_remove)
         self.append(self.removeAttribute)
-        
+
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
@@ -709,50 +713,50 @@ class EditorAttributeInput(gui.Widget):
                 self.inputWidget = UrlPathInput(appInstance)
             if attributeDict['type'] == 'css_size':
                 self.inputWidget = CssSizeInput(appInstance)
-            
+
         else: #default editor is string
             self.inputWidget = StringEditor()
- 
+
         self.inputWidget.set_on_change_listener(self.on_attribute_changed)
         self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
         self.label.attributes['title'] = attributeDict['description']
         self.append(self.inputWidget)
         self.inputWidget.style['float'] = 'right'
-    
+
         self.style['display'] = 'block'
         self.set_valid(False)
-    
+
     def set_valid(self, valid=True):
         self.label.style['opacity'] = '1.0'
-        if 'display' in self.removeAttribute.style: 
+        if 'display' in self.removeAttribute.style:
             del self.removeAttribute.style['display']
         if not valid:
             self.label.style['opacity'] = '0.5'
             self.removeAttribute.style['display'] = 'none'
-        
+
     def on_attribute_remove(self, widget):
         self.set_valid(False)
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONREMOVE, (self.attributeDict['affected_widget_attribute'], self.attributeName))
-    
+
     def set_on_attribute_remove_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONREMOVE, callback, *userdata)
-    
+
     def set_from_dict(self, dictionary):
         self.inputWidget.set_value('')
         self.set_valid(False)
         if self.attributeName in dictionary:
             self.set_valid()
             self.inputWidget.set_value(dictionary[self.attributeName])
-    
+
     def set_value(self, value):
         self.set_valid()
         self.inputWidget.set_value(value)
-    
+
     def on_attribute_changed(self, widget, value):
         self.set_valid()
         return self.eventManager.propagate(self.EVENT_ATTRIB_ONCHANGE, (self.attributeDict['affected_widget_attribute'], self.attributeName, value))
-        
+
     def set_on_attribute_change_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ATTRIB_ONCHANGE, callback, *userdata)
-        
+

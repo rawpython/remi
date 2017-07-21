@@ -287,7 +287,7 @@ Standalone Execution
 Remi is an effective solution for building your Remote Interface, but what about standalone execution? 
 Sure you can use it with your browser, but for applications where remote access is not required, than the native GUI is the best.
 This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview). 
-Here is an example about this [desktop_app.py](https://github.com/dddomodossola/remi/blob/master/examples/desktop_app.py).
+Here is an example about this [standalone_app.py](https://github.com/dddomodossola/remi/blob/development/examples/standalone_app.py).
 
 
 Authentication
