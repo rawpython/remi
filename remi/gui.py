@@ -247,23 +247,35 @@ class Tag(object):
             pass
         self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
-    def add_child(self, key, child):
+    def add_child(self, key, value):
         """Adds a child to the Tag
 
         To retrieve the child call get_child or access to the Tag.children[key] dictionary.
 
         Args:
-            key (str):  Unique child's identifier
-            child (Tag, str):
+            key (str):  Unique child's identifier, or iterable of keys
+            value (Tag, str): can be a Tag, an iterable of Tag or a str. In case of iterable
+                of Tag is a dict, each item's key is set as 'key' param
         """
-        if hasattr(child, 'attributes'):
-            child.attributes['data-parent-widget'] = self.identifier
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.add_child(k, value[k])
+                return
+            i = 0
+            for child in value:
+                self.add_child(key[i], child)
+                i = i + 1
+            return
+
+        if hasattr(value, 'attributes'):
+            value.attributes['data-parent-widget'] = self.identifier
 
         if key in self.children:
             self._render_children_list.remove(key)
         self._render_children_list.append(key)
 
-        self.children[key] = child
+        self.children[key] = value
 
     def get_child(self, key):
         """Returns the child identified by 'key'
@@ -456,12 +468,25 @@ class Widget(Tag):
         In order to access to the specific child in this way widget.children[key].
 
         Args:
-            value (Tag or Widget): The child to be appended.
-            key (str): The unique string identifier for the child or ''
+            value (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
+                param.
 
         Returns:
-            str: a key used to refer to the child for all future interaction
+            str: a key used to refer to the child for all future interaction, or a list of keys in case
+                of an iterable 'value' param
         """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
