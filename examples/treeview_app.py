@@ -28,14 +28,10 @@ class MyApp(App):
         it2 = gui.TreeItem("item2")
         self.tree.append(it2)
         
-        it2.append(gui.TreeItem("sub item1"))
         subit2 = gui.TreeItem("sub item2")
-        it2.append(subit2)
-        it2.append(gui.TreeItem("sub item3"))
+        it2.append([gui.TreeItem("sub item1"), subit2, gui.TreeItem("sub item3")])
         
-        subit2.append(gui.TreeItem("sub sub item1"))
-        subit2.append(gui.TreeItem("sub sub item2"))
-        subit2.append(gui.TreeItem("sub sub item3"))
+        subit2.append([gui.TreeItem("sub sub item1"), gui.TreeItem("sub sub item2"), gui.TreeItem("sub sub item3")])
         
         wid.append(self.tree)
 
