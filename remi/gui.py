@@ -91,7 +91,7 @@ def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
-class _VersionedDictionary(dict):
+class _VersionedDictionary(collections.OrderedDict):
     """This dictionary allows to check if its content is changed.
        It has an attribute __version__ of type int that increments every change
     """
@@ -449,6 +449,118 @@ class Widget(Tag):
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
         return super(Widget, self).repr(client, changed_widgets)
+
+    def as_dict(self):
+        """It's used to automatically serialiaze the object to dict, to be stored as JSON
+        packs all the attributes, children and so on.
+        
+        Return: dict
+        """
+
+        ret = {}
+        ret['_type'] = self.kwargs.get('_type', 'div')  # expose the element tag
+        ret['_class'] = ' '.join(self._classes)         # expose the element class
+
+        # expose any element attribute that is not an event
+        ret.update({
+            k: v for k, v in self.attributes.items()
+            if not k.startswith('on')
+        })
+
+        # expose the element style
+        ret['style'] = self.style.copy()
+
+        # expose the element children
+        ret['children'] = [
+            c.as_dict() for k, c in self.children.values() if k != 'text'
+        ]
+
+        # expose the element text
+        if 'text' in self.children:
+            ret['#text'] = self.children['text']
+
+        if hasattr(self, 'eventManager'):
+            for event, listener in self.eventManager.listeners.items():
+                ret[event] = listener['callback'].__name__
+
+        return ret
+
+    @classmethod
+    def from_dict(cls, d, pre=None, post=None):
+        """It's used to automalically construct a element from a serialized dict, previously stored
+        as JSON.
+
+        Args:
+            d: dict instance of serialized Widget
+            pre (d<dict>): an optional callback to pre-process an Widget, 
+                usefull to construct a complext element based on a given attribute
+            post(el<Widget>, events<list>): an optional callback to post-process an Widget,
+                usefull to attach event listeners to a given
+
+        Return: True, Widget
+        """
+
+        el = None
+
+        events = [                          # Extract the element events
+            (k, d.pop(k))                   # because they are behavioral
+            for k in d.keys() \
+            if k.startswith('on')
+        ]
+
+        if callable(pre):                   # Hook to pre-process an element
+            el = pre(d)                     # if an widget is given from
+                                            # pre-processor, should not build
+                                            # the element
+
+        if el is None:
+            children = d.pop('children', [])    # Extract the element children
+            class_names = d.pop('_class', '')\
+                .split(' ')                     # Extract the element classes
+            styles = d.pop('style', {})         # Extract the element styles
+            text = d.pop('#text', False)        # Extract the element text
+
+            # Build the widget constructor args
+            kwargs = {
+                '_type': d.pop('_type', 'div'),
+            }
+
+            # Append an id to the constructor, if given
+            if 'id' in d: kwargs['id'] = d['id']
+
+            # If the element has classes, append the first to the constructor
+            if class_names: kwargs['_class'] = class_names.pop(0)
+
+            el = cls(**kwargs)                  # Build the Widget
+
+            for class_name in class_names:      # Append any aditional class to the 
+                el.add_class(class_name)        # Widget
+
+            for k, v in styles:                 # Append the element styles
+                el.style[k] = v
+
+            children_list = []
+            for child in children:              # Append all children
+                append, child = cls.from_dict(child, pre=pre, post=post)
+                if append:
+                    children_list.append(child)
+            el.append(children_list)
+
+            if text:                            # Add the text as the last position
+                el.add_child('text', text)
+
+        if callable(post):                      # Hook to post-process an element
+            el = post(el, d)
+
+        for event, callback in events:          # Bind all events to they listeners
+            callback_setter = 'set_on_{0}_listener'.format(
+                event.replace('on', '')
+            )
+            if hasattr(el, callback_setter):
+                fn = getattr(el, callback_setter)
+                fn(callback)
+        
+        return el
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
