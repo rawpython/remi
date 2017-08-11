@@ -882,6 +882,16 @@ class HBox(Widget):
             key (str): Unique identifier for the child. If key.isdigit()==True '0' '1'.. the value determines the order
             in the layout
         """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+        
         key = str(key)
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
