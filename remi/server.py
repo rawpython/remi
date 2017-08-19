@@ -501,6 +501,7 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
     if(params!=null) paramStr=paramPacketize(params);
     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
     pendingSendMessages.push(message);
+    if (ws.readyState==0) { return; }
     if( pendingSendMessages.length < %s ){
         ws.send(message);
         if(comTimeout==null)
@@ -1075,10 +1076,53 @@ class StandaloneServer(Server):
             Server.stop(self)
 
 
+
+class StandaloneCefServer(Server):
+    def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True,
+                 userdata=()):
+        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
+                        password=None,
+                        multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
+                        websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                        pending_messages_queue_length=1000, userdata=userdata)
+
+        self._application_conf = {'width': width, 'height': height, 'resizable': resizable, 'fullscreen': fullscreen}
+
+        if start:
+            self.serve_forever()
+
+    def serve_forever(self):
+        try:
+            from cefpython3 import cefpython as cef
+        except ImportError:
+            raise ImportError('CEFPython3 is missing. Please install it by:\n    '
+                              'pip install cefpython3')
+        else:
+            Server.start(self)
+            #webview.create_window(self.title, self.address, **self._application_conf)
+
+
+
+            sys.excepthook = cef.ExceptHook  # To shutdown all CEF processes on error
+            cef.Initialize()
+
+            windowInfo = cef.WindowInfo()
+            windowInfo.SetAsChild(0, [0,0,400,200])
+
+            pb = cef.CreateBrowserSync(windowInfo=windowInfo, browserSettings={}, navigateUrl=self.address, window_title=self.title)
+            logging.error(dir(pb))
+            #cef.CreateBrowserSync(url=self.address, window_title=self.title)
+            cef.MessageLoop()
+            cef.Shutdown()
+            Server.stop(self)
+
+
+
 def start(main_gui_class, **kwargs):
     """This method starts the webserver with a specific App subclass."""
     debug = kwargs.pop('debug', False)
     standalone = kwargs.pop('standalone', False)
+    use_cefpython = kwargs.pop('cefpython', False)
 
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
                         format='%(name)-16s %(levelname)-8s %(message)s')
@@ -1086,7 +1130,10 @@ def start(main_gui_class, **kwargs):
             level=logging.DEBUG if debug else logging.INFO)
 
     if standalone:
-        s = StandaloneServer(main_gui_class, start=True, **kwargs)
+        if use_cefpython:
+            s = StandaloneCefServer(main_gui_class, start=True, **kwargs)
+        else:
+            s = StandaloneServer(main_gui_class, start=True, **kwargs)
     else:
         s = Server(main_gui_class, start=True, **kwargs)
 
