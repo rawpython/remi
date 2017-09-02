@@ -2771,7 +2771,7 @@ class FileDownloader(Widget, _MixinTextualWidget):
         with open(self._filename, 'r+b') as f:
             content = f.read()
         headers = {'Content-type': 'application/octet-stream',
-                   'Content-Disposition': 'attachment; filename=%s' % os.path.basename(self._filename)}
+                   'Content-Disposition': 'attachment; filename="%s"' % os.path.basename(self._filename)}
         return [content, headers]
 
 
