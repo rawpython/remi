@@ -2253,7 +2253,7 @@ class SpinBox(Input):
         js = 'var key = event.keyCode || event.charCode;'
         js += 'return (event.charCode >= 48 && event.charCode <= 57)'
         if allow_editing:
-            js += ' || (key == 8 || key == 46)'  # allow backspace and delete
+            js += ' || (key == 8 || key == 46 || key == 45|| key == 44 )'  # allow backspace and delete and minus and coma
             js += ' || (key == 13)'  # allow enter
         self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
         #FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
