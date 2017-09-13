@@ -902,7 +902,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         global http_server_instance
         self._log.debug('shutting down...')
         http_server_instance.stop()
-        update_thread.stop()
+
+    def close_connected_websockets(self): 
         for ws in self.client.websockets:
             ws.finish()
             ws.server.shutdown()
@@ -1021,31 +1022,30 @@ class Server(object):
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:
-            def sig_ignore(sig, _):
-                self._log.info('*** signal %d ignored.' % sig)
+            def sig_manager(sig, callstack):
+                self.stop()
+                self._log.info('*** signal %d received.' % sig)
                 return signal.SIG_IGN
-            signal.signal(signal.SIGINT, sig_ignore)
-            while self._alive:
-                signal.pause()
-                self._log.debug(' ** signal received')
+            prev_handler = signal.signal(signal.SIGINT, sig_manager)
         except Exception:
             # signal.pause() is missing for Windows; wait 1ms and loop instead
-            while self._alive:
-                time.sleep(1)
+            pass
         except KeyboardInterrupt:
             pass
+        while self._alive:
+            time.sleep(1)
         self._log.debug(' ** serve_forever() quitting')
 
     def stop(self):
+        global clients
         self._alive = False
         self._wsserver.shutdown()
         self._wsth.join()
         self._sserver.shutdown()
         self._sth.join()
-        try:
-            signal.pthread_kill(self._myid, signal.SIGINT)
-        except Exception:
-            pass
+        update_thread.stop()
+        for client in clients.values():
+            client.close_connected_websockets()
 
 
 class StandaloneServer(Server):
