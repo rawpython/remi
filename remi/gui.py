@@ -2228,6 +2228,68 @@ class CheckBox(Input):
         return 'checked' in self.attributes
 
 
+class RadioButtonLabel(Widget):
+    @decorate_constructor_parameter_types([str, bool, str, str])
+    def __init__(self, label='', checked=False, group='radio', user_data='', **kwargs):
+        """
+        Args:
+            label (str):
+            checked (bool):
+            group (str):
+            user_data (str):
+            kwargs: See Widget.__init__()
+        """
+        super(RadioButtonLabel, self).__init__(**kwargs)
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
+        self._radiobutton = RadioButton(checked, group, user_data)
+        self._label = Label(label)
+        self.append(self._radiobutton, key='radiobutton')
+        self.append(self._label, key='label')
+
+        self.set_value = self._radiobutton.set_value
+        self.get_value = self._radiobutton.get_value
+
+        self._radiobutton.set_on_change_listener(self.onchange)
+
+    def onchange(self, widget, value):
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
+
+    @decorate_set_on_listener("onchange", "(self,emitter,new_value)")
+    def set_on_change_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+
+
+class RadioButton(Input):
+    """Radio button widget to make sure only a single option is selected from a given group"""
+    @decorate_constructor_parameter_types([bool,str, str])
+    def __init__(self, checked=False, group='radio', user_data='', **kwargs):
+        super(RadioButton, self).__init__('radio', user_data, **kwargs)
+        self.attributes[self.EVENT_ONCHANGE] = \
+            "var params={};params['value']=document.getElementById('%(id)s').checked;" \
+            "sendCallbackParam('%(id)s','%(evt)s',params);" % {'id':  self.identifier,
+                                                               'evt': self.EVENT_ONCHANGE}
+        self.attributes['name'] = group
+        self.set_value(checked)
+
+    def onchange(self, value):
+        self.set_value(value in ('True', 'true'))
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (value,))
+
+    def set_value(self, checked, update_ui=1):
+        if checked:
+            self.attributes['checked'] = 'checked'
+        else:
+            if 'checked' in self.attributes:
+                del self.attributes['checked']
+
+    def get_value(self):
+        """
+        Returns:
+            bool:
+        """
+        return 'checked' in self.attributes
+
+
 class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
