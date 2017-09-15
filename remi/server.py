@@ -465,7 +465,11 @@ function websocketOnMessage (evt){
         document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
         document.body.innerHTML += decodeURIComponent(content);
     }else if( received_msg[0]=='1' ){ /*update_widget*/
-        var focusedElement = document.activeElement.id;
+        var focusedElement=-1;
+        if (document.activeElement)
+        {
+            focusedElement = document.activeElement.id;
+        }
         var index = received_msg.indexOf(',')+1;
         var idElem = received_msg.substr(1,index-2);
         var content = received_msg.substr(index,received_msg.length-index);

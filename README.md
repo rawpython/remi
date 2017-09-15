@@ -4,30 +4,6 @@
 [![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
-Notices
-===
-*2016 October 18* - event API change. BROKEN BACKWARD COMPATIBILITY.
-
-Event registration now have to be done with callbacks instead of passing listener instance and function name.
-i.e.
-```
-widget.set_on_click_listener(listener.my_callback)
-```
-
-The callback function now receives the emitter instance as first parameter.
-i.e.
-```
-def my_callback(self, widget):
-    pass
-```
-
-Event listener registration now accepts user data extra parameters.
-i.e.
-```
-widget.set_on_click_listener(listener.my_callback, user_param1, user_param2)
-def my_callback(self, widget, user_param1, user_param2):
-    pass
-```
 
 Do you need support? Reach us on [Gitter chat](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge).
 
@@ -50,8 +26,6 @@ Then start the test script:
 python widgets_overview_app.py
 ```
 
-we recommend installing Remi into a virtualenv. Remi is not yet API stable.
-
 Remi
 ===
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
@@ -73,7 +47,7 @@ These widgets are available:
 - DropDown
 - Image
 - Table
-- GenericObject : allows to show embedded object like pdf,swf..
+- TableWidget
 - Slider
 - ColorPicker
 - Date
@@ -136,9 +110,6 @@ I have developed this using Chrome (on Windows, Linux and Android) and haven't t
 
 - **Is it open source?**  
 For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
-
-- **Where is the documentation?**  
-I'm working on this, but it requires time. If you need support you can contact me directly on dddomodossola(at)gmail(dot)com
 
 - **Do I need some kind of webserver?**
 No, it's included.
@@ -322,9 +293,9 @@ Remi is made to be compatible from Python2.7 to Python3.X . Please notify compat
 Security
 ===
 Remi should be intended as a standard desktop gui framework. 
-The library itself don't implements security strategies, and so it's advisable to don't expose its access to unsafe public networks.
+The library itself doesn't implement security strategies, and so it is advised to not expose its access to unsafe public networks.
 
-When loading data from external sources, consider to protect the application from potential javascript injection before displaying the content directly.
+When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
 
 
 Contributors
