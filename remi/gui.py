@@ -1135,6 +1135,32 @@ class TextInput(Widget, _MixinTextualWidget):
         """
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
+    def onkeyup(self, new_value):
+        """Called when user types and releases a key into the TextInput
+        
+        Args:
+            new_value (str): the new string content of the TextInput
+        """
+        self.set_value(new_value)
+        self.children.align_version()
+        return self.eventManager.propagate(self.EVENT_ONKEYUP, (new_value,))
+
+    @decorate_set_on_listener("onkeyup", "(self,emitter,new_value)")
+    def set_on_key_up_listener(self, callback, *userdata):
+        """Registers the listener for the Widget.onkeyup event.
+
+        Note: the listener prototype have to be in the form on_textinput_key_up(self, widget, new_value) where
+        new_value is the new text content of the TextInput.
+
+        Args:
+            callback (function): Callback function pointer.
+        """
+        self.attributes[self.EVENT_ONKEYUP] = \
+            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join('');
+            var params={};params['new_value']=elem.value;
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONKEYUP}    
+        self.eventManager.register_listener(self.EVENT_ONKEYUP, callback, *userdata)
+
     def onkeydown(self, new_value):
         """Called when the user types a key into the TextInput.
 
@@ -1144,6 +1170,7 @@ class TextInput(Widget, _MixinTextualWidget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_value(new_value)
+        self.children.align_version()
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
     @decorate_set_on_listener("onkeydown", "(self,emitter,new_value)")
@@ -1173,6 +1200,7 @@ class TextInput(Widget, _MixinTextualWidget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_value(new_value)
+        self.children.align_version()
         return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
     @decorate_set_on_listener("onenter", "(self,emitter,new_value)")
