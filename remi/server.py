@@ -1042,7 +1042,6 @@ class Server(object):
         self._wsserver.shutdown()
         self._wsth.join()
         self._sserver.shutdown()
-        self._sth.join()
         update_thread.stop()
         for client in clients.values():
             client.close_connected_websockets()
