@@ -1027,8 +1027,6 @@ class Server(object):
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0' and 'C9_IP' not in os.environ:
             shost = '127.0.0.1'
-        else:
-            os.environ['BROWSER'] = '/bin/true' # prevent curses based display not visible on c9
         self._base_address = 'http://%s:%s/' % (shost,sport)
         self._log.info('Started httpserver %s' % self._base_address)
         if self._start_browser:
@@ -1039,7 +1037,7 @@ class Server(object):
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
                     webbrowser.get('windows-default').open(self._base_address)
-                else:
+                elif 'C9_IP' not in os.environ:
                     webbrowser.open(self._base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
         self._sth.daemon = False
