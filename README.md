@@ -269,6 +269,13 @@ Just define the parameters **username** and **password** in the start call:
 start(MyApp, username='myusername', password='mypassword') 
 ```
 
+Protocol security
+===
+In order to support login forms and data forms you can choose to use https protocol by giving a .pem certificate.
+To enable https pass the **https** and **certfile** parameters in the start call
+```py
+start(MyApp, https=True, certfile="./server.pem")
+```
 
 Styling
 ===
