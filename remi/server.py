@@ -133,11 +133,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def setup(self):
         global clients
         socketserver.StreamRequestHandler.setup(self)
-        self._log.info('connection established: %r' % (self.client_address,))
+        self._log.info('WebSocket connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
-        self._log.debug('handle')
+        self._log.debug('WebSocket handle')
         # on some systems like ROS, the default socket timeout
         # is less than expected, we force it to infinite (None) as default socket value
         self.request.settimeout(None)
@@ -147,10 +147,15 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             else:
                 if not self.read_next_message():
                     k = get_instance_key(self)
-                    clients[k].websockets.remove(self)
-                    self.handshake_done = False
-                    self._log.debug('ws ending websocket service')
-                    break
+                    try:
+                        clients[k].websockets.remove(self)
+                        self.handshake_done = False
+                        self._log.debug('ws ending websocket service')
+                        break
+                    except:
+                        self.handshake_done = True
+                        self._log.debug('Tried to remove self when not in client...')
+                        return
 
     @staticmethod
     def bytetonum(b):
@@ -165,6 +170,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 length = self.rfile.read(2)
             except ValueError:
                 # socket was closed, just return without errors
+                self._log.debug('Socket was closed, returning without errors')
+                return False
+            self._log.debug('WS response, length is %r' % length)
+            if len(length) < 1:
                 return False
             length = self.bytetonum(length[1]) & 127
             if length == 126:
@@ -175,10 +184,13 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             decoded = ''
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
+            self._log.debug('Decoded WebSocket message %r' % decoded)
             self.on_message(from_websocket(decoded))
         except socket.timeout:
+            self._log.debug('WebSocket timeout')
             return False
-        except Exception:
+        except Exception as ex:
+            self._log.debug('Other exception %r' % ex )
             return False
         return True
 
@@ -211,17 +223,31 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        self._log.debug('handshake')
+        self._log.debug('WebSocket handshake')
         data = self.request.recv(1024).strip()
-        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        #self._log.debug('WebSocket handshake data is %s' % data.decode())
+        #
+        # Code used to look for Sec-WebSocket-Key, some clients respond in lower case
+        #
+        try:
+            key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        except IndexError:
+            try:
+                #
+                # Try Cloud9 method..
+                #
+                key = data.decode().split('sec-websocket-key: ')[1].split('\r\n')[0]
+            except:
+                return
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
+        self._log.debug('key is ' + key)
         digest = digest.digest()
         digest = base64.b64encode(digest)
         response = 'HTTP/1.1 101 Switching Protocols\r\n'
         response += 'Upgrade: websocket\r\n'
         response += 'Connection: Upgrade\r\n'
         response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
-        self._log.info('handshake complete')
+        self._log.info('WebSocket handshake complete')
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
@@ -345,7 +371,6 @@ class _UpdateThread(threading.Thread):
 
 # noinspection PyPep8Naming
 class App(BaseHTTPRequestHandler, object):
-
     """
     This class will handles any incoming request from the browser
     The main application class can subclass this
@@ -382,6 +407,7 @@ class App(BaseHTTPRequestHandler, object):
     def log_error(self, format_string, *args):
         msg = format_string % args
         self._log.error("%s %s" % (self.address_string(), msg))
+        raise('Exception')
 
     def _instance(self):
         global clients
@@ -635,6 +661,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     xhr.send(fd);
 };
 </script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
+
+        self._log.debug('Prpeare javascript with interface %s and port %s' % (net_interface_ip, wsport))
 
         # add built in js, extend with user js
         clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
@@ -932,9 +960,14 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 class Server(object):
     # noinspection PyShadowingNames
-    def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
+    def __init__(self, gui_class, title='', start=True,
+                 address=os.getenv('IP','0.0.0.0'),
+                 port=int(os.getenv('PORT',8080)),
+                 username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
-                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                 websocket_timeout_timer_ms=1000,
+                 websocket_port=int(os.getenv('PORT',8080))+1,
+                 host_name=os.getenv('C9_HOSTNAME', None),
                  pending_messages_queue_length=1000, userdata=()):
         global http_server_instance
         http_server_instance = self
@@ -998,7 +1031,7 @@ class Server(object):
                                            self._title, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
-        if shost == '0.0.0.0':
+        if shost == '0.0.0.0' and 'C9_IP' not in os.environ:
             shost = '127.0.0.1'
         self._base_address = 'http://%s:%s/' % (shost,sport)
         self._log.info('Started httpserver %s' % self._base_address)
@@ -1010,7 +1043,7 @@ class Server(object):
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
                     webbrowser.get('windows-default').open(self._base_address)
-                else:
+                elif 'C9_IP' not in os.environ:
                     webbrowser.open(self._base_address)
         self._sth = threading.Thread(target=self._sserver.serve_forever)
         self._sth.daemon = False
@@ -1051,7 +1084,7 @@ class Server(object):
 class StandaloneServer(Server):
     def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True,
                  userdata=()):
-        Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
+        Server.__init__(self, gui_class, title=title, start=False, address='0.0.0.0', port=0, username=None,
                         password=None,
                         multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
                         websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
