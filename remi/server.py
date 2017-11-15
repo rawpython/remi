@@ -229,10 +229,16 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         #
         # Code used to look for Sec-WebSocket-Key, some clients respond in lower case
         #
-        if 'C9_HOSTNAME' in os.environ:
-            key = data.decode().split('sec-websocket-key: ')[1].split('\r\n')[0]
-        else:
+        try:
             key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        except IndexError:
+            try:
+                #
+                # Try Cloud9 method..
+                #
+                key = data.decode().split('sec-websocket-key: ')[1].split('\r\n')[0]
+            except:
+                return
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         self._log.debug('key is ' + key)
         digest = digest.digest()
