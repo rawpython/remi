@@ -27,16 +27,24 @@ class MyApp(App):
             width=540, margin='0px auto',
             style={'display': 'block', 'overflow': 'hidden'})
 
+        info_bt = gui.Button('Show info dialog',
+                             width=200, height=30, margin='10px')
+
         error_bt = gui.Button('Show error dialog',
                               width=200, height=30, margin='10px')
         
         # setting the listener for the onclick event of the button
+        info_bt.set_on_click_listener(self.show_info_dialog)
         error_bt.set_on_click_listener(self.show_error_dialog)
 
+        verticalContainer.append(info_bt)
         verticalContainer.append(error_bt)
 
         # returning the root widget
         return verticalContainer
+
+    def show_info_dialog(self, widget):
+        dialogs.Info('Some information message', width=300).show(self)
 
     def show_error_dialog(self, widget):
         dialogs.Error('Some error message', width=300).show(self)

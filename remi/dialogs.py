@@ -101,6 +101,20 @@ class _DialogBase(Widget):
         self._base_app_instance.set_root_widget(self._old_root_widget)
 
 
+class Info(_DialogBase):
+    """Show a information dialog with a little message and button to accept.
+
+    The Ok button emits the 'confirm_dialog' event. Register the listener to
+    it with set_on_confirm_dialog_listener.
+    """
+    @decorate_constructor_parameter_types([str, Widget])
+    def __init__(self, message='', **kwargs):
+        super(Info, self).__init__(
+            title='Information',
+            content=_make_content_(message, '/res/info.png'),
+            **kwargs)
+
+
 class Error(_DialogBase):
     """Show a error dialog with a little message and button to accept.
 
@@ -115,7 +129,8 @@ class Error(_DialogBase):
             title='Error',
             content=_make_content_(message, '/res/error.png'),
             **kwargs)
-        
+
+
 def _make_content_(message, icon_name):
     container = Widget()
     container.style['display'] = 'block'
