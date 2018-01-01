@@ -38,5 +38,4 @@ class Canvas(Widget):
         return self.attributes['id']
 
     def draw(self, js_code):
-        print js_code
         self._app.execute_javascript(js_code)
