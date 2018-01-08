@@ -533,6 +533,24 @@ class Widget(Tag):
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, callback, *userdata)
 
+    def ondblclick(self):
+        """Called when the Widget gets double clicked by the user with the left mouse button."""
+        return self.eventManager.propagate(self.EVENT_ONDBLCLICK, ())
+
+    @decorate_set_on_listener("ondblclick", "(self,emitter)")
+    def set_on_dblclick_listener(self, callback, *userdata):
+        """Registers the listener for the Widget.ondblclick event.
+
+        Note: the listener prototype have to be in the form on_widget_dblclick(self, widget).
+
+        Args:
+            callback (function): Callback function pointer.
+        """
+        self.attributes[self.EVENT_ONDBLCLICK] = \
+            "sendCallback('%s','%s');" \
+            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONDBLCLICK)
+        self.eventManager.register_listener(self.EVENT_ONDBLCLICK, callback, *userdata)
+
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
         """
@@ -2281,7 +2299,7 @@ class SpinBox(Input):
         js = 'var key = event.keyCode || event.charCode;'
         js += 'return (event.charCode >= 48 && event.charCode <= 57)'
         if allow_editing:
-            js += ' || (key == 8 || key == 46)'  # allow backspace and delete
+            js += ' || (key == 8 || key == 46 || key == 45|| key == 44 )'  # allow backspace and delete and minus and coma
             js += ' || (key == 13)'  # allow enter
         self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
         #FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
