@@ -34,6 +34,7 @@ import signal
 import time
 import os
 import re
+import ssl
 try:
     from urllib import unquote
     from urllib import quote
@@ -916,8 +917,13 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
-                 title, *userdata):
+                 title, https, certfile, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
+        if https:
+            try:
+                self.socket = ssl.wrap_socket(self.socket, certfile=certfile, server_side=True)
+            except Exception as e:
+                logging.warn("Cannot start https server %s", str(e))
         self.websocket_address = websocket_address
         self.auth = auth
         self.multiple_instance = multiple_instance
@@ -935,7 +941,7 @@ class Server(object):
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
-                 pending_messages_queue_length=1000, userdata=()):
+                 pending_messages_queue_length=1000, userdata=(), https=False, certfile=None, ignoreSIGINT=False):
         global http_server_instance
         http_server_instance = self
 
@@ -955,6 +961,7 @@ class Server(object):
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
         self._userdata = userdata
+
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
         else:
@@ -963,12 +970,18 @@ class Server(object):
         if not isinstance(userdata, tuple):
             raise ValueError('userdata must be a tuple')
 
+        if https:
+            if certfile is None:
+                raise ValueError('server certificate must be used')
+
+
+
         self._log = logging.getLogger('remi.server')
         self._alive = True
         if start:
             self._myid = threading.Thread.ident
-            self.start()
-            self.serve_forever()
+            self.start(https, certfile)
+            self.serve_forever(ignoreSIGINT)
 
     @property
     def title(self):
@@ -978,7 +991,7 @@ class Server(object):
     def address(self):
         return self._base_address
 
-    def start(self):
+    def start(self, https, certfile):
         # here the websocket is started on an ephemereal port
         self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
                                                  self._multiple_instance)
@@ -995,12 +1008,14 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
-                                           self._title, *self._userdata)
+                                           self._title, https, certfile, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
             shost = '127.0.0.1'
         self._base_address = 'http://%s:%s/' % (shost,sport)
+        if(https):
+            self._base_address = 'https://%s:%s/' % (shost,sport)
         self._log.info('Started httpserver %s' % self._base_address)
         if self._start_browser:
             try:
@@ -1016,7 +1031,7 @@ class Server(object):
         self._sth.daemon = False
         self._sth.start()
 
-    def serve_forever(self):
+    def serve_forever(self, ignoreSIGINT=False):
         # we could join on the threads, but join blocks all interupts (including
         # ctrl+c, so just spin here
         # noinspection PyBroadException
@@ -1024,7 +1039,7 @@ class Server(object):
             def sig_ignore(sig, _):
                 self._log.info('*** signal %d ignored.' % sig)
                 return signal.SIG_IGN
-            signal.signal(signal.SIGINT, sig_ignore)
+            if ignoreSIGINT: signal.signal(signal.SIGINT, sig_ignore)
             while self._alive:
                 signal.pause()
                 self._log.debug(' ** signal received')
@@ -1084,6 +1099,7 @@ def start(main_gui_class, **kwargs):
                         format='%(name)-16s %(levelname)-8s %(message)s')
     logging.getLogger('remi').setLevel(
             level=logging.DEBUG if debug else logging.INFO)
+
 
     if standalone:
         s = StandaloneServer(main_gui_class, start=True, **kwargs)
