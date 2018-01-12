@@ -158,7 +158,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.last_ping = time.time()
         self.handshake_done = False
         self.handshaking = False
-        self.log = logging.getLogger('remi.server.ws')
+        self._log = logging.getLogger('remi.server.ws')
         self.pending_fragments = []
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
@@ -197,7 +197,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        self.log.debug('read_next_message')
+        self._log.debug('read_next_message')
         try:
             # handle multi-part messsages as described in:
             # https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_servers
@@ -238,7 +238,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             
             self.on_message(decoded)
         except Exception as e:
-            self.log.error("Exception parsing websocket", exc_info=True)
+            self._log.error("Exception parsing websocket", exc_info=True)
             return False
         return True
 
@@ -273,7 +273,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         self.handshaking = True
         try:
-            self.log.debug('handshake')
+            self._log.debug('handshake')
 
             data = self.request.recv(1024).strip()
 
@@ -331,7 +331,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except IndexError:
                 raise IndexError
             except Exception as e:
-                self.log.error('error parsing websocket', exc_info=True)
+                self._log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
 
