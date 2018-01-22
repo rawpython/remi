@@ -276,7 +276,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             self._log.debug('handshake')
 
             data = self.request.recv(1024).strip()
-
+            print("handshake data:"+ data.decode())
             key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
             digest = hashlib.sha1((key.encode("utf-8")+self.magic))
             digest = digest.digest()
