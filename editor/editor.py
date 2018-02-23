@@ -25,7 +25,7 @@ import html_helper
 
 
 class ResizeHelper(gui.Widget):
-    def __init__(self, **kwargs):
+    def __init__(self, project, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/resize.png')"
@@ -33,12 +33,14 @@ class ResizeHelper(gui.Widget):
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
-        self.attributes['draggable'] = 'true'
-        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['resize',event.target.id,(event.clientX),(event.clientY)]));"
-        self.attributes['ondragover'] = "event.preventDefault();"   
-        self.attributes['ondrop'] = "event.preventDefault();return false;"
+        self.project = project
         self.parent = None
         self.refWidget = None
+        self.active = False
+        self.set_on_mousedown_listener(self.start_drag)
+
+        self.origin_x = -1
+        self.origin_y = -1
         
     def setup(self, refWidget, newParent):
         #refWidget is the target widget that will be resized
@@ -58,35 +60,41 @@ class ResizeHelper(gui.Widget):
         except:
             #the selected widget's parent can't contain a ResizeHelper
             pass
+        #self.refWidget.style['position'] = 'relative'
         self.update_position()
             
-    def on_dropped(self, left, top):
-        try:
-            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
-                self.refWidget.style['width'] = gui.to_pix(gui.from_pix(self.refWidget.style['width']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
-                self.refWidget.style['height'] = gui.to_pix(gui.from_pix(self.refWidget.style['height']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
-        except:
-            pass
+    def start_drag(self, emitter, x, y):
+        self.active = True
+        self.project.set_on_mousemove_listener(self.on_drag)
+        self.project.set_on_mouseup_listener(self.stop_drag)
+        self.project.set_on_mouseleave_listener(self.stop_drag, 0, 0)
+        self.origin_x = -1
+        self.origin_y = -1
+
+    def stop_drag(self, emitter, x, y):
+        self.active = False
         self.update_position()
-        
+
+    def on_drag(self, emitter, x, y):
+        if self.active:
+            if self.origin_x == -1:
+                self.origin_x = int(x)
+                self.origin_y = int(y)
+                self.refWidget_origin_w = gui.from_pix(self.refWidget.style['width'])
+                self.refWidget_origin_h = gui.from_pix(self.refWidget.style['height'])
+            else:
+                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + int(x) - self.origin_x )
+                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + int(y) - self.origin_y)
+                self.update_position()
+
     def update_position(self):
-        if self.refWidget == None:
-            return
-        if self.refWidget.style['position'] != 'absolute' or ('right' in self.refWidget.style) or ('bottom' in self.refWidget.style):
-            self.style['display'] = 'none'
-            return
-        try:
-            self.style['position'] = 'absolute'
-            self.style['display'] = 'block'
-            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
-                self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['width'])+gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
-                self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['height'])+gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
-        except:
-            self.style['display'] = 'none'
-            
+        self.style['position']='absolute'
+        self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
+        self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
+
 
 class DragHelper(gui.Widget):
-    def __init__(self, **kwargs):
+    def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/drag.png')"
@@ -94,12 +102,14 @@ class DragHelper(gui.Widget):
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
-        self.attributes['draggable'] = 'true'
-        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['resize',event.target.id,(event.clientX),(event.clientY)]));"
-        self.attributes['ondragover'] = "event.preventDefault();"   
-        self.attributes['ondrop'] = "event.preventDefault();return false;"
+        self.project = project
         self.parent = None
         self.refWidget = None
+        self.active = False
+        self.set_on_mousedown_listener(self.start_drag)
+
+        self.origin_x = -1
+        self.origin_y = -1
         
     def setup(self, refWidget, newParent):
         #refWidget is the target widget that will be resized
@@ -108,7 +118,7 @@ class DragHelper(gui.Widget):
             try:
                 self.parent.remove_child(self)
             except:
-                #there was no DragHelper placed
+                #there was no ResizeHelper placed
                 pass
         if newParent==None:
             return
@@ -117,33 +127,40 @@ class DragHelper(gui.Widget):
         try:
             self.parent.append(self)
         except:
-            #the selected widget's parent can't contain a DragHelper
+            #the selected widget's parent can't contain a ResizeHelper
             pass
+        #self.refWidget.style['position'] = 'relative'
         self.update_position()
             
-    def on_dropped(self, left, top):
-        try:
-            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
-                self.refWidget.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(left) - gui.from_pix(self.style['left']))
-                self.refWidget.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(top) - gui.from_pix(self.style['top']))
-        except:
-            pass
+    def start_drag(self, emitter, x, y):
+        self.active = True
+        self.project.set_on_mousemove_listener(self.on_drag)
+        self.project.set_on_mouseup_listener(self.stop_drag)
+        self.project.set_on_mouseleave_listener(self.stop_drag, 0, 0)
+        self.origin_x = -1
+        self.origin_y = -1
+    
+    def stop_drag(self, emitter, x, y):
+        self.active = False
         self.update_position()
-        
+
+    def on_drag(self, emitter, x, y):
+        if self.active:
+            if self.origin_x == -1:
+                self.origin_x = int(x)
+                self.origin_y = int(y)
+                self.refWidget_origin_x = gui.from_pix(self.refWidget.style['left'])
+                self.refWidget_origin_y = gui.from_pix(self.refWidget.style['top'])
+            else:
+                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + int(x) - self.origin_x )
+                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + int(y) - self.origin_y)
+                self.update_position()
+
     def update_position(self):
-        if self.refWidget == None:
-            return
-        if self.refWidget.style['position'] != 'absolute' or ('right' in self.refWidget.style) or ('bottom' in self.refWidget.style):
-            self.style['display'] = 'none'
-            return
-        try:
-            self.style['position'] = 'absolute'
-            self.style['display'] = 'block'
-            if ('left' in self.refWidget.style) and ('top' in self.refWidget.style) and ('height' in self.refWidget.style) and ('width' in self.refWidget.style) and ('height' in self.style) and ('width' in self.style):
-                self.style['left'] = gui.to_pix(gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width'])/2)
-                self.style['top'] = gui.to_pix(gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['height'])/2)
-        except:
-            self.style['display'] = 'none'
+        self.style['position']='absolute'
+        self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) - gui.from_pix(self.style['width'])/2)
+        self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) - gui.from_pix(self.style['height'])/2)
+
 
 
 class Project(gui.Widget):
@@ -509,8 +526,8 @@ class Editor(App):
         self.subContainer.append(self.subContainerRight)
         self.project.style['position'] = 'relative'
         
-        self.resizeHelper = ResizeHelper(width=16, height=16)
-        self.dragHelper = DragHelper(width=15, height=15)
+        self.resizeHelper = ResizeHelper(self.project, width=16, height=16)
+        self.dragHelper = DragHelper(self.project, width=15, height=15)
         self.menu_new_clicked(None)
         
         self.projectPathFilename = ''
@@ -707,7 +724,7 @@ def main():
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(Editor, debug=False, address='0.0.0.0', port=8082)
+    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=2.0)
     
 if __name__ == "__main__":
     main()
