@@ -27,6 +27,7 @@ import html_helper
 class ResizeHelper(gui.Widget):
     def __init__(self, project, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
+
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/resize.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
@@ -34,6 +35,7 @@ class ResizeHelper(gui.Widget):
         self.style['left']='0px'
         self.style['top']='0px'
         self.project = project
+
         self.parent = None
         self.refWidget = None
         self.active = False
@@ -96,6 +98,7 @@ class ResizeHelper(gui.Widget):
 class DragHelper(gui.Widget):
     def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
+
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/drag.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
@@ -103,6 +106,7 @@ class DragHelper(gui.Widget):
         self.style['left']='0px'
         self.style['top']='0px'
         self.project = project
+
         self.parent = None
         self.refWidget = None
         self.active = False
@@ -171,10 +175,10 @@ class Project(gui.Widget):
     def __init__(self, **kwargs):
         super(Project, self).__init__(**kwargs)
     
-        self.style['position'] = 'relative'    
-        self.style['overflow'] = 'auto'
-        self.style['background-color'] = 'rgb(250,248,240)'
-        self.style['background-image'] = "url('/res/background.png')"
+        self.style.update({'position':'relative',
+            'overflow':'auto',
+            'background-color':'rgb(250,248,240)',
+            'background-image':"url('/res/background.png')"})
     
     def new(self):
         #remove the main widget
@@ -401,23 +405,17 @@ class Editor(App):
         #m12.style['visibility'] = 'hidden'
         m121 = gui.MenuItem('Save', width=100, height=30)
         m122 = gui.MenuItem('Save as', width=100, height=30)
-        m1.append(m10)
-        m1.append(m11)
-        m1.append(m12)
-        m12.append(m121)
-        m12.append(m122)
+        m1.append([m10, m11, m12])
+        m12.append([m121, m122])
         
         m2 = gui.MenuItem('Edit', width=100, height='100%')
         m21 = gui.MenuItem('Cut', width=100, height=30)
         m22 = gui.MenuItem('Paste', width=100, height=30)
-        m2.append(m21)
-        m2.append(m22)
+        m2.append([m21, m22])
         
         m3 = gui.MenuItem('Project Config', width=200, height='100%')
         
-        menu.append(m1)
-        menu.append(m2)
-        menu.append(m3)
+        menu.append([m1, m2, m3])
         
         menubar.append(menu)
         
@@ -444,9 +442,9 @@ class Editor(App):
         m3.set_on_click_listener(self.menu_project_config_clicked)
         
         self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL)
-        self.subContainer.style['position'] = 'relative'
-        self.subContainer.style['overflow']='auto'
-        self.subContainer.style['align-items']='stretch'
+        self.subContainer.style.update({'position':'relative',
+            'overflow':'auto',
+            'align-items':'stretch'})
                 
         #here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(self, width='100%', height='50%')
@@ -495,35 +493,27 @@ class Editor(App):
         self.attributeEditor.style['overflow'] = 'hide'
         self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%')
         
-        self.mainContainer.append(menubar)
-        self.mainContainer.append(self.subContainer)
+        self.mainContainer.append([menubar, self.subContainer])
         
         self.subContainerLeft = gui.Widget(width='20%', height='100%')
         self.subContainerLeft.style['position'] = 'relative'
         self.subContainerLeft.style['left'] = '0px'
-        self.subContainerLeft.append(self.widgetsCollection)
-        self.subContainerLeft.append(self.signalConnectionManager)
+        self.subContainerLeft.append([self.widgetsCollection, self.signalConnectionManager])
         self.subContainerLeft.add_class('RaisedFrame')
         
         self.centralContainer = gui.VBox(width='56%', height='100%')
-        self.centralContainer.append(self.toolbar)
-        self.centralContainer.append(self.project)
+        self.centralContainer.append([self.toolbar, self.project])
         
         self.subContainerRight = gui.Widget(width='24%', height='100%')
-        self.subContainerRight.style['position'] = 'absolute'
-        self.subContainerRight.style['right'] = '0px'
-        self.subContainerRight.style['overflow'] = 'scroll'
+        self.subContainerRight.style.update({'position':'absolute', 'right':'0px', 'overflow':'scroll'})
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
         self.instancesWidget.dropDown.set_on_change_listener(self.on_instances_widget_selection)
         
-        self.subContainerRight.append(self.instancesWidget)
-        self.subContainerRight.append(self.attributeEditor)
+        self.subContainerRight.append([self.instancesWidget, self.attributeEditor])
         
-        self.subContainer.append(self.subContainerLeft)
-        self.subContainer.append(self.centralContainer)
-        self.subContainer.append(self.subContainerRight)
+        self.subContainer.append([self.subContainerLeft, self.centralContainer, self.subContainerRight])
         self.project.style['position'] = 'relative'
         
         self.resizeHelper = ResizeHelper(self.project, width=16, height=16)

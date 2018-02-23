@@ -31,8 +31,7 @@ class SvgPlot(gui.Svg):
         self.textYMax = gui.SvgText(0, 0, "max")
         self.textYMin.style['font-size'] = gui.to_pix(self.font_size)
         self.textYMax.style['font-size'] = gui.to_pix(self.font_size)
-        self.append(self.textYMin)
-        self.append(self.textYMax)
+        self.append([self.textYMin, self.textYMax])
 
     def append_poly(self, poly):
         self.append(poly)
@@ -45,12 +44,8 @@ class SvgPlot(gui.Svg):
         poly.lineYValIndicator = gui.SvgLine(0, 0, 0, 0)
         poly.lineXMinIndicator = gui.SvgLine(0, 0, 0, 0)
         poly.lineXMaxIndicator = gui.SvgLine(0, 0, 0, 0)
-        self.append(poly.textXMin)
-        self.append(poly.textXMax)
-        self.append(poly.textYVal)
-        self.append(poly.lineYValIndicator)
-        self.append(poly.lineXMinIndicator)
-        self.append(poly.lineXMaxIndicator)
+        self.append([poly.textXMin, poly.textXMax, poly.textYVal, poly.lineYValIndicator, 
+            poly.lineXMinIndicator, poly.lineXMaxIndicator])
 
     def remove_poly(self, poly):
         self.remove_child(poly)
@@ -137,9 +132,7 @@ class MyApp(App):
         self.plotData2.set_stroke(1.0, 'green')
         self.plotData3 = gui.SvgPolyline(300)
         self.plotData3.set_stroke(3.0, 'orange')
-        self.svgplot.append_poly(self.plotData1)
-        self.svgplot.append_poly(self.plotData2)
-        self.svgplot.append_poly(self.plotData3)
+        self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3])
 
         self.wid.append(self.svgplot)
 

@@ -136,14 +136,10 @@ class MyApp(App):
         self.horizontal_container.append(self.info)
         imgMine = gui.Image('/res/mine.png')
         imgMine.set_size(30, 30)
-        self.horizontal_container.append(imgMine)
-        self.horizontal_container.append(self.lblMineCount)
+        self.horizontal_container.append([imgMine, self.lblMineCount])
         imgFlag = gui.Image('/res/flag.png')
         imgFlag.set_size(30, 30)
-        self.horizontal_container.append(imgFlag)
-        self.horizontal_container.append(self.lblFlagCount)
-        self.horizontal_container.append(self.lblTime)
-        self.horizontal_container.append(self.btReset)
+        self.horizontal_container.append([imgFlag, self.lblFlagCount, self.lblTime, self.btReset])
 
         self.minecount = 0  # mine number in the map
         self.flagcount = 0  # flag placed by the players
@@ -153,9 +149,7 @@ class MyApp(App):
         self.link.set_size(1000, 20)
         self.link.style['margin'] = '10px'
         
-        self.main_container.append(self.title)
-        self.main_container.append(self.horizontal_container)
-        self.main_container.append(self.link)
+        self.main_container.append([self.title, self.horizontal_container, self.link])
 
         self.new_game(self)
 

@@ -247,23 +247,35 @@ class Tag(object):
             pass
         self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
-    def add_child(self, key, child):
+    def add_child(self, key, value):
         """Adds a child to the Tag
 
         To retrieve the child call get_child or access to the Tag.children[key] dictionary.
 
         Args:
-            key (str):  Unique child's identifier
-            child (Tag, str):
+            key (str):  Unique child's identifier, or iterable of keys
+            value (Tag, str): can be a Tag, an iterable of Tag or a str. In case of iterable
+                of Tag is a dict, each item's key is set as 'key' param
         """
-        if hasattr(child, 'attributes'):
-            child.attributes['data-parent-widget'] = self.identifier
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.add_child(k, value[k])
+                return
+            i = 0
+            for child in value:
+                self.add_child(key[i], child)
+                i = i + 1
+            return
+
+        if hasattr(value, 'attributes'):
+            value.attributes['data-parent-widget'] = self.identifier
 
         if key in self.children:
             self._render_children_list.remove(key)
         self._render_children_list.append(key)
 
-        self.children[key] = child
+        self.children[key] = value
 
     def get_child(self, key):
         """Returns the child identified by 'key'
@@ -456,12 +468,25 @@ class Widget(Tag):
         In order to access to the specific child in this way widget.children[key].
 
         Args:
-            value (Tag or Widget): The child to be appended.
-            key (str): The unique string identifier for the child or ''
+            value (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
+                param.
 
         Returns:
-            str: a key used to refer to the child for all future interaction
+            str: a key used to refer to the child for all future interaction, or a list of keys in case
+                of an iterable 'value' param
         """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
@@ -862,10 +887,8 @@ class HBox(Widget):
 
         # fixme: support old browsers
         # http://stackoverflow.com/a/19031640
-        self.style['display'] = 'flex'
-        self.style['justify-content'] = 'space-around'
-        self.style['align-items'] = 'center'
-        self.style['flex-direction'] = 'row'
+        self.style.update({'display':'flex', 'justify-content':'space-around', 
+            'align-items':'center', 'flex-direction':'row'})
 
     def append(self, value, key=''):
         """It allows to add child widgets to this.
@@ -877,6 +900,16 @@ class HBox(Widget):
             key (str): Unique identifier for the child. If key.isdigit()==True '0' '1'.. the value determines the order
             in the layout
         """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+        
         key = str(key)
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
@@ -886,10 +919,7 @@ class HBox(Widget):
         if 'right' in value.style.keys():
             del value.style['right']
 
-        value.style['position'] = 'static'
-
-        value.style['-webkit-order'] = '-1'
-        value.style['order'] = '-1'
+        value.style.update({'position':'static', '-webkit-order':'-1', 'order':'-1'})
 
         if key.isdigit():
             value.style['-webkit-order'] = key
@@ -1285,9 +1315,7 @@ class GenericDialog(Widget):
         """
         super(GenericDialog, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
-        self.style['display'] = 'block'
-        self.style['overflow'] = 'auto'
-        self.style['margin'] = '0px auto'
+        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
 
         if len(title) > 0:
             t = Label(title)
@@ -1300,9 +1328,7 @@ class GenericDialog(Widget):
             self.append(m)
 
         self.container = Widget()
-        self.container.style['display'] = 'block'
-        self.container.style['overflow'] = 'auto'
-        self.container.style['margin'] = '5px'
+        self.container.style.update({'display':'block', 'overflow':'auto', 'margin':'5px'})
         self.container.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
@@ -1346,9 +1372,7 @@ class GenericDialog(Widget):
         label.style['margin'] = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
-        container.style['justify-content'] = 'space-between'
-        container.style['overflow'] = 'auto'
-        container.style['padding'] = '3px'
+        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
@@ -1365,9 +1389,7 @@ class GenericDialog(Widget):
         """
         self.inputs[key] = field
         container = HBox()
-        container.style['justify-content'] = 'space-between'
-        container.style['overflow'] = 'auto'
-        container.style['padding'] = '3px'
+        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -2463,9 +2485,7 @@ class FileFolderNavigator(Widget):
         # creation of a new instance of a itemContainer
         self.itemContainer = Widget(width='100%', height=300)
         self.itemContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
-        self.itemContainer.style['overflow-y'] = 'scroll'
-        self.itemContainer.style['overflow-x'] = 'hidden'
-        self.itemContainer.style['display'] = 'block'
+        self.itemContainer.style.update({'overflow-y':'scroll', 'overflow-x':'hidden', 'display':'block'})
 
         for i in l:
             full_path = os.path.join(directory, i)
