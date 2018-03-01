@@ -1033,7 +1033,6 @@ class TabBox(Widget):
     def add_tab(self, widget, name, tab_cb):
 
         holder = Tag(_type='div', _class='')
-        holder.style['padding'] = '15px'
         holder.add_child('content', widget)
 
         li = Tag(_type='li', _class='')
