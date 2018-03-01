@@ -57,6 +57,15 @@ class ResizeHelper(gui.Widget):
             return
         self.parent = newParent
         self.refWidget = refWidget
+        
+        self.static_positioning = False
+        if 'position' in self.refWidget.style:
+            if self.refWidget.style['position'] != 'absolute':
+                self.static_positioning = True
+
+        if self.static_positioning:
+            return
+
         try:
             self.parent.append(self)
         except:
@@ -91,8 +100,9 @@ class ResizeHelper(gui.Widget):
 
     def update_position(self):
         self.style['position']='absolute'
-        self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
-        self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
+        if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
+            self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
+            self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
 
 
 class DragHelper(gui.Widget):
@@ -105,6 +115,7 @@ class DragHelper(gui.Widget):
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
+        
         self.project = project
 
         self.parent = None
@@ -128,6 +139,15 @@ class DragHelper(gui.Widget):
             return
         self.parent = newParent
         self.refWidget = refWidget
+        
+        self.static_positioning = False
+        if 'position' in self.refWidget.style:
+            if self.refWidget.style['position'] != 'absolute':
+                self.static_positioning = True
+
+        if self.static_positioning:
+            return
+
         try:
             self.parent.append(self)
         except:
@@ -162,9 +182,9 @@ class DragHelper(gui.Widget):
 
     def update_position(self):
         self.style['position']='absolute'
-        self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) - gui.from_pix(self.style['width'])/2)
-        self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) - gui.from_pix(self.style['height'])/2)
-
+        if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
+            self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']))
+            self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']))
 
 
 class Project(gui.Widget):
