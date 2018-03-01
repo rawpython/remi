@@ -52,7 +52,7 @@ import cgi
 import weakref
 
 http_server_instance = None
-import traceback
+
 
 
 clients = {}
@@ -74,7 +74,7 @@ _MSG_UPDATE = '1'
 def to_websocket(data):
     # encoding end decoding utility function
     if pyLessThan3:
-        return quote(data.encode('utf-8'))
+        return quote(data)
     return quote(data, encoding='utf-8')
 
 
@@ -86,7 +86,7 @@ def from_websocket(data):
 
 
 def encode_text(data):
-    if not pyLessThan3 or True:
+    if not pyLessThan3:
         return data.encode('utf-8')
     return data
 
@@ -116,13 +116,7 @@ def get_instance_key(handler):
 
 
 class MySSL_TCPServer(socketserver.TCPServer):
-    def __init__(self,
-                 server_address,
-                 RequestHandlerClass,
-                 certfile='server.crt',
-                 keyfile='server.key',
-                 ssl_version=ssl.PROTOCOL_TLSv1_2,
-                 bind_and_activate=True):
+    def __init__(self, server_address, RequestHandlerClass, certfile, keyfile, ssl_version, bind_and_activate):
         socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
         self.certfile = certfile
         self.keyfile = keyfile
@@ -130,22 +124,37 @@ class MySSL_TCPServer(socketserver.TCPServer):
 
     def get_request(self):
         newsocket, fromaddr = self.socket.accept()
-        connstream = ssl.wrap_socket(newsocket,
+        connstream = newsocket
+        if self.ssl_version!=None:
+            connstream = ssl.wrap_socket(newsocket,
                                  server_side=True,
                                  certfile = self.certfile,
                                  keyfile = self.keyfile,
                                  ssl_version = self.ssl_version)
         return connstream, fromaddr
 
-class MySSL_ThreadingTCPServer(socketserver.ThreadingMixIn, MySSL_TCPServer): pass
+class MySSL_ThreadingTCPServer(socketserver.ThreadingMixIn, MySSL_TCPServer): 
+        def __init__(self,
+                 server_address,
+                 RequestHandlerClass,
+                 certfile,
+                 keyfile,
+                 ssl_version,
+                 bind_and_activate=True):
+            MySSL_TCPServer.__init__(self, server_address,
+                 RequestHandlerClass,
+                 certfile,
+                 keyfile,
+                 ssl_version,
+                 bind_and_activate)
 
 
 class ThreadedWebsocketServer(MySSL_ThreadingTCPServer):
     allow_reuse_address = True
     daemon_threads = False
 
-    def __init__(self, server_address, RequestHandlerClass, multiple_instance):
-        MySSL_ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
+    def __init__(self, server_address, RequestHandlerClass, multiple_instance, certfile, keyfile, ssl_version):
+        MySSL_ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass, certfile, keyfile, ssl_version)
         self.multiple_instance = multiple_instance
         # self.getsockopt = self.socket.getsockopt
 
@@ -157,9 +166,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def __init__(self, *args, **kwargs):
         self.last_ping = time.time()
         self.handshake_done = False
-        self.handshaking = False
         self._log = logging.getLogger('remi.server.ws')
-        self.pending_fragments = []
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
     def setup(self):
@@ -175,17 +182,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.settimeout(None)
         while True:
             if not self.handshake_done:
-                if not self.handshaking:
-                    self.handshake()
-                    if not self.handshake_done:
-                        break
+                self.handshake()
             else:
                 if not self.read_next_message():
                     k = get_instance_key(self)
-                    try:
-                        clients[k].websockets.remove(self)
-                    except:
-                        """ Non-existent websocket destination for client being removed """
+                    clients[k].websockets.remove(self)
                     self.handshake_done = False
                     self._log.debug('ws ending websocket service')
                     break
@@ -197,48 +198,26 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         return b
 
     def read_next_message(self):
-        self._log.debug('read_next_message')
+        # noinspection PyBroadException
         try:
-            # handle multi-part messsages as described in:
-            # https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_servers
-            flags = self.rfile.read(2)
-            if not flags:
-                # empty message!?
-                return True
-            fin = self.bytetonum(flags[0]) & 128 != 0
-            op = self.bytetonum(flags[0]) & int(0B1111)
-            mask = self.bytetonum(flags[1]) & 128 != 0
-            length = self.bytetonum(flags[1]) & 127
-
+            try:
+                length = self.rfile.read(2)
+            except ValueError:
+                # socket was closed, just return without errors
+                return False
+            length = self.bytetonum(length[1]) & 127
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
             elif length == 127:
                 length = struct.unpack('>Q', self.rfile.read(8))[0]
-                
-            # print "FIN: {} OP:{} LEN:{}".format(fin, op, length) 
-            
             masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
             decoded = ''
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-            decoded = from_websocket(decoded)
-
-            if op < 8:
-                # non-control or continuation 
-                if not fin:
-                    # push this whole message back into memory for later consumption
-                    self.pending_fragments.append(decoded)
-                    return True
-                else:
-                    decoded = ''.join(self.pending_fragments) + decoded
-                    self.pending_fragments = []
-            else:
-                # a control frame
-                pass
-            
-            self.on_message(decoded)
-        except Exception as e:
-            self._log.error("Exception parsing websocket", exc_info=True)
+            self.on_message(from_websocket(decoded))
+        except socket.timeout:
+            return False
+        except Exception:
             return False
         return True
 
@@ -271,27 +250,19 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        self.handshaking = True
-        try:
-            self._log.debug('handshake')
-
-            data = self.request.recv(1024).strip()
-            print("handshake data:"+ data.decode())
-            key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
-            digest = hashlib.sha1((key.encode("utf-8")+self.magic))
-            digest = digest.digest()
-            digest = base64.b64encode(digest)
-            response = 'HTTP/1.1 101 Switching Protocols\r\n'
-            response += 'Upgrade: websocket\r\n'
-            response += 'Connection: Upgrade\r\n'
-            response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
-            self.request.sendall(response.encode("utf-8"))
-            self.handshake_done = True
-            print('handshake complete {}'.format(self.client_address))
-        except Exception as ex:
-            print(ex)
-        finally:
-            self.handshaking = False
+        self._log.debug('handshake')
+        data = self.request.recv(1024).strip()
+        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        digest = hashlib.sha1((key.encode("utf-8")+self.magic))
+        digest = digest.digest()
+        digest = base64.b64encode(digest)
+        response = 'HTTP/1.1 101 Switching Protocols\r\n'
+        response += 'Upgrade: websocket\r\n'
+        response += 'Connection: Upgrade\r\n'
+        response += 'Sec-WebSocket-Accept: %s\r\n\r\n' % digest.decode("utf-8")
+        self._log.info('handshake complete')
+        self.request.sendall(response.encode("utf-8"))
+        self.handshake_done = True
 
     def on_message(self, message):
         global runtimeInstances
@@ -328,9 +299,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         callback = get_method_by_name(runtimeInstances[widget_id], function_name)
                         if callback is not None:
                             callback(**param_dict)
-            except IndexError:
-                raise IndexError
-            except Exception as e:
+
+            except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
 
         update_event.set()
@@ -348,13 +318,8 @@ def parse_parametrs(p):
         l = int(s[0])  # length of param field
         if l > 0:
             p = p[len(s[0]) + 1:]
-            if len(p) < l:
-                # TODO this is currently just saying, 'hey, problem.' but should prompt putting the unconsumed data back 
-                # into a stack.
-                raise IndexError
             field_name = p.split('|')[0].split('=')[0]
             field_value = p[len(field_name) + 1:l]
-            
             p = p[l + 1:]
             ret[field_name] = field_value
     return ret
@@ -472,6 +437,8 @@ class App(BaseHTTPRequestHandler, object):
             clients[k] = self
         wshost, wsport = self.server.websocket_address
 
+        websocket_type = 'ws' if self.server.ssl_version==None else 'wss'
+
         net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
@@ -500,7 +467,6 @@ function byteLength(str) {
     else if (code > 0x7ff && code <= 0xffff) s+=2;
     if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
   }
-  console.debug(s);
   return s;
 }
 
@@ -518,13 +484,13 @@ var paramPacketize = function (ps){
 
 function openSocket(){
     try{
-        ws = new WebSocket('wss://%s:%s/'); // SSL VERSION
+        ws = new WebSocket('%(websocket_type)s://%(websocket_ip)s:%(websocket_port)s/');
         console.debug('opening websocket');
         ws.onopen = websocketOnOpen;
         ws.onmessage = websocketOnMessage;
         ws.onclose = websocketOnClose;
         ws.onerror = websocketOnError;
-    }catch(ex){ws=false;alert('websocket not supported or server unreachable');}
+    }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
 }
 
 openSocket();
@@ -576,10 +542,10 @@ var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of
     if(params!=null) paramStr=paramPacketize(params);
     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
     pendingSendMessages.push(message);
-    if( pendingSendMessages.length < %s ){
+    if( pendingSendMessages.length < %(max_pending_messages)s ){
         ws.send(message);
         if(comTimeout==null)
-            comTimeout = setTimeout(checkTimeout, %s);
+            comTimeout = setTimeout(checkTimeout, %(messaging_timeout)s);
     }else{
         console.debug('Renewing connection, ws.readyState when trying to send was: ' + ws.readyState)
         renewConnection();
@@ -603,7 +569,7 @@ function renewConnection(){
         }catch(err){};
     }
     else if(ws.readyState == 0){
-     // Don't do anything, just wait for the connection to be established
+     // Don't do anything, just wait for the connection to be stablished
     }
     else{
         openSocket();
@@ -663,9 +629,6 @@ function websocketOnError(evt){
     /* websocket is closed. */
     /* alert('Websocket error...');*/
     console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
-    // // Might be nice to reconnect or at least let the user know they are not conncted.
-    // alert('Server unavailable.  Please reload the window in a few moments. (F5)');
-    // window.location.reload(true);
 };
 
 function websocketOnOpen(evt){
@@ -712,8 +675,11 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     fd.append('upload_file', file);
     xhr.send(fd);
 };
-</script>""" % ("'+window.location.hostname+'", wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
-                                   #(net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
+</script>""" % {'websocket_type':websocket_type,
+        'websocket_ip':net_interface_ip, 
+        'websocket_port':wsport, 
+        'max_pending_messages':pending_messages_queue_length, 
+        'messaging_timeout':websocket_timeout_timer_ms}
 
         # add built in js, extend with user js
         clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
@@ -986,32 +952,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             ws.finish()
             ws.server.shutdown()
 
-    ### some sanity checks on global state
-
-    def get_orphaned_listeners(self):
-        # this doesn't allow for stuff indirectly owned by an App instance
-	    return [v.eventManager.listeners for v in runtimeInstances.values() if
-	       getattr(v, 'eventManager', None) and v.eventManager.listeners 
-	       and any(l['instance'] not in clients.values() for l in v.eventManager.listeners.values())]
-
-    def get_connected_nodes(self, clients, instances):
-        import itertools
-        connected = set()
-        interesting = set(clients.keys())
-        interesting.update([cv.root for cv in clients.values()])
-        while interesting:
-            connected.update(interesting)
-            interesting = set(itertools.chain(w.children.keys() for w in interesting.values()))
-        return connected
-
-    def prune_nodes(self, connected_nodes):
-        to_delete = runtimeInstances.keys() - connected_nodes
-
-        for n in to_delete:
-            del runtimeInstances[n]
-
-
-
+   
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     daemon_threads = False
@@ -1020,7 +961,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     def __init__(self, server_address, RequestHandlerClass, websocket_address,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
-                 title, *userdata):
+                 title, certfile, keyfile, ssl_version, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.websocket_address = websocket_address
         self.auth = auth
@@ -1033,12 +974,11 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.title = title
         self.userdata = userdata
 
-        self.certfile = 'server.crt'
-        self.keyfile = 'server.key'
-        self.ssl_version = ssl.PROTOCOL_TLSv1_2
-        bind_and_activate = True
-
-        self.socket = ssl.wrap_socket(self.socket, keyfile=self.keyfile, certfile=self.certfile, server_side=True, ssl_version=self.ssl_version, do_handshake_on_connect=True)
+        self.certfile = certfile
+        self.keyfile = keyfile
+        self.ssl_version = ssl_version
+        if self.ssl_version!=None:
+            self.socket = ssl.wrap_socket(self.socket, keyfile=self.keyfile, certfile=self.certfile, server_side=True, ssl_version=self.ssl_version, do_handshake_on_connect=True)
 
 
 class Server(object):
@@ -1046,7 +986,7 @@ class Server(object):
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
-                 pending_messages_queue_length=1000, userdata=()):
+                 pending_messages_queue_length=1000, certfile=None, keyfile=None, ssl_version=None,  userdata=()):
         global http_server_instance
         http_server_instance = self
 
@@ -1065,6 +1005,9 @@ class Server(object):
         self._websocket_port = websocket_port
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
+        self._certfile = certfile
+        self._keyfile = keyfile
+        self._ssl_version = ssl_version
         self._userdata = userdata
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
@@ -1092,7 +1035,7 @@ class Server(object):
     def start(self):
         # here the websocket is started on an ephemereal port
         self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
-                                                 self._multiple_instance)
+                                                 self._multiple_instance, self._certfile, self._keyfile, self._ssl_version)
         wshost, wsport = self._wsserver.socket.getsockname()[:2]
         self._log.info('Started websocket server %s:%s' % (wshost, wsport))
         self._wsth = threading.Thread(target=self._wsserver.serve_forever)
@@ -1106,7 +1049,7 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
-                                           self._title, *self._userdata)
+                                           self._title, self._certfile, self._keyfile, self._ssl_version, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
