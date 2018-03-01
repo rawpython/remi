@@ -210,7 +210,7 @@ class Tag(object):
         for k in self._render_children_list:
             s = self.children[k]
             if isinstance(s, type('')):
-                innerHTML = innerHTML + unicode(s)
+                innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
                 innerHTML = innerHTML + s.encode('utf-8')
             else:
