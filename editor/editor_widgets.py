@@ -349,7 +349,6 @@ class WidgetHelper(gui.HBox):
                 editWidget = gui.CheckBox()
             else:
                 editWidget = gui.TextInput()
-
             editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
 
@@ -478,7 +477,7 @@ class EditorAttributesGroup(gui.Widget):
             'background-image':"url('/res/minus.png')",
             'background-repeat':'no-repeat',
             'background-position':'5px',
-            'border-bottom':'1px solid lightgray'})
+            'border-top':'3px solid lightgray'})
         self.title.set_on_click_listener(self.openClose)
         self.append(self.title, '0')
 
@@ -672,7 +671,8 @@ class EditorAttributeInput(gui.Widget):
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style.update({'display':'block',
             'overflow':'auto',
-            'margin':'2px'})
+            'margin':'2px',
+            'border':'1px solid lightgray'})
         self.attributeName = attributeName
         self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
@@ -686,6 +686,7 @@ class EditorAttributeInput(gui.Widget):
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
+        self.label.style['border-right'] = '1px solid lightgray'
         self.append(self.label)
         self.inputWidget = None
 

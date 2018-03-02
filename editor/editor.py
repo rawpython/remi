@@ -100,9 +100,10 @@ class ResizeHelper(gui.Widget):
 
     def update_position(self):
         self.style['position']='absolute'
-        if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
-            self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
-            self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
+        if self.refWidget:
+            if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
+                self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
+                self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
 
 
 class DragHelper(gui.Widget):
@@ -182,9 +183,10 @@ class DragHelper(gui.Widget):
 
     def update_position(self):
         self.style['position']='absolute'
-        if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
-            self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']))
-            self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']))
+        if self.refWidget:
+            if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
+                self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']))
+                self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']))
 
 
 class Project(gui.Widget):
