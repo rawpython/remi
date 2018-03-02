@@ -531,7 +531,7 @@ class Editor(App):
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
-        self.instancesWidget.dropDown.set_on_change_listener(self.on_instances_widget_selection)
+        self.instancesWidget.treeView.set_on_change_listener(self.on_instances_widget_selection)
         
         self.subContainerRight.append([self.instancesWidget, self.attributeEditor])
         
@@ -628,7 +628,7 @@ class Editor(App):
         parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
         self.resizeHelper.setup(widget,parent)
         self.dragHelper.setup(widget,parent)
-        self.instancesWidget.update(self.project, self.selectedWidget)
+        self.instancesWidget.select(self.selectedWidget)
         print("selected widget: " + widget.identifier)
         
     def menu_new_clicked(self, widget):
