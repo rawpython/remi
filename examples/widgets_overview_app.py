@@ -28,7 +28,7 @@ class MyApp(App):
         horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px', style={'display': 'block', 'overflow': 'auto'})
         
         subContainerLeft = gui.Widget(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
-        self.img = gui.Image('/res/logo.png', width=100, height=100, margin='10px')
+        self.img = gui.Image('/res/logo.png', height=100, margin='10px')
         self.img.set_on_click_listener(self.on_img_clicked)
 
         self.table = gui.Table.new_from_list([('ID', 'First Name', 'Last Name'),
