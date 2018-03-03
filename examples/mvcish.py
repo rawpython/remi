@@ -34,10 +34,7 @@ class MyApp(App):
         self.bt.set_on_click_listener(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
-        wid.append(self.dd)
-        wid.append(self.list)
-        wid.append(self.ent)
-        wid.append(self.bt)
+        wid.append([self.dd, self.list, self.ent, self.bt])
 
         # returning the root widget
         return wid
