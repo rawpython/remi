@@ -90,9 +90,12 @@ class MyApp(App):
         self.date = gui.Date('2015-04-13', width=200, height=20, margin='10px')
         self.date.set_on_change_listener(self.date_changed)
 
-        self.video = gui.VideoPlayer('http://www.w3schools.com/tags/movie.mp4',
-                                     'http://www.oneparallel.com/wp-content/uploads/2011/01/placeholder.jpg',
-                                     width=300, height=270, margin='10px')
+        self.video = gui.Widget( _type='iframe', width=290, height=200, margin='10px')
+        self.video.attributes['src'] = "https://drive.google.com/file/d/0B0J9Lq_MRyn4UFRsblR3UTBZRHc/preview"
+        self.video.attributes['width'] = '100%'
+        self.video.attributes['height'] = '100%'
+        self.video.attributes['controls'] = 'true'
+        self.video.style['border'] = 'none'
                                      
         self.tree = gui.TreeView(width='100%', height=300)
         ti1 = gui.TreeItem("Item1")

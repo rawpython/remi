@@ -1,4 +1,5 @@
 
+![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png "Widgets overview")
 ## *A Platform independent Python GUI library for your applications*
 
 [![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -30,7 +31,7 @@ Remi
 ===
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
 
-![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/screenshot.png "Widgets overview")
+![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png "Widgets overview")
 
 Remi enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a webserver that will be accessible on your network.
 
