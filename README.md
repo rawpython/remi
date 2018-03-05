@@ -217,6 +217,46 @@ Simple, easy.
 Listener's callbacks will receive the emitter's instance firstly, then all other parameters provided by the specific event.
 
 
+Beside the standard event registration (as aforementioned), it is possible to pass user parameters to listener functions. This can be achieves appending parameters to the *set_on_xxx_listener* function call.
+
+```py
+import remi.gui as gui
+from remi import start, App
+
+class MyApp(App):
+    def __init__(self, *args):
+        super(MyApp, self).__init__(*args)
+
+    def main(self):
+        container = gui.VBox(width = 120, height = 100)
+        self.lbl = gui.Label('Hello world!')
+        self.bt = gui.Button('Hello name!')
+        self.bt2 = gui.Button('Hello name surname!')
+
+        # setting the listener for the onclick event of the buttons
+        self.bt.set_on_click_listener(self.on_button_pressed, "Name")
+        self.bt2.set_on_click_listener(self.on_button_pressed, "Name", "Surname")
+        
+        # appending a widget to another
+        container.append(self.lbl)
+        container.append(self.bt)
+        container.append(self.bt2)
+
+        # returning the root widget
+        return container
+
+    # listener function
+    def on_button_pressed(self, widget, name='', surname=''):
+        self.lbl.set_text('Button pressed!')
+        widget.set_text('Hello ' + name + ' ' + surname)
+
+# starts the webserver
+start(MyApp)
+```
+
+This allows great flexibility, getting different behaviours with the same event listener definition.
+
+
 HTML Attribute accessibility
 ===
 Sometimes could be required to access Widget's HTML representation in order to manipulate html attributes.
@@ -245,7 +285,7 @@ Take care about internally used attributes. These are:
 
 Remote access
 ===
-If you are using your REMI app remotely, with a DNS and a behind a firewall, you can specify special parameters in the `start` call:
+If you are using your REMI app remotely, with a DNS and behind a firewall, you can specify special parameters in the `start` call:
 - **websocket_port**: an integer number of the port used by websocket. Don't forget to NAT this port on your router;
 - **host_name**: a string containing the host name or remote ip address that allows to access to your app.
 
