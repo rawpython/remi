@@ -293,6 +293,8 @@ class Project(gui.Widget):
         return code_nested_listener
     
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
+        if not widget in self.known_project_children:
+            widget.path_to_this_widget = []
         self.known_project_children.append(widget)
         if hasattr(widget, 'path_to_this_widget'):
             widget.path_to_this_widget.append( widget.attributes['editor_varname'] )
