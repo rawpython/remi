@@ -293,13 +293,9 @@ class Project(gui.Widget):
         return code_nested_listener
     
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
-        if not widget in self.known_project_children:
-            widget.path_to_this_widget = []
         self.known_project_children.append(widget)
-        if hasattr(widget, 'path_to_this_widget'):
-            widget.path_to_this_widget.append( widget.attributes['editor_varname'] )
-        else:
-            widget.path_to_this_widget = []
+
+        widget.path_to_this_widget.append( widget.attributes['editor_varname'] )
         
         print(widget.attributes['editor_varname'])
         
@@ -365,6 +361,16 @@ class Project(gui.Widget):
         
         return code_nested
 
+    def prepare_path_to_this_widget(self, node):
+        #here gets initiated to null list the path_to_this_widget chain
+        node.path_to_this_widget = []
+        for child in node.children.values():
+            if type(child)==str:
+                continue
+            if 'editor_varname' not in child.attributes.keys():
+                continue
+            self.prepare_path_to_this_widget(child)
+
     def save(self, save_path_filename, configuration): 
         self.code_declared_classes = {}
         self.pending_listener_registration = list()
@@ -373,9 +379,8 @@ class Project(gui.Widget):
         compiled_code = ''
         code_classes = ''
         
-        #self.children['root'].path_to_this_widget = []
+        self.prepare_path_to_this_widget(self.children['root'])
         ret = self.repr_widget_for_editor( self.children['root'] )
-        self.path_to_this_widget = []
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
         main_code_class = prototypes.proto_code_main_class%{'classname':configuration.configDict[configuration.KEY_PRJ_NAME],
                                                         'config_resourcepath':configuration.configDict[configuration.KEY_RESOURCEPATH],
