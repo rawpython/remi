@@ -247,23 +247,35 @@ class Tag(object):
             pass
         self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
-    def add_child(self, key, child):
+    def add_child(self, key, value):
         """Adds a child to the Tag
 
         To retrieve the child call get_child or access to the Tag.children[key] dictionary.
 
         Args:
-            key (str):  Unique child's identifier
-            child (Tag, str):
+            key (str):  Unique child's identifier, or iterable of keys
+            value (Tag, str): can be a Tag, an iterable of Tag or a str. In case of iterable
+                of Tag is a dict, each item's key is set as 'key' param
         """
-        if hasattr(child, 'attributes'):
-            child.attributes['data-parent-widget'] = self.identifier
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.add_child(k, value[k])
+                return
+            i = 0
+            for child in value:
+                self.add_child(key[i], child)
+                i = i + 1
+            return
+
+        if hasattr(value, 'attributes'):
+            value.attributes['data-parent-widget'] = self.identifier
 
         if key in self.children:
             self._render_children_list.remove(key)
         self._render_children_list.append(key)
 
-        self.children[key] = child
+        self.children[key] = value
 
     def get_child(self, key):
         """Returns the child identified by 'key'
@@ -456,12 +468,25 @@ class Widget(Tag):
         In order to access to the specific child in this way widget.children[key].
 
         Args:
-            value (Tag or Widget): The child to be appended.
-            key (str): The unique string identifier for the child or ''
+            value (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
+                param.
 
         Returns:
-            str: a key used to refer to the child for all future interaction
+            str: a key used to refer to the child for all future interaction, or a list of keys in case
+                of an iterable 'value' param
         """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
@@ -532,6 +557,24 @@ class Widget(Tag):
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
         self.eventManager.register_listener(self.EVENT_ONCLICK, callback, *userdata)
+
+    def ondblclick(self):
+        """Called when the Widget gets double clicked by the user with the left mouse button."""
+        return self.eventManager.propagate(self.EVENT_ONDBLCLICK, ())
+
+    @decorate_set_on_listener("ondblclick", "(self,emitter)")
+    def set_on_dblclick_listener(self, callback, *userdata):
+        """Registers the listener for the Widget.ondblclick event.
+
+        Note: the listener prototype have to be in the form on_widget_dblclick(self, widget).
+
+        Args:
+            callback (function): Callback function pointer.
+        """
+        self.attributes[self.EVENT_ONDBLCLICK] = \
+            "sendCallback('%s','%s');" \
+            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONDBLCLICK)
+        self.eventManager.register_listener(self.EVENT_ONDBLCLICK, callback, *userdata)
 
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
@@ -844,10 +887,8 @@ class HBox(Widget):
 
         # fixme: support old browsers
         # http://stackoverflow.com/a/19031640
-        self.style['display'] = 'flex'
-        self.style['justify-content'] = 'space-around'
-        self.style['align-items'] = 'center'
-        self.style['flex-direction'] = 'row'
+        self.style.update({'display':'flex', 'justify-content':'space-around', 
+            'align-items':'center', 'flex-direction':'row'})
 
     def append(self, value, key=''):
         """It allows to add child widgets to this.
@@ -859,6 +900,16 @@ class HBox(Widget):
             key (str): Unique identifier for the child. If key.isdigit()==True '0' '1'.. the value determines the order
             in the layout
         """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+        
         key = str(key)
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
@@ -868,10 +919,8 @@ class HBox(Widget):
         if 'right' in value.style.keys():
             del value.style['right']
 
-        value.style['position'] = 'static'
-
-        value.style['-webkit-order'] = '-1'
-        value.style['order'] = '-1'
+        if not 'order' in value.style.keys():
+            value.style.update({'position':'static', '-webkit-order':'-1', 'order':'-1'})
 
         if key.isdigit():
             value.style['-webkit-order'] = key
@@ -985,7 +1034,6 @@ class TabBox(Widget):
     def add_tab(self, widget, name, tab_cb):
 
         holder = Tag(_type='div', _class='')
-        holder.style['padding'] = '15px'
         holder.add_child('content', widget)
 
         li = Tag(_type='li', _class='')
@@ -1135,6 +1183,32 @@ class TextInput(Widget, _MixinTextualWidget):
         """
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
+    def onkeyup(self, new_value):
+        """Called when user types and releases a key into the TextInput
+        
+        Args:
+            new_value (str): the new string content of the TextInput
+        """
+        self.set_value(new_value)
+        self.children.align_version()
+        return self.eventManager.propagate(self.EVENT_ONKEYUP, (new_value,))
+
+    @decorate_set_on_listener("onkeyup", "(self,emitter,new_value)")
+    def set_on_key_up_listener(self, callback, *userdata):
+        """Registers the listener for the Widget.onkeyup event.
+
+        Note: the listener prototype have to be in the form on_textinput_key_up(self, widget, new_value) where
+        new_value is the new text content of the TextInput.
+
+        Args:
+            callback (function): Callback function pointer.
+        """
+        self.attributes[self.EVENT_ONKEYUP] = \
+            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join('');
+            var params={};params['new_value']=elem.value;
+            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONKEYUP}    
+        self.eventManager.register_listener(self.EVENT_ONKEYUP, callback, *userdata)
+
     def onkeydown(self, new_value):
         """Called when the user types a key into the TextInput.
 
@@ -1144,6 +1218,7 @@ class TextInput(Widget, _MixinTextualWidget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_value(new_value)
+        self.children.align_version()
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
     @decorate_set_on_listener("onkeydown", "(self,emitter,new_value)")
@@ -1173,6 +1248,7 @@ class TextInput(Widget, _MixinTextualWidget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_value(new_value)
+        self.children.align_version()
         return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
     @decorate_set_on_listener("onenter", "(self,emitter,new_value)")
@@ -1239,9 +1315,7 @@ class GenericDialog(Widget):
         """
         super(GenericDialog, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
-        self.style['display'] = 'block'
-        self.style['overflow'] = 'auto'
-        self.style['margin'] = '0px auto'
+        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
 
         if len(title) > 0:
             t = Label(title)
@@ -1254,9 +1328,7 @@ class GenericDialog(Widget):
             self.append(m)
 
         self.container = Widget()
-        self.container.style['display'] = 'block'
-        self.container.style['overflow'] = 'auto'
-        self.container.style['margin'] = '5px'
+        self.container.style.update({'display':'block', 'overflow':'auto', 'margin':'5px'})
         self.container.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
@@ -1300,9 +1372,7 @@ class GenericDialog(Widget):
         label.style['margin'] = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
-        container.style['justify-content'] = 'space-between'
-        container.style['overflow'] = 'auto'
-        container.style['padding'] = '3px'
+        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
@@ -1319,9 +1389,7 @@ class GenericDialog(Widget):
         """
         self.inputs[key] = field
         container = HBox()
-        container.style['justify-content'] = 'space-between'
-        container.style['overflow'] = 'auto'
-        container.style['padding'] = '3px'
+        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -2417,9 +2485,7 @@ class FileFolderNavigator(Widget):
         # creation of a new instance of a itemContainer
         self.itemContainer = Widget(width='100%', height=300)
         self.itemContainer.set_layout_orientation(Widget.LAYOUT_VERTICAL)
-        self.itemContainer.style['overflow-y'] = 'scroll'
-        self.itemContainer.style['overflow-x'] = 'hidden'
-        self.itemContainer.style['display'] = 'block'
+        self.itemContainer.style.update({'overflow-y':'scroll', 'overflow-x':'hidden', 'display':'block'})
 
         for i in l:
             full_path = os.path.join(directory, i)
@@ -2771,7 +2837,7 @@ class FileDownloader(Widget, _MixinTextualWidget):
         with open(self._filename, 'r+b') as f:
             content = f.read()
         headers = {'Content-type': 'application/octet-stream',
-                   'Content-Disposition': 'attachment; filename=%s' % os.path.basename(self._filename)}
+                   'Content-Disposition': 'attachment; filename="%s"' % os.path.basename(self._filename)}
         return [content, headers]
 
 
