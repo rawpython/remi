@@ -17,14 +17,14 @@ select:focus {
     border: 0px;
     outline: 0px;
     box-shadow: 0 1px 1px 0 rgba(0, 0, 0, .14);
-    border-bottom: 1px solid rgba(33, 150, 243, .26);
+    border-bottom: 1px solid rgba(2, 70, 147, 0.26);
 }
 ::-moz-selection {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(2, 70, 147, 0.26);
     text-shadow: none
 }
 ::selection {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(2, 70, 147, 0.26);
     text-shadow: none
 }
 audio,
@@ -139,7 +139,7 @@ p {
     margin: 0 0 16px
 }
 a {
-    color: rgba(33, 150, 243, .8);
+    color: rgba(2, 70, 147, 0.8);
     font-weight: 500
 }
 blockquote {
@@ -201,14 +201,14 @@ div {
     list-style: none;
 }
 option:hover {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(2, 70, 147, 0.26);
     outline: 1px solid red;
 }
 .ListItem:hover {
-    background: rgba(33, 150, 243, .26)
+    background: rgba(4, 90, 188, 0.26);
 }
 .ListItem[selected='True'] {
-    background: rgba(33, 150, 243, .26)
+    background: rgba(4, 90, 188, 0.26);
 }
 input[type='number'],
 input[type='text'],
@@ -227,6 +227,7 @@ select {
     text-align: left;
     color: inherit;
     padding: 0;
+    background-color: rgb(245, 245, 245);
 }
 textarea:disabled,
 input[type='checkbox']:disabled,
@@ -249,12 +250,12 @@ input[type='checkbox'] {
 button {
     background: 0 0;
     border: none;
-    border-radius: 2px;
+    border-radius: 0px;
     color: #000;
     position: relative;
     height: 36px;
     margin: 0;
-    padding: 0 8px;
+    padding: 0 0px;
     display: inline-block;
     font-weight: 500;
     letter-spacing: 0;
@@ -262,19 +263,19 @@ button {
     overflow-x: hidden;
     overflow-y: hidden;
     will-change: box-shadow;
-    transition: box-shadow .1s cubic-bezier(.4, 0, 1, 1), background-color .1s cubic-bezier(.4, 0, .2, 1), color .1s cubic-bezier(.4, 0, .2, 1);
     outline: none;
     cursor: pointer;
     text-decoration: none;
     text-align: center;
     vertical-align: middle;
-    background: rgb(33, 150, 243);
+    background: rgb(4, 90, 188);
     color: rgb(255, 255, 255);
-    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
+    box-shadow: 3px 3px 5px rgb(150,150,150);
 }
 button:focus {
-    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .2), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
+    box-shadow: 3px 3px 5px rgb(130,130,130);
     font-weight: bold;
+    outline: 1px dashed lightgray;
 }
 button:disabled {
     background-color: #ddd;
@@ -284,8 +285,8 @@ button:disabled {
     cursor: default;
     color: #9F9F9F;
 }
- button:active{
-    background: rgb(25, 145, 223);
+button:active{
+    background: rgb(2, 70, 147);
     box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .12), 0 2px 0px -1px rgba(0, 0, 0, .2);
 }
 .TextInput {
@@ -296,7 +297,7 @@ button:disabled {
     margin: 0;
     padding: 0;
     width: 100%;
-    background: 0 0;
+    /*background: 0 0;*/
     text-align: left;
     color: inherit;
 }
@@ -309,24 +310,23 @@ table {
 }
 .TableItem {
     padding: 0px;
-    border: none;
+    border: 1px solid white;
     outline: 0px;
-    border-bottom: 1px solid rgb(218, 218, 218);
 }
 td {
-    border: none;
+    border: 1px solid white;
     outline: 0px;
-    background-color: inherit;
+    background-color: rgb(245,245,245);
 }
 th {
-    border: 0px;
+    border: 1px solid white;
     outline: 0px;
-    background: rgb(33, 150, 243);
+    background: rgba(19, 108, 209, .6);
     color: rgb(255, 255, 255);
     font-weight: normal;
 }
 p.DialogTitle {
-    background: rgb(33, 150, 243);
+    background: rgba(19, 108, 209, .6);
     border: 0px;
     margin: 0px;
     color: white;
@@ -340,7 +340,7 @@ p.Title {
     font-weight: bold;
 }
 nav > ul.Menu {
-    background: rgb(33, 150, 243);
+    background: rgb(19, 108, 209);
     border: 0px;
     color: white;
 }
@@ -376,16 +376,17 @@ ul.Menu {
 }
 .MenuBar>.Menu>.MenuItem {
     border-bottom: 0;
+    background: rgb(19, 108, 209);
 }
 .MenuBar {
     border-bottom: 1px solid rgba(0, 0, 0, .26);
 }
 .Menu > .MenuItem:hover {
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
 }
 .MenuItem .MenuItem:hover {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(4, 90, 188, 0.4);
 }
 .Menu::after {
     content: "";
@@ -405,7 +406,7 @@ input.file {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
 }
 input[type='range'] {
@@ -419,7 +420,7 @@ input[type='range'] {
     user-select: none;
     outline: 0;
     padding: 0;
-    color: rgb(33, 150, 243);
+    color: rgb(2, 70, 147);
     -webkit-align-self: center;
     -ms-flex-item-align: center;
     align-self: center;
@@ -434,16 +435,16 @@ input[type='range']::-ms-tooltip {
     display: none
 }
 input[type='range']::-webkit-slider-runnable-track {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(2, 70, 147, 0.26);
     height: 2px;
 }
 input[type='range']::-moz-range-track {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(2, 70, 147, 0.26);
     height: 2px;
     border: none;
 }
 input[type='range']::-ms-track {
-    background: rgba(33, 150, 243, .26);
+    background: rgba(2, 70, 147, 0.26);
     height: 2px;
     color: transparent;
     width: 100%;
@@ -451,7 +452,7 @@ input[type='range']::-ms-track {
 }
 input[type='range']::-ms-fill-lower {
     padding: 0;
-    background: linear-gradient(to right, transparent, transparent 16px, rgb(33, 150, 243), rgb(33, 150, 243)0)
+    background: linear-gradient(to right, transparent, transparent 16px, rgb(15, 113, 225), rgb(15, 113, 225))
 }
 input[type='range']::-ms-fill-upper {
     padding: 0;
@@ -465,7 +466,7 @@ input[type='range']::-webkit-slider-thumb {
     position: relative;
     box-sizing: border-box;
     border-radius: 100%;
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     border: none;
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), border .18s cubic-bezier(.4, 0, .2, 1), box-shadow .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1);
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), border .18s cubic-bezier(.4, 0, .2, 1), box-shadow .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1), -webkit-transform .18s cubic-bezier(.4, 0, .2, 1)
@@ -477,24 +478,24 @@ input[type='range']::-moz-range-thumb {
     box-sizing: border-box;
     border-radius: 100%;
     background-image: none;
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     border: none
 }
 input[type='range']:focus:not(:active)::-webkit-slider-thumb {
-    box-shadow: 0 0 0 10px rgba(33, 150, 243, .26)
+    box-shadow: 0 0 0 10px rgba(4, 90, 188, 0.26);
 }
 input[type='range']:focus:not(:active)::-moz-range-thumb {
-    box-shadow: 0 0 0 10px rgba(33, 150, 243, .26)
+    box-shadow: 0 0 0 10px rgba(4, 90, 188, 0.26);
 }
 input[type='range']:active::-webkit-slider-thumb {
     background-image: none;
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     -webkit-transform: scale(1.5);
     transform: scale(1.5)
 }
 input[type='range']:active::-moz-range-thumb {
     background-image: none;
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     transform: scale(1.5)
 }
 input[type='range']::-ms-thumb {
@@ -502,17 +503,17 @@ input[type='range']::-ms-thumb {
     height: 32px;
     border: none;
     border-radius: 50%;
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     transform: scale(.375);
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1);
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1), -webkit-transform .18s cubic-bezier(.4, 0, .2, 1)
 }
 input[type='range']:focus:not(:active)::-ms-thumb {
-    background: radial-gradient(circle closest-side, rgb(33, 150, 243)0%, rgb(33, 150, 243)37.5%, rgba(33, 150, 243, .26)37.5%, rgba(33, 150, 243, .26)100%);
+    background: radial-gradient(circle closest-side, rgb(15, 113, 225) 0%, rgb(15, 113, 225) 37.5%, rgba(4, 90, 188, 0.26); 37.5%, rgba(4, 90, 188, 0.26);100%);
     transform: scale(1)
 }
 input[type='range']:active::-ms-thumb {
-    background: rgb(33, 150, 243);
+    background: rgb(2, 70, 147);
     transform: scale(.5625)
 }
 input[type='range']:disabled:focus::-webkit-slider-thumb,
@@ -543,7 +544,7 @@ input[type='range']:disabled::-moz-range-thumb {
 #loading-animation {
   width: 40px;
   height: 40px;
-  background-color: rgb(33, 150, 243);
+  background-color: rgb(2, 70, 147);
 
   margin: 100px auto;
   -webkit-animation: sk-rotateplane 1.2s infinite ease-in-out;
@@ -653,8 +654,11 @@ ul.TreeView{
     padding-left: 18px;
 }
 .TreeItem:hover {
-    background-color: rgba(33, 150, 243, .26);
+    background-color: rgba(2, 70, 147, 0.26);
 }
 .TreeItem[has-subtree='true'][treeopen='true']:hover {
     background-color: transparent;
+}
+a {
+    outline:none;
 }

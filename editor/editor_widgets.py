@@ -18,43 +18,64 @@ import inspect
 import re
 
 
-class InstancesDropDown(gui.DropDown):
+class InstancesTree(gui.TreeView):
     def __init__(self, **kwargs):
-        super(InstancesDropDown, self).__init__(**kwargs)
+        super(InstancesTree, self).__init__(**kwargs)
         self.EVENT_ONCHANGE = "on_instance_selection"
 
-    def append_instance(self, instance):
-        item = gui.DropDownItem(instance.attributes['editor_varname'])
-        self.append(item)
+    def append_instance(self, instance, parent):
+        item = gui.TreeItem(instance.attributes['editor_varname'])
+        if parent==None:
+            parent = self
         item.instance = instance
+        item.set_on_click_listener(self.on_tree_item_selected)
+        parent.append(item)
+        return item
 
-    def item_by_instance(self, instance):
-        for item in self.children.values():
-            if item.instance.identifier == instance.identifier:
-                return item
+    def item_by_instance(self, node, instance):
+        if not hasattr(node, 'attributes'):
+            return None
+        if node.identifier!=self.identifier:
+            if not hasattr(node,'instance'):
+                return None
+
+        for item in node.children.values():
+            if self.item_by_instance(item, instance) == instance.identifier:
+                return [node, item]
         return None
 
     def remove_instance(self, instance):
-        self.remove_child(self.item_by_instance(instance))
+        node, item = self.item_by_instance(self, instance)
+        node.remove_child(item)
 
-    def select_instance(self, instance):
-        item = self.item_by_instance(instance)
-        if item is not None:
-            item.set_text(instance.attributes['editor_varname'])
-            self.select_by_value(item.get_value())
+    def select_instance(self, node, instance):
+        if not hasattr(node, 'attributes'):
+            return
+        if node.identifier!=self.identifier:
+            if hasattr(node,'instance'):
+                if node.instance.identifier == instance.identifier:
+                    node.style['background-color'] = 'lightblue'
+                else: 
+                    node.style['background-color'] = 'white'
+                node.attributes['treeopen'] = 'true'
+        for item in node.children.values():
+            self.select_instance(item, instance)
 
-    def onchange(self, value):
-        self.select_by_value(value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, (self._selected_item.instance,))
+    def set_on_change_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
 
-    def append_instances_from_tree(self, node):
+    def on_tree_item_selected(self, emitter):
+        self.select_instance(self, emitter.instance)
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, (emitter.instance,))
+
+    def append_instances_from_tree(self, node, parent=None):
         if not hasattr(node, 'attributes'):
             return
         if not 'editor_varname' in node.attributes.keys():
             return
-        self.append_instance(node)
+        nodeTreeItem = self.append_instance(node, parent)
         for child in node.children.values():
-            self.append_instances_from_tree(child)
+            self.append_instances_from_tree(child, nodeTreeItem)
 
 
 class InstancesWidget(gui.VBox):
@@ -62,22 +83,24 @@ class InstancesWidget(gui.VBox):
         super(InstancesWidget, self).__init__(**kwargs)
         self.titleLabel = gui.Label('Instances list', width='100%')
         self.titleLabel.add_class("DialogTitle")
+        self.style['align-items'] = 'flex-start'
+        self.treeView = InstancesTree()
 
-        self.dropDown = InstancesDropDown()
-
-        self.append(self.titleLabel)
-        self.append(self.dropDown)
+        self.append([self.titleLabel, self.treeView])
 
         self.titleLabel.style['order'] = '-1'
         self.titleLabel.style['-webkit-order'] = '-1'
-        self.dropDown.style['order'] = '0'
-        self.dropDown.style['-webkit-order'] = '0'
+        self.treeView.style['order'] = '0'
+        self.treeView.style['-webkit-order'] = '0'
 
     def update(self, editorProject, selectedNode):
-        self.dropDown.empty()
+        self.treeView.empty()
         if 'root' in editorProject.children.keys():
-            self.dropDown.append_instances_from_tree(editorProject.children['root'])
-            self.dropDown.select_instance(selectedNode)
+            self.treeView.append_instances_from_tree(editorProject.children['root'])
+            self.treeView.select_instance(self.treeView, selectedNode)
+    
+    def select(self, selectedNode):
+        self.treeView.select_instance(self.treeView, selectedNode)
 
 
 class ToolBar(gui.Widget):
@@ -98,18 +121,13 @@ class SignalConnection(gui.Widget):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        self.style['overflow'] = 'visible'
-        self.style['height'] = '24px'
-        self.style['display'] = 'block'
+        self.style.update({'overflow':'visible', 'height':'24px', 'display':'block', 'outline':'1px solid lightgray'})
         self.label = gui.Label(eventConnectionFuncName, width='49%')
-        self.label.style['float'] = 'left'
-        self.label.style['font-size'] = '10px'
-        self.label.style['overflow'] = 'hidden'
+        self.label.style.update({'float':'left', 'font-size':'10px', 'overflow':'hidden', 'outline':'1px solid lightgray'})
 
         self.dropdown = gui.DropDown(width='49%', height='100%')
         self.dropdown.set_on_change_listener(self.on_connection)
-        self.append(self.label)
-        self.append(self.dropdown)
+        self.append([self.label, self.dropdown])
         self.dropdown.style['float'] = 'right'
 
         self.eventConnectionFunc = eventConnectionFunc
@@ -313,10 +331,10 @@ class WidgetHelper(gui.HBox):
         self.icon.attributes['ondragstart'] = "event.preventDefault();"
         self.append(self.icon)
 
-        self.attributes['draggable'] = 'true'
-        self.attributes['ondragstart'] = "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));"
-        self.attributes['ondragover'] = "event.preventDefault();"
-        self.attributes['ondrop'] = "event.preventDefault();return false;"
+        self.attributes.update({'draggable':'true',
+            'ondragstart':"this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));",
+            'ondragover':"event.preventDefault();",
+            'ondrop':"event.preventDefault();return false;"})
 
         self.optional_style_dict = {} #this dictionary will contain optional style attributes that have to be added to the widget once created
 
@@ -355,7 +373,6 @@ class WidgetHelper(gui.HBox):
                 editWidget = gui.CheckBox()
             else:
                 editWidget = gui.TextInput()
-
             editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
 
@@ -406,11 +423,11 @@ class WidgetHelper(gui.HBox):
         constructor = '(%s)'%(','.join(map(lambda v: str(v), param_for_constructor)))
         #here we create and decorate the widget
         widget = self.widgetClass(*param_values, **self.kwargs_to_widget)
-        widget.attributes['editor_constructor'] = constructor
-        widget.attributes['editor_varname'] = variableName
-        widget.attributes['editor_tag_type'] = 'widget'
-        widget.attributes['editor_newclass'] = 'True' if self.dialog.get_field("editor_newclass").get_value() else 'False'
-        widget.attributes['editor_baseclass'] = widget.__class__.__name__ #__class__.__bases__[0].__name__
+        widget.attributes.update({'editor_constructor':constructor,
+            'editor_varname':variableName,
+            'editor_tag_type':'widget',
+            'editor_newclass':'True' if self.dialog.get_field("editor_newclass").get_value() else 'False',
+            'editor_baseclass':widget.__class__.__name__}) #__class__.__bases__[0].__name__
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"
         if not 'position' in widget.style:
             widget.style['position'] = 'absolute'
@@ -431,13 +448,12 @@ class WidgetCollection(gui.Widget):
         self.lblTitle = gui.Label("Widgets Toolbox")
         self.lblTitle.add_class("DialogTitle")
         self.widgetsContainer = gui.HBox(width='100%', height='85%')
-        self.widgetsContainer.style['overflow-y'] = 'scroll'
-        self.widgetsContainer.style['overflow-x'] = 'hidden'
-        self.widgetsContainer.style['flex-wrap'] = 'wrap'
-        self.widgetsContainer.style['background-color'] = 'white'
+        self.widgetsContainer.style.update({'overflow-y':'scroll',
+            'overflow-x':'hidden',
+            'flex-wrap':'wrap',
+            'background-color':'white'})
 
-        self.append(self.lblTitle)
-        self.append(self.widgetsContainer)
+        self.append([self.lblTitle, self.widgetsContainer])
 
         #load all widgets
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px')
@@ -481,11 +497,11 @@ class EditorAttributesGroup(gui.Widget):
         self.opened = True
         self.title = gui.Label(title)
         self.title.add_class("Title")
-        self.title.style['padding-left'] = '32px'
-        self.title.style['background-image'] = "url('/res/minus.png')"
-        self.title.style['background-repeat'] = 'no-repeat'
-        self.title.style['background-position'] = '5px'
-        self.title.style['border-bottom'] = '1px solid lightgray'
+        self.title.style.update({'padding-left':'32px',
+            'background-image':"url('/res/minus.png')",
+            'background-repeat':'no-repeat',
+            'background-position':'5px',
+            'border-top':'3px solid lightgray'})
         self.title.set_on_click_listener(self.openClose)
         self.append(self.title, '0')
 
@@ -512,8 +528,7 @@ class EditorAttributes(gui.VBox):
         self.titleLabel.add_class("DialogTitle")
         self.infoLabel = gui.Label('Selected widget: None')
         self.infoLabel.style['font-weight'] = 'bold'
-        self.append(self.titleLabel)
-        self.append(self.infoLabel)
+        self.append([self.titleLabel, self.infoLabel])
 
         self.titleLabel.style['order'] = '-1'
         self.titleLabel.style['-webkit-order'] = '-1'
@@ -621,9 +636,9 @@ class UrlPathInput(gui.Widget):
         self.append(self.txtInput)
 
         self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
-        self.btFileFolderSelection.style['background-repeat'] = 'round'
-        self.btFileFolderSelection.style['background-image'] = "url('/res/folder.png')"
-        self.btFileFolderSelection.style['background-color'] = 'transparent'
+        self.btFileFolderSelection.style.update({'background-repeat':'round',
+            'background-image':"url('/res/folder.png')",
+            'background-color':'transparent'})
         self.append(self.btFileFolderSelection)
         self.btFileFolderSelection.set_on_click_listener(self.on_file_selection_bt_pressed)
 
@@ -678,9 +693,10 @@ class EditorAttributeInput(gui.Widget):
     def __init__(self, attributeName, attributeDict, appInstance=None):
         super(EditorAttributeInput, self).__init__()
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        self.style['display'] = 'block'
-        self.style['overflow'] = 'auto'
-        self.style['margin'] = '2px'
+        self.style.update({'display':'block',
+            'overflow':'auto',
+            'margin':'2px',
+            'outline':'1px solid lightgray'})
         self.attributeName = attributeName
         self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
@@ -694,6 +710,7 @@ class EditorAttributeInput(gui.Widget):
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
+        self.label.style['outline'] = '1px solid lightgray'
         self.append(self.label)
         self.inputWidget = None
 
