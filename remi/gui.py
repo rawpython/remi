@@ -920,10 +920,9 @@ class HBox(Widget):
             del value.style['right']
 
         if not 'order' in value.style.keys():
-            value.style.update({'position':'static', '-webkit-order':'-1', 'order':'-1'})
+            value.style.update({'position':'static', 'order':'-1'})
 
         if key.isdigit():
-            value.style['-webkit-order'] = key
             value.style['order'] = key
 
 
