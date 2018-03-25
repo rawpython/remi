@@ -695,6 +695,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
     def _send_spontaneous_websocket_message(self, message):
         global update_lock
+        self._log.debug('spontaneous message, lock: %s' % update_lock)
         with update_lock:
             for ws in self.client.websockets:
                 # noinspection PyBroadException

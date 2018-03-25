@@ -7,7 +7,7 @@ setup(name='remi',
       author='Davide Rosa',
       author_email='dddomodossola@gmail.com',
       license='Apache',
-      packages=['remi'],
+      packages=['remi', 'remi.game'],
       include_package_data=True,
 	  zip_safe=False,
 )
