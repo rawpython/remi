@@ -202,8 +202,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         self._log.debug('handshake')
         data = self.request.recv(1024).strip()
-        print("websocket handshake data: %s"%str(data))
-        self.session = int(data.decode().split('Cookie: ')[1].split('\r\n')[0].replace('session=',''))
+        self.session = int(data.decode().split('Cookie: ')[1].split('\r\n')[0].split("session=")[-1])
+        if not self.session in clients.keys():
+            return
         key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
@@ -383,18 +384,26 @@ class App(BaseHTTPRequestHandler, object):
         multiple clients" or "multiple instance for multiple clients" execution way
         """
 
-        self.session = id(self)
-        if not 'cookie' in self.headers:
-            self.send_response(200)
-            self.send_header("Set-Cookie", "session=%s"%(self.session))
-        else:
-            self.session = int(self.headers['cookie'].replace("session=",''))
-            print(">>>>>app session: %s"%self.session)
-        
-        if self.server.multiple_instance:
-            self.session = 0
+        self.session = 0
+        #cheching previously defined session
+        if 'cookie' in self.headers:
+            print(">>>>>>>self.headers['cookie'] %s"%str(self.headers['cookie']))
+            self.session = int(self.headers['cookie'].split("session=")[-1])
+            #if not a valid session id
+            if not self.session in clients.keys():
+                print("session id %s not in clients %s"%(self.session, str(clients.keys())))
+                self.session = 0
 
-        print(">>>>>app session: %s"%self.session)
+        #if no session id
+        if self.session == 0:
+            if self.server.multiple_instance:
+                self.session = int(time.time()*1000)
+            print("_________setting up session %s"%self.session)
+            #send session to browser
+            self.send_response(200)
+            del self.headers['cookie']
+            self.send_header("Set-Cookie", "session=%s"%(self.session))
+
         if not(self.session in clients):
             runtimeInstances[str(id(self))] = self
             clients[self.session] = self
