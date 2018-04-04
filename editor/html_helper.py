@@ -99,6 +99,7 @@ editorAttributesGroupOrdering = {
 editorAttributeList = [
     ('title',{'type':str, 'description':'Advisory information for the element', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}}),
     ('editor_varname',{'type':str, 'description':'Variable name', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}}),
+    ('visibility',{'type':gui.DropDown, 'description':'Specifies whether or not an element is visible.', 'affected_widget_attribute':'style', 'group':'Generic', 'additional_data':{'possible_values':('visible','hidden')}}),
 
     ('width',{'type':'css_size', 'description':'Widget width.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
     ('height',{'type':'css_size', 'description':'Widget height.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
@@ -123,6 +124,10 @@ editorAttributeList = [
     ('font-size',{'type':'css_size', 'description':'Font size', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}}),
     ('font-style',{'type':gui.DropDown, 'description':'Style', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','italic','oblique','inherit')}}),
     ('font-weight',{'type':gui.DropDown, 'description':'Style', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','bold','bolder','lighter','100','200','300','400','500','600','700','800','900','inherit')}}),
+    ('white-space',{'type':gui.DropDown, 'description':'Specifies how white-space inside an element is handled', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{'possible_values':('normal','nowrap','pre','pre-line','pre-wrap','initial','inherit')}}),
+    ('letter-spacing',{'type':'css_size', 'description':"Increases or decreases the space between characters in a text."
+                        , 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}}),
+    
     ('flex-direction',{'type':gui.DropDown, 'description':'The flex-direction property specifies the direction of the flexible items. Note: If the element is not a flexible item, the flex-direction property has no effect.'
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('row','row-reverse','column','column-reverse','initial','inherit')}}),
     ('display',{'type':gui.DropDown, 'description':'The display property specifies the type of box used for an HTML element'
@@ -148,7 +153,9 @@ editorAttributeList = [
 
     #:{'type':, 'description':'', 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':''}},
     
-    #'disabled':{'type':bool, 'description':'Whether the form control is disabled', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
+    #'disabled' causes interaction confusion
+    #('disabled',{'type':bool, 'description':'Whether the form control is disabled', 'affected_widget_attribute':'attributes', 'group':'Generic', 'additional_data':{}}),
+
     #'hidden':{'type':bool, 'description':'Whether the element is relevant', 'affected_widget_attribute':'attributes', 'group':'', 'additional_data':{}},
 ]
 

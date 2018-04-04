@@ -871,6 +871,70 @@ class Widget(Tag):
         self.eventManager.register_listener(self.EVENT_ONTOUCHCANCEL, callback, *userdata)
 
 
+class GridBox(Widget):
+    """It contains widgets automatically aligning them to the grid.
+    Does not permit children absolute positioning.
+
+    In order to add children to this container, use the append(child, key) function.
+    The key have to be string and determines the children positioning in the layout.
+
+    Note: If you would absolute positioning, use the Widget container instead.
+    """
+    @decorate_constructor_parameter_types([])
+    def __init__(self, **kwargs):
+        super(GridBox, self).__init__(**kwargs)
+        self.style.update({'display':'grid'})
+
+    def define_grid(self, matrix):
+        """Populates the Table with a list of tuples of strings.
+
+        Args:
+            matrix (list): list of iterables of strings (lists or someting else). 
+                Items in the matrix have to correspond to a key for the children.
+        """
+        self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
+
+    def append(self, value, key=''):
+        """Adds a child widget, generating and returning a key if not provided
+
+        In order to access to the specific child in this way widget.children[key].
+
+        Args:
+            value (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
+                param. The key have to correspond to a an element provided in the 'define_grid' method param.
+
+        Returns:
+            str: a key used to refer to the child for all future interaction, or a list of keys in case
+                of an iterable 'value' param
+        """
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
+        if not isinstance(value, Widget):
+            raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
+
+        key = value.identifier if key == '' else key
+        self.add_child(key, value)
+        value.style['grid-area'] = key
+
+        return key
+    
+    def remove_child(self, child):
+        if 'grid-area' in child.style.keys():
+            del child.style['grid-area']
+        super(GridBox,self).remove_child(child)
+
+
+
 class HBox(Widget):
     """It contains widget automatically aligning them horizontally.
     Does not permit children absolute positioning.
