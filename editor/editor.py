@@ -244,45 +244,30 @@ class Project(gui.Widget):
                     #this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
                     event['done'] = True
                     
-                    if not hasattr(event['eventlistener'],'path_to_this_widget'):
-                        event['eventlistener'].path_to_this_widget = []
-                    
+                    #event source chain                    
+                    sourcename = 'self'
                     source_filtered_path=event['eventsource'].path_to_this_widget[:]
                     listener_filtered_path=event['eventlistener'].path_to_this_widget[:]
                     for v in widget.path_to_this_widget:
-                        #if v in source_filtered_path:
                         source_filtered_path.remove(v)
-                        listener_filtered_path.remove(v)
-                    #event['eventsource'].path_to_this_widget = source_filtered_path
-                    #event['eventlistener'].path_to_this_widget = listener_filtered_path
-
-                    sourcename = widgetVarName
-                    if len(source_filtered_path)>0:
-                        if len(source_filtered_path)>1:
-                            sourcename = "%s.children['"%self.children['root'].attributes['editor_varname'] + "'].children['".join(source_filtered_path) + "']"
-                        else:
-                            sourcename = event['eventsource'].attributes['editor_varname']
-                    if force==True:
+                        listener_filtered_path.remove(v)   
+                    if force or (self.children['root']==widget and not (widget.attributes['editor_newclass'] == 'True')):
+                        sourcename = self.children['root'].attributes['editor_varname']
                         if self.children['root'].attributes['editor_varname'] in source_filtered_path:
                             source_filtered_path.remove(self.children['root'].attributes['editor_varname'])
-                        sourcename = self.children['root'].attributes['editor_varname']
-                        if len(source_filtered_path)>0:
-                            sourcename = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
+                    
+                    if len(source_filtered_path)>0:
+                        sourcename = ("%s.children['" + "'].children['".join(source_filtered_path) + "']")%sourcename
 
+                    #listener chain
                     listenername = "self"
+                    if force or (self.children['root']==widget and not (widget.attributes['editor_newclass'] == 'True')):
+                        if event['eventlistener'] != self:
+                            listenername = self.children['root'].attributes['editor_varname']
                     if len(listener_filtered_path)>0:
-                        if len(listener_filtered_path)>1:
-                            listenername = "%s.children['"%self.children['root'].attributes['editor_varname'] + "'].children['".join(listener_filtered_path) + "']"
-                        else:
-                            listenername = event['eventlistener'].attributes['editor_varname']
-                    if force==True:
-                        if self.children['root'].attributes['editor_varname'] in listener_filtered_path:
-                            listener_filtered_path.remove(self.children['root'].attributes['editor_varname'])
-                        listenername = self.children['root'].attributes['editor_varname']
-                        if len(listener_filtered_path)>0:
-                            listenername = ("%s.children['" + "'].children['".join(listener_filtered_path) + "']")%self.children['root'].attributes['editor_varname']
-                    if event['eventlistener'] == widget:
-                        listenername = widgetVarName
+                        listenername = ("%s.children['" + "'].children['".join(listener_filtered_path) + "']")%listenername
+
+
                     code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
                                                 'register_function':  event['setoneventfuncname'],
                                                 'listenername': listenername,
@@ -291,7 +276,7 @@ class Project(gui.Widget):
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
                     self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
-    
+
     def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
         self.known_project_children.append(widget)
 
@@ -379,6 +364,7 @@ class Project(gui.Widget):
         compiled_code = ''
         code_classes = ''
         
+        self.path_to_this_widget = []
         self.prepare_path_to_this_widget(self.children['root'])
         ret = self.repr_widget_for_editor( self.children['root'] )
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
