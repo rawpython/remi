@@ -295,11 +295,9 @@ class Project(gui.Widget):
         
         code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':widget.identifier}
         
-        for key in widget.attributes.keys():
-            if key not in html_helper.htmlInternallyUsedTags:
-                code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.attributes[key]}
-        for key in widget.style.keys():
-            code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'attrname': key, 'attrvalue': widget.style[key]}
+        code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attr_dict': ','.join('"%s":"%s"'%(key,widget.attributes[key]) for key in widget.attributes.keys() if key not in html_helper.htmlInternallyUsedTags)}
+
+        code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
         
         
         #for all the events of this widget
