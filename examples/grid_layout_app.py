@@ -24,18 +24,26 @@ class MyApp(App):
         label = gui.Label('This is the a label')
         label.style['background-color'] = 'lightgreen'
         
-        button = gui.Button('Button', height='100%')
+        button = gui.Button('Change layout', height='100%')
+        button.set_on_click_listener(self.redefine_grid, main_container)
         
         text = gui.TextInput()
         
         #defining layout matrix, have to be iterable of iterable
-        main_container.define_grid(['abb',
-                                    'acc'])
-
+        main_container.define_grid(['ab',
+                                    'ac'])
         main_container.append({'a':label, 'b':button, 'c':text})
+        #setting sizes for rows and columns
+        main_container.style.update({'grid-template-columns':'10% 90%', 'grid-template-rows':'10% 90%'})
 
         # returning the root widget
         return main_container
+    
+    def redefine_grid(self, emitter, container):
+        #redefining grid layout
+        container.define_grid(['bb',
+                               'ca'])
+        emitter.set_text("Done")
 
 
 if __name__ == "__main__":
