@@ -341,10 +341,13 @@ When loading data from external sources, consider protecting the application fro
 
 Supporting the project
 ===
-Are you able to support the Remi project?
+*Are you able to support the Remi project?*
+
 Are you aware that remi is on Patreon?
 That's a brilliant way to support this project.
-patreon.com/remigui
+
+**[SUPPORT Remi now](https://patreon.com/remigui)**
+
 Also a small amount is really welcome.
 
 
