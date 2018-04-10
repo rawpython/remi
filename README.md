@@ -339,6 +339,15 @@ The library itself doesn't implement security strategies, and so it is advised t
 When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
 
 
+Supporting the project
+===
+Are you able to support the Remi project?
+Are you aware that remi is on Patreon?
+That's a brilliant way to support this project.
+patreon.com/remigui
+Also a small amount is really welcome.
+
+
 Contributors
 ===
 Thank you for collaborating with us to make Remi better!
