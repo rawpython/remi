@@ -25,6 +25,8 @@ import html_helper
 
 
 class ResizeHelper(gui.Widget):
+    ON_END_EVENT = "on_end_event"
+
     def __init__(self, project, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
 
@@ -85,6 +87,7 @@ class ResizeHelper(gui.Widget):
     def stop_drag(self, emitter, x, y):
         self.active = False
         self.update_position()
+        self.eventManager.propagate(self.ON_END_EVENT, ())
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -105,8 +108,13 @@ class ResizeHelper(gui.Widget):
                 self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
                 self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
 
+    def set_on_end_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.ON_END_EVENT, callback, *userdata)
+
 
 class DragHelper(gui.Widget):
+    ON_END_EVENT = "on_end_event"
+
     def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
 
@@ -168,6 +176,7 @@ class DragHelper(gui.Widget):
     def stop_drag(self, emitter, x, y):
         self.active = False
         self.update_position()
+        self.eventManager.propagate(self.ON_END_EVENT, ())
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -187,6 +196,9 @@ class DragHelper(gui.Widget):
             if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
                 self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']))
                 self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']))
+
+    def set_on_end_listener(self, callback, *userdata):
+        self.eventManager.register_listener(self.ON_END_EVENT, callback, *userdata)
 
 
 class Project(gui.Widget):
@@ -531,6 +543,9 @@ class Editor(App):
         
         self.resizeHelper = ResizeHelper(self.project, width=16, height=16)
         self.dragHelper = DragHelper(self.project, width=15, height=15)
+        self.resizeHelper.set_on_end_listener(self.on_drag_resize_end)
+        self.dragHelper.set_on_end_listener(self.on_drag_resize_end)
+
         self.menu_new_clicked(None)
         
         self.projectPathFilename = ''
@@ -539,6 +554,9 @@ class Editor(App):
         # returning the root widget
         return self.mainContainer
     
+    def on_drag_resize_end(self, emitter):
+        self.attributeEditor.set_widget( self.selectedWidget )
+
     def configure_widget_for_editing(self, widget):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
             to the editor

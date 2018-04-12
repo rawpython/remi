@@ -21,7 +21,7 @@ class MyApp(App):
         #creating a container GridBox type
         main_container = gui.GridBox(width='100%', height='100%', style={'margin':'0px auto'})
         
-        label = gui.Label('This is the a label')
+        label = gui.Label('This is a label')
         label.style['background-color'] = 'lightgreen'
         
         button = gui.Button('Change layout', height='100%')
