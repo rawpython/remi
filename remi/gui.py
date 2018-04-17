@@ -2733,8 +2733,9 @@ class TreeItem(Widget, _MixinTextualWidget):
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
-        self.treeopen = False
-        self.attributes['treeopen'] = 'false'
+        treeopen = kwargs.get('treeopen', False)
+        self.treeopen = treeopen
+        self.attributes['treeopen'] = str(treeopen).lower()
         self.attributes['has-subtree'] = 'false'
 
     def append(self, value, key=''):
