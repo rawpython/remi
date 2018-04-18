@@ -2119,7 +2119,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', text_align='left' **kwargs):
+    def __init__(self, text='', text_align='left', **kwargs):
         """
         Args:
             text (str):
