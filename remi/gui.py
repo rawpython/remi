@@ -2720,7 +2720,7 @@ class TreeItem(Widget, _MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, tree_open=False, **kwargs):
         """
         Args:
             text (str):
@@ -2733,9 +2733,8 @@ class TreeItem(Widget, _MixinTextualWidget):
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
-        treeopen = kwargs.get('treeopen', False)
-        self.treeopen = treeopen
-        self.attributes['treeopen'] = str(treeopen).lower()
+        self.treeopen = tree_open
+        self.attributes['treeopen'] = str(tree_open).lower()
         self.attributes['has-subtree'] = 'false'
 
     def append(self, value, key=''):
