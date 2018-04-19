@@ -2119,7 +2119,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', text_align='left', **kwargs):
+    def __init__(self, text='', text_style={}, **kwargs):
         """
         Args:
             text (str):
@@ -2127,7 +2127,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
         """
         super(TableEditableItem, self).__init__(**kwargs)
         self.type = 'td'
-        self.editInput = TextInput(style={'text-align': text_align})
+        self.editInput = TextInput(style=text_style)
         self.append(self.editInput)
         self.editInput.set_on_change_listener(self.onchange)
         self.get_text = self.editInput.get_text
