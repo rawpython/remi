@@ -1,12 +1,22 @@
 
-![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png "Widgets overview")
-## *A Platform independent Python GUI library for your applications*
+<p align="center">
+    <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png" width="430">
+</p>
 
-[![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+<p align="center" style="font-size:30px;">
+    A Platform independent Python GUI library for your applications
+</p>
+
+<p align="center">
+    <a href="https://gitter.im/dddomodossola/remi">
+        <img src="https://badges.gitter.im/Join%20Chat.svg" width="200">
+    </a>
+</p>
+
 Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
 
-Do you need support? Reach us on [Gitter chat](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge).
+Do you need support? Reach us on [Gitter chat](https://gitter.im/dddomodossola/remi).
 
 
 Getting Started
@@ -27,35 +37,16 @@ Then start the test script:
 python widgets_overview_app.py
 ```
 
+
 Remi
 ===
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
 
-![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png "Widgets overview")
+<p align="center">
+    <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png" title="Widgets overview">
+</p>
 
 Remi enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a webserver that will be accessible on your network.
-
-These widgets are available:
-- Widget : base class of all widgets. it can be used as a generic container
-- HBox : horizontal container
-- VBox : vertical container
-- Button
-- TextInput : for the editable text
-- SpinBox
-- Label
-- InputDialog
-- ListView
-- DropDown
-- Image
-- Table
-- TableWidget
-- Slider
-- ColorPicker
-- Date
-- FileSelectionDialog
-- Menu
-- MenuItem
-- VideoPlayer
 
 A basic application appears like this:
 
@@ -107,7 +98,7 @@ Kivy, PyQT and PyGObject all require native code for the host operating system, 
 NO, It is not required, you have to code only in Python.
 
 - **Which browsers can I use this with?**  
-I have developed this using Chrome (on Windows, Linux and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
+Tested on Chrome Firefox and Edge (on Windows, Linux and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
 
 - **Is it open source?**  
 For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
@@ -296,10 +287,13 @@ start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhos
 
 Standalone Execution
 ===
-Remi is an effective solution for building your Remote Interface, but what about standalone execution? 
-Sure you can use it with your browser, but for applications where remote access is not required, than the native GUI is the best.
+I suggest to use the browser as standard interface window.
+
+However, you can avoid using the browser.
 This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview). 
 Here is an example about this [standalone_app.py](https://github.com/dddomodossola/remi/blob/development/examples/standalone_app.py).
+
+**Be aware that PyWebView uses qt, gtk and so on to create the window. An outdated version of these libraries can cause ui problems. If you experience ui issues, update these libraries, or better avoid standalone execution.**
 
 
 Authentication

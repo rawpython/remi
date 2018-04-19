@@ -41,8 +41,8 @@ class MyApp(App):
     
     def redefine_grid(self, emitter, container):
         #redefining grid layout
-        container.define_grid(['bb',
-                               'ca'])
+        container.define_grid(['cab'])
+        container.style.update({'grid-template-columns':'33% 33% 33%', 'grid-template-rows':'50%'})
         emitter.set_text("Done")
 
 
