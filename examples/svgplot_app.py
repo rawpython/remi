@@ -33,19 +33,20 @@ class SvgPlot(gui.Svg):
         self.textYMax.style['font-size'] = gui.to_pix(self.font_size)
         self.append([self.textYMin, self.textYMax])
 
-    def append_poly(self, poly):
-        self.append(poly)
-        self.polyList.append(poly)
-        poly.textXMin = gui.SvgText(0, 0, "actualValue")
-        poly.textXMax = gui.SvgText(0, 0, "actualValue")
-        poly.textYVal = gui.SvgText(0, 0, "actualValue")
-        poly.textYVal.style['font-size'] = gui.to_pix(self.font_size)
+    def append_poly(self, polys):
+        for poly in polys:
+            self.append(poly)
+            self.polyList.append(poly)
+            poly.textXMin = gui.SvgText(0, 0, "actualValue")
+            poly.textXMax = gui.SvgText(0, 0, "actualValue")
+            poly.textYVal = gui.SvgText(0, 0, "actualValue")
+            poly.textYVal.style['font-size'] = gui.to_pix(self.font_size)
 
-        poly.lineYValIndicator = gui.SvgLine(0, 0, 0, 0)
-        poly.lineXMinIndicator = gui.SvgLine(0, 0, 0, 0)
-        poly.lineXMaxIndicator = gui.SvgLine(0, 0, 0, 0)
-        self.append([poly.textXMin, poly.textXMax, poly.textYVal, poly.lineYValIndicator, 
-            poly.lineXMinIndicator, poly.lineXMaxIndicator])
+            poly.lineYValIndicator = gui.SvgLine(0, 0, 0, 0)
+            poly.lineXMinIndicator = gui.SvgLine(0, 0, 0, 0)
+            poly.lineXMaxIndicator = gui.SvgLine(0, 0, 0, 0)
+            self.append([poly.textXMin, poly.textXMax, poly.textYVal, poly.lineYValIndicator, 
+                poly.lineXMinIndicator, poly.lineXMaxIndicator])
 
     def remove_poly(self, poly):
         self.remove_child(poly)

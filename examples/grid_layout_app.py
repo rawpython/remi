@@ -43,7 +43,7 @@ class MyApp(App):
         #redefining grid layout
         container.define_grid(['cab'])
         container.style.update({'grid-template-columns':'33% 33% 33%', 'grid-template-rows':'50%'})
-        emitter.set_text("Done")
+        #emitter.set_text("Done")
 
 
 if __name__ == "__main__":

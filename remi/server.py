@@ -55,8 +55,6 @@ runtimeInstances = weakref.WeakValueDictionary()
 pyLessThan3 = sys.version_info < (3,)
 
 update_lock = threading.RLock()
-update_event = threading.Event()
-update_thread = None
 
 
 _MSG_PING = '4'
@@ -227,7 +225,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def on_message(self, message):
         global runtimeInstances
-        global update_lock, update_event
+        global update_lock
 
         if message == 'pong':
             return
@@ -264,8 +262,6 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
 
-        update_event.set()
-
 
 def parse_parametrs(p):
     """
@@ -284,63 +280,6 @@ def parse_parametrs(p):
             p = p[l + 1:]
             ret[field_name] = field_value
     return ret
-
-
-class _UpdateThread(threading.Thread):
-
-    daemon = True
-
-    def __init__(self, interval):
-        threading.Thread.__init__(self)
-        self.daemon = False
-        self._interval = interval
-        self._log = logging.getLogger('remi.update')
-        self._alive = True
-        self.start()
-
-    def stop(self):
-        self._alive = False
-
-    def _update_gui(self, client, node):
-        changed_widgets = {}  # key = widget instance, value = html representation
-        node.repr(client, changed_widgets)
-        for widget in changed_widgets.keys():
-            html = changed_widgets[widget]
-            __id = str(widget.identifier)
-            for ws in client.websockets:
-                self._log.debug('update_widget: %s type: %s' % (__id, type(widget)))
-                try:
-                    ws.send_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
-                except Exception:
-                    client.websockets.remove(ws)
-
-    def run(self):
-        while self._alive:
-            global clients, runtimeInstances
-            global update_lock, update_event
-
-            update_event.wait(self._interval)
-            with update_lock:
-                # noinspection PyBroadException
-                try:
-
-                    for client in clients.values():
-                        if not hasattr(client, 'root'):
-                            continue
-
-                        if client.websockets:
-                            self._update_gui(client, client.root)
-
-                            for ws in client.websockets:
-                                ws.ping()
-
-                        client.idle()
-
-                except Exception:
-                    self._log.error('error updating gui', exc_info=True)
-
-                update_event.clear()
-        self._log.debug('stopped update thread')
 
 
 # noinspection PyPep8Naming
@@ -386,7 +325,6 @@ class App(BaseHTTPRequestHandler, object):
     def _instance(self):
         global clients
         global runtimeInstances
-        global update_event, update_thread
         """
         This method is used to get the Application instance previously created
         managing on this, it is possible to switch to "single instance for
@@ -657,17 +595,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
         self.client = clients[k]
 
-        if update_thread is None:
-            # we need to, at least, ping the websockets to keep them alive. we might also ping more frequently if the
-            # user requested we do so
-            ping_time = self.server.websocket_timeout_timer_ms / 2000.0  # twice the timeout in ms
-            if self.server.update_interval is None:
-                interval = ping_time
-            else:
-                interval = min(ping_time, self.server.update_interval)
-            update_thread = _UpdateThread(interval)
-            update_event.set()  # update now
-
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
             that will be the entry point of the application.
@@ -680,19 +607,32 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             Useful to schedule tasks. """
         pass
 
-    def set_root_widget(self, widget):
-        global update_lock, update_event
-        # update_event.wait()
-        self.root = widget
-        # here we check if the root window has changed
-        for ws in self.websockets:
-            try:
+    def need_update(self, changed_widget):
+        global update_lock
+        with update_lock:
+            # here we check if the root window has changed
+            msg = ""
+            if changed_widget == self.root:
                 html = self.root.repr(self)
-                ws.send_message('0' + self.root.identifier + ',' + to_websocket(html))  # #0==show_window message
-            except Exception:
-                self.websockets.remove(ws)
-        # update_event.clear()
+                msg = '0' + self.root.identifier + ',' + to_websocket(html)  # #0==show_window message
+            else:
+                msg =_MSG_UPDATE + changed_widget.identifier + ',' + to_websocket(changed_widget.repr(self))
 
+            for ws in self.websockets:
+                try:
+                    ws.send_message(msg)
+                except Exception:
+                    self.websockets.remove(ws)
+
+    def set_root_widget(self, widget):
+        global update_lock
+        if self.root:
+            if 'data-parent-widget' in self.root.attributes:
+                del self.root.attributes['data-parent-widget']
+        self.root = widget
+
+        self.root.attributes['data-parent-widget'] = str(id(self))
+        
     def _send_spontaneous_websocket_message(self, message):
         global update_lock
         with update_lock:
@@ -704,7 +644,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 except:
                     self._log.error("sending websocket spontaneous message", exc_info=True)
                     self.client.websockets.remove(ws)
-        update_event.clear()
 
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
@@ -806,7 +745,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                     # build the root page once if necessary
                     if not hasattr(self.client, 'root') or self.client.root is None:
                         self._log.info('built UI (path=%s)' % path)
-                        self.client.root = self.main(*self.server.userdata)
+                        self.client.set_root_widget(self.main(*self.server.userdata))
                 self._process_all(path)
             except:
                 self._log.error('error processing GET request', exc_info=True)
@@ -1042,7 +981,6 @@ class Server(object):
         self._wsserver.shutdown()
         self._wsth.join()
         self._sserver.shutdown()
-        update_thread.stop()
         for client in clients.values():
             client.close_connected_websockets()
 
