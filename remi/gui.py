@@ -373,7 +373,7 @@ class Widget(Tag):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, margin='0px', **kwargs):
         """
         Args:
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
@@ -390,7 +390,9 @@ class Widget(Tag):
         self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.style['margin'] = kwargs.get('margin', '0px')
+        if margin:
+            self.style['margin'] = margin
+            
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(kwargs.pop('style', None))
