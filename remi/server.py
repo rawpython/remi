@@ -681,8 +681,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         pass
 
     def set_root_widget(self, widget):
-        global update_lock, update_event
-        # update_event.wait()
+        global update_lock
         self.root = widget
         # here we check if the root window has changed
         for ws in self.websockets:
@@ -691,7 +690,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 ws.send_message('0' + self.root.identifier + ',' + to_websocket(html))  # #0==show_window message
             except Exception:
                 self.websockets.remove(ws)
-        # update_event.clear()
 
     def _send_spontaneous_websocket_message(self, message):
         global update_lock
@@ -704,7 +702,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 except:
                     self._log.error("sending websocket spontaneous message", exc_info=True)
                     self.client.websockets.remove(ws)
-        update_event.clear()
 
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
