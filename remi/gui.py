@@ -2129,7 +2129,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
         """
         super(TableEditableItem, self).__init__(**kwargs)
         self.type = 'td'
-        self.editInput = TextInput(style=text_style)
+        self.editInput = TextInput(style=text_style, **kwargs)
         self.append(self.editInput)
         self.editInput.set_on_change_listener(self.onchange)
         self.get_text = self.editInput.get_text
