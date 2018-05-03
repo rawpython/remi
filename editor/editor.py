@@ -745,7 +745,7 @@ def main():
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=2.0)
+    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=0.1)
     
 if __name__ == "__main__":
     main()

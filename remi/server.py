@@ -314,14 +314,6 @@ class App(BaseHTTPRequestHandler, object):
             vals = []
         return vals
 
-    def log_message(self, format_string, *args):
-        msg = format_string % args
-        self._log.debug("%s %s" % (self.address_string(), msg))
-
-    def log_error(self, format_string, *args):
-        msg = format_string % args
-        self._log.error("%s %s" % (self.address_string(), msg))
-
     def _instance(self):
         global clients
         global runtimeInstances
@@ -342,6 +334,7 @@ class App(BaseHTTPRequestHandler, object):
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
+        self.update_interval = self.server.update_interval
 
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
@@ -595,6 +588,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
         self.client = clients[k]
 
+        self._update_timer = None
+
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
             that will be the entry point of the application.
@@ -602,48 +597,59 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             and return the root widget. """
         raise NotImplementedError("Applications must implement 'main()' function.")
 
-    def idle(self):
-        """ Idle function called every UPDATE_INTERVAL before the gui update.
-            Useful to schedule tasks. """
-        pass
-
     def need_update(self, changed_widget):
-        global update_lock
-        with update_lock:
-            # here we check if the root window has changed
-            msg = ""
-            if changed_widget == self.root:
-                html = self.root.repr(self)
-                msg = '0' + self.root.identifier + ',' + to_websocket(html)  # #0==show_window message
-            else:
-                msg =_MSG_UPDATE + changed_widget.identifier + ',' + to_websocket(changed_widget.repr(self))
+        # here we check if the root window has changed
+        if self.update_interval == 0:
+            #no interval, immadiate update
+            self.delayed_global_update(changed_widget)
+        else:
+            if self._update_timer == None:
+                #for delayed update, the update have to scan the entire gui from the root widget
+                # the root widget can change during the delay, so we can't pass the actual root widget 
+                # we pass no arguments instead, assuming in the delayed function that no arguments means root
+                self._update_timer = threading.Timer(self.update_interval, self.delayed_global_update)
+                self._update_timer.start()
+                
+    def delayed_global_update(self, changed_widget = None):
+        if not changed_widget:
+            changed_widget = self.root
 
-            for ws in self.websockets:
-                try:
-                    ws.send_message(msg)
-                except Exception:
-                    self.websockets.remove(ws)
+        changed_widget_dict = {}
+        changed_widget.repr(self, changed_widget_dict)
+        
+        for widget in changed_widget_dict.keys():
+            html = changed_widget_dict[widget]
+            __id = str(widget.identifier)
+            self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
+        
+        self._update_timer = None
 
     def set_root_widget(self, widget):
-        global update_lock
         if self.root:
             if 'data-parent-widget' in self.root.attributes:
+                self.root.disable_refresh()
                 del self.root.attributes['data-parent-widget']
+                self.root.enable_refresh()
         self.root = widget
 
+        self.root.disable_refresh()
         self.root.attributes['data-parent-widget'] = str(id(self))
+        self.root.enable_refresh()
+
+        msg = "0" + self.root.identifier + ',' + to_websocket(self.root.repr(self))
+        self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
         global update_lock
-        with update_lock:
-            for ws in self.client.websockets:
-                # noinspection PyBroadException
-                try:
-                    self._log.debug("sending websocket spontaneous message")
-                    ws.send_message(message)
-                except:
-                    self._log.error("sending websocket spontaneous message", exc_info=True)
-                    self.client.websockets.remove(ws)
+        #with update_lock:
+        for ws in self.client.websockets:
+            # noinspection PyBroadException
+            try:
+                #self._log.debug("sending websocket spontaneous message")
+                ws.send_message(message)
+            except:
+                self._log.error("sending websocket spontaneous message", exc_info=True)
+                self.client.websockets.remove(ws)
 
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)

@@ -111,39 +111,34 @@ class _EventDictionary(dict):
         self.eventManager = _EventManager(self)
         super(_EventDictionary, self).__init__(*args, **kwargs)
 
-    def __setitem__(self, key, value, version_increment=1):
+    def __setitem__(self, key, value):
         if key in self:
             if self[key] == value:
                 return
-        self.__version__ += version_increment
         ret = super(_EventDictionary, self).__setitem__(key, value)
         self.onchange()
         return ret
 
-    def __delitem__(self, key, version_increment=1):
+    def __delitem__(self, key):
         if key not in self:
             return
-        self.__version__ += version_increment
         ret = super(_EventDictionary, self).__delitem__(key)
         self.onchange()
         return ret
 
-    def pop(self, key, d=None, version_increment=1):
+    def pop(self, key, d=None):
         if key not in self:
             return
-        self.__version__ += version_increment
         ret = super(_EventDictionary, self).pop(key, d)
         self.onchange()
         return ret
 
-    def clear(self, version_increment=1):
-        self.__version__ += version_increment
+    def clear(self):
         ret = super(_EventDictionary, self).clear()
         self.onchange()
         return ret
 
-    def update(self, d, version_increment=1):
-        self.__version__ += version_increment
+    def update(self, d):
         ret = super(_EventDictionary, self).update(d)
         self.onchange()
         return ret
@@ -157,6 +152,7 @@ class _EventDictionary(dict):
     def onchange(self):
         """Called on content change.
         """
+        self.__version__ += 1
         return self.eventManager.propagate(self.EVENT_ONCHANGE, ())
 
     @decorate_set_on_listener("onchange", "(self,emitter)")
@@ -259,7 +255,7 @@ class Tag(object):
     def _tag_changed(self, emitter):
         if not self.ignore_update:
             if self.get_parent():
-                self.get_parent().need_update(self)
+                self.get_parent().need_update(self.get_parent())
 
     def need_update(self, changed_widget):
         if self.get_parent():
@@ -1290,7 +1286,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.disable_refresh()
         self.set_value(new_value)
         self.enable_refresh()
-        self.align_version()
+        self._set_updated()
         return self.eventManager.propagate(self.EVENT_ONKEYUP, (new_value,))
 
     @decorate_set_on_listener("onkeyup", "(self,emitter,new_value)")
@@ -1320,7 +1316,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.disable_refresh()
         self.set_value(new_value)
         self.enable_refresh()
-        self.align_version()
+        self._set_updated()
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
     @decorate_set_on_listener("onkeydown", "(self,emitter,new_value)")
@@ -1352,7 +1348,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.disable_refresh()
         self.set_value(new_value)
         self.enable_refresh()
-        self.align_version()
+        self._set_updated()
         return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
     @decorate_set_on_listener("onenter", "(self,emitter,new_value)")
@@ -2635,7 +2631,9 @@ class FileFolderNavigator(Widget):
         self.selectionlist = []  # reset selected file list
         os.chdir(directory)
         directory = os.getcwd()
+        self.disable_refresh()
         self.populate_folder_items(directory)
+        self.enable_refresh()
         self.pathEditor.set_text(directory)
         os.chdir(curpath)  # restore the path
 
