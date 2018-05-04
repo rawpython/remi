@@ -642,7 +642,10 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 ws.send_message(message)
             except:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
-                self.client.websockets.remove(ws)
+                try:
+                    self.client.websockets.remove(ws)
+                except:
+                    self._log.error("unable to remove websocket client - already not in list", exc_info=True)
 
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
