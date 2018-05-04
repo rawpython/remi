@@ -603,11 +603,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         else:
             if self._update_timer == None:
                 #delayed update
-                with self.update_lock:
-                    self._update_timer = threading.Timer(self.update_interval, self.do_gui_update)
-                    self._update_timer.start()
+                self._update_timer = threading.Timer(self.update_interval, self.do_gui_update)
+                self._update_timer.start()
                 
     def do_gui_update(self):
+        """ This method gets called also by Timer, a new thread, and so needs to lock the update
+        """
         with self.update_lock:
             changed_widget_dict = {}
             self.root.repr(self, changed_widget_dict)
