@@ -414,7 +414,6 @@ class Editor(App):
     def idle(self):
         self.resizeHelper.update_position()
         self.dragHelper.update_position()
-        threading.Timer(0.1, self.idle).start()
 
     def main(self):
         self.mainContainer = gui.Widget(width='100%', height='100%', layout_orientation=gui.Widget.LAYOUT_VERTICAL)
@@ -551,8 +550,6 @@ class Editor(App):
         
         self.projectPathFilename = ''
         self.editCuttedWidget = None #cut operation, contains the cutted tag
-        
-        self.idle()
 
         # returning the root widget
         return self.mainContainer

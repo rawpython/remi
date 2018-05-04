@@ -332,7 +332,7 @@ class App(BaseHTTPRequestHandler, object):
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
-        self.update_interval = self.server.update_interval
+        clients[k].update_interval = self.server.update_interval
 
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
@@ -588,6 +588,8 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
         self._update_timer = None
 
+        threading.Timer(clients[k].update_interval, clients[k].idle_loop).start()
+
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
             that will be the entry point of the application.
@@ -595,7 +597,20 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             and return the root widget. """
         raise NotImplementedError("Applications must implement 'main()' function.")
 
+    def idle_loop(self):
+        """ This is used to exec the idle function in a safe context and a separate thread
+        """
+        with self.update_lock:
+            self.idle()
+            threading.Timer(self.update_interval, self.idle_loop).start()
+
+    def idle(self):
+        """ Idle function called every UPDATE_INTERVAL before the gui update.
+            Useful to schedule tasks. """
+        pass
+
     def need_update(self, changed_widget):
+        print("--need gui update")
         if self.update_interval == 0:
             #no interval, immadiate update
             self.do_gui_update()
@@ -608,16 +623,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     def do_gui_update(self):
         """ This method gets called also by Timer, a new thread, and so needs to lock the update
         """
+        self._log.debug("do_gui_update")
         with self.update_lock:
             changed_widget_dict = {}
             self.root.repr(self, changed_widget_dict)
-            
             for widget in changed_widget_dict.keys():
                 html = changed_widget_dict[widget]
                 __id = str(widget.identifier)
                 self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
-            
-            self._update_timer = None
+                
+        self._update_timer = None
 
     def set_root_widget(self, widget):
         if self.root:

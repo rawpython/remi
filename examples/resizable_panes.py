@@ -233,4 +233,4 @@ class MyApp(App):
 
     
 if __name__ == "__main__":
-    start(MyApp, debug=False, address='0.0.0.0', port=8082, update_interval=2.0)
+    start(MyApp, debug=False, address='0.0.0.0', port=8082, update_interval=0.01)
