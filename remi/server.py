@@ -596,7 +596,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         raise NotImplementedError("Applications must implement 'main()' function.")
 
     def need_update(self, changed_widget):
-        # here we check if the root window has changed
         if self.update_interval == 0:
             #no interval, immadiate update
             self.do_gui_update()
