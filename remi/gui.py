@@ -254,8 +254,7 @@ class Tag(object):
 
     def _tag_changed(self, emitter):
         if not self.ignore_update:
-            if self.get_parent():
-                self.get_parent().need_update(self.get_parent())
+            self.need_update(self)
 
     def need_update(self, changed_widget):
         if self.get_parent():

@@ -54,8 +54,6 @@ runtimeInstances = weakref.WeakValueDictionary()
 
 pyLessThan3 = sys.version_info < (3,)
 
-update_lock = threading.RLock()
-
 
 _MSG_PING = '4'
 _MSG_ACK = '3'
@@ -225,18 +223,17 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def on_message(self, message):
         global runtimeInstances
-        global update_lock
 
         if message == 'pong':
             return
 
         self.send_message(_MSG_ACK)
 
-        with update_lock:
+        k = get_instance_key(self)
+        with clients[k].update_lock:
             # noinspection PyBroadException
             try:
                 # saving the websocket in order to update the client
-                k = get_instance_key(self)
                 if self not in clients[k].websockets:
                     clients[k].websockets.append(self)
 
@@ -297,6 +294,7 @@ class App(BaseHTTPRequestHandler, object):
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
+        self.update_lock = threading.RLock()
         self._app_args = app_args
         self.client = None
         self.root = None
@@ -601,28 +599,25 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         # here we check if the root window has changed
         if self.update_interval == 0:
             #no interval, immadiate update
-            self.delayed_global_update(changed_widget)
+            self.do_gui_update()
         else:
             if self._update_timer == None:
-                #for delayed update, the update have to scan the entire gui from the root widget
-                # the root widget can change during the delay, so we can't pass the actual root widget 
-                # we pass no arguments instead, assuming in the delayed function that no arguments means root
-                self._update_timer = threading.Timer(self.update_interval, self.delayed_global_update)
-                self._update_timer.start()
+                #delayed update
+                with self.update_lock:
+                    self._update_timer = threading.Timer(self.update_interval, self.do_gui_update)
+                    self._update_timer.start()
                 
-    def delayed_global_update(self, changed_widget = None):
-        if not changed_widget:
-            changed_widget = self.root
-
-        changed_widget_dict = {}
-        changed_widget.repr(self, changed_widget_dict)
-        
-        for widget in changed_widget_dict.keys():
-            html = changed_widget_dict[widget]
-            __id = str(widget.identifier)
-            self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
-        
-        self._update_timer = None
+    def do_gui_update(self):
+        with self.update_lock:
+            changed_widget_dict = {}
+            self.root.repr(self, changed_widget_dict)
+            
+            for widget in changed_widget_dict.keys():
+                html = changed_widget_dict[widget]
+                __id = str(widget.identifier)
+                self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
+            
+            self._update_timer = None
 
     def set_root_widget(self, widget):
         if self.root:
@@ -640,8 +635,6 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
-        global update_lock
-        #with update_lock:
         for ws in self.client.websockets:
             # noinspection PyBroadException
             try:
@@ -747,7 +740,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
             try:
                 self._instance()
                 # build the page (call main()) in user code, if not built yet
-                with update_lock:
+                with self.update_lock:
                     # build the root page once if necessary
                     if not hasattr(self.client, 'root') or self.client.root is None:
                         self._log.info('built UI (path=%s)' % path)
@@ -765,15 +758,13 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 return path
 
     def _process_all(self, func):
-        global update_lock
-
         self._log.debug('get: %s' % func)
 
         static_file = self.re_static_file.match(func)
         attr_call = self.re_attr_call.match(func)
 
         if (func == '/') or (not func):
-            with update_lock:
+            with self.update_lock:
                 # render the HTML
                 html = self.client.root.repr(self.client)
 
@@ -813,7 +804,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 content = f.read()
                 self.wfile.write(content)
         elif attr_call:
-            with update_lock:
+            with self.update_lock:
                 param_dict = parse_qs(urlparse(func).query)
                 # parse_qs returns patameters as list, here we take the first element
                 for k in param_dict:

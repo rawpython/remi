@@ -153,4 +153,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0')
+    start(MyApp, address='0.0.0.0', update_interval=0)
