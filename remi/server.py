@@ -584,11 +584,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = []
 
+        if not hasattr(clients[k], '_need_update_flag'):
+            clients[k]._need_update_flag = False
+            if clients[k].update_interval > 0:
+                clients[k].idle_loop()
+        
         self.client = clients[k]
-
-        self._update_timer = None
-
-        threading.Timer(clients[k].update_interval, clients[k].idle_loop).start()
 
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
@@ -601,7 +602,12 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         """ This is used to exec the idle function in a safe context and a separate thread
         """
         with self.update_lock:
-            self.idle()
+            try:
+                self.idle()
+            except:
+                self._log.error("exception in App.idle method", exc_info=True)
+            if self._need_update_flag:
+                self.do_gui_update()
             threading.Timer(self.update_interval, self.idle_loop).start()
 
     def idle(self):
@@ -610,20 +616,16 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         pass
 
     def need_update(self, changed_widget):
-        print("--need gui update")
         if self.update_interval == 0:
             #no interval, immadiate update
             self.do_gui_update()
         else:
-            if self._update_timer == None:
-                #delayed update
-                self._update_timer = threading.Timer(self.update_interval, self.do_gui_update)
-                self._update_timer.start()
+            #will be updated after idle loop
+            self._need_update_flag = True
                 
     def do_gui_update(self):
         """ This method gets called also by Timer, a new thread, and so needs to lock the update
         """
-        self._log.debug("do_gui_update")
         with self.update_lock:
             changed_widget_dict = {}
             self.root.repr(self, changed_widget_dict)
@@ -631,8 +633,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 html = changed_widget_dict[widget]
                 __id = str(widget.identifier)
                 self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
-                
-        self._update_timer = None
+        self._need_update_flag = False
 
     def set_root_widget(self, widget):
         if self.root:
