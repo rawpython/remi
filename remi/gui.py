@@ -187,9 +187,9 @@ class Tag(object):
         self.style = _EventDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
 
         self.ignore_update = False
-        self.children.set_on_change_listener(self._tag_changed)
-        self.attributes.set_on_change_listener(self._tag_changed)
-        self.style.set_on_change_listener(self._tag_changed)
+        self.children.set_on_change_listener(self._need_update)
+        self.attributes.set_on_change_listener(self._need_update)
+        self.style.set_on_change_listener(self._need_update)
 
         self.type = kwargs.get('_type', '')
         self.attributes['id'] = kwargs.get('id', str(id(self)))
@@ -252,13 +252,10 @@ class Tag(object):
             changed_widgets.update(local_changed_widgets)
         return self._backup_repr
 
-    def _tag_changed(self, emitter):
+    def _need_update(self, emitter=None):
         if not self.ignore_update:
-            self.need_update(self)
-
-    def need_update(self, changed_widget):
-        if self.get_parent():
-            self.get_parent().need_update(changed_widget)
+            if self.get_parent():
+                self.get_parent()._need_update()
 
     def _ischanged(self):
         return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
@@ -480,7 +477,7 @@ class Widget(Tag):
 
     def redraw(self):
         """Forces a graphic update of the widget"""
-        self.need_update(self)
+        self._need_update()
 
     def repr(self, client, changed_widgets={}):
         """Represents the widget as HTML format, packs all the attributes, children and so on.

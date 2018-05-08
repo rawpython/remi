@@ -586,6 +586,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 
         if not hasattr(clients[k], '_need_update_flag'):
             clients[k]._need_update_flag = False
+            clients[k]._stop_update_flag = False
             if clients[k].update_interval > 0:
                 clients[k].idle_loop()
         
@@ -608,14 +609,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
                 self._log.error("exception in App.idle method", exc_info=True)
             if self._need_update_flag:
                 self.do_gui_update()
-            threading.Timer(self.update_interval, self.idle_loop).start()
+            if not self._stop_update_flag:
+                threading.Timer(self.update_interval, self.idle_loop).start()
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
             Useful to schedule tasks. """
         pass
 
-    def need_update(self, changed_widget):
+    def _need_update(self, emitter=None):
         if self.update_interval == 0:
             #no interval, immadiate update
             self.do_gui_update()
@@ -856,6 +858,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     def close(self):
         global http_server_instance
         self._log.debug('shutting down...')
+        self._stop_update_flag = True
         http_server_instance.stop()
 
     def close_connected_websockets(self): 
