@@ -149,8 +149,8 @@ class MyApp(App):
         self.plotData3.add_coord(self.count, math.sin(self.count / 180.0 * math.pi))
         self.svgplot.render()
         self.count += 1
-        Timer(0.01, self.add_data).start()
+        Timer(0.0001, self.add_data).start()
 
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0', update_interval=0)
+    start(MyApp, address='0.0.0.0', update_interval=0.1)

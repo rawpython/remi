@@ -211,12 +211,11 @@ class Tag(object):
     def identifier(self):
         return self.attributes['id']
 
-    def repr(self, client, changed_widgets={}):
+    def repr(self, changed_widgets={}):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
         Args:
-            client (App): The client instance.
             changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
@@ -224,25 +223,20 @@ class Tag(object):
         innerHTML = ''
         for k in self._render_children_list:
             s = self.children[k]
-            if isinstance(s, type('')):
+            if isinstance(s, Tag):
+                innerHTML = innerHTML + s.repr(local_changed_widgets)
+            elif isinstance(s, type('')):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
                 innerHTML = innerHTML + s.encode('utf-8')
             else:
-                try:
-                    innerHTML = innerHTML + s.repr(client,
-                                                   local_changed_widgets)
-                except AttributeError:
-                    innerHTML = innerHTML + repr(s)
+                innerHTML = innerHTML + repr(s)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
-            tmp = dict(self.attributes)
-            tmp['style'] = jsonize(self.style)
-            self._backup_repr = '<%s %s>%s</%s>' % (self.type,
-                                    ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                                tmp.items()),
-                                    innerHTML,
-                                    self.type)
+            self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>', 
+                                        innerHTML, '</', self.type, '>'))
+            #faster but unsupported before python3.6
+            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{innerHTML}</{self.type}>'
         if self._ischanged():
             # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
@@ -253,6 +247,12 @@ class Tag(object):
         return self._backup_repr
 
     def _need_update(self, emitter=None):
+        #if there is an emitter, it means self is the actual changed widget
+        if emitter:
+            tmp = dict(self.attributes)
+            tmp['style'] = jsonize(self.style)
+            self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
+                                                tmp.items())
         if not self.ignore_update:
             if self.get_parent():
                 self.get_parent()._need_update()
@@ -479,7 +479,7 @@ class Widget(Tag):
         """Forces a graphic update of the widget"""
         self._need_update()
 
-    def repr(self, client, changed_widgets={}):
+    def repr(self, changed_widgets={}):
         """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Args:
@@ -487,7 +487,7 @@ class Widget(Tag):
             changed_widgets (dict): A dictionary containing a collection of widgets that have to be updated.
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
-        return super(Widget, self).repr(client, changed_widgets)
+        return super(Widget, self).repr(changed_widgets)
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
