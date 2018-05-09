@@ -109,22 +109,13 @@ def get_instance_key(handler):
     return ip, unique_port
 
 
-# noinspection PyPep8Naming
-class ThreadedWebsocketServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    allow_reuse_address = True
-    daemon_threads = False
-
-    def __init__(self, server_address, RequestHandlerClass, multiple_instance):
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
-        self.multiple_instance = multiple_instance
-
-
 class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
     timeout = 10
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, headers, *args, **kwargs):
+        self.headers = headers
         self.last_ping = time.time()
         self.handshake_done = False
         self._log = logging.getLogger('remi.server.ws')
@@ -211,9 +202,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        self._log.debug('handshake')
-        data = self.request.recv(1024).strip()
-        key = data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        #data = self.request.recv(1024).strip()
+        key = self.headers['Sec-WebSocket-Key']# data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
         digest = base64.b64encode(digest)
@@ -396,7 +386,6 @@ class App(BaseHTTPRequestHandler, object):
         if not(k in clients):
             runtimeInstances[str(id(self))] = self
             clients[k] = self
-        wshost, wsport = self.server.websocket_address
 
         net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
@@ -634,7 +623,7 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
     fd.append('upload_file', file);
     xhr.send(fd);
 };
-</script>""" % (net_interface_ip, wsport, pending_messages_queue_length, websocket_timeout_timer_ms)
+</script>""" % (net_interface_ip, self.server.server_address[1] , pending_messages_queue_length, websocket_timeout_timer_ms)
 
         # add built in js, extend with user js
         clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
@@ -777,6 +766,15 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
         self.end_headers()
 
     def do_GET(self):
+        # check here request header to identify the type of req, if http or ws
+        # if this is a ws req, instance a ws handler, add it to App's ws list, return
+        if "Upgrade" in self.headers:
+            if self.headers['Upgrade'] == 'websocket':
+                #passing arguments to websocket handler, otherwise it will lost the last message, 
+                # and will be unable to handshake
+                ws = WebSocketsHandler(self.headers, self.request, self.client_address, self.server)
+                return
+
         """Handler for the GET requests."""
         do_process = False
         if self.server.auth is None:
@@ -911,12 +909,11 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     daemon_threads = False
 
     # noinspection PyPep8Naming
-    def __init__(self, server_address, RequestHandlerClass, websocket_address,
+    def __init__(self, server_address, RequestHandlerClass,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
                  title, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
-        self.websocket_address = websocket_address
         self.auth = auth
         self.multiple_instance = multiple_instance
         self.enable_file_cache = enable_file_cache
@@ -932,15 +929,15 @@ class Server(object):
     # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
-                 websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                 websocket_timeout_timer_ms=1000, host_name=None,
                  pending_messages_queue_length=1000, userdata=()):
         global http_server_instance
         http_server_instance = self
 
         self._gui = gui_class
         self._title = title or gui_class.__name__
-        self._wsserver = self._sserver = None
-        self._wsth = self._sth = None
+        self._sserver = None
+        self._sth = None
         self._base_address = ''
         self._address = address
         self._sport = port
@@ -949,7 +946,6 @@ class Server(object):
         self._update_interval = update_interval
         self._start_browser = start_browser
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
-        self._websocket_port = websocket_port
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
         self._userdata = userdata
@@ -977,19 +973,9 @@ class Server(object):
         return self._base_address
 
     def start(self):
-        # here the websocket is started on an ephemereal port
-        self._wsserver = ThreadedWebsocketServer((self._address, self._websocket_port), WebSocketsHandler,
-                                                 self._multiple_instance)
-        wshost, wsport = self._wsserver.socket.getsockname()[:2]
-        self._log.info('Started websocket server %s:%s' % (wshost, wsport))
-        self._wsth = threading.Thread(target=self._wsserver.serve_forever)
-        self._wsth.daemon = False
-        self._wsth.start()
-
         # Create a web server and define the handler to manage the incoming
         # request
-        self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui,
-                                           (wshost, wsport), self._auth,
+        self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui, self._auth,
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
@@ -1036,8 +1022,6 @@ class Server(object):
     def stop(self):
         global clients
         self._alive = False
-        self._wsserver.shutdown()
-        self._wsth.join()
         self._sserver.shutdown()
         update_thread.stop()
         for client in clients.values():
@@ -1050,7 +1034,7 @@ class StandaloneServer(Server):
         Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
                         password=None,
                         multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                        websocket_timeout_timer_ms=1000, websocket_port=0, host_name=None,
+                        websocket_timeout_timer_ms=1000, host_name=None,
                         pending_messages_queue_length=1000, userdata=userdata)
 
         self._application_conf = {'width': width, 'height': height, 'resizable': resizable, 'fullscreen': fullscreen}
