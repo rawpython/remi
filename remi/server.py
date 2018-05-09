@@ -581,6 +581,8 @@ class App(BaseHTTPRequestHandler, object):
         clients[k].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
         clients[k].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
 
+        self.client = clients[k]
+
         if not hasattr(clients[k], 'websockets'):
             clients[k].websockets = []
 
@@ -588,9 +590,9 @@ class App(BaseHTTPRequestHandler, object):
             clients[k]._need_update_flag = False
             clients[k]._stop_update_flag = False
             if clients[k].update_interval > 0:
-                clients[k].idle_loop()
-        
-        self.client = clients[k]
+                clients[k]._update_thread = threading.Thread(target=self._idle_loop)
+                clients[k]._update_thread.setDaemon(True)
+                clients[k]._update_thread.start()
 
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
@@ -599,18 +601,18 @@ class App(BaseHTTPRequestHandler, object):
             and return the root widget. """
         raise NotImplementedError("Applications must implement 'main()' function.")
 
-    def idle_loop(self):
+    def _idle_loop(self):
         """ This is used to exec the idle function in a safe context and a separate thread
         """
-        with self.update_lock:
-            try:
-                self.idle()
-            except:
-                self._log.error("exception in App.idle method", exc_info=True)
-            if self._need_update_flag:
-                self.do_gui_update()
-            if not self._stop_update_flag:
-                threading.Timer(self.update_interval, self.idle_loop).start()
+        while not self._stop_update_flag:
+            time.sleep(self.update_interval)
+            with self.update_lock:
+                try:
+                    self.idle()
+                except:
+                    self._log.error("exception in App.idle method", exc_info=True)
+                if self._need_update_flag:
+                    self.do_gui_update()
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
