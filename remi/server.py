@@ -122,12 +122,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
 
     def setup(self):
-        global clients
         socketserver.StreamRequestHandler.setup(self)
         self._log.info('connection established: %r' % (self.client_address,))
         self.handshake_done = False
 
     def handle(self):
+        global clients
         self._log.debug('handle')
         # on some systems like ROS, the default socket timeout
         # is less than expected, we force it to infinite (None) as default socket value
