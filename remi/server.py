@@ -99,16 +99,6 @@ def get_method_by_id(_id):
     return None
 
 
-def get_instance_key(handler):
-    if not handler.server.multiple_instance:
-        # overwrite the key value, so all clients will point the same
-        # instance
-        return 0
-    ip = handler.client_address[0]
-    unique_port = getattr(handler.server, 'websocket_address', handler.server.server_address)[1]
-    return ip, unique_port
-
-
 class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
@@ -137,8 +127,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 self.handshake()
             else:
                 if not self.read_next_message():
-                    k = get_instance_key(self)
-                    clients[k].websockets.remove(self)
+                    clients[self.session].websockets.remove(self)
                     self.handshake_done = False
                     self._log.debug('ws ending websocket service')
                     break
@@ -202,8 +191,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.send(out)
 
     def handshake(self):
-        #data = self.request.recv(1024).strip()
-        key = self.headers['Sec-WebSocket-Key']# data.decode().split('Sec-WebSocket-Key: ')[1].split('\r\n')[0]
+        self._log.debug('handshake')
+        key = self.headers['Sec-WebSocket-Key']
+        self.session = int(self.headers['Cookie: '].split("session=")[-1])
+        if not self.session in clients.keys():
+            return
+
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
         digest = base64.b64encode(digest)
@@ -228,9 +221,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             # noinspection PyBroadException
             try:
                 # saving the websocket in order to update the client
-                k = get_instance_key(self)
-                if self not in clients[k].websockets:
-                    clients[k].websockets.append(self)
+                if self not in clients[self.session].websockets:
+                    clients[self.session].websockets.append(self)
 
                 # parsing messages
                 chunks = message.split('/')
@@ -382,10 +374,30 @@ class App(BaseHTTPRequestHandler, object):
         managing on this, it is possible to switch to "single instance for
         multiple clients" or "multiple instance for multiple clients" execution way
         """
-        k = get_instance_key(self)
-        if not(k in clients):
+
+        self.session = 0
+        #cheching previously defined session
+        if 'cookie' in self.headers:
+            print(">>>>>>>self.headers['cookie'] %s"%str(self.headers['cookie']))
+            self.session = int(self.headers['cookie'].split("session=")[-1])
+            #if not a valid session id
+            if not self.session in clients.keys():
+                print("session id %s not in clients %s"%(self.session, str(clients.keys())))
+                self.session = 0
+
+        #if no session id
+        if self.session == 0:
+            if self.server.multiple_instance:
+                self.session = int(time.time()*1000)
+            print("_________setting up session %s"%self.session)
+            #send session to browser
+            self.send_response(200)
+            del self.headers['cookie']
+            self.send_header("Set-Cookie", "session=%s"%(self.session))
+
+        if not(self.session in clients):
             runtimeInstances[str(id(self))] = self
-            clients[k] = self
+            clients[self.session] = self
 
         net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
@@ -396,7 +408,7 @@ class App(BaseHTTPRequestHandler, object):
 
         # refreshing the script every instance() call, beacuse of different net_interface_ip connections
         # can happens for the same 'k'
-        clients[k].js_body_end = """
+        clients[self.session].js_body_end = """
 <script>
 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
 // using UTF8 strings I noticed that the javascript .length of a string returned less
@@ -626,25 +638,25 @@ function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
 </script>""" % (net_interface_ip, self.server.server_address[1] , pending_messages_queue_length, websocket_timeout_timer_ms)
 
         # add built in js, extend with user js
-        clients[k].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
+        clients[self.session].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
         # use the default css, but append a version based on its hash, to stop browser caching
         with open(self._get_static_file('style.css'), 'rb') as f:
             md5 = hashlib.md5(f.read()).hexdigest()
-            clients[k].css_head = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
+            clients[self.session].css_head = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
         # add built in css, extend with user css
-        clients[k].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
+        clients[self.session].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
 
         # add user supplied extra html,css,js
-        clients[k].html_head = '\n'.join(self._get_list_from_app_args('html_head'))
-        clients[k].html_body_start = '\n'.join(self._get_list_from_app_args('html_body_start'))
-        clients[k].html_body_end = '\n'.join(self._get_list_from_app_args('html_body_end'))
-        clients[k].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
-        clients[k].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
+        clients[self.session].html_head = '\n'.join(self._get_list_from_app_args('html_head'))
+        clients[self.session].html_body_start = '\n'.join(self._get_list_from_app_args('html_body_start'))
+        clients[self.session].html_body_end = '\n'.join(self._get_list_from_app_args('html_body_end'))
+        clients[self.session].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
+        clients[self.session].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
 
-        if not hasattr(clients[k], 'websockets'):
-            clients[k].websockets = []
+        if not hasattr(clients[self.session], 'websockets'):
+            clients[self.session].websockets = []
 
-        self.client = clients[k]
+        self.client = clients[self.session]
 
         if update_thread is None:
             # we need to, at least, ping the websockets to keep them alive. we might also ping more frequently if the
