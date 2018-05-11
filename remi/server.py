@@ -22,6 +22,9 @@ try:
     import socketserver
 except ImportError:
     import SocketServer as socketserver
+import socket
+import ssl
+
 import mimetypes
 import webbrowser
 import struct
@@ -49,6 +52,9 @@ import cgi
 import weakref
 
 http_server_instance = None
+
+
+
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
 
@@ -190,9 +196,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self._log.debug('handshake')
         key = self.headers['Sec-WebSocket-Key']
         self.session = int(self.headers['cookie'].split("session=")[-1])
-        print("websocket session ##############" + str(self.session))
         if not self.session in clients.keys():
-            print("<><><>unknown key")
             return
 
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
@@ -326,6 +330,8 @@ class App(BaseHTTPRequestHandler, object):
             runtimeInstances[str(id(self))] = self
             clients[self.session] = self
 
+        websocket_type = 'ws' if self.server.ssl_version==None else 'wss'
+
         net_interface_ip = self.connection.getsockname()[0]
         if self.server.host_name is not None:
             net_interface_ip = self.server.host_name
@@ -372,7 +378,7 @@ class App(BaseHTTPRequestHandler, object):
 
         function openSocket(){
             try{
-                ws = new WebSocket('ws://%s:%s/');
+                ws = new WebSocket('%(websocket_type)s://%(websocket_ip)s:%(websocket_port)s/');
                 console.debug('opening websocket');
                 ws.onopen = websocketOnOpen;
                 ws.onmessage = websocketOnMessage;
@@ -380,7 +386,6 @@ class App(BaseHTTPRequestHandler, object):
                 ws.onerror = websocketOnError;
             }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
         }
-
         openSocket();
 
         function websocketOnMessage (evt){
@@ -430,10 +435,10 @@ class App(BaseHTTPRequestHandler, object):
             if(params!=null) paramStr=paramPacketize(params);
             var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
             pendingSendMessages.push(message);
-            if( pendingSendMessages.length < %s ){
+            if( pendingSendMessages.length < %(max_pending_messages)s ){
                 ws.send(message);
                 if(comTimeout==null)
-                    comTimeout = setTimeout(checkTimeout, %s);
+                    comTimeout = setTimeout(checkTimeout, %(messaging_timeout)s);
             }else{
                 console.debug('Renewing connection, ws.readyState when trying to send was: ' + ws.readyState)
                 renewConnection();
@@ -563,8 +568,11 @@ class App(BaseHTTPRequestHandler, object):
             fd.append('upload_file', file);
             xhr.send(fd);
         };
-        </script>""" % (net_interface_ip, self.server.server_address[1] , pending_messages_queue_length, websocket_timeout_timer_ms)
-        
+        </script>""" % {'websocket_type':websocket_type,
+                        'websocket_ip':net_interface_ip, 
+                        'websocket_port':self.server.server_address[1], 
+                        'max_pending_messages':pending_messages_queue_length, 
+                        'messaging_timeout':websocket_timeout_timer_ms}
 
         # add built in js, extend with user js
         clients[self.session].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
@@ -878,7 +886,7 @@ class App(BaseHTTPRequestHandler, object):
             ws.finish()
             ws.server.shutdown()
 
-
+   
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     daemon_threads = False
@@ -887,7 +895,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     def __init__(self, server_address, RequestHandlerClass,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
-                 title, *userdata):
+                 title, certfile, keyfile, ssl_version, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.auth = auth
         self.multiple_instance = multiple_instance
@@ -899,13 +907,19 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.title = title
         self.userdata = userdata
 
+        self.certfile = certfile
+        self.keyfile = keyfile
+        self.ssl_version = ssl_version
+        if self.ssl_version!=None:
+            self.socket = ssl.wrap_socket(self.socket, keyfile=self.keyfile, certfile=self.certfile, server_side=True, ssl_version=self.ssl_version, do_handshake_on_connect=True)
+
 
 class Server(object):
     # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, host_name=None,
-                 pending_messages_queue_length=1000, userdata=()):
+                 pending_messages_queue_length=1000, certfile=None, keyfile=None, ssl_version=None,  userdata=()):
         global http_server_instance
         http_server_instance = self
 
@@ -923,6 +937,9 @@ class Server(object):
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
         self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
+        self._certfile = certfile
+        self._keyfile = keyfile
+        self._ssl_version = ssl_version
         self._userdata = userdata
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
@@ -954,7 +971,7 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._host_name, self._pending_messages_queue_length,
-                                           self._title, *self._userdata)
+                                           self._title, self._certfile, self._keyfile, self._ssl_version, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
