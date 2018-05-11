@@ -33,19 +33,20 @@ class SvgPlot(gui.Svg):
         self.textYMax.style['font-size'] = gui.to_pix(self.font_size)
         self.append([self.textYMin, self.textYMax])
 
-    def append_poly(self, poly):
-        self.append(poly)
-        self.polyList.append(poly)
-        poly.textXMin = gui.SvgText(0, 0, "actualValue")
-        poly.textXMax = gui.SvgText(0, 0, "actualValue")
-        poly.textYVal = gui.SvgText(0, 0, "actualValue")
-        poly.textYVal.style['font-size'] = gui.to_pix(self.font_size)
+    def append_poly(self, polys):
+        for poly in polys:
+            self.append(poly)
+            self.polyList.append(poly)
+            poly.textXMin = gui.SvgText(0, 0, "actualValue")
+            poly.textXMax = gui.SvgText(0, 0, "actualValue")
+            poly.textYVal = gui.SvgText(0, 0, "actualValue")
+            poly.textYVal.style['font-size'] = gui.to_pix(self.font_size)
 
-        poly.lineYValIndicator = gui.SvgLine(0, 0, 0, 0)
-        poly.lineXMinIndicator = gui.SvgLine(0, 0, 0, 0)
-        poly.lineXMaxIndicator = gui.SvgLine(0, 0, 0, 0)
-        self.append([poly.textXMin, poly.textXMax, poly.textYVal, poly.lineYValIndicator, 
-            poly.lineXMinIndicator, poly.lineXMaxIndicator])
+            poly.lineYValIndicator = gui.SvgLine(0, 0, 0, 0)
+            poly.lineXMinIndicator = gui.SvgLine(0, 0, 0, 0)
+            poly.lineXMaxIndicator = gui.SvgLine(0, 0, 0, 0)
+            self.append([poly.textXMin, poly.textXMax, poly.textYVal, poly.lineYValIndicator, 
+                poly.lineXMinIndicator, poly.lineXMaxIndicator])
 
     def remove_poly(self, poly):
         self.remove_child(poly)
@@ -148,8 +149,8 @@ class MyApp(App):
         self.plotData3.add_coord(self.count, math.sin(self.count / 180.0 * math.pi))
         self.svgplot.render()
         self.count += 1
-        Timer(0.01, self.add_data).start()
+        Timer(0.0001, self.add_data).start()
 
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0')
+    start(MyApp, address='0.0.0.0', update_interval=0.1, multiple_instance=True)
