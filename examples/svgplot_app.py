@@ -132,7 +132,9 @@ class MyApp(App):
         self.plotData2.set_stroke(1.0, 'green')
         self.plotData3 = gui.SvgPolyline(300)
         self.plotData3.set_stroke(3.0, 'orange')
-        self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3])
+        self.svgplot.append_poly(self.plotData1)
+        self.svgplot.append_poly(self.plotData2)
+        self.svgplot.append_poly(self.plotData3)
 
         self.wid.append(self.svgplot)
 

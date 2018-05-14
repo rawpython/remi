@@ -475,8 +475,15 @@ function websocketOnMessage (evt){
         var content = received_msg.substr(index,received_msg.length-index);
 
         var elem = document.getElementById(idElem);
-        elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
-        elem.parentElement.removeChild(elem);
+        try{
+            elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
+            elem.parentElement.removeChild(elem);
+        }catch(e){
+            /*Microsoft EDGE doesn't support insertAdjacentHTML for SVGElement*/
+            var ns = document.createElementNS("http://www.w3.org/2000/svg",'tmp');
+            ns.innerHTML = decodeURIComponent(content);
+            elem.parentElement.replaceChild(ns.firstChild, elem);
+        }
 
         var elemToFocus = document.getElementById(focusedElement);
         if( elemToFocus != null ){
