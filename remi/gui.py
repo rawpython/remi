@@ -3036,7 +3036,7 @@ class Svg(Widget):
 class SvgShape(Widget):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
 
-    @decorate_constructor_parameter_types([int, int, int])
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, x, y, **kwargs):
         """
         Args:
@@ -3046,7 +3046,6 @@ class SvgShape(Widget):
         """
         super(SvgShape, self).__init__(**kwargs)
         self.set_position(x, y)
-        self.set_stroke()
 
     def set_position(self, x, y):
         """Sets the shape position.
@@ -3075,6 +3074,15 @@ class SvgShape(Widget):
             color (str): stroke color
         """
         self.attributes['fill'] = color
+
+
+class SvgGroup(SvgShape):
+    """svg group widget."""
+
+    @decorate_constructor_parameter_types([int, int])
+    def __init__(self, x, y, **kwargs):
+        super(SvgGroup, self).__init__(x, y, **kwargs)
+        self.type = 'g' 
 
 
 class SvgRectangle(SvgShape):
@@ -3146,7 +3154,6 @@ class SvgLine(Widget):
     def __init__(self, x1, y1, x2, y2, **kwargs):
         super(SvgLine, self).__init__(**kwargs)
         self.set_coords(x1, y1, x2, y2)
-        self.set_stroke()
         self.type = 'line'
 
     def set_coords(self, x1, y1, x2, y2):
@@ -3171,7 +3178,6 @@ class SvgPolyline(Widget):
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
         super(SvgPolyline, self).__init__(**kwargs)
-        self.set_stroke()
         self.style['fill'] = 'none'
         self.type = 'polyline'
         self.coordsX = collections.deque(maxlen=_maxlen)
@@ -3201,5 +3207,4 @@ class SvgText(SvgShape, _MixinTextualWidget):
         super(SvgText, self).__init__(x, y, **kwargs)
         self.type = 'text'
         self.set_fill()
-        self.set_stroke(0)
         self.set_text(text)

@@ -17,6 +17,31 @@ from remi import start, App
 import math
 from threading import Timer
 import random
+import collections
+
+
+class SvgComposedPoly(gui.SvgGroup):
+    """ A group of polyline and circles
+    """
+    def __init__(self, x, y, maxlen, stroke, color, **kwargs):
+        super(SvgComposedPoly, self).__init__(x, y, **kwargs)
+        self.maxlen = maxlen
+        self.plotData = gui.SvgPolyline(self.maxlen)
+        self.append(self.plotData)
+        self.set_stroke(stroke, color)
+        self.set_fill(color)
+        self.circle_radius = stroke
+        self.circles_list = list()
+
+    def add_coord(self, x, y):
+        """ Adds a coord to the polyline and creates another circle
+        """
+        self.plotData.add_coord(x, y)
+        self.circles_list.append(gui.SvgCircle(x, y, self.circle_radius))
+        self.append(self.circles_list[-1])
+        if len(self.circles_list) > self.maxlen:
+            self.remove_child(self.circles_list[0])
+            del self.circles_list[0]
 
 
 class SvgPlot(gui.Svg):
@@ -56,64 +81,53 @@ class SvgPlot(gui.Svg):
         self.remove_child(poly.textYVal)
 
     def render(self):
-
         self.set_viewbox(-self.plot_inner_border, -self.plot_inner_border, self.width + self.plot_inner_border * 2,
                          self.height + self.plot_inner_border * 2)
         if len(self.polyList) < 1:
             return
-        minX = min(self.polyList[0].coordsX)
-        maxX = max(self.polyList[0].coordsX)
-        minY = min(self.polyList[0].coordsY)
-        maxY = max(self.polyList[0].coordsY)
+        minX = min(self.polyList[0].plotData.coordsX)
+        maxX = max(self.polyList[0].plotData.coordsX)
+        minY = min(self.polyList[0].plotData.coordsY)
+        maxY = max(self.polyList[0].plotData.coordsY)
 
         for poly in self.polyList:
-            minX = min(minX, min(poly.coordsX))
-            maxX = max(maxX, max(poly.coordsX))
-            minY = min(minY, min(poly.coordsY))
-            maxY = max(maxY, max(poly.coordsY))
+            minX = min(minX, min(poly.plotData.coordsX))
+            maxX = max(maxX, max(poly.plotData.coordsX))
+            minY = min(minY, min(poly.plotData.coordsY))
+            maxY = max(maxY, max(poly.plotData.coordsY))
         self.textYMin.set_text("min:%s" % minY)
         self.textYMax.set_text("max:%s" % maxY)
 
-        scaleWidth = 1.0
-        scaleHeight = 1.0
-        if (maxX > minX):
-            scaleWidth = self.width / float(abs(maxX - minX))
-        if (maxY > minY):
-            scaleHeight = self.height / float(abs(maxY - minY))
-
         i = 1
         for poly in self.polyList:
-            scaledTranslatedYpos = (-poly.coordsY[-1] + maxY) * scaleHeight
+            scaledTranslatedYpos = (-poly.plotData.coordsY[-1] + maxY + (self.height-(maxY-minY))/2.0)
 
             textXpos = self.height / (len(self.polyList) + 1) * i
 
-            poly.textXMin.set_text(str(min(poly.coordsX)))
-            poly.textXMin.set_fill(poly.style['stroke'])
-            # poly.textXMin.set_position( -scaledTranslatedYpos, (min(poly.coordsX)-minX)*scaleWidth )
-            poly.textXMin.set_position(-textXpos, (min(poly.coordsX) - minX) * scaleWidth)
+            poly.textXMin.set_text(str(min(poly.plotData.coordsX)))
+            poly.textXMin.set_fill(poly.attributes['stroke'])
+
+            poly.textXMin.set_position(-textXpos, (min(poly.plotData.coordsX) - minX) )
             poly.textXMin.attributes['transform'] = "rotate(%s)" % (-90)
-            poly.textXMax.set_text(str(max(poly.coordsX)))
-            poly.textXMax.set_fill(poly.style['stroke'])
-            poly.textXMax.set_position(-textXpos, (max(poly.coordsX) - minX) * scaleWidth)
-            # poly.textXMax.set_position( -scaledTranslatedYpos, (maxX-minX)*scaleWidth )
+            poly.textXMax.set_text(str(max(poly.plotData.coordsX)))
+            poly.textXMax.set_fill(poly.attributes['stroke'])
+            poly.textXMax.set_position(-textXpos, (max(poly.plotData.coordsX) - minX) )
+
             poly.textXMax.attributes['transform'] = "rotate(%s)" % (-90)
-            poly.textYVal.set_text(str(poly.coordsY[-1]))
-            poly.textYVal.set_fill(poly.style['stroke'])
+            poly.textYVal.set_text(str(poly.plotData.coordsY[-1]))
+            poly.textYVal.set_fill(poly.attributes['stroke'])
             poly.textYVal.set_position(0, scaledTranslatedYpos)
-            # poly.textYVal.set_position( (maxX-minX)*scaleWidth/2.0, scaledTranslatedYpos )
 
-            poly.lineYValIndicator.set_stroke(1, poly.style['stroke'])
-            poly.lineXMinIndicator.set_stroke(1, poly.style['stroke'])
-            poly.lineXMaxIndicator.set_stroke(1, poly.style['stroke'])
+            poly.lineYValIndicator.set_stroke(1, poly.attributes['stroke'])
+            poly.lineXMinIndicator.set_stroke(1, poly.attributes['stroke'])
+            poly.lineXMaxIndicator.set_stroke(1, poly.attributes['stroke'])
             poly.lineYValIndicator.set_coords(0, scaledTranslatedYpos, self.width, scaledTranslatedYpos)
-            poly.lineXMinIndicator.set_coords((min(poly.coordsX) - minX) * scaleWidth, 0,
-                                              (min(poly.coordsX) - minX) * scaleWidth, self.height)
-            poly.lineXMaxIndicator.set_coords((max(poly.coordsX) - minX) * scaleWidth, 0,
-                                              (max(poly.coordsX) - minX) * scaleWidth, self.height)
-            poly.attributes['transform'] = (
-            'translate(%s,%s)' % (-minX * scaleWidth, (maxY * scaleHeight)) + ' scale(%s,%s)' % (
-            (scaleWidth), -(scaleHeight)))
-
+            poly.lineXMinIndicator.set_coords((min(poly.plotData.coordsX) - minX), 0,
+                                              (min(poly.plotData.coordsX) - minX), self.height)
+            poly.lineXMaxIndicator.set_coords((max(poly.plotData.coordsX) - minX), 0,
+                                              (max(poly.plotData.coordsX) - minX), self.height)
+            poly.attributes['transform'] = ('translate(%s,%s)' % (-minX, maxY + (self.height-(maxY-minY))/2.0) + 
+                                            ' scale(%s,%s)' % ((1.0), -(1.0)))
             i = i + 1
 
 
@@ -127,12 +141,9 @@ class MyApp(App):
 
         self.svgplot = SvgPlot(600, 600)
         self.svgplot.style['margin'] = '10px'
-        self.plotData1 = gui.SvgPolyline(500)
-        self.plotData1.set_stroke(2.0, 'rgba(255,0,0,0.8)')
-        self.plotData2 = gui.SvgPolyline(500)
-        self.plotData2.set_stroke(1.0, 'green')
-        self.plotData3 = gui.SvgPolyline(300)
-        self.plotData3.set_stroke(3.0, 'orange')
+        self.plotData1 = SvgComposedPoly(0,0,60,2.0, 'rgba(255,0,0,0.8)')
+        self.plotData2 = SvgComposedPoly(0,0,60,1.0, 'green')
+        self.plotData3 = SvgComposedPoly(0,0,30,3.0, 'orange')
         self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3])
 
         self.wid.append(self.svgplot)
@@ -144,12 +155,16 @@ class MyApp(App):
         return self.wid
 
     def add_data(self):
-        self.plotData1.add_coord(self.count, math.atan(self.count / 180.0 * math.pi))
-        self.plotData2.add_coord(self.count, math.cos(self.count / 180.0 * math.pi))
-        self.plotData3.add_coord(self.count, math.sin(self.count / 180.0 * math.pi))
+        #the scale factors are used to adapt the values to the view
+        scale_factor_x = 1.0
+        scale_factor_y = 200.0
+
+        self.plotData1.add_coord(self.count*scale_factor_x, math.atan(self.count / 180.0 * math.pi)*scale_factor_y)
+        self.plotData2.add_coord(self.count*scale_factor_x, math.cos(self.count / 180.0 * math.pi)*scale_factor_y)
+        self.plotData3.add_coord(self.count*scale_factor_x, math.sin(self.count / 180.0 * math.pi)*scale_factor_y)
         self.svgplot.render()
-        self.count += 1
-        Timer(0.0001, self.add_data).start()
+        self.count += 10
+        Timer(0.1, self.add_data).start()
 
 
 if __name__ == "__main__":
