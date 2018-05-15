@@ -14,6 +14,7 @@
 
 import remi.gui as gui
 from remi import start, App
+from remi import server
 import math
 from threading import Timer
 import random
@@ -144,7 +145,8 @@ class MyApp(App):
         self.plotData1 = SvgComposedPoly(0,0,60,2.0, 'rgba(255,0,0,0.8)')
         self.plotData2 = SvgComposedPoly(0,0,60,1.0, 'green')
         self.plotData3 = SvgComposedPoly(0,0,30,3.0, 'orange')
-        self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3])
+        self.plotData4 = SvgComposedPoly(0,0,30,3.0, 'blue')
+        self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3, self.plotData4])
 
         self.wid.append(self.svgplot)
 
@@ -155,16 +157,18 @@ class MyApp(App):
         return self.wid
 
     def add_data(self):
-        #the scale factors are used to adapt the values to the view
-        scale_factor_x = 1.0
-        scale_factor_y = 200.0
+        with self.update_lock:
+            #the scale factors are used to adapt the values to the view
+            scale_factor_x = 1.0
+            scale_factor_y = 200.0
 
-        self.plotData1.add_coord(self.count*scale_factor_x, math.atan(self.count / 180.0 * math.pi)*scale_factor_y)
-        self.plotData2.add_coord(self.count*scale_factor_x, math.cos(self.count / 180.0 * math.pi)*scale_factor_y)
-        self.plotData3.add_coord(self.count*scale_factor_x, math.sin(self.count / 180.0 * math.pi)*scale_factor_y)
-        self.svgplot.render()
-        self.count += 10
-        Timer(0.1, self.add_data).start()
+            self.plotData1.add_coord(self.count*scale_factor_x, math.atan(self.count / 180.0 * math.pi)*scale_factor_y)
+            self.plotData2.add_coord(self.count*scale_factor_x, math.cos(self.count / 180.0 * math.pi)*scale_factor_y)
+            self.plotData3.add_coord(self.count*scale_factor_x, math.sin(self.count / 180.0 * math.pi)*scale_factor_y)
+            self.plotData4.add_coord(self.count*scale_factor_x, len(server.runtimeInstances)/1000.0)
+            self.svgplot.render()
+            self.count += 10
+            Timer(0.0001, self.add_data).start()
 
 
 if __name__ == "__main__":

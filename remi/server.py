@@ -61,7 +61,6 @@ runtimeInstances = weakref.WeakValueDictionary()
 pyLessThan3 = sys.version_info < (3,)
 
 
-_MSG_PING = '4'
 _MSG_ACK = '3'
 _MSG_JS = '2'
 _MSG_UPDATE = '1'
@@ -104,11 +103,9 @@ def get_method_by_id(_id):
 class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-    timeout = 10
 
     def __init__(self, headers, *args, **kwargs):
         self.headers = headers
-        self.last_ping = time.time()
         self.handshake_done = False
         self._log = logging.getLogger('remi.server.ws')
         socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
@@ -124,10 +121,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         # on some systems like ROS, the default socket timeout
         # is less than expected, we force it to infinite (None) as default socket value
         self.request.settimeout(None)
-        while True:
-            if not self.handshake_done:
-                self.handshake()
-            else:
+        if self.handshake():
+            while True:
                 if not self.read_next_message():
                     clients[self.session].websockets.remove(self)
                     self.handshake_done = False
@@ -164,19 +159,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             return False
         return True
 
-    def ping(self):
-        t = time.time()
-        if (t - self.last_ping) > (0.5*self.timeout):
-            self.last_ping = t
-            self.send_message(_MSG_PING)
-
     def send_message(self, message):
         if not self.handshake_done:
             self._log.warning("ignoring message %s (handshake not done)" % message[:10])
             return
 
-        if message != _MSG_PING:
-            self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
+        self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
         length = len(message)
@@ -198,7 +186,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         key = self.headers['Sec-WebSocket-Key']
         self.session = int(self.headers['cookie'].split("session=")[-1])
         if not self.session in clients.keys():
-            return
+            return False
 
         digest = hashlib.sha1((key.encode("utf-8")+self.magic))
         digest = digest.digest()
@@ -211,11 +199,15 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
+        #if an update happens since the websocket connection to its handshake, 
+        # it gets not displayed. it is required to inform App about handshake done, 
+        # to get a full refresh
+        clients[self.session].websocket_handshake_done(self)
+
+        return True
+
     def on_message(self, message):
         global runtimeInstances
-
-        if message == 'pong':
-            return
 
         self.send_message(_MSG_ACK)
 
@@ -354,15 +346,15 @@ class App(BaseHTTPRequestHandler, object):
         var failedConnections = 0;
 
         function byteLength(str) {
-        // returns the byte length of an utf8 string
-        var s = str.length;
-        for (var i=str.length-1; i>=0; i--) {
-            var code = str.charCodeAt(i);
-            if (code > 0x7f && code <= 0x7ff) s++;
-            else if (code > 0x7ff && code <= 0xffff) s+=2;
-            if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
-        }
-        return s;
+            // returns the byte length of an utf8 string
+            var s = str.length;
+            for (var i=str.length-1; i>=0; i--) {
+                var code = str.charCodeAt(i);
+                if (code > 0x7f && code <= 0x7ff) s++;
+                else if (code > 0x7ff && code <= 0xffff) s+=2;
+                if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+            }
+            return s;
         }
 
         var paramPacketize = function (ps){
@@ -431,9 +423,8 @@ class App(BaseHTTPRequestHandler, object):
                 }catch(e){console.debug(e.message);};
             }else if( received_msg[0]=='3' ){ /*ack*/
                 pendingSendMessages.shift() /*remove the oldest*/
-                if(comTimeout!=null)clearTimeout(comTimeout);
-            }else if( received_msg[0]=='4' ){ /*ping*/
-                ws.send('pong');
+                if(comTimeout!=null)
+                    clearTimeout(comTimeout);
             }
         };
 
@@ -629,7 +620,11 @@ class App(BaseHTTPRequestHandler, object):
                 except:
                     self._log.error("exception in App.idle method", exc_info=True)
                 if self._need_update_flag:
-                    self.do_gui_update()
+                    try:
+                        self.do_gui_update()
+                    except:
+                        self._log.error('''exception during gui update. It is advisable to 
+                            use App.update_lock using external threads.''', exc_info=True)
 
     def idle(self):
         """ Idle function called every UPDATE_INTERVAL before the gui update.
@@ -655,6 +650,11 @@ class App(BaseHTTPRequestHandler, object):
                 __id = str(widget.identifier)
                 self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
         self._need_update_flag = False
+
+    def websocket_handshake_done(self, ws_instance_to_update):
+        with self.update_lock:
+            msg = "0" + self.root.identifier + ',' + to_websocket(self.root.repr())
+            ws_instance_to_update.send_message(msg)
 
     def set_root_widget(self, widget):
         if self.root:
