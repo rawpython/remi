@@ -1308,7 +1308,7 @@ class GenericDialog(Widget):
     EVENT_ONCANCEL = 'cancel_dialog'
 
     @decorate_constructor_parameter_types([str, str])
-    def __init__(self, title='', message='', **kwargs):
+    def __init__(self, title='', message='', cancel_button=True, **kwargs):
         """
         Args:
             title (str): The title of the dialog.
@@ -1335,22 +1335,25 @@ class GenericDialog(Widget):
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
         self.conf.style['margin'] = '3px'
-        self.cancel = Button('Cancel')
-        self.cancel.set_size(100, 30)
-        self.cancel.style['margin'] = '3px'
         hlay = Widget(height=35)
         hlay.style['display'] = 'block'
         hlay.style['overflow'] = 'visible'
         hlay.append(self.conf)
-        hlay.append(self.cancel)
         self.conf.style['float'] = 'right'
-        self.cancel.style['float'] = 'right'
+        
+        if cancel_button:
+            self.cancel = Button('Cancel')
+            self.cancel.set_size(100, 30)
+            self.cancel.style['margin'] = '3px'
+            self.cancel.style['float'] = 'right'
+            self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (
+                self.identifier, self.EVENT_ONCANCEL)
+            hlay.append(self.cancel)
 
         self.append(self.container)
         self.append(hlay)
 
         self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCONFIRM)
-        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCANCEL)
 
         self.inputs = {}
 
