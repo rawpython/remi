@@ -1317,7 +1317,7 @@ class GenericDialog(Widget):
         """
         super(GenericDialog, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
-        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
+        self.style.update({'display':'block', 'overflow':'auto', 'margin':'8px auto'})
 
         if len(title) > 0:
             t = Label(title)
