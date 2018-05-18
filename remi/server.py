@@ -917,10 +917,7 @@ class App(BaseHTTPRequestHandler, object):
     def close_connected_websockets(self): 
         self._stop_update_flag = True
         for ws in self.client.websockets:
-            try:
-                ws.close()
-            except:
-                pass
+            ws.close()
 
    
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
@@ -1052,7 +1049,6 @@ class Server(object):
 
     def stop(self):
         global clients
-        self._log.debug('Server.stop')
         self._alive = False
         self._sserver.shutdown()
         for client in clients.values():
