@@ -255,6 +255,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
 
+    def close(self):
+        try:
+            self.request.shutdown(socket.SHUT_WR)
+            self.finish()
+            self.server.shutdown()
+        except:
+            self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
+
 
 def parse_parametrs(p):
     """
@@ -698,6 +706,7 @@ class App(BaseHTTPRequestHandler, object):
                 self._log.error("sending websocket spontaneous message", exc_info=True)
                 try:
                     self.client.websockets.remove(ws)
+                    ws.close()
                 except:
                     self._log.error("unable to remove websocket client - already not in list", exc_info=True)
 
@@ -908,8 +917,10 @@ class App(BaseHTTPRequestHandler, object):
     def close_connected_websockets(self): 
         self._stop_update_flag = True
         for ws in self.client.websockets:
-            ws.finish()
-            ws.server.shutdown()
+            try:
+                ws.close()
+            except:
+                pass
 
    
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
@@ -1033,11 +1044,15 @@ class Server(object):
         except KeyboardInterrupt:
             pass
         while self._alive:
-            time.sleep(1)
+            try:
+                time.sleep(1)
+            except:
+                self._alive = False
         self._log.debug(' ** serve_forever() quitting')
 
     def stop(self):
         global clients
+        self._log.debug('Server.stop')
         self._alive = False
         self._sserver.shutdown()
         for client in clients.values():
