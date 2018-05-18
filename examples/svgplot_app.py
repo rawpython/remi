@@ -33,16 +33,43 @@ class SvgComposedPoly(gui.SvgGroup):
         self.set_fill(color)
         self.circle_radius = stroke
         self.circles_list = list()
+        self.x_factor = 1.0
+        self.y_factor = 1.0
 
     def add_coord(self, x, y):
         """ Adds a coord to the polyline and creates another circle
         """
+        x = x*self.x_factor
+        y = y*self.y_factor
         self.plotData.add_coord(x, y)
         self.circles_list.append(gui.SvgCircle(x, y, self.circle_radius))
         self.append(self.circles_list[-1])
         if len(self.circles_list) > self.maxlen:
             self.remove_child(self.circles_list[0])
             del self.circles_list[0]
+
+    def scale(self, x_factor, y_factor):
+        self.x_factor = x_factor/self.x_factor
+        self.y_factor = y_factor/self.y_factor
+        self.plotData.attributes['points'] = "" 
+        tmpx = collections.deque()
+        tmpy = collections.deque()
+
+        for c in self.circles_list:
+            self.remove_child(c)
+        self.circles_list = list()
+
+        while len(self.plotData.coordsX)>0:
+            tmpx.append( self.plotData.coordsX.popleft() )
+            tmpy.append( self.plotData.coordsY.popleft() )
+
+        while len(tmpx)>0:
+            self.add_coord(tmpx.popleft(), tmpy.popleft())
+            
+        self.x_factor = x_factor
+        self.y_factor = y_factor
+        
+
 
 
 class SvgPlot(gui.Svg):
@@ -145,30 +172,42 @@ class MyApp(App):
         self.plotData1 = SvgComposedPoly(0,0,60,2.0, 'rgba(255,0,0,0.8)')
         self.plotData2 = SvgComposedPoly(0,0,60,1.0, 'green')
         self.plotData3 = SvgComposedPoly(0,0,30,3.0, 'orange')
-        self.plotData4 = SvgComposedPoly(0,0,30,3.0, 'blue')
-        self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3, self.plotData4])
+        self.svgplot.append_poly([self.plotData1, self.plotData2, self.plotData3])
+
+        scale_factor_x = 1.0
+        scale_factor_y = 200.0
+        self.plotData1.scale(scale_factor_x, scale_factor_y)
+        self.plotData2.scale(scale_factor_x, scale_factor_y)
+        self.plotData3.scale(scale_factor_x, scale_factor_y)
 
         self.wid.append(self.svgplot)
 
         self.count = 0
         self.add_data()
 
+        bt = gui.Button("Zoom - ")
+        bt.set_on_click_listener(self.zoom_out)
+        self.wid.append(bt)
+
         # returning the root widget
         return self.wid
+
+    def zoom_out(self, emitter):
+        scale_factor_x = 0.5
+        scale_factor_y = 100.0
+        self.plotData1.scale(scale_factor_x, scale_factor_y)
+        self.plotData2.scale(scale_factor_x, scale_factor_y)
+        self.plotData3.scale(scale_factor_x, scale_factor_y)
 
     def add_data(self):
         with self.update_lock:
             #the scale factors are used to adapt the values to the view
-            scale_factor_x = 1.0
-            scale_factor_y = 200.0
-
-            self.plotData1.add_coord(self.count*scale_factor_x, math.atan(self.count / 180.0 * math.pi)*scale_factor_y)
-            self.plotData2.add_coord(self.count*scale_factor_x, math.cos(self.count / 180.0 * math.pi)*scale_factor_y)
-            self.plotData3.add_coord(self.count*scale_factor_x, math.sin(self.count / 180.0 * math.pi)*scale_factor_y)
-            self.plotData4.add_coord(self.count*scale_factor_x, len(server.runtimeInstances)/1000.0)
+            self.plotData1.add_coord(self.count, math.atan(self.count / 180.0 * math.pi))
+            self.plotData2.add_coord(self.count, math.cos(self.count / 180.0 * math.pi))
+            self.plotData3.add_coord(self.count, math.sin(self.count / 180.0 * math.pi))
             self.svgplot.render()
             self.count += 10
-            Timer(0.0001, self.add_data).start()
+            Timer(0.1, self.add_data).start()
 
 
 if __name__ == "__main__":

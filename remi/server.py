@@ -100,6 +100,19 @@ def get_method_by_id(_id):
     return None
 
 
+def parse_session_cookie(cookie_to_cook):
+    """ cookie_to_cook = http_header['cookie']
+    """
+    print("cookie_to_cook: " + cookie_to_cook)
+    session_value = False
+    tokens = cookie_to_cook.split(";")
+    for tok in tokens:
+        if 'session' in tok:
+            print("found session id: " + tok)
+            session_value = int(tok.replace('session=', ''))
+    return session_value
+
+
 class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
@@ -184,7 +197,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         self._log.debug('handshake')
         key = self.headers['Sec-WebSocket-Key']
-        self.session = int(self.headers['cookie'].split("session=")[-1])
+        self.session = parse_session_cookie(self.headers['cookie'])
+        if self.session == None:
+            return False
         if not self.session in clients.keys():
             return False
 
@@ -305,8 +320,10 @@ class App(BaseHTTPRequestHandler, object):
         self.session = 0
         #cheching previously defined session
         if 'cookie' in self.headers:
-            self.session = int(self.headers['cookie'].split("session=")[-1])
+            self.session = parse_session_cookie(self.headers['cookie'])
             #if not a valid session id
+            if self.session == None:
+                self.session = 0
             if not self.session in clients.keys():
                 self.session = 0
 
@@ -886,10 +903,10 @@ class App(BaseHTTPRequestHandler, object):
     def close(self):
         global http_server_instance
         self._log.debug('shutting down...')
-        self._stop_update_flag = True
         http_server_instance.stop()
 
     def close_connected_websockets(self): 
+        self._stop_update_flag = True
         for ws in self.client.websockets:
             ws.finish()
             ws.server.shutdown()
