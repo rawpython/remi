@@ -8,11 +8,6 @@
 </p>
 
 <p align="center">
-    <a href="https://www.reddit.com/r/RemiGUI">
-        <img src="https://upload.wikimedia.org/wikipedia/en/8/82/Reddit_logo_and_wordmark.svg" width="200">
-    </a>
-</p>
-<p align="center">
     <a href="https://gitter.im/dddomodossola/remi">
         <img src="https://badges.gitter.im/Join%20Chat.svg" width="100">
     </a>
