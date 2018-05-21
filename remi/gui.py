@@ -19,7 +19,7 @@ import functools
 import threading
 import collections
 
-from .server import runtimeInstances, update_event
+from .server import runtimeInstances
 
 log = logging.getLogger('remi.gui')
 
@@ -29,22 +29,6 @@ def uid(obj):
     if not hasattr(obj,'identifier'):
         return str(id(obj))
     return obj.identifier
-
-
-def debounce_button(btn_attr_name, t=2, final_value=True):
-    def wrapper(f):
-        @functools.wraps(f)
-        def wrapped(self, *f_args, **f_kwargs):
-            btn = getattr(self, btn_attr_name)
-            btn.set_enabled(False)
-            try:
-                f(self, *f_args, **f_kwargs)
-            except Exception as e:
-                print(e)
-            finally:
-                threading.Timer(t, btn.set_enabled, (final_value,)).start()
-        return wrapped
-    return wrapper
 
 
 def decorate_set_on_listener(event_name, params):
@@ -91,45 +75,6 @@ def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
-class _VersionedDictionary(dict):
-    """This dictionary allows to check if its content is changed.
-       It has an attribute __version__ of type int that increments every change
-    """
-    def __init__(self, *args, **kwargs):
-        self.__version__ = 0
-        self.__lastversion__ = 0
-        super(_VersionedDictionary, self).__init__(*args, **kwargs)
-
-    def __setitem__(self, key, value, version_increment=1):
-        if key in self:
-            if self[key] == value:
-                return
-        self.__version__ += version_increment
-        return super(_VersionedDictionary, self).__setitem__(key, value)
-
-    def __delitem__(self, key, version_increment=1):
-        if key not in self:
-            return
-        self.__version__ += version_increment
-        return super(_VersionedDictionary, self).__delitem__(key)
-
-    def pop(self, key, d=None, version_increment=1):
-        if key not in self:
-            return
-        self.__version__ += version_increment
-        return super(_VersionedDictionary, self).pop(key, d)
-
-    def clear(self, version_increment=1):
-        self.__version__ += version_increment
-        return super(_VersionedDictionary, self).clear()
-
-    def ischanged(self):
-        return self.__version__ != self.__lastversion__
-
-    def align_version(self):
-        self.__lastversion__ = self.__version__
-
-
 class _EventManager(object):
     """Manages the event propagation to the listeners functions"""
 
@@ -155,6 +100,71 @@ class _EventManager(object):
         self.listeners[eventname] = {'callback': callback, 'userdata': userdata}
 
 
+class _EventDictionary(dict):
+    """This dictionary allows to be notified if its content is changed.
+    """
+    EVENT_ONCHANGE = 'onchange'
+
+    def __init__(self, *args, **kwargs):
+        self.__version__ = 0
+        self.__lastversion__ = 0
+        self.eventManager = _EventManager(self)
+        super(_EventDictionary, self).__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        if key in self:
+            if self[key] == value:
+                return
+        ret = super(_EventDictionary, self).__setitem__(key, value)
+        self.onchange()
+        return ret
+
+    def __delitem__(self, key):
+        if key not in self:
+            return
+        ret = super(_EventDictionary, self).__delitem__(key)
+        self.onchange()
+        return ret
+
+    def pop(self, key, d=None):
+        if key not in self:
+            return
+        ret = super(_EventDictionary, self).pop(key, d)
+        self.onchange()
+        return ret
+
+    def clear(self):
+        ret = super(_EventDictionary, self).clear()
+        self.onchange()
+        return ret
+
+    def update(self, d):
+        ret = super(_EventDictionary, self).update(d)
+        self.onchange()
+        return ret
+
+    def ischanged(self):
+        return self.__version__ != self.__lastversion__
+
+    def align_version(self):
+        self.__lastversion__ = self.__version__
+
+    def onchange(self):
+        """Called on content change.
+        """
+        self.__version__ += 1
+        return self.eventManager.propagate(self.EVENT_ONCHANGE, ())
+
+    @decorate_set_on_listener("onchange", "(self,emitter)")
+    def set_on_change_listener(self, callback, *userdata):
+        """Registers the listener for the onchange event.
+
+        Args:
+            callback (function): Callback function pointer.
+        """
+        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+
+
 class Tag(object):
     """
     Tag is the base class of the framework. It represents an element that can be added to the GUI,
@@ -172,9 +182,14 @@ class Tag(object):
 
         self._render_children_list = []
 
-        self.children = _VersionedDictionary()
-        self.attributes = _VersionedDictionary()  # properties as class id style
-        self.style = _VersionedDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
+        self.children = _EventDictionary()
+        self.attributes = _EventDictionary()  # properties as class id style
+        self.style = _EventDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
+
+        self.ignore_update = False
+        self.children.set_on_change_listener(self._need_update)
+        self.attributes.set_on_change_listener(self._need_update)
+        self.style.set_on_change_listener(self._need_update)
 
         self.type = kwargs.get('_type', '')
         self.attributes['id'] = kwargs.get('id', str(id(self)))
@@ -196,12 +211,11 @@ class Tag(object):
     def identifier(self):
         return self.attributes['id']
 
-    def repr(self, client, changed_widgets={}):
+    def repr(self, changed_widgets={}):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
         Args:
-            client (App): The client instance.
             changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
@@ -209,24 +223,20 @@ class Tag(object):
         innerHTML = ''
         for k in self._render_children_list:
             s = self.children[k]
-            if isinstance(s, type('')):
+            if isinstance(s, Tag):
+                innerHTML = innerHTML + s.repr(local_changed_widgets)
+            elif isinstance(s, type('')):
                 innerHTML = innerHTML + s
             elif isinstance(s, type(u'')):
                 innerHTML = innerHTML + s.encode('utf-8')
             else:
-                try:
-                    innerHTML = innerHTML + s.repr(client,
-                                                   local_changed_widgets)
-                except AttributeError:
-                    innerHTML = innerHTML + repr(s)
+                innerHTML = innerHTML + repr(s)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
-            self.attributes['style'] = jsonize(self.style)
-            self._backup_repr = '<%s %s>%s</%s>' % (self.type,
-                                    ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                                self.attributes.items()),
-                                    innerHTML,
-                                    self.type)
+            self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>', 
+                                        innerHTML, '</', self.type, '>'))
+            #faster but unsupported before python3.6
+            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{innerHTML}</{self.type}>'
         if self._ischanged():
             # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
@@ -235,6 +245,31 @@ class Tag(object):
         else:
             changed_widgets.update(local_changed_widgets)
         return self._backup_repr
+
+    def _need_update(self, emitter=None):
+        #if there is an emitter, it means self is the actual changed widget
+        if emitter:
+            tmp = dict(self.attributes)
+            tmp['style'] = jsonize(self.style)
+            self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
+                                                tmp.items())
+        if not self.ignore_update:
+            if self.get_parent():
+                self.get_parent()._need_update()
+
+    def _ischanged(self):
+        return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
+
+    def _set_updated(self):
+        self.children.align_version()
+        self.attributes.align_version()
+        self.style.align_version()
+
+    def disable_refresh(self):
+        self.ignore_update = True
+
+    def enable_refresh(self):
+        self.ignore_update = False
 
     def add_class(self, cls):
         self._classes.append(cls)
@@ -292,8 +327,8 @@ class Tag(object):
             if 'data-parent-widget' in self.attributes.keys():
                 if self.attributes['data-parent-widget'] in runtimeInstances.keys():
                     parent = runtimeInstances[self.attributes['data-parent-widget']]
-                    if self.identifier in parent.children.keys():
-                        return parent
+                    #if self.identifier in parent.children.keys():
+                    return parent
         return None
 
     def empty(self):
@@ -317,14 +352,6 @@ class Tag(object):
                         # when the child is removed we stop the iteration
                         # this implies that a child replication should not be allowed
                         break
-
-    def _ischanged(self):
-        return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
-
-    def _set_updated(self):
-        self.children.align_version()
-        self.attributes.align_version()
-        self.style.align_version()
 
 
 class Widget(Tag):
@@ -450,9 +477,9 @@ class Widget(Tag):
 
     def redraw(self):
         """Forces a graphic update of the widget"""
-        update_event.set()
+        self._need_update()
 
-    def repr(self, client, changed_widgets={}):
+    def repr(self, changed_widgets={}):
         """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Args:
@@ -460,7 +487,7 @@ class Widget(Tag):
             changed_widgets (dict): A dictionary containing a collection of widgets that have to be updated.
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
-        return super(Widget, self).repr(client, changed_widgets)
+        return super(Widget, self).repr(changed_widgets)
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
@@ -1252,8 +1279,10 @@ class TextInput(Widget, _MixinTextualWidget):
         Args:
             new_value (str): the new string content of the TextInput
         """
+        self.disable_refresh()
         self.set_value(new_value)
-        self.children.align_version()
+        self.enable_refresh()
+        self._set_updated()
         return self.eventManager.propagate(self.EVENT_ONKEYUP, (new_value,))
 
     @decorate_set_on_listener("onkeyup", "(self,emitter,new_value)")
@@ -1280,8 +1309,10 @@ class TextInput(Widget, _MixinTextualWidget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
+        self.disable_refresh()
         self.set_value(new_value)
-        self.children.align_version()
+        self.enable_refresh()
+        self._set_updated()
         return self.eventManager.propagate(self.EVENT_ONKEYDOWN, (new_value,))
 
     @decorate_set_on_listener("onkeydown", "(self,emitter,new_value)")
@@ -1310,8 +1341,10 @@ class TextInput(Widget, _MixinTextualWidget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
+        self.disable_refresh()
         self.set_value(new_value)
-        self.children.align_version()
+        self.enable_refresh()
+        self._set_updated()
         return self.eventManager.propagate(self.EVENT_ONENTER, (new_value,))
 
     @decorate_set_on_listener("onenter", "(self,emitter,new_value)")
@@ -2594,7 +2627,9 @@ class FileFolderNavigator(Widget):
         self.selectionlist = []  # reset selected file list
         os.chdir(directory)
         directory = os.getcwd()
+        self.disable_refresh()
         self.populate_folder_items(directory)
+        self.enable_refresh()
         self.pathEditor.set_text(directory)
         os.chdir(curpath)  # restore the path
 
@@ -3001,7 +3036,7 @@ class Svg(Widget):
 class SvgShape(Widget):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
 
-    @decorate_constructor_parameter_types([int, int, int])
+    @decorate_constructor_parameter_types([int, int])
     def __init__(self, x, y, **kwargs):
         """
         Args:
@@ -3011,7 +3046,6 @@ class SvgShape(Widget):
         """
         super(SvgShape, self).__init__(**kwargs)
         self.set_position(x, y)
-        self.set_stroke()
 
     def set_position(self, x, y):
         """Sets the shape position.
@@ -3040,6 +3074,15 @@ class SvgShape(Widget):
             color (str): stroke color
         """
         self.attributes['fill'] = color
+
+
+class SvgGroup(SvgShape):
+    """svg group widget."""
+
+    @decorate_constructor_parameter_types([int, int])
+    def __init__(self, x, y, **kwargs):
+        super(SvgGroup, self).__init__(x, y, **kwargs)
+        self.type = 'g' 
 
 
 class SvgRectangle(SvgShape):
@@ -3111,7 +3154,6 @@ class SvgLine(Widget):
     def __init__(self, x1, y1, x2, y2, **kwargs):
         super(SvgLine, self).__init__(**kwargs)
         self.set_coords(x1, y1, x2, y2)
-        self.set_stroke()
         self.type = 'line'
 
     def set_coords(self, x1, y1, x2, y2):
@@ -3136,7 +3178,6 @@ class SvgPolyline(Widget):
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, **kwargs):
         super(SvgPolyline, self).__init__(**kwargs)
-        self.set_stroke()
         self.style['fill'] = 'none'
         self.type = 'polyline'
         self.coordsX = collections.deque(maxlen=_maxlen)
@@ -3166,5 +3207,4 @@ class SvgText(SvgShape, _MixinTextualWidget):
         super(SvgText, self).__init__(x, y, **kwargs)
         self.type = 'text'
         self.set_fill()
-        self.set_stroke(0)
         self.set_text(text)

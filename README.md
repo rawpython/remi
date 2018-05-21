@@ -142,18 +142,25 @@ Run the script. If all it's OK the gui will be opened automatically in your brow
 You can customize optional parameters in the `start` call like.
 
 ```py
-start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True) 
+start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True) 
 ```
 
 Parameters:
 - address: network interface ip
 - port: listen port
-- multiple_instance: boolean, if True multiple clients that connects to your script has different App instances
+- multiple_instance: boolean, if True multiple clients that connects to your script has different App instances (identified by unique cookie session identifier)
 - enable_file_cache: boolean, if True enable resource caching
-- update_interval: gui update interval in seconds
+- update_interval: gui update interval in seconds. If zero, the update happens at each change. If zero, the App.idle method is not called. 
 - start_browser: boolean that defines if the browser should be opened automatically at startup
-- websocket_port: integer, port number for websocket communication
 - standalone: boolean, indicates where to run the application as standard Desktop application with its own window. If False, the interface is shown in a browser webpage.
+
+Additional Parameters:
+- username: for a basic http authentication
+- password: for a basic http authentication
+- host_name: the server hostname 
+- certfile: ssl certificale filename
+- keyfile: ssl key file
+- ssl_version: authentication version (i.e. ssl.PROTOCOL_TLSv1_2). If None, disables ssl encription
 
 All widgets constructors accepts two standard **kwargs that are:
 - width: can be expressed as int (and is interpreted as pixel) or as str (and you can specify the measure unit like '10%')
@@ -277,11 +284,11 @@ Take care about internally used attributes. These are:
 Remote access
 ===
 If you are using your REMI app remotely, with a DNS and behind a firewall, you can specify special parameters in the `start` call:
-- **websocket_port**: an integer number of the port used by websocket. Don't forget to NAT this port on your router;
+- **port**: http server port. Don't forget to NAT this port on your router;
 - **host_name**: a string containing the host name or remote ip address that allows to access to your app.
 
 ```py
-start(MyApp, address='0.0.0.0', port=8081, websocket_port=8082, host_name='myhostname.net') 
+start(MyApp, address='0.0.0.0', port=8081, host_name='myhostname.net') 
 ```
 
 

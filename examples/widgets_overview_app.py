@@ -21,6 +21,9 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
+    def idle(self):
+        self.counter.set_text('Running Time: ' + str(self.count))
+
     def main(self):
         # the margin 0px auto centers the main container
         verticalContainer = gui.Widget(width=540, margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
@@ -154,7 +157,6 @@ class MyApp(App):
         return verticalContainer
 
     def display_counter(self):
-        self.counter.set_text('Running Time: ' + str(self.count))
         self.count += 1
         Timer(1, self.display_counter).start()
 
@@ -310,5 +312,5 @@ if __name__ == "__main__":
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-
-    start(MyApp, debug=True, address='0.0.0.0', start_browser=True)
+    import ssl
+    start(MyApp, debug=True, address='0.0.0.0', start_browser=True, multiple_instance=True)

@@ -22,7 +22,7 @@ import os #for path handling
 import prototypes
 import editor_widgets
 import html_helper
-
+import threading
 
 class ResizeHelper(gui.Widget):
     ON_END_EVENT = "on_end_event"
@@ -550,7 +550,7 @@ class Editor(App):
         
         self.projectPathFilename = ''
         self.editCuttedWidget = None #cut operation, contains the cutted tag
-        
+
         # returning the root widget
         return self.mainContainer
     
@@ -745,7 +745,7 @@ def main():
     # starts the webserver
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=2.0)
+    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=0.01)
     
 if __name__ == "__main__":
     main()
