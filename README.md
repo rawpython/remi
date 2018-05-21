@@ -8,15 +8,25 @@
 </p>
 
 <p align="center">
-    <a href="https://gitter.im/dddomodossola/remi">
-        <img src="https://badges.gitter.im/Join%20Chat.svg" width="200">
+    <a href="https://www.reddit.com/r/RemiGUI">
+        <img src="https://upload.wikimedia.org/wikipedia/en/8/82/Reddit_logo_and_wordmark.svg" width="200">
     </a>
 </p>
+<p align="center">
+    <a href="https://gitter.im/dddomodossola/remi">
+        <img src="https://badges.gitter.im/Join%20Chat.svg" width="100">
+    </a>
+</p>
+
 
 Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
 
-Do you need support? Reach us on [Gitter chat](https://gitter.im/dddomodossola/remi).
+Do you need support? Reach us on:
+
+[Reddit](https://www.reddit.com/r/RemiGUI)
+
+[Gitter](https://gitter.im/dddomodossola/remi)
 
 
 Getting Started
@@ -338,6 +348,18 @@ Remi should be intended as a standard desktop gui framework.
 The library itself doesn't implement security strategies, and so it is advised to not expose its access to unsafe public networks.
 
 When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
+
+
+Supporting the project
+===
+*Are you able to support the Remi project?*
+
+Are you aware that remi is on Patreon?
+That's a brilliant way to support this project.
+
+**[SUPPORT Remi now](https://patreon.com/remigui)**
+
+Also a small amount is really welcome.
 
 
 Contributors

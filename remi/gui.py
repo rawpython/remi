@@ -2561,9 +2561,9 @@ class FileFolderNavigator(Widget):
                         a = a[1:]
                     if b[0] == '.':
                         b = b[1:]
-                    return a.lower() > b.lower()
+                    return (1 if a.lower() > b.lower() else -1)
                 except (IndexError, ValueError):
-                    return a > b
+                    return (1 if a > b else -1)
 
         log.debug("FileFolderNavigator - populate_folder_items")
 
