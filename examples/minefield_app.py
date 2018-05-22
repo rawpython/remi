@@ -165,7 +165,7 @@ class MyApp(App):
     def new_game(self, widget):
         self.time_count = 0
         self.mine_table = gui.Table(margin='0px auto')#900, 450
-        self.mine_matrix = self.build_mine_matrix(30, 15, 60)
+        self.mine_matrix = self.build_mine_matrix(5, 5, 1)
         self.mine_table.empty()
         self.mine_table.append_from_list(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
@@ -215,7 +215,7 @@ class MyApp(App):
             self.dialog = gui.GenericDialog(title='You Win!', message='Game done in %s seconds' % self.time_count)
             self.dialog.set_on_confirm_dialog_listener(self.new_game)
             self.dialog.set_on_cancel_dialog_listener(self.new_game)
-            self.set_root_widget(self.dialog)
+            self.dialog.show(self)
 
     def fill_void_cells(self, cell):
         checked_cells = [cell, ]
