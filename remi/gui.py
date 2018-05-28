@@ -18,6 +18,7 @@ import logging
 import functools
 import threading
 import collections
+import inspect
 
 from .server import runtimeInstances
 
@@ -29,6 +30,22 @@ def uid(obj):
     if not hasattr(obj,'identifier'):
         return str(id(obj))
     return obj.identifier
+
+
+class ClassEventConnector(object):
+    def __init__(self, event_source_instance, event_name, event_method_bound):
+        self.event_source_instance = event_source_instance
+        self.event_name = event_name
+        self.event_method_bound = event_method_bound
+        
+    def connect(self, callback, *params):
+        self.event_source_instance.eventManager.register_listener(self.event_name, callback, *params)
+
+
+def decorate_event(method):
+    setattr(method, "_is_event", True )
+    setattr(method, "connect", None ) #for autocompletion
+    return method
 
 
 def decorate_set_on_listener(event_name, params):
@@ -81,6 +98,11 @@ class _EventManager(object):
     def __init__(self, emitter):
         self.listeners = {}
         self.emitter = emitter
+
+        for (method_name, method) in inspect.getmembers(self.emitter, predicate=inspect.ismethod):
+            if hasattr(method, '_is_event'):
+                e = ClassEventConnector(self.emitter, method_name, method)
+                method.__dict__['connect'] = e.connect
 
     def propagate(self, eventname, params):
         # if for an event there is a listener, it calls the listener passing the parameters
@@ -567,6 +589,7 @@ class Widget(Tag):
             "return false;" % (self.identifier, self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, callback, *userdata)
 
+    @decorate_event
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
         return self.eventManager.propagate(self.EVENT_ONCLICK, ())
