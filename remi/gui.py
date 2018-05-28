@@ -1672,7 +1672,7 @@ class ListItem(Widget, _MixinTextualWidget):
     """
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, tooltip_title='', **kwargs):
         """
         Args:
             text (str, unicode): The textual content of the ListItem.
@@ -1682,6 +1682,10 @@ class ListItem(Widget, _MixinTextualWidget):
         self.type = 'li'
 
         self.attributes[self.EVENT_ONCLICK] = ''
+
+        if tooltip_title:
+            self.attributes['title'] = tooltip_title
+
         self.set_text(text)
 
     def get_value(self):
