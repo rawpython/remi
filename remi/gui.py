@@ -400,7 +400,7 @@ class Widget(Tag):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, margin='0px', **kwargs):
         """
         Args:
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
@@ -417,7 +417,9 @@ class Widget(Tag):
         self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.style['margin'] = kwargs.get('margin', '0px')
+        if margin:
+            self.style['margin'] = margin
+            
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(kwargs.pop('style', None))
@@ -1402,7 +1404,7 @@ class GenericDialog(Widget):
     EVENT_ONCANCEL = 'cancel_dialog'
 
     @decorate_constructor_parameter_types([str, str])
-    def __init__(self, title='', message='', **kwargs):
+    def __init__(self, title='', message='', cancel_button=True, **kwargs):
         """
         Args:
             title (str): The title of the dialog.
@@ -1411,7 +1413,7 @@ class GenericDialog(Widget):
         """
         super(GenericDialog, self).__init__(**kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
-        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
+        self.style.update({'display':'block', 'overflow':'auto', 'margin':'8px auto', 'padding': '8px'})
 
         if len(title) > 0:
             t = Label(title)
@@ -1429,22 +1431,25 @@ class GenericDialog(Widget):
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
         self.conf.style['margin'] = '3px'
-        self.cancel = Button('Cancel')
-        self.cancel.set_size(100, 30)
-        self.cancel.style['margin'] = '3px'
         hlay = Widget(height=35)
         hlay.style['display'] = 'block'
         hlay.style['overflow'] = 'visible'
         hlay.append(self.conf)
-        hlay.append(self.cancel)
         self.conf.style['float'] = 'right'
-        self.cancel.style['float'] = 'right'
+        
+        if cancel_button:
+            self.cancel = Button('Cancel')
+            self.cancel.set_size(100, 30)
+            self.cancel.style['margin'] = '3px'
+            self.cancel.style['float'] = 'right'
+            self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (
+                self.identifier, self.EVENT_ONCANCEL)
+            hlay.append(self.cancel)
 
         self.append(self.container)
         self.append(hlay)
 
         self.conf.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCONFIRM)
-        self.cancel.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCANCEL)
 
         self.inputs = {}
 
@@ -1763,7 +1768,7 @@ class ListItem(Widget, _MixinTextualWidget):
     """
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, tooltip_title='', **kwargs):
         """
         Args:
             text (str, unicode): The textual content of the ListItem.
@@ -1773,6 +1778,10 @@ class ListItem(Widget, _MixinTextualWidget):
         self.type = 'li'
 
         self.attributes[self.EVENT_ONCLICK] = ''
+
+        if tooltip_title:
+            self.attributes['title'] = tooltip_title
+
         self.set_text(text)
 
     def get_value(self):
@@ -2215,7 +2224,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', **kwargs):
+    def __init__(self, text='', text_style={}, **kwargs):
         """
         Args:
             text (str):
@@ -2223,7 +2232,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
         """
         super(TableEditableItem, self).__init__(**kwargs)
         self.type = 'td'
-        self.editInput = TextInput()
+        self.editInput = TextInput(style=text_style, **kwargs)
         self.append(self.editInput)
         self.editInput.set_on_change_listener(self.onchange)
         self.get_text = self.editInput.get_text
@@ -2818,7 +2827,7 @@ class TreeItem(Widget, _MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, tree_open=False, **kwargs):
         """
         Args:
             text (str):
@@ -2831,8 +2840,8 @@ class TreeItem(Widget, _MixinTextualWidget):
             "sendCallback('%s','%s');" \
             "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
-        self.treeopen = False
-        self.attributes['treeopen'] = 'false'
+        self.treeopen = tree_open
+        self.attributes['treeopen'] = str(tree_open).lower()
         self.attributes['has-subtree'] = 'false'
 
     def append(self, value, key=''):
