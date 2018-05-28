@@ -165,7 +165,7 @@ class MyApp(App):
     def new_game(self, widget):
         self.time_count = 0
         self.mine_table = gui.Table(margin='0px auto')#900, 450
-        self.mine_matrix = self.build_mine_matrix(5, 5, 1)
+        self.mine_matrix = self.build_mine_matrix(8, 8, 5)
         self.mine_table.empty()
         self.mine_table.append_from_list(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
