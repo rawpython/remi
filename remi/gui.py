@@ -1628,7 +1628,7 @@ class ListView(Widget, _SyncableValuesMixin):
     EVENT_ONSELECTION = 'onselection'
 
     @decorate_constructor_parameter_types([bool])
-    def __init__(self, selectable=True, **kwargs):
+    def __init__(self, selectable = True, value = None, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -1638,6 +1638,9 @@ class ListView(Widget, _SyncableValuesMixin):
         self._selected_item = None
         self._selected_key = None
         self._selectable = selectable
+
+        if value:
+            self.append(value)
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1651,22 +1654,34 @@ class ListView(Widget, _SyncableValuesMixin):
             obj.append(ListItem(item))
         return obj
 
-    def append(self, item, key=''):
+    def append(self, value, key=''):
         """Appends child items to the ListView. The items are accessible by list.children[key].
 
         Args:
-            item (ListItem): the item to add.
-            key (str): string key for the item.
+            value (ListItem, or iterable of ListItems): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
+                param.
         """
-        if isinstance(item, type('')) or isinstance(item, type(u'')):
-            item = ListItem(item)
-        elif not isinstance(item, ListItem):
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
+        if isinstance(value, type('')) or isinstance(value, type(u'')):
+            value = ListItem(value)
+        elif not isinstance(value, ListItem):
             raise ValueError("item must be text or a ListItem instance")
         # if an event listener is already set for the added item, it will not generate a selection event
-        if item.attributes[self.EVENT_ONCLICK] == '':
-            item.set_on_click_listener(self.onselection)
-        item.attributes['selected'] = False
-        super(ListView, self).append(item, key=key)
+        if value.attributes[self.EVENT_ONCLICK] == '':
+            value.set_on_click_listener(self.onselection)
+        value.attributes['selected'] = False
+        return super(ListView, self).append(value, key=key)
 
     def empty(self):
         """Removes all children from the list"""
@@ -1793,7 +1808,7 @@ class DropDown(Widget, _SyncableValuesMixin):
     """
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, value = None, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -1806,7 +1821,9 @@ class DropDown(Widget, _SyncableValuesMixin):
                                                                'evt': self.EVENT_ONCHANGE}
         self._selected_item = None
         self._selected_key = None
-        self._selectable = True
+
+        if value:
+            self.append(value)
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1821,12 +1838,25 @@ class DropDown(Widget, _SyncableValuesMixin):
                 pass
         return obj
 
-    def append(self, item, key=''):
-        if isinstance(item, type('')) or isinstance(item, type(u'')):
-            item = DropDownItem(item)
-        elif not isinstance(item, DropDownItem):
+    def append(self, value, key=''):
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
+        if isinstance(value, type('')) or isinstance(value, type(u'')):
+            value = DropDownItem(value)
+        elif not isinstance(value, DropDownItem):
             raise ValueError("item must be text or a DropDownItem instance")
-        super(DropDown, self).append(item, key=key)
+        key = super(DropDown, self).append(value, key=key)
+        if len(self.children) < 2:
+            self.select_by_value(value.get_value())
+        return key
 
     def empty(self):
         self._selected_item = None
@@ -1953,14 +1983,18 @@ class Table(Widget):
     EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, value = None, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
         super(Table, self).__init__(**kwargs)
+
         self.type = 'table'
         self.style['float'] = 'none'
+
+        if value:
+            self.append(value)
 
     @classmethod
     def new_from_list(cls, content, fill_title=True, **kwargs):
@@ -2000,9 +2034,31 @@ class Table(Widget):
             self.append(tr, str(row_index))
             row_index = row_index + 1
 
-    def append(self, row, key=''):
-        super(Table, self).append(row, key)
-        row.set_on_row_item_click_listener(self.on_table_row_click)
+    def append(self, value, key=''):
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    if type(value[k]) in (list, tuple, dict):
+                        row = TableRow()
+                        row.append(value[k])
+                        value[k] = row
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                if type(child) in (list, tuple, dict):
+                    row = TableRow()
+                    row.append(child)
+                    child = row
+                keys.append( self.append(child) )
+            return keys
+
+        if not isinstance(value, TableRow):
+            raise ValueError("item must be iterable or a TableRow instance")
+
+        key = super(Table, self).append(value, key)
+        value.set_on_row_item_click_listener(self.on_table_row_click)
+        return key
 
     def on_table_row_click(self, row, item):
         self.eventManager.propagate(self.EVENT_ON_TABLE_ROW_CLICK, (row, item))
@@ -2177,7 +2233,7 @@ class TableRow(Widget):
     EVENT_ON_ROW_ITEM_CLICK = 'on_row_item_click'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, value = None, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -2185,10 +2241,27 @@ class TableRow(Widget):
         super(TableRow, self).__init__(**kwargs)
         self.type = 'tr'
         self.style['float'] = 'none'
+        
+        if value:
+            self.append(value)
 
-    def append(self, item, key=''):
-        super(TableRow, self).append(item, key)
-        item.set_on_click_listener(self.on_row_item_click)
+    def append(self, value, key=''):
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
+        if isinstance(value, type('')) or isinstance(value, type(u'')):
+            value = TableItem(value)
+
+        key = super(TableRow, self).append(value, key)
+        value.set_on_click_listener(self.on_row_item_click)
+        return key
 
     def on_row_item_click(self, item):
         self.eventManager.propagate(self.EVENT_ON_ROW_ITEM_CLICK, (item,))
@@ -2795,10 +2868,20 @@ class MenuItem(Widget, _MixinTextualWidget):
         self.set_text(text)
 
     def append(self, value, key=''):
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
         if self.sub_container is None:
             self.sub_container = Menu()
             super(MenuItem, self).append(self.sub_container, key='subcontainer')
-        self.sub_container.append(value, key=key)
+        return self.sub_container.append(value, key=key)
 
 
 class TreeView(Widget):
@@ -2836,11 +2919,21 @@ class TreeItem(Widget, _MixinTextualWidget):
         self.attributes['has-subtree'] = 'false'
 
     def append(self, value, key=''):
+        if type(value) in (list, tuple, dict):
+            if type(value)==dict:
+                for k in value.keys():
+                    self.append(value[k], k)
+                return value.keys()
+            keys = []
+            for child in value:
+                keys.append( self.append(child) )
+            return keys
+
         if self.sub_container is None:
             self.attributes['has-subtree'] = 'true'
             self.sub_container = TreeView()
             super(TreeItem, self).append(self.sub_container, key='subcontainer')
-        self.sub_container.append(value, key=key)
+        return self.sub_container.append(value, key=key)
 
     def onclick(self):
         self.treeopen = not self.treeopen
