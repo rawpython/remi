@@ -400,7 +400,7 @@ class Widget(Tag):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, children = None, **kwargs):
         """
         Args:
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
@@ -421,6 +421,9 @@ class Widget(Tag):
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(kwargs.pop('style', None))
+
+        if children:
+            self.append(children)
 
     def set_style(self, style):
         """ Allows to set style properties for the widget.
@@ -1628,19 +1631,16 @@ class ListView(Widget, _SyncableValuesMixin):
     EVENT_ONSELECTION = 'onselection'
 
     @decorate_constructor_parameter_types([bool])
-    def __init__(self, selectable = True, value = None, **kwargs):
+    def __init__(self, selectable = True, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(ListView, self).__init__(**kwargs)
+        super(ListView, self).__init__(*args, **kwargs)
         self.type = 'ul'
         self._selected_item = None
         self._selected_key = None
         self._selectable = selectable
-
-        if value:
-            self.append(value)
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1808,12 +1808,12 @@ class DropDown(Widget, _SyncableValuesMixin):
     """
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, value = None, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(DropDown, self).__init__(**kwargs)
+        super(DropDown, self).__init__(*args, **kwargs)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
@@ -1821,9 +1821,6 @@ class DropDown(Widget, _SyncableValuesMixin):
                                                                'evt': self.EVENT_ONCHANGE}
         self._selected_item = None
         self._selected_key = None
-
-        if value:
-            self.append(value)
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1983,18 +1980,15 @@ class Table(Widget):
     EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, value = None, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(Table, self).__init__(**kwargs)
+        super(Table, self).__init__(*args, **kwargs)
 
         self.type = 'table'
         self.style['float'] = 'none'
-
-        if value:
-            self.append(value)
 
     @classmethod
     def new_from_list(cls, content, fill_title=True, **kwargs):
@@ -2233,17 +2227,14 @@ class TableRow(Widget):
     EVENT_ON_ROW_ITEM_CLICK = 'on_row_item_click'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, value = None, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(TableRow, self).__init__(**kwargs)
+        super(TableRow, self).__init__(*args, **kwargs)
         self.type = 'tr'
         self.style['float'] = 'none'
-        
-        if value:
-            self.append(value)
 
     def append(self, value, key=''):
         if type(value) in (list, tuple, dict):
@@ -2827,12 +2818,12 @@ class FileSelectionDialog(GenericDialog):
 class MenuBar(Widget):
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(MenuBar, self).__init__(**kwargs)
+        super(MenuBar, self).__init__(*args, **kwargs)
         self.type = 'nav'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
@@ -2841,12 +2832,12 @@ class Menu(Widget):
     """Menu widget can contain MenuItem."""
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(Menu, self).__init__(**kwargs)
+        super(Menu, self).__init__(*args, **kwargs)
         self.type = 'ul'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
@@ -2855,14 +2846,14 @@ class MenuItem(Widget, _MixinTextualWidget):
     """MenuItem widget can contain other MenuItem."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         """
         Args:
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(MenuItem, self).__init__(**kwargs)
         self.sub_container = None
+        super(MenuItem, self).__init__(*args, **kwargs)
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
@@ -2888,12 +2879,12 @@ class TreeView(Widget):
     """TreeView widget can contain TreeItem."""
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(TreeView, self).__init__(**kwargs)
+        super(TreeView, self).__init__(*args, **kwargs)
         self.type = 'ul'
 
 
