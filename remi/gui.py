@@ -254,7 +254,7 @@ class Tag(object):
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                                 tmp.items())
         if not self.ignore_update:
-            if self.get_parent():
+            if self.get_parent() and self.get_parent()!=self:
                 self.get_parent()._need_update()
 
     def _ischanged(self):
@@ -964,7 +964,6 @@ class GridBox(Widget):
         super(GridBox,self).remove_child(child)
 
 
-
 class HBox(Widget):
     """It contains widget automatically aligning them horizontally.
     Does not permit children absolute positioning.
@@ -1019,21 +1018,8 @@ class HBox(Widget):
         if key.isdigit():
             value.style['order'] = key
 
-
-        # weight of the widget in the layout
-        # value.style['-webkit-flex'] =
-        # value.style['-ms-flex'] =
-        # value.style['flex'] =
-
         key = value.identifier if key == '' else key
         self.add_child(key, value)
-
-        if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
-            if 'float' in self.children[key].style.keys():
-                if not (self.children[key].style['float'] == 'none'):
-                    self.children[key].style['float'] = 'left'
-            else:
-                self.children[key].style['float'] = 'left'
 
         return key
 
@@ -1639,25 +1625,21 @@ class ListView(Widget):
             key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
                 param.
         """
-        if type(value) in (list, tuple, dict):
-            if type(value)==dict:
-                for k in value.keys():
-                    self.append(value[k], k)
-                return value.keys()
-            keys = []
-            for child in value:
-                keys.append( self.append(child) )
-            return keys
-
         if isinstance(value, type('')) or isinstance(value, type(u'')):
             value = ListItem(value)
-        elif not isinstance(value, ListItem):
-            raise ValueError("item must be text or a ListItem instance")
-        # if an event listener is already set for the added item, it will not generate a selection event
-        if value.attributes[self.EVENT_ONCLICK] == '':
-            value.set_on_click_listener(self.onselection)
-        value.attributes['selected'] = False
-        return super(ListView, self).append(value, key=key)
+
+        keys = super(ListView, self).append(value, key=key)
+        if type(value) in (list, tuple, dict):
+            for k in keys:
+                if self.children[k].attributes[self.EVENT_ONCLICK] == '':
+                    self.children[k].set_on_click_listener(self.onselection)
+                    self.children[k].attributes['selected'] = False
+        else:
+            # if an event listener is already set for the added item, it will not generate a selection event
+            if value.attributes[self.EVENT_ONCLICK] == '':
+                value.set_on_click_listener(self.onselection)
+            value.attributes['selected'] = False
+        return keys
 
     def empty(self):
         """Removes all children from the list"""
@@ -1812,24 +1794,12 @@ class DropDown(Widget):
         return obj
 
     def append(self, value, key=''):
-        if type(value) in (list, tuple, dict):
-            if type(value)==dict:
-                for k in value.keys():
-                    self.append(value[k], k)
-                return value.keys()
-            keys = []
-            for child in value:
-                keys.append( self.append(child) )
-            return keys
-
         if isinstance(value, type('')) or isinstance(value, type(u'')):
             value = DropDownItem(value)
-        elif not isinstance(value, DropDownItem):
-            raise ValueError("item must be text or a DropDownItem instance")
-        key = super(DropDown, self).append(value, key=key)
-        if len(self.children) < 2:
+        keys = super(DropDown, self).append(value, key=key)
+        if len(self.children) == 1:
             self.select_by_value(value.get_value())
-        return key
+        return keys
 
     def empty(self):
         self._selected_item = None
@@ -2005,30 +1975,13 @@ class Table(Widget):
             row_index = row_index + 1
 
     def append(self, value, key=''):
+        keys = super(Table, self).append(value, key)
         if type(value) in (list, tuple, dict):
-            if type(value)==dict:
-                for k in value.keys():
-                    if type(value[k]) in (list, tuple, dict):
-                        row = TableRow()
-                        row.append(value[k])
-                        value[k] = row
-                    self.append(value[k], k)
-                return value.keys()
-            keys = []
-            for child in value:
-                if type(child) in (list, tuple, dict):
-                    row = TableRow()
-                    row.append(child)
-                    child = row
-                keys.append( self.append(child) )
-            return keys
-
-        if not isinstance(value, TableRow):
-            raise ValueError("item must be iterable or a TableRow instance")
-
-        key = super(Table, self).append(value, key)
-        value.set_on_row_item_click_listener(self.on_table_row_click)
-        return key
+            for k in keys:
+                self.children[k].set_on_row_item_click_listener(self.on_table_row_click)
+        else:
+            value.set_on_row_item_click_listener(self.on_table_row_click)
+        return keys
 
     def on_table_row_click(self, row, item):
         self.eventManager.propagate(self.EVENT_ON_TABLE_ROW_CLICK, (row, item))
@@ -2213,22 +2166,15 @@ class TableRow(Widget):
         self.style['float'] = 'none'
 
     def append(self, value, key=''):
-        if type(value) in (list, tuple, dict):
-            if type(value)==dict:
-                for k in value.keys():
-                    self.append(value[k], k)
-                return value.keys()
-            keys = []
-            for child in value:
-                keys.append( self.append(child) )
-            return keys
-
         if isinstance(value, type('')) or isinstance(value, type(u'')):
             value = TableItem(value)
-
-        key = super(TableRow, self).append(value, key)
-        value.set_on_click_listener(self.on_row_item_click)
-        return key
+        keys = super(TableRow, self).append(value, key)
+        if type(value) in (list, tuple, dict):
+            for k in keys:
+                self.children[k].set_on_click_listener(self.on_row_item_click)
+        else:
+            value.set_on_click_listener(self.on_row_item_click)
+        return keys
 
     def on_row_item_click(self, item):
         self.eventManager.propagate(self.EVENT_ON_ROW_ITEM_CLICK, (item,))
@@ -2813,9 +2759,8 @@ class Menu(Widget):
         Args:
             kwargs: See Widget.__init__()
         """
-        super(Menu, self).__init__(*args, **kwargs)
+        super(Menu, self).__init__(layout_orientation = Widget.LAYOUT_HORIZONTAL, *args, **kwargs)
         self.type = 'ul'
-        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
 
 class MenuItem(Widget, _MixinTextualWidget):
@@ -2828,26 +2773,14 @@ class MenuItem(Widget, _MixinTextualWidget):
             text (str):
             kwargs: See Widget.__init__()
         """
-        self.sub_container = None
+        self.sub_container = Menu()
         super(MenuItem, self).__init__(*args, **kwargs)
+        self.append(self.sub_container, key='subcontainer')
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
 
     def append(self, value, key=''):
-        if type(value) in (list, tuple, dict):
-            if type(value)==dict:
-                for k in value.keys():
-                    self.append(value[k], k)
-                return value.keys()
-            keys = []
-            for child in value:
-                keys.append( self.append(child) )
-            return keys
-
-        if self.sub_container is None:
-            self.sub_container = Menu()
-            super(MenuItem, self).append(self.sub_container, key='subcontainer')
         return self.sub_container.append(value, key=key)
 
 
@@ -2886,16 +2819,6 @@ class TreeItem(Widget, _MixinTextualWidget):
         self.attributes['has-subtree'] = 'false'
 
     def append(self, value, key=''):
-        if type(value) in (list, tuple, dict):
-            if type(value)==dict:
-                for k in value.keys():
-                    self.append(value[k], k)
-                return value.keys()
-            keys = []
-            for child in value:
-                keys.append( self.append(child) )
-            return keys
-
         if self.sub_container is None:
             self.attributes['has-subtree'] = 'true'
             self.sub_container = TreeView()

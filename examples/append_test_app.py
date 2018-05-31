@@ -32,39 +32,23 @@ class MyApp(App):
         #creating a container VBox type, vertical (you can use also HBox or Widget)
         main_container = gui.VBox(width=300, style={'margin':'0px auto'})
 
+        m11 = gui.MenuItem('Save', [gui.MenuItem('Save'), gui.MenuItem('Save as')], width=100, height=30)
+        m1 = gui.MenuItem('File', [m11, gui.MenuItem('Open')], width=100, height=30)
+        menu = gui.Menu([m1, gui.MenuItem('View', width=100, height=30), gui.MenuItem('Dialog')], width='100%', height='30px')
         
-        
-        m2 = gui.MenuItem('View', width=100, height=30)
-        #m2.set_on_click_listener(self.menu_view_clicked)
-        
-        m12 = gui.MenuItem('Open', width=100, height=30)
-        #m12.set_on_click_listener(self.menu_open_clicked)
-        m111 = gui.MenuItem('Save', width=100, height=30)
-        #m111.set_on_click_listener(self.menu_save_clicked)
-        m112 = gui.MenuItem('Save as', width=100, height=30)
-        #m112.set_on_click_listener(self.menu_saveas_clicked)
-        m3 = gui.MenuItem('Dialog', width=100, height=30)
-        #m3.set_on_click_listener(self.menu_dialog_clicked)
-
-        m11 = gui.MenuItem('Save', [m111, m112], width=100, height=30)
-        m1 = gui.MenuItem('File', [m11, m12], width=100, height=30)
-        
-        menu = gui.Menu([m1, m2, m3], width='100%', height='30px')
-        
-
         menubar = gui.MenuBar(width='100%', height='30px')
+        menubar.append(menu)
 
+        listview = gui.ListView({'0': gui.ListItem('zero'), 'n': 'n'})
+        print( listview.append({'1': gui.ListItem('uno'), '2': gui.ListItem('due')}) )
+        print( listview.append([gui.ListItem('tre'), gui.ListItem('quattro')]) )
 
-        listview = gui.ListView(children={'0': gui.ListItem('zero'), 'n': 'n'})
-        print( listview.append({'1': 'uno', '2': 'due'}) )
-        print( listview.append(['tre', 'quattro']) )
-
-        dropdown = gui.DropDown(children={'0': gui.DropDownItem('zero'), 'n': 'n'})
-        print( dropdown.append({'1': 'uno', '2': 'due'}) )
+        dropdown = gui.DropDown({'0': gui.DropDownItem('zero'), 'n': gui.DropDownItem('n')})
+        print( dropdown.append({'1': gui.DropDownItem('uno'), '2': gui.DropDownItem('due')}) )
         print( dropdown.append(['tre', 'quattro']) )
 
-        table = gui.Table({'0': ['zero','zeroo','zerooo'], 'n':['n','nn','nnn']})
-        print( table.append({'1': ['uno','unoo','unooo'], '2':['due','duee','dueee']}) )
+        table = gui.Table({'0': gui.TableRow(['zero','zeroo','zerooo']), 'n':gui.TableRow(['n','nn','nnn'])})
+        print( table.append({'1': gui.TableRow(['uno','unoo','unooo']), '2':gui.TableRow(['due','duee','dueee'])}) )
         row3 = gui.TableRow()
         row3.append(['tre','tree','treee'])
         row4 = gui.TableRow()
