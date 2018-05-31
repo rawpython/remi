@@ -254,7 +254,7 @@ class Tag(object):
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                                 tmp.items())
         if not self.ignore_update:
-            if self.get_parent() and self.get_parent()!=self:
+            if self.get_parent():
                 self.get_parent()._need_update()
 
     def _ischanged(self):
@@ -1633,7 +1633,7 @@ class ListView(Widget):
             for k in keys:
                 if self.children[k].attributes[self.EVENT_ONCLICK] == '':
                     self.children[k].set_on_click_listener(self.onselection)
-                    self.children[k].attributes['selected'] = False
+                self.children[k].attributes['selected'] = False
         else:
             # if an event listener is already set for the added item, it will not generate a selection event
             if value.attributes[self.EVENT_ONCLICK] == '':
@@ -2775,12 +2775,13 @@ class MenuItem(Widget, _MixinTextualWidget):
         """
         self.sub_container = Menu()
         super(MenuItem, self).__init__(*args, **kwargs)
-        self.append(self.sub_container, key='subcontainer')
+        super(MenuItem, self).append(self.sub_container, key='subcontainer')
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
 
     def append(self, value, key=''):
+        
         return self.sub_container.append(value, key=key)
 
 

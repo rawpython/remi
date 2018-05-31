@@ -30,16 +30,17 @@ class MyApp(App):
 
     def main(self):
         #creating a container VBox type, vertical (you can use also HBox or Widget)
-        main_container = gui.VBox(width=300, style={'margin':'0px auto'})
+        main_container = gui.Widget(width=300, style={'margin':'0px auto'}, layout_orientation=gui.Widget.LAYOUT_VERTICAL)
+
 
         m11 = gui.MenuItem('Save', [gui.MenuItem('Save'), gui.MenuItem('Save as')], width=100, height=30)
         m1 = gui.MenuItem('File', [m11, gui.MenuItem('Open')], width=100, height=30)
-        menu = gui.Menu([m1, gui.MenuItem('View', width=100, height=30), gui.MenuItem('Dialog')], width='100%', height='30px')
+        menu = gui.Menu([m1, gui.MenuItem('View', width=100, height=30), gui.MenuItem('Dialog', width=100, height=30)], width='100%', height='30px')
         
         menubar = gui.MenuBar(width='100%', height='30px')
         menubar.append(menu)
 
-        listview = gui.ListView({'0': gui.ListItem('zero'), 'n': 'n'})
+        listview = gui.ListView(children={'0': gui.ListItem('zero'), 'n': 'n'})
         print( listview.append({'1': gui.ListItem('uno'), '2': gui.ListItem('due')}) )
         print( listview.append([gui.ListItem('tre'), gui.ListItem('quattro')]) )
 
