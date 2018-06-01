@@ -64,7 +64,7 @@ def decorate_event_js(js_code):
         return method
     return add_annotation
 
-def decorate_set_on_listener(event_name, params):
+def decorate_set_on_listener(prototype):
     """ private decorator for use in the editor
 
     Args:
@@ -72,12 +72,11 @@ def decorate_set_on_listener(event_name, params):
         (es. For set_on_click_listener the event_name is "onclick"
         params (str): The list of parameters for the listener function (es. "(self, new_value)")
     """
-
     # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(function):
         function._event_listener = {}
-        function._event_listener['eventName'] = event_name
-        function._event_listener['prototype'] = params
+        function._event_listener['eventName'] = function.__name__
+        function._event_listener['prototype'] = prototype
         return function
 
     return add_annotation
@@ -574,7 +573,7 @@ class Widget(Tag):
         """Called when the Widget gets focus."""
         return self.eventManager.propagate(self.EVENT_ONFOCUS, ())
 
-    @decorate_set_on_listener("onfocus", "(self,emitter)")
+    @decorate_set_on_listener("onfocus", "(self, emitter)")
     def set_on_focus_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onfocus event.
 
@@ -593,7 +592,7 @@ class Widget(Tag):
         """Called when the Widget loses focus"""
         return self.eventManager.propagate(self.EVENT_ONBLUR, ())
 
-    @decorate_set_on_listener("onblur", "(self,emitter)")
+    @decorate_set_on_listener("onblur", "(self, emitter)")
     def set_on_blur_listener(self, callback, *userdata):
         """Registers the listener for the Widget.onblur event.
 
@@ -608,18 +607,21 @@ class Widget(Tag):
             "return false;" % (self.identifier, self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, callback, *userdata)
 
+    @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
                        "event.stopPropagation();event.preventDefault();")
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
         return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
+    @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
                        "event.stopPropagation();event.preventDefault();")
     def ondblclick(self):
         """Called when the Widget gets double clicked by the user with the left mouse button."""
         return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
+    @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
                        "event.stopPropagation();event.preventDefault();" \
                        "return false;")
@@ -628,6 +630,7 @@ class Widget(Tag):
         """
         return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
+    @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
             "params['x']=event.clientX-this.offsetLeft;" \
             "params['y']=event.clientY-this.offsetTop;" \
@@ -643,6 +646,13 @@ class Widget(Tag):
         """
         return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
 
+    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_event_js("var params={};" \
+            "params['x']=event.clientX-this.offsetLeft;" \
+            "params['y']=event.clientY-this.offsetTop;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
+            "event.stopPropagation();event.preventDefault();" \
+            "return false;")
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
 
@@ -650,49 +660,24 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEUP, (x, y))
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
 
-    @decorate_set_on_listener("onmouseup", "(self,emitter,x,y)")
-    def set_on_mouseup_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.onmouseup event.
-
-        Note: the listener prototype have to be in the form on_widget_mouseup(self, widget, x, y).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONMOUSEUP] = \
-            "var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;" \
-            "params['y']=event.clientY-this.offsetTop;" \
-            "sendCallbackParam('%s','%s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONMOUSEUP)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEUP, callback, *userdata)
-
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
+                       "event.stopPropagation();event.preventDefault();" \
+                       "return false;")
     def onmouseout(self):
         """Called when the mouse cursor moves outside a Widget.
 
         Note: This event is often used together with the Widget.onmouseover event, which occurs when the pointer is
             moved onto a Widget, or onto one of its children.
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEOUT, ())
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
-    @decorate_set_on_listener("onmouseout", "(self,emitter)")
-    def set_on_mouseout_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.onmouseout event.
-
-        Note: the listener prototype have to be in the form on_widget_mouseout(self, widget).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONMOUSEOUT] = \
-            "sendCallback('%s','%s');" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONMOUSEOUT)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEOUT, callback, *userdata)
-
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
+                       "event.stopPropagation();event.preventDefault();" \
+                       "return false;")
     def onmouseleave(self):
         """Called when the mouse cursor moves outside a Widget.
 
@@ -702,23 +687,15 @@ class Widget(Tag):
         Note: The Widget.onmouseleave event is similar to the Widget.onmouseout event. The only difference is that the
             onmouseleave event does not bubble (does not propagate up the Widgets tree).
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSELEAVE, ())
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
-    @decorate_set_on_listener("onmouseleave", "(self,emitter)")
-    def set_on_mouseleave_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.onmouseleave event.
-
-        Note: the listener prototype have to be in the form on_widget_mouseleave(self, widget).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONMOUSELEAVE] = \
-            "sendCallback('%s','%s');" \
+    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_event_js("var params={};" \
+            "params['x']=event.clientX-this.offsetLeft;" \
+            "params['y']=event.clientY-this.offsetTop;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONMOUSELEAVE)
-        self.eventManager.register_listener(self.EVENT_ONMOUSELEAVE, callback, *userdata)
-
+            "return false;")
     def onmousemove(self, x, y):
         """Called when the mouse cursor moves inside the Widget.
 
@@ -726,25 +703,15 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEMOVE, (x, y))
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
 
-    @decorate_set_on_listener("onmousemove", "(self,emitter,x,y)")
-    def set_on_mousemove_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.onmousemove event.
-        Note: the listener prototype have to be in the form on_widget_mousemove(self, widget, x, y)
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONMOUSEMOVE] = \
-            "var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;" \
-            "params['y']=event.clientY-this.offsetTop;" \
-            "sendCallbackParam('%s','%s',params);" \
+    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_event_js("var params={};" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONMOUSEMOVE)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEMOVE, callback, *userdata)
-
+            "return false;")
     def ontouchmove(self, x, y):
         """Called continuously while a finger is dragged across the screen, over a Widget.
 
@@ -752,24 +719,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONTOUCHMOVE, (x, y))
-
-    @decorate_set_on_listener("ontouchmove", "(self,emitter,x,y)")
-    def set_on_touchmove_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.ontouchmove event.
-        Note: the listener prototype have to be in the form on_widget_touchmove(self, widget, x, y)
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONTOUCHMOVE] = \
-            "var params={};" \
-            "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
-            "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
-            "sendCallbackParam('%s','%s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONTOUCHMOVE)
-        self.eventManager.register_listener(self.EVENT_ONTOUCHMOVE, callback, *userdata)
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
 
     def ontouchstart(self, x, y):
         """Called when a finger touches the widget.

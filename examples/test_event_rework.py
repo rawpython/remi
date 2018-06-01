@@ -34,6 +34,7 @@ class MyApp(App):
         bt = gui.Button("test")
         print(dir(bt.onclick))
         bt.onclick.connect(self.on_bt_click, 'patate', 'fritte')
+        print(">>>>>:" + bt.onclick._event_listener['eventName'])
         main_container.append(bt)
         # returning the root widget
         return main_container
