@@ -403,6 +403,8 @@ class Widget(Tag):
     def __init__(self, children = None, **kwargs):
         """
         Args:
+            children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
             height (int, str): An optional height for the widget (es. height=10 or height='10px' or height='10%').
             margin (str): CSS margin specifier
