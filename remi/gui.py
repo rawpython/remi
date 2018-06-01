@@ -38,8 +38,8 @@ class ClassEventConnector(object):
         self.event_name = event_name
         self.event_method_bound = event_method_bound
         
-    def connect(self, callback, *params):
-        self.event_source_instance.eventManager.register_listener(self.event_name, callback, *params)
+    def connect(self, callback, *userdata):
+        self.event_source_instance.eventManager.register_listener(self.event_name, callback, *userdata)
 
 
 def decorate_event(method):
@@ -47,6 +47,22 @@ def decorate_event(method):
     setattr(method, "connect", None ) #for autocompletion
     return method
 
+
+def decorate_event_js(js_code):
+    """ private decorator for use in the editor
+
+    Args:
+        js_code (str): javascript code to generate the event client-side.
+            js_code is added to the widget html as 
+            widget.attributes['onclick'] = js_code%{'emitter_identifier':widget.identifier, 'event_name':'onclick'}
+    """
+    # noinspection PyDictCreation,PyProtectedMember
+    def add_annotation(method):
+        setattr(method, "_is_event", True )
+        setattr(method, "connect", None ) #for autocompletion
+        setattr(method, "_js_code", js_code )
+        return method
+    return add_annotation
 
 def decorate_set_on_listener(event_name, params):
     """ private decorator for use in the editor
@@ -103,6 +119,9 @@ class _EventManager(object):
             if hasattr(method, '_is_event'):
                 e = ClassEventConnector(self.emitter, method_name, method)
                 method.__dict__['connect'] = e.connect
+
+                if hasattr(method, '_js_code'):
+                    emitter.attributes[method_name] = method._js_code%{'emitter_identifier':emitter.identifier, 'event_name':method_name}
 
     def propagate(self, eventname, params):
         # if for an event there is a listener, it calls the listener passing the parameters
@@ -589,63 +608,32 @@ class Widget(Tag):
             "return false;" % (self.identifier, self.EVENT_ONBLUR)
         self.eventManager.register_listener(self.EVENT_ONBLUR, callback, *userdata)
 
-    @decorate_event
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
+                       "event.stopPropagation();event.preventDefault();")
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
-        return self.eventManager.propagate(self.EVENT_ONCLICK, ())
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
-    @decorate_set_on_listener("onclick", "(self,emitter)")
-    def set_on_click_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.onclick event.
-
-        Note: the listener prototype have to be in the form on_widget_click(self, widget).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONCLICK] = \
-            "sendCallback('%s','%s');" \
-            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONCLICK)
-        self.eventManager.register_listener(self.EVENT_ONCLICK, callback, *userdata)
-
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
+                       "event.stopPropagation();event.preventDefault();")
     def ondblclick(self):
         """Called when the Widget gets double clicked by the user with the left mouse button."""
-        return self.eventManager.propagate(self.EVENT_ONDBLCLICK, ())
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
-    @decorate_set_on_listener("ondblclick", "(self,emitter)")
-    def set_on_dblclick_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.ondblclick event.
-
-        Note: the listener prototype have to be in the form on_widget_dblclick(self, widget).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONDBLCLICK] = \
-            "sendCallback('%s','%s');" \
-            "event.stopPropagation();event.preventDefault();" % (self.identifier, self.EVENT_ONDBLCLICK)
-        self.eventManager.register_listener(self.EVENT_ONDBLCLICK, callback, *userdata)
-
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
+                       "event.stopPropagation();event.preventDefault();" \
+                       "return false;")
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
         """
-        return self.eventManager.propagate(self.EVENT_ONCONTEXTMENU, ())
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
 
-    @decorate_set_on_listener("oncontextmenu", "(self,emitter)")
-    def set_on_contextmenu_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.oncontextmenu event.
-
-        Note: the listener prototype have to be in the form on_widget_contextmenu(self, widget).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONCONTEXTMENU] = \
-            "sendCallback('%s','%s');" \
+    @decorate_event_js("var params={};" \
+            "params['x']=event.clientX-this.offsetLeft;" \
+            "params['y']=event.clientY-this.offsetTop;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONCONTEXTMENU)
-        self.eventManager.register_listener(self.EVENT_ONCONTEXTMENU, callback, *userdata)
-
+            "return false;")
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
 
@@ -653,25 +641,7 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(self.EVENT_ONMOUSEDOWN, (x, y))
-
-    @decorate_set_on_listener("onmousedown", "(self,emitter,x,y)")
-    def set_on_mousedown_listener(self, callback, *userdata):
-        """Registers the listener for the Widget.onmousedown event.
-
-        Note: the listener prototype have to be in the form on_widget_mousedown(self, widget, x, y).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.attributes[self.EVENT_ONMOUSEDOWN] = \
-            "var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;" \
-            "params['y']=event.clientY-this.offsetTop;" \
-            "sendCallbackParam('%s','%s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;" % (self.identifier, self.EVENT_ONMOUSEDOWN)
-        self.eventManager.register_listener(self.EVENT_ONMOUSEDOWN, callback, *userdata)
+        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
 
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
