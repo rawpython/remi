@@ -32,7 +32,7 @@ class MyApp(App):
         
         subContainerLeft = gui.Widget(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.img = gui.Image('/res/logo.png', height=100, margin='10px')
-        self.img.set_on_click_listener(self.on_img_clicked)
+        self.img.onclick.connect(self.on_img_clicked)
 
         self.table = gui.Table.new_from_list([('ID', 'First Name', 'Last Name'),
                                    ('101', 'Danny', 'Young'),
@@ -40,7 +40,7 @@ class MyApp(App):
                                    ('103', 'Lars', 'Gordon'),
                                    ('104', 'Roberto', 'Robitaille'),
                                    ('105', 'Maria', 'Papadopoulos')], width=300, height=200, margin='10px')
-        self.table.set_on_table_row_click_listener(self.on_table_row_click)
+        self.table.on_table_row_click.connect(self.on_table_row_click)
 
         # the arguments are	width - height - layoutOrientationOrizontal
         subContainerRight = gui.Widget(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
@@ -51,47 +51,47 @@ class MyApp(App):
 
         self.bt = gui.Button('Press me!', width=200, height=30, margin='10px')
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self.on_button_pressed)
+        self.bt.onclick.connect(self.on_button_pressed)
 
         self.txt = gui.TextInput(width=200, height=30, margin='10px')
         self.txt.set_text('This is a TEXTAREA')
-        self.txt.set_on_change_listener(self.on_text_area_change)
+        self.txt.onchange.connect(self.on_text_area_change)
 
         self.spin = gui.SpinBox(-10, -100, 1000, width=200, height=30, margin='10px')
-        self.spin.set_on_change_listener(self.on_spin_change)
+        self.spin.onchange.connect(self.on_spin_change)
 
         self.check = gui.CheckBoxLabel('Label checkbox', True, width=200, height=30, margin='10px')
-        self.check.set_on_change_listener(self.on_check_change)
+        self.check.onchange.connect(self.on_check_change)
 
         self.btInputDiag = gui.Button('Open InputDialog', width=200, height=30, margin='10px')
-        self.btInputDiag.set_on_click_listener(self.open_input_dialog)
+        self.btInputDiag.onclick.connect(self.open_input_dialog)
 
         self.btFileDiag = gui.Button('File Selection Dialog', width=200, height=30, margin='10px')
-        self.btFileDiag.set_on_click_listener(self.open_fileselection_dialog)
+        self.btFileDiag.onclick.connect(self.open_fileselection_dialog)
 
         self.btUploadFile = gui.FileUploader('./', width=200, height=30, margin='10px')
-        self.btUploadFile.set_on_success_listener(self.fileupload_on_success)
-        self.btUploadFile.set_on_failed_listener(self.fileupload_on_failed)
+        self.btUploadFile.onsuccess.connect(self.fileupload_on_success)
+        self.btUploadFile.onfailed.connect(self.fileupload_on_failed)
 
         items = ('Danny Young','Christine Holand','Lars Gordon','Roberto Robitaille')
         self.listView = gui.ListView.new_from_list(items, width=300, height=120, margin='10px')
-        self.listView.set_on_selection_listener(self.list_view_on_selected)
+        self.listView.onselection.connect(self.list_view_on_selected)
 
         self.link = gui.Link("http://localhost:8081", "A link to here", width=200, height=30, margin='10px')
 
         self.dropDown = gui.DropDown.new_from_list(('DropDownItem 0', 'DropDownItem 1'),
                                                    width=200, height=20, margin='10px')
-        self.dropDown.set_on_change_listener(self.drop_down_changed)
+        self.dropDown.onchange.connect(self.drop_down_changed)
         self.dropDown.select_by_value('DropDownItem 0')
 
         self.slider = gui.Slider(10, 0, 100, 5, width=200, height=20, margin='10px')
-        self.slider.set_on_change_listener(self.slider_changed)
+        self.slider.onchange.connect(self.slider_changed)
 
         self.colorPicker = gui.ColorPicker('#ffbb00', width=200, height=20, margin='10px')
-        self.colorPicker.set_on_change_listener(self.color_picker_changed)
+        self.colorPicker.onchange.connect(self.color_picker_changed)
 
         self.date = gui.Date('2015-04-13', width=200, height=20, margin='10px')
-        self.date.set_on_change_listener(self.date_changed)
+        self.date.onchange.connect(self.date_changed)
 
         self.video = gui.Widget( _type='iframe', width=290, height=200, margin='10px')
         self.video.attributes['src'] = "https://drive.google.com/file/d/0B0J9Lq_MRyn4UFRsblR3UTBZRHc/preview"
@@ -130,16 +130,16 @@ class MyApp(App):
         menu = gui.Menu(width='100%', height='30px')
         m1 = gui.MenuItem('File', width=100, height=30)
         m2 = gui.MenuItem('View', width=100, height=30)
-        m2.set_on_click_listener(self.menu_view_clicked)
+        m2.onclick.connect(self.menu_view_clicked)
         m11 = gui.MenuItem('Save', width=100, height=30)
         m12 = gui.MenuItem('Open', width=100, height=30)
-        m12.set_on_click_listener(self.menu_open_clicked)
+        m12.onclick.connect(self.menu_open_clicked)
         m111 = gui.MenuItem('Save', width=100, height=30)
-        m111.set_on_click_listener(self.menu_save_clicked)
+        m111.onclick.connect(self.menu_save_clicked)
         m112 = gui.MenuItem('Save as', width=100, height=30)
-        m112.set_on_click_listener(self.menu_saveas_clicked)
+        m112.onclick.connect(self.menu_saveas_clicked)
         m3 = gui.MenuItem('Dialog', width=100, height=30)
-        m3.set_on_click_listener(self.menu_dialog_clicked)
+        m3.onclick.connect(self.menu_dialog_clicked)
 
         menu.append([m1, m2, m3])
         m1.append([m11, m12])
@@ -192,7 +192,7 @@ class MyApp(App):
         self.ddate.set_value('2000-01-01')
         self.dialog.add_field_with_label('ddate', 'Date', self.ddate)
 
-        self.dialog.set_on_confirm_dialog_listener(self.dialog_confirm)
+        self.dialog.confirm_dialog.connect(self.dialog_confirm)
         self.dialog.show(self)
 
     def dialog_confirm(self, widget):
@@ -244,7 +244,7 @@ class MyApp(App):
         self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?',
                                            initial_value='type here', 
                                            width=500, height=160)
-        self.inputDialog.set_on_confirm_value_listener(
+        self.inputDialog.confirm_value.connect(
             self.on_input_dialog_confirm)
 
         # here is returned the Input Dialog widget, and it will be shown
@@ -256,7 +256,7 @@ class MyApp(App):
     def open_fileselection_dialog(self, widget):
         self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select files and folders', False,
                                                            '.')
-        self.fileselectionDialog.set_on_confirm_value_listener(
+        self.fileselectionDialog.confirm_value.connect(
             self.on_fileselection_dialog_confirm)
 
         # here is returned the Input Dialog widget, and it will be shown

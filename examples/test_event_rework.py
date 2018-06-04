@@ -32,17 +32,21 @@ class MyApp(App):
         #creating a container VBox type, vertical (you can use also HBox or Widget)
         main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
         bt = gui.Button("test")
-        print(dir(bt.onclick))
         bt.onclick.connect(self.on_bt_click, 'patate', 'fritte')
-        print(">>>>>:" + bt.onclick._event_listener['eventName'])
+
+        bt2 = gui.Button("test2")
+        bt2.onclick.connect(self.on_bt_click, 'rucola', 'sedano')
+
         main_container.append(bt)
+        main_container.append(bt2)
         # returning the root widget
         return main_container
 
     def on_bt_click(self, emitter, p1, p2):
         print("bt pressed" + p1 + p2)
+        emitter.set_text("pressed")
 
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='127.0.0.1', port=8081, host_name=None, start_browser=True, username=None, password=None)
+    start(MyApp, address='127.0.0.1', port=8081, host_name=None, start_browser=True, username=None, password=None, debug=True)
