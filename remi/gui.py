@@ -37,15 +37,21 @@ class ClassEventConnector(object):
         self.event_source_instance = event_source_instance
         self.event_name = event_name
         self.event_method_bound = event_method_bound
+        self.callback = None
+        self.userdata = None
         
     def connect(self, callback, *userdata):
         if hasattr(self.event_method_bound, '_js_code'):
             self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
                 'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
-        self.event_source_instance.eventManager.register_listener(self.event_name, callback, *userdata)
+        self.callback = callback
+        self.userdata = userdata
 
     def __call__(self, *args, **kwargs):
-        return self.event_method_bound(*args, **kwargs)
+        callback_params =  self.event_method_bound(*args, **kwargs)
+        if not self.callback:
+            return callback_params
+        return self.callback(self.event_source_instance, *(callback_params + self.userdata))
 
 
 def decorate_event(method):
@@ -112,36 +118,6 @@ def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
-class _EventManager(object):
-    """Manages the event propagation to the listeners functions"""
-
-    def __init__(self, emitter):
-        self.listeners = {}
-        self.emitter = emitter
-
-        for (method_name, method) in inspect.getmembers(self.emitter, predicate=inspect.ismethod):
-            if hasattr(method, '__is_event'):
-                e = ClassEventConnector(self.emitter, method_name, method)
-                setattr(self.emitter, method_name, e)
-
-    def propagate(self, eventname, params):
-        # if for an event there is a listener, it calls the listener passing the parameters
-        if eventname not in self.listeners:
-            return
-        listener = self.listeners[eventname]
-        return listener['callback'](self.emitter, *(params+listener['userdata']))
-
-    def register_listener(self, eventname, callback, *userdata):
-        """register a listener for a specific event
-
-        Args:
-            eventname (str): The event identifier, like Widget.EVENT_ONCLICK that is 'onclick'.
-            callback (function): Function pointer to the callback function.
-            userdata (tuple): Extra optional userdata that will be passed to the listener.
-        """
-        self.listeners[eventname] = {'callback': callback, 'userdata': userdata}
-
-
 class _EventDictionary(dict):
     """This dictionary allows to be notified if its content is changed.
     """
@@ -150,7 +126,10 @@ class _EventDictionary(dict):
         self.__version__ = 0
         self.__lastversion__ = 0
         super(_EventDictionary, self).__init__(*args, **kwargs)
-        self.eventManager = _EventManager(self)
+        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(method, '__is_event'):
+                e = ClassEventConnector(self, method_name, method)
+                setattr(self, method_name, e)
 
     def __setitem__(self, key, value):
         if key in self:
@@ -195,7 +174,7 @@ class _EventDictionary(dict):
         """Called on content change.
         """
         self.__version__ += 1
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
 
 class Tag(object):
@@ -447,13 +426,17 @@ class Widget(Tag):
 
         super(Widget, self).__init__(**kwargs)
 
-        self.eventManager = _EventManager(self)
         self.oldRootWidget = None  # used when hiding the widget
 
         self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(kwargs.pop('style', None))
+
+        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(method, '__is_event'):
+                e = ClassEventConnector(self, method_name, method)
+                setattr(self, method_name, e)
 
     def set_style(self, style):
         """ Allows to set style properties for the widget.
@@ -568,7 +551,7 @@ class Widget(Tag):
             "return false;")
     def onfocus(self):
         """Called when the Widget gets focus."""
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
@@ -576,21 +559,21 @@ class Widget(Tag):
             "return false;")
     def onblur(self):
         """Called when the Widget loses focus"""
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
                        "event.stopPropagation();event.preventDefault();")
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
                        "event.stopPropagation();event.preventDefault();")
     def ondblclick(self):
         """Called when the Widget gets double clicked by the user with the left mouse button."""
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
@@ -599,7 +582,7 @@ class Widget(Tag):
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -615,7 +598,7 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -631,7 +614,7 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
@@ -643,7 +626,7 @@ class Widget(Tag):
         Note: This event is often used together with the Widget.onmouseover event, which occurs when the pointer is
             moved onto a Widget, or onto one of its children.
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
@@ -658,7 +641,7 @@ class Widget(Tag):
         Note: The Widget.onmouseleave event is similar to the Widget.onmouseout event. The only difference is that the
             onmouseleave event does not bubble (does not propagate up the Widgets tree).
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -674,7 +657,7 @@ class Widget(Tag):
             x (int): position of the mouse inside the widget
             y (int): position of the mouse inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -690,7 +673,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -706,7 +689,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -722,7 +705,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
@@ -738,7 +721,7 @@ class Widget(Tag):
             x (int): position of the finger inside the widget
             y (int): position of the finger inside the widget
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (x, y))
+        return (x, y)
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
@@ -747,7 +730,7 @@ class Widget(Tag):
     def ontouchleave(self):
         """Called when a finger touches from inside to outside the widget.
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
@@ -757,7 +740,7 @@ class Widget(Tag):
         """Called when a touch point has been disrupted in an implementation-specific manner
         (for example, too many touch points are created).
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
 
 class GridBox(Widget):
@@ -1121,7 +1104,7 @@ class TextInput(Widget, _MixinTextualWidget):
             new_value (str): the new string content of the TextInput.
         """
         self.set_value(new_value)
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (new_value,))
+        return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');elem.value = elem.value.split('\\n').join('');
@@ -1137,7 +1120,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.set_value(new_value)
         self.enable_refresh()
         self._set_updated()
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (new_value,))
+        return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event_js("var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
@@ -1155,7 +1138,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.set_value(new_value)
         self.enable_refresh()
         self._set_updated()
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (new_value,))
+        return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event_js("""
@@ -1178,7 +1161,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.set_value(new_value)
         self.enable_refresh()
         self._set_updated()
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (new_value,))
+        return (new_value, )
 
 
 class Label(Widget, _MixinTextualWidget):
@@ -1313,14 +1296,14 @@ class GenericDialog(Widget):
         """Event generated by the OK button click.
         """
         self.hide()
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     @decorate_set_on_listener("(self,emitter)")
     @decorate_event
     def cancel_dialog(self, emitter):
         """Event generated by the Cancel button click."""
         self.hide()
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
     def show(self, base_app_instance):
         self._base_app_instance = base_app_instance
@@ -1367,13 +1350,13 @@ class InputDialog(GenericDialog):
         propagates the string content of the input field
         """
         self.hide()
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (value,))
+        return (value, )
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def confirm_value(self, widget):
         """Event called pressing on OK button."""
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (self.inputText.get_text(),))
+        return (self.inputText.get_text(),)
 
 
 # noinspection PyUnresolvedReferences
@@ -1467,7 +1450,7 @@ class ListView(Widget, _SyncableValuesMixin):
                 if self._selectable:
                     self._selected_item.attributes['selected'] = True
                 break
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (self._selected_key,))
+        return (self._selected_key,)
 
     def get_value(self):
         """
@@ -1653,7 +1636,7 @@ class DropDown(Widget, _SyncableValuesMixin):
         """
         log.debug('combo box. selected %s' % value)
         self.select_by_value(value)
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (value,))
+        return (value, )
 
 
 class DropDownItem(Widget, _MixinTextualWidget):
@@ -1760,7 +1743,7 @@ class Table(Widget):
     @decorate_set_on_listener("(self, emitter, row, item)")
     @decorate_event
     def on_table_row_click(self, row, item):
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (row, item))
+        return (row, item)
 
 
 class TableWidget(Table):
@@ -1901,7 +1884,7 @@ class TableWidget(Table):
             row (int): row index.
             column (int): column index.
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (item, new_value, row, column))
+        return (item, new_value, row, column)
 
 
 class TableRow(Widget):
@@ -1935,7 +1918,7 @@ class TableRow(Widget):
             emitter (TableRow): The emitter of the event.
             item (TableItem): The clicked TableItem.
         """
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (item, ))
+        return (item, )
 
 
 class TableEditableItem(Widget, _MixinTextualWidget):
@@ -1960,7 +1943,7 @@ class TableEditableItem(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event
     def onchange(self, emitter, new_value):
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (new_value, ))
+        return (new_value, )
 
 
 class TableItem(Widget, _MixinTextualWidget):
@@ -2024,7 +2007,7 @@ class Input(Widget):
                        "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onchange(self, value):
         self.attributes['value'] = value
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (value, ))
+        return (value, )
 
     def set_read_only(self, readonly):
         if readonly:
@@ -2062,7 +2045,7 @@ class CheckBoxLabel(Widget):
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def onchange(self, widget, value):
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (value, ))
+        return (value, )
 
 
 class CheckBox(Input):
@@ -2084,7 +2067,7 @@ class CheckBox(Input):
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onchange(self, value):
         self.set_value(value in ('True', 'true'))
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (value, ))
+        return (value, )
 
     def set_value(self, checked, update_ui=1):
         if checked:
@@ -2161,7 +2144,7 @@ class Slider(Input):
     @decorate_event_js("var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def oninput(self, value):
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (value, ))
+        return (value, )
 
 
 class ColorPicker(Input):
@@ -2395,7 +2378,7 @@ class FileFolderItem(Widget):
     @decorate_event
     def onselection(self, widget):
         self.set_selected(not self.selected)
-        return self.eventManager.propagate(self.EVENT_ONSELECTION, ())
+        return ()
 
     def set_text(self, t):
         self.children['text'].set_text(t)
@@ -2431,7 +2414,7 @@ class FileSelectionDialog(GenericDialog):
         """
         self.hide()
         params = (self.fileFolderNavigator.get_selection_list(),)
-        return self.eventManager.propagate(self.EVENT_ONCONFIRMVALUE, params)
+        return params
 
 
 class MenuBar(Widget):
@@ -2566,19 +2549,19 @@ class FileUploader(Widget):
     @decorate_set_on_listener("(self, emitter, filename)")
     @decorate_event
     def onsuccess(self, filename):
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (filename, ))
+        return (filename, )
 
     @decorate_set_on_listener("(self, emitter, filename)")
     @decorate_event
     def onfailed(self, filename):
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (filename, ))
+        return (filename, )
 
     @decorate_set_on_listener("(self, emitter, filedata, filename)")
     @decorate_event
     def ondata(self, filedata, filename):
         with open(os.path.join(self._savepath, filename), 'wb') as f:
             f.write(filedata)
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, (filedata, filename))
+        return (filedata, filename)
 
 
 class FileDownloader(Widget, _MixinTextualWidget):
@@ -2653,7 +2636,7 @@ class VideoPlayer(Widget):
             "event.stopPropagation();event.preventDefault();")
     def onended(self):
         """Called when the media has been played and reached the end."""
-        return self.eventManager.propagate(inspect.currentframe().f_code.co_name, ())
+        return ()
 
 
 class Svg(Widget):
