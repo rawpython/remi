@@ -38,9 +38,16 @@ class EventSource(object):
     
     def setup_event_methods(self):
         for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
+            _event_info = None
+            if hasattr(method, "_event_info"):
+                _event_info = method._event_info
+            
             if hasattr(method, '__is_event'):
                 e = ClassEventConnector(self, method_name, method)
                 setattr(self, method_name, e)
+
+            if _event_info:
+                getattr(self, method_name)._event_info = _event_info
 
 
 class ClassEventConnector(object):
@@ -106,15 +113,13 @@ def decorate_set_on_listener(prototype):
     """ private decorator for use in the editor
 
     Args:
-        event_name (str): Name of the event to which it refers
-        (es. For set_on_click_listener the event_name is "onclick"
         params (str): The list of parameters for the listener function (es. "(self, new_value)")
     """
     # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(method):
-        method._event_listener = {}
-        method._event_listener['eventName'] = method.__name__
-        method._event_listener['prototype'] = prototype
+        method._event_info = {}
+        method._event_info['name'] = method.__name__
+        method._event_info['prototype'] = prototype
         return method
 
     return add_annotation
