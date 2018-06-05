@@ -32,7 +32,23 @@ def uid(obj):
     return obj.identifier
 
 
+class EventSource(object):
+    def __init__(self, *args, **kwargs):
+        self.setup_event_methods()
+    
+    def setup_event_methods(self):
+        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(method, '__is_event'):
+                e = ClassEventConnector(self, method_name, method)
+                setattr(self, method_name, e)
+
+
 class ClassEventConnector(object):
+    """ This class allows to manage the events. Decorating a method with *decorate_event* decorator
+        The method gets the __is_event flag. At runtime, the methods that has this flag gets replaced
+        by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
+        and after that the listener method is called too.
+    """
     def __init__(self, event_source_instance, event_name, event_method_bound):
         self.event_source_instance = event_source_instance
         self.event_name = event_name
@@ -41,6 +57,9 @@ class ClassEventConnector(object):
         self.userdata = None
         
     def connect(self, callback, *userdata):
+        """ The callback and userdata gets stored, and if there is some javascript to add
+            the js code is appended as attribute for the event source
+        """
         if hasattr(self.event_method_bound, '_js_code'):
             self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
                 'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
@@ -48,19 +67,27 @@ class ClassEventConnector(object):
         self.userdata = userdata
 
     def __call__(self, *args, **kwargs):
+        #here the event method gets called
         callback_params =  self.event_method_bound(*args, **kwargs)
         if not self.callback:
             return callback_params
-        return self.callback(self.event_source_instance, *(callback_params + self.userdata))
+        if not callback_params:
+            callback_params = self.userdata
+        else:
+            callback_params = callback_params + self.userdata
+        #here the listener gets called, passing as parameters the return values of the event method
+        # plus the userdata parameters
+        return self.callback(self.event_source_instance, *callback_params)
 
 
 def decorate_event(method):
+    """ setup a method as an event """
     setattr(method, "__is_event", True )
     return method
 
 
 def decorate_event_js(js_code):
-    """ private decorator for use in the editor
+    """setup a method as an event, adding also javascript code to generate
 
     Args:
         js_code (str): javascript code to generate the event client-side.
@@ -94,6 +121,7 @@ def decorate_set_on_listener(prototype):
 
 
 def decorate_constructor_parameter_types(type_list):
+    """ private decorator for use in the editor """
     def add_annotation(method):
         method._constructor_types = type_list
         return method
@@ -118,7 +146,7 @@ def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
-class _EventDictionary(dict):
+class _EventDictionary(dict, EventSource):
     """This dictionary allows to be notified if its content is changed.
     """
 
@@ -126,10 +154,7 @@ class _EventDictionary(dict):
         self.__version__ = 0
         self.__lastversion__ = 0
         super(_EventDictionary, self).__init__(*args, **kwargs)
-        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
-            if hasattr(method, '__is_event'):
-                e = ClassEventConnector(self, method_name, method)
-                setattr(self, method_name, e)
+        EventSource.__init__(self, *args, **kwargs)
 
     def __setitem__(self, key, value):
         if key in self:
@@ -366,7 +391,7 @@ class Tag(object):
                         break
 
 
-class Widget(Tag):
+class Widget(Tag, EventSource):
     """Base class for gui widgets.
 
     Widget can be used as generic container. You can add children by the append(value, key) function.
@@ -412,7 +437,7 @@ class Widget(Tag):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
@@ -425,6 +450,7 @@ class Widget(Tag):
             kwargs['_type'] = 'div'
 
         super(Widget, self).__init__(**kwargs)
+        EventSource.__init__(self, *args, **kwargs)
 
         self.oldRootWidget = None  # used when hiding the widget
 
@@ -432,11 +458,6 @@ class Widget(Tag):
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(kwargs.pop('style', None))
-
-        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
-            if hasattr(method, '__is_event'):
-                e = ClassEventConnector(self, method_name, method)
-                setattr(self, method_name, e)
 
     def set_style(self, style):
         """ Allows to set style properties for the widget.
@@ -1077,6 +1098,11 @@ class TextInput(Widget, _MixinTextualWidget):
 
         self.attributes['autocomplete'] = 'off'
 
+        self.attributes[Widget.EVENT_ONCHANGE] = \
+            "var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+
     def set_value(self, text):
         """Sets the text content.
 
@@ -1095,8 +1121,7 @@ class TextInput(Widget, _MixinTextualWidget):
         return self.get_text()
 
     @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    @decorate_event
     def onchange(self, new_value):
         """Called when the user finishes to edit the TextInput content.
 
@@ -1994,6 +2019,10 @@ class Input(Widget):
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
         self.attributes['autocomplete'] = 'off'
+        self.attributes[Widget.EVENT_ONCHANGE] = \
+            "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+        {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     def set_value(self, value):
         self.attributes['value'] = str(value)
@@ -2003,8 +2032,7 @@ class Input(Widget):
         return self.attributes['value']
 
     @decorate_set_on_listener("(self, emitter, value)")
-    @decorate_event_js("var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    @decorate_event
     def onchange(self, value):
         self.attributes['value'] = value
         return (value, )
@@ -2061,10 +2089,13 @@ class CheckBox(Input):
         """
         super(CheckBox, self).__init__('checkbox', user_data, **kwargs)
         self.set_value(checked)
+        self.attributes[Widget.EVENT_ONCHANGE] = \
+            "var params={};params['value']=document.getElementById('%(emitter_identifier)s').checked;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, value)")
-    @decorate_event_js("var params={};params['value']=document.getElementById('%(emitter_identifier)s').checked;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    @decorate_event
     def onchange(self, value):
         self.set_value(value in ('True', 'true'))
         return (value, )
@@ -2139,10 +2170,13 @@ class Slider(Input):
         self.attributes['min'] = str(min)
         self.attributes['max'] = str(max)
         self.attributes['step'] = str(step)
+        self.attributes[Widget.EVENT_ONCHANGE] = \
+            "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, value)")
-    @decorate_event_js("var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    @decorate_event
     def oninput(self, value):
         return (value, )
 
@@ -2376,6 +2410,11 @@ class FileFolderItem(Widget):
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event
+    def onclick(self, widget):
+        return super(FileFolderItem, self).onclick()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event
     def onselection(self, widget):
         self.set_selected(not self.selected)
         return ()
@@ -2497,6 +2536,10 @@ class TreeItem(Widget, _MixinTextualWidget):
         self.treeopen = False
         self.attributes['treeopen'] = 'false'
         self.attributes['has-subtree'] = 'false'
+        self.attributes[Widget.EVENT_ONCLICK] = \
+            "sendCallback('%(emitter_identifier)s','%(event_name)s');" \
+            "event.stopPropagation();event.preventDefault();"% \
+            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCLICK}
 
     def append(self, value, key=''):
         if self.sub_container is None:
@@ -2506,8 +2549,7 @@ class TreeItem(Widget, _MixinTextualWidget):
         self.sub_container.append(value, key=key)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();")
+    @decorate_event
     def onclick(self):
         self.treeopen = not self.treeopen
         if self.treeopen:

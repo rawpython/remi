@@ -19,11 +19,12 @@ import os #for path handling
 
 
 
-class ResizeHelper(gui.Widget):
+class ResizeHelper(gui.Widget, gui.EventSource):
     EVENT_ONDRAG = "on_drag"
 
     def __init__(self, project, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
         self.style['float'] = 'none'
         self.style['background-color'] = "transparent"
         self.style['border'] = '1px dashed black'
@@ -34,7 +35,7 @@ class ResizeHelper(gui.Widget):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.set_on_mousedown_listener(self.start_drag)
+        self.onmousedown.connect(self.start_drag)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -62,9 +63,9 @@ class ResizeHelper(gui.Widget):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.set_on_mousemove_listener(self.on_drag)
-        self.project.set_on_mouseup_listener(self.stop_drag)
-        self.project.set_on_mouseleave_listener(self.stop_drag, 0, 0)
+        self.project.onmousemove.connect(self.on_drag)
+        self.project.onmouseup.connect(self.stop_drag)
+        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -72,6 +73,7 @@ class ResizeHelper(gui.Widget):
         self.active = False
         self.update_position()
 
+    @gui.decorate_event
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
@@ -83,10 +85,7 @@ class ResizeHelper(gui.Widget):
                 self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + int(x) - self.origin_x )
                 self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + int(y) - self.origin_y)
                 self.update_position()
-            return self.eventManager.propagate(self.EVENT_ONDRAG, ())
-
-    def set_on_drag_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONDRAG, callback, *userdata)
+            return ()
 
     def update_position(self):
         self.style['position']='absolute'
@@ -95,11 +94,12 @@ class ResizeHelper(gui.Widget):
 
 
 
-class DragHelper(gui.Widget):
+class DragHelper(gui.Widget, gui.EventSource):
     EVENT_ONDRAG = "on_drag"
 
     def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
         self.style['float'] = 'none'
         self.style['background-color'] = "transparent"
         self.style['border'] = '1px dashed black'
@@ -110,7 +110,7 @@ class DragHelper(gui.Widget):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.set_on_mousedown_listener(self.start_drag)
+        self.onmousedown.connect(self.start_drag)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -138,9 +138,9 @@ class DragHelper(gui.Widget):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.set_on_mousemove_listener(self.on_drag)
-        self.project.set_on_mouseup_listener(self.stop_drag)
-        self.project.set_on_mouseleave_listener(self.stop_drag, 0, 0)
+        self.project.onmousemove.connect(self.on_drag)
+        self.project.onmouseup.connect(self.stop_drag)
+        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
     
@@ -148,6 +148,7 @@ class DragHelper(gui.Widget):
         self.active = False
         self.update_position()
 
+    @gui.decorate_event
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
@@ -159,10 +160,7 @@ class DragHelper(gui.Widget):
                 self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + int(x) - self.origin_x )
                 self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + int(y) - self.origin_y)
                 self.update_position()
-            return self.eventManager.propagate(self.EVENT_ONDRAG, ())
-
-    def set_on_drag_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONDRAG, callback, *userdata)
+            return ()
 
     def update_position(self):
         self.style['position']='absolute'
@@ -176,8 +174,8 @@ class FloatingPanesContainer(gui.Widget):
         super(FloatingPanesContainer, self).__init__(**kwargs)
         self.resizeHelper = ResizeHelper(self, width=16, height=16)
         self.dragHelper = DragHelper(self, width=15, height=15)
-        self.resizeHelper.set_on_drag_listener(self.on_helper_dragged_update_the_latter_pos, self.dragHelper)
-        self.dragHelper.set_on_drag_listener(self.on_helper_dragged_update_the_latter_pos, self.resizeHelper)
+        self.resizeHelper.on_drag.connect(self.on_helper_dragged_update_the_latter_pos, self.dragHelper)
+        self.dragHelper.on_drag.connect(self.on_helper_dragged_update_the_latter_pos, self.resizeHelper)
 
         self.style['position'] = 'relative'    
         self.style['overflow'] = 'auto'
@@ -188,7 +186,7 @@ class FloatingPanesContainer(gui.Widget):
     def add_pane(self, pane, x, y):
         pane.style['left'] = gui.to_pix(x)
         pane.style['top'] = gui.to_pix(y)
-        pane.set_on_click_listener(self.on_pane_selection)
+        pane.onclick.connect(self.on_pane_selection)
         pane.style['position'] = 'absolute'
         self.append(pane)
         self.on_pane_selection(pane)
