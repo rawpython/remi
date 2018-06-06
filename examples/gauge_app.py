@@ -12,6 +12,10 @@
    limitations under the License.
 """
 
+""" This example shows an application using Svg graphics 
+     to display an interactive gauge.
+"""
+
 import remi.gui as gui
 from remi import start, App
 import math
@@ -20,7 +24,7 @@ import random
 
 
 class InputGauge(gui.VBox):
-    #@decorate_constructor_parameter_types([int, int, int, int])
+
     def __init__(self, width, height, _min, _max, **kwargs):
         super(InputGauge, self).__init__(**kwargs)
         self.set_size(width, height)
@@ -39,7 +43,6 @@ class InputGauge(gui.VBox):
         params = (self.gauge.value)
         return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
 
-    #@decorate_set_on_listener("confirm_value", "(value, widget)")
     def set_on_confirm_value_listener(self, callback, *userdata):
         self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
     

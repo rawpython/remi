@@ -12,6 +12,10 @@
    limitations under the License.
 """
 
+""" Here is an "Hello World" application showing a simple interaction
+     with the user.
+"""
+
 import remi.gui as gui
 from remi import start, App
 

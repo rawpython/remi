@@ -12,6 +12,11 @@
    limitations under the License.
 """
 
+""" This example shows the possibility to stop the server by App.close() method.
+    With multiple_clients, the server will stop as soon as all the clients 
+    will disconnect.
+"""
+
 import remi.gui as gui
 from remi import start, App
 
