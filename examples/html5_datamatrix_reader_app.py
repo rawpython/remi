@@ -26,8 +26,6 @@ import ssl
 
 class HalconMsgHandler(socketserver.BaseRequestHandler, object):
     def __init__(self, *args, **kvargs):
-        self.EVENT_ONNEWHALCONCODE = 'onnewhalconcode'
-        self.eventManager = gui._EventManager(self)
         super(HalconMsgHandler, self).__init__(*args, **kvargs)
 
     def handle(self):
@@ -38,14 +36,12 @@ class HalconMsgHandler(socketserver.BaseRequestHandler, object):
         self.server.app_instance.new_halcon_code(self.data)
 
 
-class ImageGrabber(gui.Tag):
+class ImageGrabber(gui.Tag, gui.EventSource):
 
     def __init__(self, app_instance, width, height, **kwargs):
         super(ImageGrabber, self).__init__(_type='script', **kwargs)
+        gui.EventSource.__init__(self)
         self.app = app_instance
-        self.eventManager = gui._EventManager(self)
-        self.EVENT_ONCHANGE = 'onchange'
-        self.EVENT_ONNEWVIDEODEVICE = 'onnewvideodevice'
         self.add_child("javascript", """
             var video = null;
             var canvas = null;
@@ -158,18 +154,14 @@ class ImageGrabber(gui.Tag):
             
             """% {'width':width, 'height':height, 'id': self.identifier,'evt_foto': self.EVENT_ONCHANGE,'evt_videodevice': self.EVENT_ONNEWVIDEODEVICE}) # on new image available
 
+    @gui.decorate_event
     def onchange(self, image_data, filename):
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, (image_data,))
+        return (image_data,)
 
-    def set_on_change_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
-
+    @gui.decorate_event
     def onnewvideodevice(self, device_id, device_kind, device_label):
         print("new video device: " + device_id + "  kind: " + device_kind + "  label: " + device_label )
-        return self.eventManager.propagate(self.EVENT_ONNEWVIDEODEVICE, (device_id, device_kind, device_label))
-
-    def set_on_newvideodevice_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONNEWVIDEODEVICE, callback, *userdata)
+        return (device_id, device_kind, device_label)
 
     def get_available_videoinputs(self):
         self.app.execute_javascript('get_available_videoinputs();')
@@ -216,15 +208,15 @@ class MyApp(App):
 
         self.imgGrabber = ImageGrabber(self, width, height)
         
-        self.imgGrabber.set_on_change_listener(self.on_new_image)
-        self.imgGrabber.set_on_newvideodevice_listener(self.new_video_device)
+        self.imgGrabber.onchange.connect(self.on_new_image)
+        self.imgGrabber.onnewvideodevice.connect(self.new_video_device)
         getVideoInputsButton = gui.Button("Get cameras", margin='10px')
-        getVideoInputsButton.set_on_click_listener(self.on_get_video_inputs)
+        getVideoInputsButton.onclick.connect(self.on_get_video_inputs)
         captureButton = gui.Button("Start", margin='10px')
-        captureButton.set_on_click_listener(self.on_start_grab, None)
+        captureButton.onclick.connect(self.on_start_grab, None)
 
         self.check_flash = gui.CheckBoxLabel('Flashlight', False, width=200, height=30, margin='10px')
-        self.check_flash.set_on_change_listener(self.on_start_grab)
+        self.check_flash.onchange.connect(self.on_start_grab)
 
         self.label = gui.Label('Image capture')
         self.label.style['font-size'] = '18px'
@@ -288,7 +280,7 @@ class MyApp(App):
                 self.imgGrabber.nextFrame()
             else:
                 self.dialog = gui.GenericDialog(title='DECODE OK', message=data, width='200px')
-                self.dialog.set_on_confirm_dialog_listener(self.on_dialog_confirm)
+                self.dialog.confirm_dialog.connect(self.on_dialog_confirm)
                 self.dialog.show(self)
 
     def on_dialog_confirm(self, emitter):

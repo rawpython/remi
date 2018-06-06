@@ -25,7 +25,7 @@ class LabelSpinBox(gui.HBox):
         self.append(self._label, 'label')
         self.append(self._spinbox, 'spinbox')
 
-        self.set_on_change_listener = self._spinbox.set_on_change_listener
+        self.onchange = self._spinbox.onchange
         self.set_value = self._spinbox.set_value
         self.get_value = self._spinbox.get_value
         self.setValue = self.set_value
@@ -39,11 +39,20 @@ class PlotlyWidget(gui.Widget):
         self.data = data
         self.update = update
 
+    def get_refresh(self):
+        if self.data is None:
+            return None, None
+        print(self.data)
+        txt = json.dumps(self.data)
+        headers = {'Content-type': 'text/plain'}
+        return [txt, headers]
+
+    def go(self):
         javascript_code = gui.Tag()
         javascript_code.type = 'script'
         javascript_code.attributes['type'] = 'text/javascript'
         code = """
-        var PLOT = document.getElementById('plot');
+        var PLOT = document.getElementById('%(id)s');
         var url = "plot/get_refresh";
         var plotOptions = {
                            title: 'Title goes here'
@@ -58,16 +67,8 @@ class PlotlyWidget(gui.Widget):
             });
         """
         javascript_code.add_child('code',   # Add to Tag
-                                  code % {'id': id(self), })
+                                  code % {'id': self.identifier})
         self.add_child('javascript_code', javascript_code)   # Add to widget
-
-    def get_refresh(self):
-        if self.data is None:
-            return None, None
-
-        txt = json.dumps(self.data)
-        headers = {'Content-type': 'text/plain'}
-        return [txt, headers]
 
 
 class MyApp(App):
@@ -75,7 +76,7 @@ class MyApp(App):
         html_head = '<script src="https://cdn.plot.ly/plotly-latest.min.js">'
         html_head += '</script>'
         self.data = []
-        for idx in range(2):
+        for idx in range(10):
             self.data.extend([{'x': [], 'y': [], 'type': 'scatter', 'mode':
                               'markers+lines', 'name': 'name %d' % idx}])
         super(MyApp, self).__init__(*args, html_head=html_head)
@@ -104,7 +105,7 @@ class MyApp(App):
         self.started = False
 
         # setting the listener for the onclick event of the button
-        bt.set_on_click_listener(self.on_button_pressed, ctrl)
+        bt.onclick.connect(self.on_button_pressed, ctrl)
 
         ctrl.append(lbl)
         ctrl.append(self.historyBox)
@@ -156,6 +157,7 @@ class MyApp(App):
 
     # listener function
     def on_button_pressed(self, widget, settings):
+        self.plt.go()
         if not self.started:
             # self.plt.status.play()
             widget.set_text('Stop')

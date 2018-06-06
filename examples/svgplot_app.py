@@ -186,7 +186,7 @@ class MyApp(App):
         self.add_data()
 
         bt = gui.Button("Zoom - ")
-        bt.set_on_click_listener(self.zoom_out)
+        bt.onclick.connect(self.zoom_out)
         self.wid.append(bt)
 
         # returning the root widget

@@ -16,11 +16,11 @@ import remi.gui as gui
 from remi import start, App
 
 
-class GeolocationAPI(gui.Tag):
+class GeolocationAPI(gui.Tag, gui.EventSource):
 
     def __init__(self, **kwargs):
         super(GeolocationAPI, self).__init__(_type='script', **kwargs)
-        self.eventManager = gui._EventManager(self)
+        gui.EventSource.__init__(self)
         self.EVENT_ONCHANGE = 'onchange'
         self.add_child("javascript", """
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -33,18 +33,16 @@ class GeolocationAPI(gui.Tag):
         });
         """% {'id': self.identifier,'evt': self.EVENT_ONCHANGE})
 
+    @gui.decorate_event
     def onchange(self, latitude, longitude):
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, (latitude,longitude,))
-
-    def set_on_change_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+        return (latitude,longitude,)
 
 
-class OrientationAPI(gui.Tag):
+class OrientationAPI(gui.Tag, gui.EventSource):
 
     def __init__(self, **kwargs):
         super(OrientationAPI, self).__init__(_type='script', **kwargs)
-        self.eventManager = gui._EventManager(self)
+        gui.EventSource.__init__(self)
         self.EVENT_ONCHANGE = 'onchange'
         self.add_child("javascript", """
         if (window.DeviceOrientationEvent) {
@@ -61,18 +59,16 @@ class OrientationAPI(gui.Tag):
         }
         """% {'id': self.identifier,'evt': self.EVENT_ONCHANGE})
 
+    @gui.decorate_event
     def onchange(self, gamma, beta, alpha):
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, (gamma,beta,alpha,))
-
-    def set_on_change_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+        return (gamma,beta,alpha,)
 
 
-class AccelerometerAPI(gui.Tag):
+class AccelerometerAPI(gui.Tag, gui.EventSource):
 
     def __init__(self, **kwargs):
         super(AccelerometerAPI, self).__init__(_type='script', **kwargs)
-        self.eventManager = gui._EventManager(self)
+        gui.EventSource.__init__(self)
         self.EVENT_ONCHANGE = 'onchange'
         self.add_child("javascript", """
         window.ondevicemotion = function(event) {
@@ -87,11 +83,9 @@ class AccelerometerAPI(gui.Tag):
         }
         """% {'id': self.identifier,'evt': self.EVENT_ONCHANGE})
 
+    @gui.decorate_event
     def onchange(self, accelerationX, accelerationY, accelerationZ):
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, (accelerationX,accelerationY,accelerationZ,))
-
-    def set_on_change_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
+        return (accelerationX,accelerationY,accelerationZ,)
 
 
 class MyApp(App):
@@ -114,9 +108,9 @@ class MyApp(App):
         wid.add_child("javascript_ori", oriApi)
         wid.add_child("javascript_acc", accApi)
 
-        geoApi.set_on_change_listener(self.onGeolocation, lblGeolocation)
-        oriApi.set_on_change_listener(self.onOrientation, lblOrientation)
-        accApi.set_on_change_listener(self.onAccelerometer, lblAccelerometer)
+        geoApi.onchange.connect(self.onGeolocation, lblGeolocation)
+        oriApi.onchange.connect(self.onOrientation, lblOrientation)
+        accApi.onchange.connect(self.onAccelerometer, lblAccelerometer)
 
         # returning the root widget
         return wid

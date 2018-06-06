@@ -43,8 +43,8 @@ class Cell(gui.Widget):
             self.style['background-color'] = 'rgb(255,255,255)'
         else:
             self.style['background-color'] = 'rgb(245,245,240)'
-        self.set_on_contextmenu_listener(self.on_right_click)
-        self.set_on_click_listener(self.check_mine)
+        self.oncontextmenu.connect(self.on_right_click)
+        self.onclick.connect(self.check_mine)
 
     def on_right_click(self, widget):
         """ Here with right click the change of cell is changed """
@@ -126,7 +126,7 @@ class MyApp(App):
 
         self.btReset = gui.Button('Restart')
         self.btReset.set_size(100, 30)
-        self.btReset.set_on_click_listener(self.new_game)
+        self.btReset.onclick.connect(self.new_game)
 
         self.horizontal_container = gui.Widget()
         self.horizontal_container.style['display'] = 'block'
@@ -213,8 +213,8 @@ class MyApp(App):
         self.lblFlagCount.set_text("%s" % self.flagcount)
         if win:
             self.dialog = gui.GenericDialog(title='You Win!', message='Game done in %s seconds' % self.time_count)
-            self.dialog.set_on_confirm_dialog_listener(self.new_game)
-            self.dialog.set_on_cancel_dialog_listener(self.new_game)
+            self.dialog.confirm_dialog.connect(self.new_game)
+            self.dialog.cancel_dialog.connect(self.new_game)
             self.dialog.show(self)
 
     def fill_void_cells(self, cell):
