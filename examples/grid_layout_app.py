@@ -12,6 +12,19 @@
    limitations under the License.
 """
 
+""" Here is shown the usage of GridBox layout.
+    The gridbox layouting allows a flexible way to define a layout matrix
+     using GridBox.define_grid, passing as parameter a two dimensional iterable.
+    Each element in the defined grid, is the "key" to address a widget by the 
+    GridBox.append method.
+    In this example, the matrix is a list of strings, where each character is used
+     as a "key". A key can occur multiple times in the defined matrix, making the 
+     widget to cover a bigger area.
+    The size of each column and row in the grid can be defined by GridBox.style,
+     and the style parameters are 
+     {'grid-template-columns':'10% 90%', 'grid-template-rows':'10% 90%'}.
+"""
+
 import remi.gui as gui
 from remi import start, App
 import os

@@ -213,9 +213,10 @@ class Tag(object):
     but it is not necessarily graphically representable.
     You can use this class for sending javascript code to the clients.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, attributes = {}, _type = '', _class = None,  **kwargs):
         """
         Args:
+            attributes (dict): The attributes to be applied. 
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, usefull for public API definition.
@@ -233,18 +234,19 @@ class Tag(object):
         self.attributes.onchange.connect(self._need_update)
         self.style.onchange.connect(self._need_update)
 
-        self.type = kwargs.get('_type', '')
-        self.attributes['id'] = kwargs.get('id', str(id(self)))
+        self.type = _type
+        self.attributes['id'] = str(id(self))
+
+        #attribute['id'] can be overwritten to get a static Tag identifier
+        self.attributes.update(attributes)
 
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
         # we not callable
         runtimeInstances[self.identifier] = self
 
-        cls = kwargs.get('_class', self.__class__.__name__)
         self._classes = []
-        if cls:
-            self.add_class(cls)
+        self.add_class(self.__class__.__name__ if _class == None else _class)
 
         #this variable will contain the repr of this tag, in order to avoid unuseful operations
         self._backup_repr = ''
@@ -442,9 +444,13 @@ class Widget(Tag, EventSource):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, *args, **kwargs):
+    def __init__(self, children = None, style = {}, *args, **kwargs):
+
         """
         Args:
+            children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            style (dict, or json str): The style properties to be applied. 
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
             height (int, str): An optional height for the widget (es. height=10 or height='10px' or height='10%').
             margin (str): CSS margin specifier
@@ -462,7 +468,10 @@ class Widget(Tag, EventSource):
         self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
-        self.set_style(kwargs.pop('style', None))
+        self.set_style(style)
+
+        if children:
+            self.append(children)
 
     def set_style(self, style):
         """ Allows to set style properties for the widget.
@@ -779,8 +788,8 @@ class GridBox(Widget):
     Note: If you would absolute positioning, use the Widget container instead.
     """
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
-        super(GridBox, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(GridBox, self).__init__(*args, **kwargs)
         self.style.update({'display':'grid'})
 
     def define_grid(self, matrix):
@@ -832,7 +841,6 @@ class GridBox(Widget):
         super(GridBox,self).remove_child(child)
 
 
-
 class HBox(Widget):
     """It contains widget automatically aligning them horizontally.
     Does not permit children absolute positioning.
@@ -844,8 +852,8 @@ class HBox(Widget):
     """
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
-        super(HBox, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(HBox, self).__init__(*args, **kwargs)
 
         # fixme: support old browsers
         # http://stackoverflow.com/a/19031640
@@ -887,21 +895,8 @@ class HBox(Widget):
         if key.isdigit():
             value.style['order'] = key
 
-
-        # weight of the widget in the layout
-        # value.style['-webkit-flex'] =
-        # value.style['-ms-flex'] =
-        # value.style['flex'] =
-
         key = value.identifier if key == '' else key
         self.add_child(key, value)
-
-        if self.layout_orientation == Widget.LAYOUT_HORIZONTAL:
-            if 'float' in self.children[key].style.keys():
-                if not (self.children[key].style['float'] == 'none'):
-                    self.children[key].style['float'] = 'left'
-            else:
-                self.children[key].style['float'] = 'left'
 
         return key
 
@@ -917,8 +912,8 @@ class VBox(HBox):
     """
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
-        super(VBox, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(VBox, self).__init__(*args, **kwargs)
         self.style['flex-direction'] = 'column'
 
 
@@ -937,8 +932,8 @@ class TabBox(Widget):
     # <section id="first-tab-group">
     #   <div id="tab1">
 
-    def __init__(self, **kwargs):
-        super(TabBox, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(TabBox, self).__init__(*args, **kwargs)
 
         self._section = Tag(_type='section')
 
@@ -1055,13 +1050,13 @@ class Button(Widget, _MixinTextualWidget):
         Use Widget.onclick.connect in order to register the listener.
     """
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str): The text that will be displayed on the button.
             kwargs: See Widget.__init__()
         """
-        super(Button, self).__init__(**kwargs)
+        super(Button, self).__init__(*args, **kwargs)
         self.type = 'button'
         self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
@@ -1075,7 +1070,7 @@ class TextInput(Widget, _MixinTextualWidget):
     EVENT_ONENTER = 'onenter'
 
     @decorate_constructor_parameter_types([bool, str])
-    def __init__(self, single_line=True, hint='', **kwargs):
+    def __init__(self, single_line=True, hint='', *args, **kwargs):
         """
         Args:
             single_line (bool): Determines if the TextInput have to be single_line. A multiline TextInput have a gripper
@@ -1083,7 +1078,7 @@ class TextInput(Widget, _MixinTextualWidget):
             hint (str): Sets a hint using the html placeholder attribute.
             kwargs: See Widget.__init__()
         """
-        super(TextInput, self).__init__(**kwargs)
+        super(TextInput, self).__init__(*args, **kwargs)
         self.type = 'textarea'
 
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -1200,13 +1195,13 @@ class Label(Widget, _MixinTextualWidget):
     """
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         """
         Args:
             text (str): The string content that have to be displayed in the Label.
             kwargs: See Widget.__init__()
         """
-        super(Label, self).__init__(**kwargs)
+        super(Label, self).__init__(*args, **kwargs)
         self.type = 'p'
         self.set_text(text)
 
@@ -1222,14 +1217,14 @@ class GenericDialog(Widget):
     """
 
     @decorate_constructor_parameter_types([str, str])
-    def __init__(self, title='', message='', **kwargs):
+    def __init__(self, title='', message='', *args, **kwargs):
         """
         Args:
             title (str): The title of the dialog.
             message (str): The message description.
             kwargs: See Widget.__init__()
         """
-        super(GenericDialog, self).__init__(**kwargs)
+        super(GenericDialog, self).__init__(*args, **kwargs)
         self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
         self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
 
@@ -1355,7 +1350,7 @@ class InputDialog(GenericDialog):
     EVENT_ONCONFIRMVALUE = 'confirm_value'
 
     @decorate_constructor_parameter_types([str, str, str])
-    def __init__(self, title='Title', message='Message', initial_value='', **kwargs):
+    def __init__(self, title='Title', message='Message', initial_value='', *args, **kwargs):
         """
         Args:
             title (str): The title of the dialog.
@@ -1363,7 +1358,7 @@ class InputDialog(GenericDialog):
             initial_value (str): The default content for the TextInput field.
             kwargs: See Widget.__init__()
         """
-        super(InputDialog, self).__init__(title, message, **kwargs)
+        super(InputDialog, self).__init__(title, message, *args, **kwargs)
 
         self.inputText = TextInput()
         self.inputText.onenter.connect(self.on_text_enter_listener)
@@ -1389,31 +1384,7 @@ class InputDialog(GenericDialog):
         return (self.inputText.get_text(),)
 
 
-# noinspection PyUnresolvedReferences
-class _SyncableValuesMixin(object):
-
-    def synchronize_values(self, values):
-        selected_before = self.get_value()
-        before = set(self.children[k].get_value() for k in self.children)
-        after = set(values)
-
-        changed = None  # indicates if we changed the model, and represents the last item
-        if before != after:
-            self.empty()
-            # iter over values to maintain the order
-            for item in values:
-                self.append(item)
-                changed = item
-
-        if (changed is not None) and selected_before and self._selectable:
-            if selected_before in after:
-                self.select_by_value(selected_before)
-            else:
-                # select the last item given nothing better to do...
-                self.select_by_value(changed)
-
-
-class ListView(Widget, _SyncableValuesMixin):
+class ListView(Widget):
     """List widget it can contain ListItems. Add items to it by using the standard append(item, key) function or
     generate a filled list from a string list by means of the function new_from_list. Use the list in conjunction of
     its onselection event. Register a listener with ListView.onselection.connect.
@@ -1422,12 +1393,12 @@ class ListView(Widget, _SyncableValuesMixin):
     EVENT_ONSELECTION = 'onselection'
 
     @decorate_constructor_parameter_types([bool])
-    def __init__(self, selectable=True, **kwargs):
+    def __init__(self, selectable = True, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(ListView, self).__init__(**kwargs)
+        super(ListView, self).__init__(*args, **kwargs)
         self.type = 'ul'
         self._selected_item = None
         self._selected_key = None
@@ -1445,20 +1416,30 @@ class ListView(Widget, _SyncableValuesMixin):
             obj.append(ListItem(item))
         return obj
 
-    def append(self, item, key=''):
+    def append(self, value, key=''):
         """Appends child items to the ListView. The items are accessible by list.children[key].
 
         Args:
-            item (ListItem): the item to add.
-            key (str): string key for the item.
+            value (ListItem, or iterable of ListItems): The child to be appended. In case of a dictionary,
+                each item's key is used as 'key' param for the single append.
+            key (str): The unique string identifier for the child. Ignored in case of iterable 'value'
+                param.
         """
-        if isinstance(item, type('')) or isinstance(item, type(u'')):
-            item = ListItem(item)
-        elif not isinstance(item, ListItem):
-            raise ValueError("item must be text or a ListItem instance")
-        item.onclick.connect(self.onselection)
-        item.attributes['selected'] = False
-        super(ListView, self).append(item, key=key)
+        if isinstance(value, type('')) or isinstance(value, type(u'')):
+            value = ListItem(value)
+
+        keys = super(ListView, self).append(value, key=key)
+        if type(value) in (list, tuple, dict):
+            for k in keys:
+                if self.children[k].attributes[self.EVENT_ONCLICK] == '':
+                    self.children[k].onclick.connect(self.onselection)
+                self.children[k].attributes['selected'] = False
+        else:
+            # if an event listener is already set for the added item, it will not generate a selection event
+            if value.attributes[self.EVENT_ONCLICK] == '':
+                value.onclick.connect(self.onselection)
+            value.attributes['selected'] = False
+        return keys
 
     def empty(self):
         """Removes all children from the list"""
@@ -1543,13 +1524,13 @@ class ListItem(Widget, _MixinTextualWidget):
     """
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         """
         Args:
             text (str, unicode): The textual content of the ListItem.
             kwargs: See Widget.__init__()
         """
-        super(ListItem, self).__init__(**kwargs)
+        super(ListItem, self).__init__(*args, **kwargs)
         self.type = 'li'
 
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -1563,18 +1544,18 @@ class ListItem(Widget, _MixinTextualWidget):
         return self.get_text()
 
 
-class DropDown(Widget, _SyncableValuesMixin):
+class DropDown(Widget):
     """Drop down selection widget. Implements the onchange(value) event. Register a listener for its selection change
     by means of the function DropDown.onchange.connect.
     """
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(DropDown, self).__init__(**kwargs)
+        super(DropDown, self).__init__(*args, **kwargs)
         self.type = 'select'
         self.attributes[self.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(id)s').value;" \
@@ -1582,7 +1563,6 @@ class DropDown(Widget, _SyncableValuesMixin):
                                                                'evt': self.EVENT_ONCHANGE}
         self._selected_item = None
         self._selected_key = None
-        self._selectable = True
 
     @classmethod
     def new_from_list(cls, items, **kwargs):
@@ -1597,12 +1577,13 @@ class DropDown(Widget, _SyncableValuesMixin):
                 pass
         return obj
 
-    def append(self, item, key=''):
-        if isinstance(item, type('')) or isinstance(item, type(u'')):
-            item = DropDownItem(item)
-        elif not isinstance(item, DropDownItem):
-            raise ValueError("item must be text or a DropDownItem instance")
-        super(DropDown, self).append(item, key=key)
+    def append(self, value, key=''):
+        if isinstance(value, type('')) or isinstance(value, type(u'')):
+            value = DropDownItem(value)
+        keys = super(DropDown, self).append(value, key=key)
+        if len(self.children) == 1:
+            self.select_by_value(value.get_value())
+        return keys
 
     def empty(self):
         self._selected_item = None
@@ -1673,12 +1654,12 @@ class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(DropDownItem, self).__init__(**kwargs)
+        super(DropDownItem, self).__init__(*args, **kwargs)
         self.type = 'option'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
@@ -1694,13 +1675,13 @@ class Image(Widget):
     """image widget."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, *args, **kwargs):
         """
         Args:
             filename (str): an url to an image
             kwargs: See Widget.__init__()
         """
-        super(Image, self).__init__(**kwargs)
+        super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
         self.attributes['src'] = filename
 
@@ -1719,12 +1700,13 @@ class Table(Widget):
     EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(Table, self).__init__(**kwargs)
+        super(Table, self).__init__(*args, **kwargs)
+
         self.type = 'table'
         self.style['float'] = 'none'
 
@@ -1766,9 +1748,14 @@ class Table(Widget):
             self.append(tr, str(row_index))
             row_index = row_index + 1
 
-    def append(self, row, key=''):
-        super(Table, self).append(row, key)
-        row.on_row_item_click.connect(self.on_table_row_click)
+    def append(self, value, key=''):
+        keys = super(Table, self).append(value, key)
+        if type(value) in (list, tuple, dict):
+            for k in keys:
+                self.children[k].on_row_item_click.connect(self.on_table_row_click)
+        else:
+            value.on_row_item_click.connect(self.on_table_row_click)
+        return keys
 
     @decorate_set_on_listener("(self, emitter, row, item)")
     @decorate_event
@@ -1784,7 +1771,7 @@ class TableWidget(Table):
     EVENT_ON_ITEM_CHANGED = 'on_item_changed'
 
     @decorate_constructor_parameter_types([int, int, bool, bool])
-    def __init__(self, n_rows, n_columns, use_title=True, editable=False, **kwargs):
+    def __init__(self, n_rows, n_columns, use_title=True, editable=False, *args, **kwargs):
         """
         Args:
             use_title (bool): enable title bar. Note that the title bar is
@@ -1793,7 +1780,7 @@ class TableWidget(Table):
             n_columns (int): number of columns to create
             kwargs: See Widget.__init__()
         """
-        super(TableWidget, self).__init__(**kwargs)
+        super(TableWidget, self).__init__(*args, **kwargs)
         self._editable = editable
         self.set_use_title(use_title)
         self._column_count = 0
@@ -1923,18 +1910,25 @@ class TableRow(Widget):
     """
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(TableRow, self).__init__(**kwargs)
+        super(TableRow, self).__init__(*args, **kwargs)
         self.type = 'tr'
         self.style['float'] = 'none'
 
-    def append(self, item, key=''):
-        super(TableRow, self).append(item, key)
-        item.onclick.connect(self.on_row_item_click)
+    def append(self, value, key=''):
+        if isinstance(value, type('')) or isinstance(value, type(u'')):
+            value = TableItem(value)
+        keys = super(TableRow, self).append(value, key)
+        if type(value) in (list, tuple, dict):
+            for k in keys:
+                self.children[k].onclick.connect(self.on_row_item_click)
+        else:
+            value.onclick.connect(self.on_row_item_click)
+        return keys
 
     @decorate_set_on_listener("(self, emitter, item)")
     @decorate_event
@@ -1955,13 +1949,13 @@ class TableEditableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(TableEditableItem, self).__init__(**kwargs)
+        super(TableEditableItem, self).__init__(*args, **kwargs)
         self.type = 'td'
         self.editInput = TextInput()
         self.append(self.editInput)
@@ -1980,13 +1974,13 @@ class TableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(TableItem, self).__init__(**kwargs)
+        super(TableItem, self).__init__(*args, **kwargs)
         self.type = 'td'
         self.set_text(text)
 
@@ -1995,20 +1989,20 @@ class TableTitle(TableItem, _MixinTextualWidget):
     """title widget for the table."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text='', **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(TableTitle, self).__init__(text, **kwargs)
+        super(TableTitle, self).__init__(text, *args, **kwargs)
         self.type = 'th'
 
 
 class Input(Widget):
 
     @decorate_constructor_parameter_types([str, str])
-    def __init__(self, input_type='', default_value='', **kwargs):
+    def __init__(self, input_type='', default_value='', *args, **kwargs):
         """
         Args:
             input_type (str): HTML5 input type
@@ -2016,7 +2010,7 @@ class Input(Widget):
             kwargs: See Widget.__init__()
         """
         kwargs['_class'] = input_type
-        super(Input, self).__init__(**kwargs)
+        super(Input, self).__init__(*args, **kwargs)
         self.type = 'input'
 
         self.attributes[self.EVENT_ONCLICK] = ''
@@ -2464,12 +2458,12 @@ class FileSelectionDialog(GenericDialog):
 class MenuBar(Widget):
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(MenuBar, self).__init__(**kwargs)
+        super(MenuBar, self).__init__(*args, **kwargs)
         self.type = 'nav'
         self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
@@ -2478,49 +2472,47 @@ class Menu(Widget):
     """Menu widget can contain MenuItem."""
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(Menu, self).__init__(**kwargs)
+        super(Menu, self).__init__(layout_orientation = Widget.LAYOUT_HORIZONTAL, *args, **kwargs)
         self.type = 'ul'
-        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
 
 
 class MenuItem(Widget, _MixinTextualWidget):
     """MenuItem widget can contain other MenuItem."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         """
         Args:
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(MenuItem, self).__init__(**kwargs)
-        self.sub_container = None
+        self.sub_container = Menu()
+        super(MenuItem, self).__init__(*args, **kwargs)
+        super(MenuItem, self).append(self.sub_container, key='subcontainer')
         self.type = 'li'
         self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
 
     def append(self, value, key=''):
-        if self.sub_container is None:
-            self.sub_container = Menu()
-            super(MenuItem, self).append(self.sub_container, key='subcontainer')
-        self.sub_container.append(value, key=key)
+        
+        return self.sub_container.append(value, key=key)
 
 
 class TreeView(Widget):
     """TreeView widget can contain TreeItem."""
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
         """
-        super(TreeView, self).__init__(**kwargs)
+        super(TreeView, self).__init__(*args, **kwargs)
         self.type = 'ul'
 
 
@@ -2528,13 +2520,13 @@ class TreeItem(Widget, _MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         """
         Args:
             text (str):
             kwargs: See Widget.__init__()
         """
-        super(TreeItem, self).__init__(**kwargs)
+        super(TreeItem, self).__init__(*args, **kwargs)
         self.sub_container = None
         self.type = 'li'
         self.set_text(text)
@@ -2551,7 +2543,7 @@ class TreeItem(Widget, _MixinTextualWidget):
             self.attributes['has-subtree'] = 'true'
             self.sub_container = TreeView()
             super(TreeItem, self).append(self.sub_container, key='subcontainer')
-        self.sub_container.append(value, key=key)
+        return self.sub_container.append(value, key=key)
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event
@@ -2572,8 +2564,8 @@ class FileUploader(Widget):
     """
 
     @decorate_constructor_parameter_types([str, bool])
-    def __init__(self, savepath='./', multiple_selection_allowed=False, **kwargs):
-        super(FileUploader, self).__init__(**kwargs)
+    def __init__(self, savepath='./', multiple_selection_allowed=False, *args, **kwargs):
+        super(FileUploader, self).__init__(*args, **kwargs)
         self._savepath = savepath
         self._multiple_selection_allowed = multiple_selection_allowed
         self.type = 'input'
@@ -2615,8 +2607,8 @@ class FileDownloader(Widget, _MixinTextualWidget):
     """FileDownloader widget. Allows to start a file download."""
 
     @decorate_constructor_parameter_types([str, str, str])
-    def __init__(self, text, filename, path_separator='/', **kwargs):
-        super(FileDownloader, self).__init__(**kwargs)
+    def __init__(self, text, filename, path_separator='/', *args, **kwargs):
+        super(FileDownloader, self).__init__(*args, **kwargs)
         self.type = 'a'
         self.attributes['download'] = os.path.basename(filename)
         self.attributes['href'] = "/%s/download" % self.identifier
@@ -2635,8 +2627,8 @@ class FileDownloader(Widget, _MixinTextualWidget):
 class Link(Widget, _MixinTextualWidget):
 
     @decorate_constructor_parameter_types([str, str, bool])
-    def __init__(self, url, text, open_new_window=True, **kwargs):
-        super(Link, self).__init__(**kwargs)
+    def __init__(self, url, text, open_new_window=True, *args, **kwargs):
+        super(Link, self).__init__(*args, **kwargs)
         self.type = 'a'
         self.attributes['href'] = url
         if open_new_window:
@@ -2652,8 +2644,8 @@ class VideoPlayer(Widget):
     EVENT_ONENDED = 'onended'
 
     @decorate_constructor_parameter_types([str, str, bool, bool])
-    def __init__(self, video, poster=None, autoplay=False, loop=False, **kwargs):
-        super(VideoPlayer, self).__init__(**kwargs)
+    def __init__(self, video, poster=None, autoplay=False, loop=False, *args, **kwargs):
+        super(VideoPlayer, self).__init__(*args, **kwargs)
         self.type = 'video'
         self.attributes['src'] = video
         self.attributes['preload'] = 'auto'
@@ -2690,14 +2682,14 @@ class Svg(Widget):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
 
     @decorate_constructor_parameter_types([int, int])
-    def __init__(self, width, height, **kwargs):
+    def __init__(self, width, height, *args, **kwargs):
         """
         Args:
             width (int): the viewport width in pixel
             height (int): the viewport height in pixel
             kwargs: See Widget.__init__()
         """
-        super(Svg, self).__init__(**kwargs)
+        super(Svg, self).__init__(*args, **kwargs)
         self.set_size(width, height)
         self.attributes['width'] = width
         self.attributes['height'] = height
@@ -2720,14 +2712,14 @@ class SvgShape(Widget):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
 
     @decorate_constructor_parameter_types([int, int])
-    def __init__(self, x, y, **kwargs):
+    def __init__(self, x, y, *args, **kwargs):
         """
         Args:
             x (int): the x coordinate
             y (int): the y coordinate
             kwargs: See Widget.__init__()
         """
-        super(SvgShape, self).__init__(**kwargs)
+        super(SvgShape, self).__init__(*args, **kwargs)
         self.set_position(x, y)
 
     def set_position(self, x, y):
@@ -2763,8 +2755,8 @@ class SvgGroup(SvgShape):
     """svg group widget."""
 
     @decorate_constructor_parameter_types([int, int])
-    def __init__(self, x, y, **kwargs):
-        super(SvgGroup, self).__init__(x, y, **kwargs)
+    def __init__(self, x, y, *args, **kwargs):
+        super(SvgGroup, self).__init__(x, y, *args, **kwargs)
         self.type = 'g' 
 
 
@@ -2772,7 +2764,7 @@ class SvgRectangle(SvgShape):
     """svg rectangle - a rectangle represented filled and with a stroke."""
 
     @decorate_constructor_parameter_types([int, int, int])
-    def __init__(self, x, y, w, h, **kwargs):
+    def __init__(self, x, y, w, h, *args, **kwargs):
         """
         Args:
             x (int): the x coordinate of the top left corner of the rectangle
@@ -2781,7 +2773,7 @@ class SvgRectangle(SvgShape):
             h (int): height of the rectangle
             kwargs: See Widget.__init__()
         """
-        super(SvgRectangle, self).__init__(x, y, **kwargs)
+        super(SvgRectangle, self).__init__(x, y, *args, **kwargs)
         self.set_size(w, h)
         self.type = 'rect'
 
@@ -2800,7 +2792,7 @@ class SvgCircle(SvgShape):
     """svg circle - a circle represented filled and with a stroke."""
 
     @decorate_constructor_parameter_types([int, int, int])
-    def __init__(self, x, y, radius, **kwargs):
+    def __init__(self, x, y, radius, *args, **kwargs):
         """
         Args:
             x (int): the x center point of the circle
@@ -2808,7 +2800,7 @@ class SvgCircle(SvgShape):
             radius (int): the circle radius
             kwargs: See Widget.__init__()
         """
-        super(SvgCircle, self).__init__(x, y, **kwargs)
+        super(SvgCircle, self).__init__(x, y, *args, **kwargs)
         self.set_radius(radius)
         self.type = 'circle'
 
@@ -2834,8 +2826,8 @@ class SvgCircle(SvgShape):
 class SvgLine(Widget):
 
     @decorate_constructor_parameter_types([int, int, int, int])
-    def __init__(self, x1, y1, x2, y2, **kwargs):
-        super(SvgLine, self).__init__(**kwargs)
+    def __init__(self, x1, y1, x2, y2, *args, **kwargs):
+        super(SvgLine, self).__init__(*args, **kwargs)
         self.set_coords(x1, y1, x2, y2)
         self.type = 'line'
 
@@ -2859,8 +2851,8 @@ class SvgLine(Widget):
 class SvgPolyline(Widget):
 
     @decorate_constructor_parameter_types([int])
-    def __init__(self, _maxlen=None, **kwargs):
-        super(SvgPolyline, self).__init__(**kwargs)
+    def __init__(self, _maxlen=None, *args, **kwargs):
+        super(SvgPolyline, self).__init__(*args, **kwargs)
         self.style['fill'] = 'none'
         self.type = 'polyline'
         self.coordsX = collections.deque(maxlen=_maxlen)
@@ -2886,8 +2878,8 @@ class SvgPolyline(Widget):
 class SvgText(SvgShape, _MixinTextualWidget):
 
     @decorate_constructor_parameter_types([int, int, str])
-    def __init__(self, x, y, text, **kwargs):
-        super(SvgText, self).__init__(x, y, **kwargs)
+    def __init__(self, x, y, text, *args, **kwargs):
+        super(SvgText, self).__init__(x, y, *args, **kwargs)
         self.type = 'text'
         self.set_fill()
         self.set_text(text)

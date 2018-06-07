@@ -35,7 +35,7 @@ class MyApp(App):
         wid = gui.VBox()
 
         #the 'id' param allows to have an alias in the url to refer to the widget that will manage the call
-        self.lbl = RemoteLabel('type in other page url "http://127.0.0.1:8082/label/api_set_text?value1=text1&value2=text2" !', width='80%', height='50%', id='label')
+        self.lbl = RemoteLabel('type in other page url "http://127.0.0.1:8082/label/api_set_text?value1=text1&value2=text2" !', width='80%', height='50%', attributes = {'id':'label'})
         self.lbl.style['margin'] = 'auto'
 
         # appending a widget to another, the first argument is a string key

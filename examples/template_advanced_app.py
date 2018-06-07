@@ -38,25 +38,25 @@ class MyApp(App):
         super(MyApp, self).__init__(*args, static_file_path=res_path, html_head=my_html_head, css_head=my_css_head, js_head=my_js_head)
 
     def idle(self):
-        #idle loop, you can place here custom code
-        # avoid to use infinite iterations, it would stop gui update
+        """ Idle loop, you can place here custom code,
+             avoid to use infinite iterations, it would stop gui update.
+            This is a Thread safe method where you can update the 
+             gui with information from external Threads.
+        """
         pass
 
     def main(self):
         #creating a container VBox type, vertical (you can use also HBox or Widget)
         main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
 
-        #add the following 3 lines to your app and the on_window_close method to make the console close automatically
-        tag = gui.Tag(_type='script')
-        tag.add_child("javascript", """window.onunload=function(e){sendCallback('%s','%s');return "close?";};""" % (str(id(self)), "on_window_close")) 
-        main_container.add_child("onbeforeunloadevent", tag)
-
         # returning the root widget
         return main_container
                 
-    def on_window_close(self):
-        #here you can handle the unload
-        self.close()
+    def on_close(self):
+        """ Overloading App.on_close event allows to perform some 
+             activities before app termination.
+        """
+        super(MyApp, self).on_close()
 
 
 if __name__ == "__main__":

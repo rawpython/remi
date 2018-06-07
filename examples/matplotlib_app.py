@@ -12,8 +12,11 @@
    limitations under the License.
 """
 
-"""
-This simple example shows how to display a matplotlib plot image
+""" This simple example shows how to display a matplotlib plot image.
+    The MatplotImage gets addressed by url requests that points to 
+     a specific method. The displayed image url points to "get_image_data" 
+    Passing an additional parameter "update_index" we inform the browser 
+     about an image change so forcing the image update.
 """
 
 import io
