@@ -26,10 +26,22 @@ log = logging.getLogger('remi.gui')
 
 pyLessThan3 = sys.version_info < (3,)
 
-def uid(obj):
-    if not hasattr(obj,'identifier'):
-        return str(id(obj))
-    return obj.identifier
+
+def to_pix(x):
+    return str(x) + 'px'
+
+
+def from_pix(x):
+    v = 0
+    try:
+        v = int(float(x.replace('px', '')))
+    except ValueError:
+        log.error('error parsing px', exc_info=True)
+    return v
+
+
+def jsonize(d):
+    return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
 class EventSource(object):
@@ -101,7 +113,6 @@ def decorate_event_js(js_code):
             js_code is added to the widget html as 
             widget.attributes['onclick'] = js_code%{'emitter_identifier':widget.identifier, 'event_name':'onclick'}
     """
-    # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(method):
         setattr(method, "__is_event", True )
         setattr(method, "_js_code", js_code )
@@ -110,10 +121,12 @@ def decorate_event_js(js_code):
 
 
 def decorate_set_on_listener(prototype):
-    """ private decorator for use in the editor
+    """ Private decorator for use in the editor.
+        Allows the Editor to create listener methods.
 
-    Args:
-        params (str): The list of parameters for the listener function (es. "(self, new_value)")
+        Args:
+            params (str): The list of parameters for the listener 
+                method (es. "(self, new_value)")
     """
     # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(method):
@@ -126,29 +139,18 @@ def decorate_set_on_listener(prototype):
 
 
 def decorate_constructor_parameter_types(type_list):
-    """ private decorator for use in the editor """
+    """ Private decorator for use in the editor. 
+        Allows Editor to instanciate widgets.
+
+        Args:
+            params (str): The list of types for the widget 
+                constructor method (i.e. "(int, int, str)")
+    """
     def add_annotation(method):
         method._constructor_types = type_list
         return method
 
     return add_annotation
-
-
-def to_pix(x):
-    return str(x) + 'px'
-
-
-def from_pix(x):
-    v = 0
-    try:
-        v = int(float(x.replace('px', '')))
-    except ValueError:
-        log.error('error parsing px', exc_info=True)
-    return v
-
-
-def jsonize(d):
-    return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
 class _EventDictionary(dict, EventSource):
@@ -1007,8 +1009,6 @@ class TabBox(Widget):
         # so no-op JS is the least of all evils
         a.attributes['href'] = 'javascript:void(0);'
 
-        a.attributes[a.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (a.identifier, a.EVENT_ONCLICK)
-
         self._tab_cbs[holder.identifier] = tab_cb
         a.onclick.connect(self._on_tab_pressed, li, holder)
 
@@ -1058,7 +1058,6 @@ class Button(Widget, _MixinTextualWidget):
         """
         super(Button, self).__init__(*args, **kwargs)
         self.type = 'button'
-        self.attributes[self.EVENT_ONCLICK] = "sendCallback('%s','%s');" % (self.identifier, self.EVENT_ONCLICK)
         self.set_text(text)
 
 
@@ -1066,8 +1065,6 @@ class TextInput(Widget, _MixinTextualWidget):
     """Editable multiline/single_line text area widget. You can set the content by means of the function set_text or
      retrieve its content with get_text.
     """
-
-    EVENT_ONENTER = 'onenter'
 
     @decorate_constructor_parameter_types([bool, str])
     def __init__(self, single_line=True, hint='', *args, **kwargs):
@@ -1080,8 +1077,6 @@ class TextInput(Widget, _MixinTextualWidget):
         """
         super(TextInput, self).__init__(*args, **kwargs)
         self.type = 'textarea'
-
-        self.attributes[self.EVENT_ONCLICK] = ''
 
         self.single_line = single_line
         if single_line:
@@ -1190,8 +1185,8 @@ class TextInput(Widget, _MixinTextualWidget):
 
 
 class Label(Widget, _MixinTextualWidget):
-    """Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
-    function get_text.
+    """ Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
+        function get_text.
     """
 
     @decorate_constructor_parameter_types([str])
@@ -1207,13 +1202,13 @@ class Label(Widget, _MixinTextualWidget):
 
 
 class GenericDialog(Widget):
-    """Generic Dialog widget. It can be customized to create personalized dialog windows.
-    You can setup the content adding content widgets with the functions add_field or add_field_with_label.
-    The user can confirm or dismiss the dialog with the common buttons Cancel/Ok.
-    Each field added to the dialog can be retrieved by its key, in order to get back the edited value. Use the function
-    get_field(key) to retrieve the field.
-    The Ok button emits the 'confirm_dialog' event. Register the listener to it with set_on_confirm_dialog_listener.
-    The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
+    """ Generic Dialog widget. It can be customized to create personalized dialog windows.
+        You can setup the content adding content widgets with the functions add_field or add_field_with_label.
+        The user can confirm or dismiss the dialog with the common buttons Cancel/Ok.
+        Each field added to the dialog can be retrieved by its key, in order to get back the edited value. Use the function
+         get_field(key) to retrieve the field.
+        The Ok button emits the 'confirm_dialog' event. Register the listener to it with set_on_confirm_dialog_listener.
+        The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
     """
 
     @decorate_constructor_parameter_types([str, str])
@@ -1347,8 +1342,6 @@ class InputDialog(GenericDialog):
     The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
     """
 
-    EVENT_ONCONFIRMVALUE = 'confirm_value'
-
     @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, title='Title', message='Message', initial_value='', *args, **kwargs):
         """
@@ -1390,8 +1383,6 @@ class ListView(Widget):
     its onselection event. Register a listener with ListView.onselection.connect.
     """
 
-    EVENT_ONSELECTION = 'onselection'
-
     @decorate_constructor_parameter_types([bool])
     def __init__(self, selectable = True, *args, **kwargs):
         """
@@ -1431,12 +1422,12 @@ class ListView(Widget):
         keys = super(ListView, self).append(value, key=key)
         if type(value) in (list, tuple, dict):
             for k in keys:
-                if self.children[k].attributes[self.EVENT_ONCLICK] == '':
+                if not self.EVENT_ONCLICK in self.children[k].attributes:
                     self.children[k].onclick.connect(self.onselection)
                 self.children[k].attributes['selected'] = False
         else:
             # if an event listener is already set for the added item, it will not generate a selection event
-            if value.attributes[self.EVENT_ONCLICK] == '':
+            if not self.EVENT_ONCLICK in value.attributes:
                 value.onclick.connect(self.onselection)
             value.attributes['selected'] = False
         return keys
@@ -1532,8 +1523,6 @@ class ListItem(Widget, _MixinTextualWidget):
         """
         super(ListItem, self).__init__(*args, **kwargs)
         self.type = 'li'
-
-        self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
 
     def get_value(self):
@@ -1661,7 +1650,6 @@ class DropDownItem(Widget, _MixinTextualWidget):
         """
         super(DropDownItem, self).__init__(*args, **kwargs)
         self.type = 'option'
-        self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
 
     def set_value(self, text):
@@ -1697,7 +1685,6 @@ class Table(Widget):
     """
     table widget - it will contains TableRow
     """
-    EVENT_ON_TABLE_ROW_CLICK = 'on_table_row_click'
 
     @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
@@ -1768,7 +1755,6 @@ class TableWidget(Table):
     Basic table model widget.
     Each item is addressed by stringified integer key in the children dictionary.
     """
-    EVENT_ON_ITEM_CHANGED = 'on_item_changed'
 
     @decorate_constructor_parameter_types([int, int, bool, bool])
     def __init__(self, n_rows, n_columns, use_title=True, editable=False, *args, **kwargs):
@@ -2013,8 +1999,6 @@ class Input(Widget):
         super(Input, self).__init__(*args, **kwargs)
         self.type = 'input'
 
-        self.attributes[self.EVENT_ONCLICK] = ''
-
         self.attributes['value'] = str(default_value)
         self.attributes['type'] = input_type
         self.attributes['autocomplete'] = 'off'
@@ -2151,8 +2135,6 @@ class SpinBox(Input):
 
 
 class Slider(Input):
-
-    EVENT_ONINPUT = 'oninput'
 
     # noinspection PyShadowingBuiltins
     @decorate_constructor_parameter_types([str, int, int, int])
@@ -2388,7 +2370,6 @@ class FileFolderItem(Widget):
         super(FileFolderItem, self).set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
         self.style['margin'] = '3px'
         self.isFolder = is_folder
-        self.attributes[self.EVENT_ONCLICK] = ''
         self.icon = Widget(_class='FileFolderItemIcon')
         self.icon.set_size(30, 30)
         # the icon click activates the onselection event, that is propagates to registered listener
@@ -2428,8 +2409,6 @@ class FileFolderItem(Widget):
 class FileSelectionDialog(GenericDialog):
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
-
-    EVENT_ONCONFIRMVALUE = 'confirm_value'
 
     @decorate_constructor_parameter_types([str, str, bool, str, bool, bool])
     def __init__(self, title='File dialog', message='Select files and folders',
@@ -2495,7 +2474,6 @@ class MenuItem(Widget, _MixinTextualWidget):
         super(MenuItem, self).__init__(*args, **kwargs)
         super(MenuItem, self).append(self.sub_container, key='subcontainer')
         self.type = 'li'
-        self.attributes[self.EVENT_ONCLICK] = ''
         self.set_text(text)
 
     def append(self, value, key=''):
@@ -2573,7 +2551,6 @@ class FileUploader(Widget):
         if multiple_selection_allowed:
             self.attributes['multiple'] = 'multiple'
         self.attributes['accept'] = '*.*'
-        self.attributes[self.EVENT_ONCLICK] = ''
         self.EVENT_ON_SUCCESS = 'onsuccess'
         self.EVENT_ON_FAILED = 'onfailed'
         self.EVENT_ON_DATA = 'ondata'
@@ -2641,7 +2618,6 @@ class Link(Widget, _MixinTextualWidget):
 
 class VideoPlayer(Widget):
     # some constants for the events
-    EVENT_ONENDED = 'onended'
 
     @decorate_constructor_parameter_types([str, str, bool, bool])
     def __init__(self, video, poster=None, autoplay=False, loop=False, *args, **kwargs):
