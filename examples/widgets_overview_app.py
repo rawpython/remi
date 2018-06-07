@@ -150,6 +150,9 @@ class MyApp(App):
 
         verticalContainer.append([menubar, horizontalContainer])
 
+        #this flag will be used to stop the display_counter Timer
+        self.stop_flag = False 
+
         # kick of regular display of counter
         self.display_counter()
 
@@ -158,7 +161,8 @@ class MyApp(App):
 
     def display_counter(self):
         self.count += 1
-        Timer(1, self.display_counter).start()
+        if not self.stop_flag:
+            Timer(1, self.display_counter).start()
 
     def menu_dialog_clicked(self, widget):
         self.dialog = gui.GenericDialog(title='Dialog Box', message='Click Ok to transfer content to main page', width='500px')
@@ -306,6 +310,12 @@ class MyApp(App):
 
     def fileupload_on_failed(self, widget, filename):
         self.lbl.set_text('File upload failed: ' + filename)
+
+    def on_close(self):
+        """ Overloading App.on_close event to stop the Timer.
+        """
+        self.stop_flag = True
+        super(MyApp, self).on_close()
 
 
 if __name__ == "__main__":

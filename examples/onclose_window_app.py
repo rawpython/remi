@@ -24,7 +24,7 @@ class MyApp(App):
         # margin 0px auto allows to center the app to the screen
         wid = gui.VBox(width=300, height=200, margin='0px auto')
 
-        lbl = gui.Label("Close the window, the console thread will stop automatically.")
+        lbl = gui.Label("Close or reload the page, the console thread will stop automatically.")
         wid.append(lbl)
 
         #add the following 3 lines to your app and the on_window_close method to make the console close automatically

@@ -44,6 +44,13 @@ class MyApp(App):
     def on_button_pressed(self, _):
         self.close()  # closes the application
 
+    def on_close(self):
+        """ Overloading App.on_close event allows to perform some 
+             activities before app termination.
+        """
+        print("I'm going to be closed.")
+        super(MyApp, self).on_close()
+
 
 if __name__ == "__main__":
     # starts the webserver

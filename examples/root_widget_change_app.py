@@ -12,6 +12,12 @@
    limitations under the License.
 """
 
+""" This example shows how to change the App's root widget. This allows to  
+    mimic a page change behaviour. 
+    It is done by the App.set_root_widget(mywidget) method.
+
+"""
+
 import remi.gui as gui
 from remi import start, App
 import os
@@ -23,20 +29,24 @@ class MyApp(App):
         #  multiple resource path in where the resources will be placed
         super(MyApp, self).__init__(*args, static_file_path=res_path)
 
-    def idle(self):
-        """ Idle loop, you can place here custom code,
-             avoid to use infinite iterations, it would stop gui update.
-            This is a Thread safe method where you can update the 
-             gui with information from external Threads.
-        """
-        pass
+    def main(self):        
+        #creating two "pages" widgets to be shown alternatively
+        lbl = gui.Label("Page 2. Press the button to change the page.", style={'font-size':'20px'})
+        bt2 = gui.Button("change page")
+        page2 = gui.HBox(children=[lbl, bt2], style={'margin':'0px auto', 'background-color':'lightgray'})
+        
+        lbl = gui.Label("Page 1. Press the button to change the page.", style={'font-size':'20px'})
+        bt1 = gui.Button("change page")
+        page1 = gui.VBox(children=[lbl, bt1], style={'width':'300px', 'height':'200px', 'margin':'0px auto', 'background-color':'white'})
 
-    def main(self):
-        #creating a container VBox type, vertical (you can use also HBox or Widget)
-        main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
+        bt1.set_on_click_listener(self.set_different_root_widget, page2)
+        bt2.set_on_click_listener(self.set_different_root_widget, page1)
 
         # returning the root widget
-        return main_container
+        return page1
+
+    def set_different_root_widget(self, emitter, page_to_be_shown):
+        self.set_root_widget(page_to_be_shown)
 
 
 if __name__ == "__main__":

@@ -171,9 +171,10 @@ class Tag(object):
     but it is not necessarily graphically representable.
     You can use this class for sending javascript code to the clients.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, attributes = {}, _type = '', _class = None,  **kwargs):
         """
         Args:
+            attributes (dict): The attributes to be applied. 
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, usefull for public API definition.
@@ -191,18 +192,19 @@ class Tag(object):
         self.attributes.set_on_change_listener(self._need_update)
         self.style.set_on_change_listener(self._need_update)
 
-        self.type = kwargs.get('_type', '')
-        self.attributes['id'] = kwargs.get('id', str(id(self)))
+        self.type = _type
+        self.attributes['id'] = str(id(self))
+
+        #attribute['id'] can be overwritten to get a static Tag identifier
+        self.attributes.update(attributes)
 
         # the runtime instances are processed every time a requests arrives, searching for the called method
         # if a class instance is not present in the runtimeInstances, it will
         # we not callable
         runtimeInstances[self.identifier] = self
 
-        cls = kwargs.get('_class', self.__class__.__name__)
         self._classes = []
-        if cls:
-            self.add_class(cls)
+        self.add_class(self.__class__.__name__ if _class == None else _class)
 
         #this variable will contain the repr of this tag, in order to avoid unuseful operations
         self._backup_repr = ''
@@ -400,11 +402,12 @@ class Widget(Tag):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, children = None, **kwargs):
+    def __init__(self, children = None, style = {}, **kwargs):
         """
         Args:
             children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
                 each item's key is used as 'key' param for the single append.
+            style (dict, or json str): The style properties to be applied. 
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
             height (int, str): An optional height for the widget (es. height=10 or height='10px' or height='10%').
             margin (str): CSS margin specifier
@@ -422,7 +425,7 @@ class Widget(Tag):
         self.style['margin'] = kwargs.get('margin', '0px')
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
-        self.set_style(kwargs.pop('style', None))
+        self.set_style(style)
 
         if children:
             self.append(children)

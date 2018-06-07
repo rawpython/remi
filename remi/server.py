@@ -907,10 +907,14 @@ class App(BaseHTTPRequestHandler, object):
                 self.wfile.write(encode_text(content))
 
     def close(self):
+        """ Command to initiate an App to close
+        """
         self._log.debug('shutting down...')
         self.server.server_starter_instance.stop()
 
-    def close_connected_websockets(self): 
+    def on_close(self):
+        """ Called by the server when the App have to be terminated
+        """
         self._stop_update_flag = True
         for ws in self.client.websockets:
             ws.close()
@@ -1047,7 +1051,7 @@ class Server(object):
         self._alive = False
         self._sserver.shutdown()
         for client in clients.values():
-            client.close_connected_websockets()
+            client.on_close()
 
 
 class StandaloneServer(Server):
