@@ -23,10 +23,11 @@ from threading import Timer
 import random
 
 
-class InputGauge(gui.VBox):
+class InputGauge(gui.VBox, gui.EventSource):
 
     def __init__(self, width, height, _min, _max, **kwargs):
         super(InputGauge, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
         self.set_size(width, height)
         self.gauge = Gauge(width, height, _min, _max)
         self.gauge.set_value(_min)
@@ -35,17 +36,14 @@ class InputGauge(gui.VBox):
         self.onmousedown.connect(self.confirm_value)
         self.onmousemove.connect(self.gauge.onmousemove)
     
+    @gui.decorate_event
     def confirm_value(self, widget, x, y):
         """event called clicking on the gauge and so changing its value.
            propagates the new value
         """
         self.gauge.onmousedown(self.gauge, x, y)
         params = (self.gauge.value)
-        return self.eventManager.propagate(self.EVENT_ONCHANGE, params)
-
-    def set_on_confirm_value_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.EVENT_ONCHANGE, callback, *userdata)
-    
+        return params
 
 
 class Gauge(gui.Svg):
