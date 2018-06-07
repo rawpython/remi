@@ -305,6 +305,9 @@ class Project(gui.Widget):
 
         code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
         
+        backup_editor_onclick = widget.onclick.callback
+        widget.onclick.callback = widget.backup_onclick_listener
+
         #for all the methods of this widget
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
             #if the member is decorated by decorate_set_on_listener
@@ -341,6 +344,8 @@ class Project(gui.Widget):
         
         children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
                         
+        widget.onclick.callback = backup_editor_onclick
+
         if newClass:# and not (classname in self.code_declared_classes.keys()):
             if not widget.identifier in self.code_declared_classes:
                 self.code_declared_classes[widget.identifier] = ''
@@ -560,13 +565,8 @@ class Editor(App):
         if not 'editor_varname' in widget.attributes:
             return
         
-        #here, the standard onclick function of the widget is overridden with a custom function
-        #this function redirect the onclick event to the editor App in order to manage the event
-        #detecting the widget selection
-        typefunc = type(widget.onclick.__call__)
-        widget.onclick.__call__ = typefunc(onclick_with_instance, widget)
-        widget.attributes[widget.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (widget.identifier, widget.EVENT_ONCLICK)
-        widget.editor = self
+        widget.backup_onclick_listener = widget.onclick.callback
+        widget.onclick.connect(self.on_widget_selection)
         
         #setup of the on_dropped function of the widget in order to manage the dragNdrop 
         widget.__class__.on_dropped = on_dropped
@@ -713,14 +713,6 @@ class Editor(App):
         if str(keypressed)=='46': #46 the delete keycode
             self.toolbar_delete_clicked(None)
         print("Key pressed: " + str(keypressed))
-
-#function overload for widgets that have to be editable
-#the normal onfocus function does not returns the widget instance
-#def onfocus_with_instance(self):
-#    return self.eventManager.propagate(self.EVENT_ONFOCUS, [self])
-def onclick_with_instance(self):
-    #return self.eventManager.propagate(self.EVENT_ON_WIDGET_SELECTION, [self])
-    self.editor.on_widget_selection(self)
 
         
 def on_dropped(self, left, top):

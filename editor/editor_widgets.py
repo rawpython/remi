@@ -118,6 +118,10 @@ class ToolBar(gui.Widget):
 class SignalConnection(gui.Widget):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
+
+        backup_editor_onclick = widget.onclick.callback
+        widget.onclick.callback = widget.backup_onclick_listener
+
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style.update({'overflow':'visible', 'height':'24px', 'display':'block', 'outline':'1px solid lightgray'})
         self.label = gui.Label(eventConnectionFuncName, width='49%')
@@ -138,10 +142,15 @@ class SignalConnection(gui.Widget):
             ddi.listenerInstance = w
             self.dropdown.append(ddi)
         if self.eventConnectionFunc.callback: #if the callback is not None, and so there is a listener
-            connectedListenerName = getattr(self.refWidget, eventConnectionFuncName).callback.__self__.attributes['editor_varname']
-            self.dropdown.set_value( connectedListenerName )
+            if getattr(self.refWidget, eventConnectionFuncName):
+                connectedListenerName = getattr(self.refWidget, eventConnectionFuncName).callback.__self__.attributes['editor_varname']
+                self.dropdown.set_value( connectedListenerName )
+
+        widget.onclick.callback = backup_editor_onclick
 
     def on_connection(self, widget, dropDownValue):
+        backup_editor_onclick = self.refWidget.onclick.callback
+
         if self.dropdown.get_value()=='None':
             self.refWidget.connect(None) #removing listener
             return
@@ -150,6 +159,10 @@ class SignalConnection(gui.Widget):
         print("signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
         listener.__class__.fakeListenerFunc = fakeListenerFunc
         getattr(self.refWidget, self.eventConnectionFuncName).connect(listener.fakeListenerFunc)
+
+        self.refWidget.backup_onclick_listener = self.refWidget.onclick.callback
+        self.refWidget.onclick.callback = backup_editor_onclick
+
 
 def fakeListenerFunc(self,*args):
     print('event trap')
