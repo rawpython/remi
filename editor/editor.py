@@ -229,12 +229,11 @@ class Project(gui.Widget):
                 
         if app_init_fnc==None:
             return None
-
-        members_list = inspect.getmembers(app_init_fnc(editing_mode=True), inspect.ismethod)
-        #print(members_list)
-        for (name, member) in members_list:
-            #print("SETTING MEMBER: " + name)
-            setattr(self, name, self.fakeListenerFunc)
+        
+        members_list = app_init_fnc.__dict__.values()
+        for m in members_list:
+            if inspect.isfunction(m) and m.__name__ not in ['__init__', 'main', 'idle']:
+                setattr(self, m.__name__, self.fakeListenerFunc)
         return app_init_fnc.construct_ui(self)
 
     def fakeListenerFunc(*args):
