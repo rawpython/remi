@@ -379,10 +379,11 @@ class Tag(object):
         """
         if hasattr(self, 'attributes'):
             if 'data-parent-widget' in self.attributes.keys():
-                if self.attributes['data-parent-widget'] in runtimeInstances.keys():
+                try:
                     parent = runtimeInstances[self.attributes['data-parent-widget']]
-                    #if self.identifier in parent.children.keys():
                     return parent
+                except:
+                    pass
         return None
 
     def empty(self):
