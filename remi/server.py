@@ -92,9 +92,7 @@ def get_method_by_name(root_node, name):
 
 def get_method_by_id(_id):
     global runtimeInstances
-    if str(_id) in runtimeInstances:
-        return runtimeInstances[str(_id)]
-    return None
+    return runtimeInstances.get(str(_id), None)
 
 
 def parse_session_cookie(cookie_to_cook):
