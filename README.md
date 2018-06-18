@@ -36,7 +36,12 @@ The previous dialect is still compatible.
 
 Getting Started
 ===
-[Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
+For a **stable** version:
+```
+pip install remi
+```
+
+For the most updated **experimental** version [Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
 
 ```
 python setup.py install
