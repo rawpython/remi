@@ -35,7 +35,7 @@ class MyApp(App):
         container = gui.HBox(width='100%')
         lbl_row_count = gui.Label('Rows:')
         spin_row_count = gui.SpinBox(10, 0, 15)
-        spin_row_count.set_on_change_listener(self.on_row_count_change, table)
+        spin_row_count.onchange.connect(self.on_row_count_change, table)
         container.append(lbl_row_count)
         container.append(spin_row_count)
         wid.append(container)
@@ -43,22 +43,22 @@ class MyApp(App):
         container = gui.HBox(width='100%')
         lbl_column_count = gui.Label('Columns:')
         spin_column_count = gui.SpinBox(3, 0, 4)
-        spin_column_count.set_on_change_listener(self.on_column_count_change, table)
+        spin_column_count.onchange.connect(self.on_column_count_change, table)
         container.append(lbl_column_count)
         container.append(spin_column_count)
         wid.append(container)
 
         bt_fill_table = gui.Button('Fill table', width=100)
-        bt_fill_table.set_on_click_listener(self.fill_table, table)
+        bt_fill_table.onclick.connect(self.fill_table, table)
         wid.append(bt_fill_table)
 
         chk_use_title = gui.CheckBoxLabel('Use title', True)
-        chk_use_title.set_on_change_listener(self.on_use_title_change, table)
+        chk_use_title.onchange.connect(self.on_use_title_change, table)
         wid.append(chk_use_title)
 
         self.fill_table(table, table)
 
-        table.set_on_item_changed_listener(self.on_table_item_changed)
+        table.on_item_changed.connect(self.on_table_item_changed)
 
         wid.append(table)
         # returning the root widget

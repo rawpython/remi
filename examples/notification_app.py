@@ -22,14 +22,13 @@ class MyApp(App):
 
     def main(self):
         wid = gui.VBox(width=300, height=200, margin='0px auto')
-        wid.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
         self.lbl = gui.Label('Press the button', width='80%', height='50%')
         self.lbl.style['margin'] = 'auto'
         self.bt = gui.Button('Press me!', width=200, height=30)
         self.bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self.on_button_pressed)
+        self.bt.onclick.connect(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)

@@ -24,12 +24,11 @@ import editor_widgets
 import html_helper
 import threading
 
-class ResizeHelper(gui.Widget):
-    ON_END_EVENT = "on_end_event"
+class ResizeHelper(gui.Widget, gui.EventSource):
 
     def __init__(self, project, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
-
+        gui.EventSource.__init__(self)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/resize.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
@@ -41,7 +40,7 @@ class ResizeHelper(gui.Widget):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.set_on_mousedown_listener(self.start_drag)
+        self.onmousedown.connect(self.start_drag)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -78,16 +77,17 @@ class ResizeHelper(gui.Widget):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.set_on_mousemove_listener(self.on_drag)
-        self.project.set_on_mouseup_listener(self.stop_drag)
-        self.project.set_on_mouseleave_listener(self.stop_drag, 0, 0)
+        self.project.onmousemove.connect(self.on_drag)
+        self.project.onmouseup.connect(self.stop_drag)
+        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
 
+    @gui.decorate_event
     def stop_drag(self, emitter, x, y):
         self.active = False
         self.update_position()
-        self.eventManager.propagate(self.ON_END_EVENT, ())
+        return ()
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -108,16 +108,12 @@ class ResizeHelper(gui.Widget):
                 self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
                 self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
 
-    def set_on_end_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.ON_END_EVENT, callback, *userdata)
 
-
-class DragHelper(gui.Widget):
-    ON_END_EVENT = "on_end_event"
+class DragHelper(gui.Widget, gui.EventSource):
 
     def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
-
+        gui.EventSource.__init__(self)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/drag.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
@@ -130,7 +126,7 @@ class DragHelper(gui.Widget):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.set_on_mousedown_listener(self.start_drag)
+        self.onmousedown.connect(self.start_drag)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -167,16 +163,17 @@ class DragHelper(gui.Widget):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.set_on_mousemove_listener(self.on_drag)
-        self.project.set_on_mouseup_listener(self.stop_drag)
-        self.project.set_on_mouseleave_listener(self.stop_drag, 0, 0)
+        self.project.onmousemove.connect(self.on_drag)
+        self.project.onmouseup.connect(self.stop_drag)
+        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
     
+    @gui.decorate_event
     def stop_drag(self, emitter, x, y):
         self.active = False
         self.update_position()
-        self.eventManager.propagate(self.ON_END_EVENT, ())
+        return ()
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -196,9 +193,6 @@ class DragHelper(gui.Widget):
             if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
                 self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']))
                 self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']))
-
-    def set_on_end_listener(self, callback, *userdata):
-        self.eventManager.register_listener(self.ON_END_EVENT, callback, *userdata)
 
 
 class Project(gui.Widget):
@@ -235,12 +229,11 @@ class Project(gui.Widget):
                 
         if app_init_fnc==None:
             return None
-
-        members_list = inspect.getmembers(app_init_fnc(editing_mode=True), inspect.ismethod)
-        #print(members_list)
-        for (name, member) in members_list:
-            #print("SETTING MEMBER: " + name)
-            setattr(self, name, self.fakeListenerFunc)
+        
+        members_list = app_init_fnc.__dict__.values()
+        for m in members_list:
+            if inspect.isfunction(m) and m.__name__ not in ['__init__', 'main', 'idle']:
+                setattr(self, m.__name__, self.fakeListenerFunc)
         return app_init_fnc.construct_ui(self)
 
     def fakeListenerFunc(*args):
@@ -311,23 +304,27 @@ class Project(gui.Widget):
 
         code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
         
-        
-        #for all the events of this widget
-        for registered_event_name in widget.eventManager.listeners.keys():
-            #for all the function of this widget
-            for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget, predicate=inspect.ismethod):
-                #if the member is decorated by decorate_set_on_listener and the function is referred to this event
-                if hasattr(setOnEventListenerFunc, '_event_listener') and setOnEventListenerFunc._event_listener['eventName']==registered_event_name:
-                    listenerPrototype = setOnEventListenerFunc._event_listener['prototype']
-                    listener = widget.eventManager.listeners[registered_event_name]['callback'].__self__
-                    listenerFunctionName = setOnEventListenerFunc._event_listener['eventName'] + "_" + widget.attributes['editor_varname']
-                    
+        backup_editor_onclick = widget.onclick.callback
+        widget.onclick.callback = widget.backup_onclick_listener
+
+        #for all the methods of this widget
+        for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
+            #if the member is decorated by decorate_set_on_listener
+            if hasattr(setOnEventListenerFunc, '_event_info'):
+                #if there is a callback
+                if getattr(widget, setOnEventListenerFuncname).callback: 
+                    listenerPrototype = setOnEventListenerFunc._event_info['prototype']
+                    listener = getattr(widget, setOnEventListenerFuncname).callback.__self__
+                    listenerFunctionName = setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
+                        
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
-                                                                            'parameters': listenerPrototype}
-                    self.pending_listener_registration.append({'done':False,'eventsource':widget, 'eventlistener':listener,
-                     'setoneventfuncname':setOnEventListenerFuncname,
-                     'listenerfuncname': listenerFunctionName,
-                     'listenerClassFunction':listenerClassFunction})
+                                                                                'parameters': listenerPrototype}
+                    self.pending_listener_registration.append({'done':False,
+                        'eventsource':widget, 
+                        'eventlistener':listener,
+                        'setoneventfuncname':setOnEventListenerFuncname,
+                        'listenerfuncname': listenerFunctionName,
+                        'listenerClassFunction':listenerClassFunction})
                     
         if newClass:
             widgetVarName = 'self'
@@ -346,6 +343,8 @@ class Project(gui.Widget):
         
         children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
                         
+        widget.onclick.callback = backup_editor_onclick
+
         if newClass:# and not (classname in self.code_declared_classes.keys()):
             if not widget.identifier in self.code_declared_classes:
                 self.code_declared_classes[widget.identifier] = ''
@@ -451,20 +450,20 @@ class Editor(App):
         self.toolbar.add_command('/res/paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
         
         self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
-        self.fileOpenDialog.set_on_confirm_value_listener(self.on_open_dialog_confirm)
+        self.fileOpenDialog.confirm_value.connect(self.on_open_dialog_confirm)
         
         self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog('Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
         self.fileSaveAsDialog.add_fileinput_field('untitled.py')
-        self.fileSaveAsDialog.set_on_confirm_value_listener(self.on_saveas_dialog_confirm)        
+        self.fileSaveAsDialog.confirm_value.connect(self.on_saveas_dialog_confirm)        
 
-        m10.set_on_click_listener(self.menu_new_clicked)
-        m11.set_on_click_listener(self.fileOpenDialog.show)
-        m121.set_on_click_listener(self.menu_save_clicked)
-        m122.set_on_click_listener(self.fileSaveAsDialog.show)
-        m21.set_on_click_listener(self.menu_cut_selection_clicked)
-        m22.set_on_click_listener(self.menu_paste_selection_clicked)
+        m10.onclick.connect(self.menu_new_clicked)
+        m11.onclick.connect(self.fileOpenDialog.show)
+        m121.onclick.connect(self.menu_save_clicked)
+        m122.onclick.connect(self.fileSaveAsDialog.show)
+        m21.onclick.connect(self.menu_cut_selection_clicked)
+        m22.onclick.connect(self.menu_paste_selection_clicked)
         
-        m3.set_on_click_listener(self.menu_project_config_clicked)
+        m3.onclick.connect(self.menu_project_config_clicked)
         
         self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style.update({'position':'relative',
@@ -534,7 +533,7 @@ class Editor(App):
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
-        self.instancesWidget.treeView.set_on_change_listener(self.on_instances_widget_selection)
+        self.instancesWidget.treeView.on_tree_item_selected.connect(self.on_instances_widget_selection)
         
         self.subContainerRight.append([self.instancesWidget, self.attributeEditor])
         
@@ -543,8 +542,8 @@ class Editor(App):
         
         self.resizeHelper = ResizeHelper(self.project, width=16, height=16)
         self.dragHelper = DragHelper(self.project, width=15, height=15)
-        self.resizeHelper.set_on_end_listener(self.on_drag_resize_end)
-        self.dragHelper.set_on_end_listener(self.on_drag_resize_end)
+        self.resizeHelper.stop_drag.connect(self.on_drag_resize_end)
+        self.dragHelper.stop_drag.connect(self.on_drag_resize_end)
 
         self.menu_new_clicked(None)
         
@@ -565,13 +564,8 @@ class Editor(App):
         if not 'editor_varname' in widget.attributes:
             return
         
-        #here, the standard onclick function of the widget is overridden with a custom function
-        #this function redirect the onclick event to the editor App in order to manage the event
-        #detecting the widget selection
-        typefunc = type(widget.onclick)
-        widget.onclick = typefunc(onclick_with_instance, widget)
-        widget.attributes[widget.EVENT_ONCLICK] = "sendCallback('%s','%s');event.stopPropagation();event.preventDefault();" % (widget.identifier, widget.EVENT_ONCLICK)
-        widget.editor = self
+        widget.backup_onclick_listener = widget.onclick.callback
+        widget.onclick.connect(self.on_widget_selection)
         
         #setup of the on_dropped function of the widget in order to manage the dragNdrop 
         widget.__class__.on_dropped = on_dropped
@@ -720,14 +714,6 @@ class Editor(App):
         print("Key pressed: " + str(keypressed))
 
         
-#function overload for widgets that have to be editable
-#the normal onfocus function does not returns the widget instance
-#def onfocus_with_instance(self):
-#    return self.eventManager.propagate(self.EVENT_ONFOCUS, [self])
-def onclick_with_instance(self):
-    #return self.eventManager.propagate(self.EVENT_ON_WIDGET_SELECTION, [self])
-    self.editor.on_widget_selection(self)
-    
 def on_dropped(self, left, top):
     if len(left)<1:
         left='0px'
@@ -735,6 +721,7 @@ def on_dropped(self, left, top):
         top='0px'
     self.style['left']=left
     self.style['top']=top
+
 
 def main():
     #p = Project()

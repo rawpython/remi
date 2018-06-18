@@ -7,21 +7,31 @@
     A Platform independent Python GUI library for your applications
 </p>
 
-<p align="center">
-    <a href="https://gitter.im/dddomodossola/remi">
-        <img src="https://badges.gitter.im/Join%20Chat.svg" width="100">
-    </a>
-</p>
-
 
 Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 
 
 Do you need support? Reach us on:
+<p align="center">
+<a href="https://www.reddit.com/r/RemiGUI" style="font-size:25px">Reddit - (subreddit RemiGUI)</a>
+</p>
 
-[Reddit](https://www.reddit.com/r/RemiGUI)
+Changelog
+===
+The current branch includes a bunch of updates. 
+The major changes are related to the event infrastructure. Now, an event listener can be registered as:
+```
+widget.eventname.connect(listener)
+```
 
-[Gitter](https://gitter.im/dddomodossola/remi)
+instead of:
+```
+widget.set_on_xxx_listerner(listener)
+```
+
+And so, in order to register a listener for the *onclick* event you can do *button.onclick.connect(myapp.on_button_pressed)* .
+
+The previous dialect is still compatible.
 
 
 Getting Started
@@ -69,7 +79,7 @@ class MyApp(App):
         self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self.on_button_pressed)
+        self.bt.onclick.connect(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         container.append(self.lbl)
@@ -179,7 +189,7 @@ Such events are a convenient way to define the application behavior.
 Each widget has its own callbacks, depending on the type of user interaction it allows.
 The specific callbacks for the widgets will be illustrated later.
 
-In order to register a function as an event listener you have to call a function like set_on_xxx_listener passing as parameters the callback that will manage the event.
+In order to register a function as an event listener you have to call a function like eventname.connect (i.e. onclick.connect) passing as parameters the callback that will manage the event.
 Follows an example:
 
 ```py
@@ -196,7 +206,7 @@ class MyApp(App):
         self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.set_on_click_listener(self.on_button_pressed)
+        self.bt.onclick.connect(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         container.append(self.lbl)
@@ -214,13 +224,13 @@ class MyApp(App):
 start(MyApp)
 ```
 
-In the shown example *self.bt.set_on_click_listener(self.on_button_pressed)* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
+In the shown example *self.bt.onclick.connect(self.on_button_pressed)* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
 Simple, easy.
 
 Listener's callbacks will receive the emitter's instance firstly, then all other parameters provided by the specific event.
 
 
-Beside the standard event registration (as aforementioned), it is possible to pass user parameters to listener functions. This can be achieves appending parameters to the *set_on_xxx_listener* function call.
+Beside the standard event registration (as aforementioned), it is possible to pass user parameters to listener functions. This can be achieves appending parameters to the *connect* function call.
 
 ```py
 import remi.gui as gui
@@ -237,8 +247,8 @@ class MyApp(App):
         self.bt2 = gui.Button('Hello name surname!')
 
         # setting the listener for the onclick event of the buttons
-        self.bt.set_on_click_listener(self.on_button_pressed, "Name")
-        self.bt2.set_on_click_listener(self.on_button_pressed, "Name", "Surname")
+        self.bt.onclick.connect(self.on_button_pressed, "Name")
+        self.bt2.onclick.connect(self.on_button_pressed, "Name", "Surname")
         
         # appending a widget to another
         container.append(self.lbl)

@@ -33,7 +33,7 @@ class MyApp(App):
         bt.style['margin'] = 'auto 50px'
         bt.style['background-color'] = 'red'
 
-        bt.set_on_click_listener(self.on_button_pressed)
+        bt.onclick.connect(self.on_button_pressed)
 
         wid.append(bt)
 

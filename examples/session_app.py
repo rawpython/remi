@@ -17,7 +17,7 @@ from remi import start, App
 import random
 import threading
 
-class CookieInterface(gui.Tag):
+class CookieInterface(gui.Tag, gui.EventSource):
     def __init__(self, remi_app_instance, **kwargs):
         """
         This class uses javascript code from cookie.js framework ( https://developer.mozilla.org/en-US/docs/Web/API/document.cookie )
@@ -39,7 +39,7 @@ class CookieInterface(gui.Tag):
         \*/
         """
         super(CookieInterface, self).__init__(**kwargs)
-        self.eventManager = gui._EventManager(self)
+        gui.EventSource.__init__(self)
         self.app_instance = remi_app_instance
         self.EVENT_ONCOOKIES = "on_cookies"
         self.cookies = {}
@@ -55,19 +55,10 @@ class CookieInterface(gui.Tag):
             sendCallbackParam('%s','%s', result);
             """%(self.identifier, self.EVENT_ONCOOKIES))
 
-    def set_on_cookie_listener(self, callback, *userdata):
-        """Registers the listener for the on_cookies event.
-
-        Note: The prototype of the listener have to be like my_on_cookies(self, widget, **values_dict).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.eventManager.register_listener(self.EVENT_ONCOOKIES, callback, *userdata)
-
+    @gui.decorate_event
     def on_cookies(self, **value):
         self.cookies = value
-        return self.eventManager.propagate(self.EVENT_ONCOOKIES, (value,))
+        return (value,)
     
     def remove_cookie(self, key, path='/', domain=''):
         if not key in self.cookies.keys():
@@ -112,7 +103,7 @@ class CookieInterface(gui.Tag):
             """%{'sKey': key, 'sValue': value, 'vEnd': expiration, 'sPath': path, 'sDomain': domain, 'bSecure': secure})
 
 
-class LoginManager(gui.Tag):
+class LoginManager(gui.Tag, gui.EventSource):
     """
     Login manager class allows to simply manage user access safety by session cookies
     It requires a cookieInterface instance to query and set user session id
@@ -130,37 +121,27 @@ class LoginManager(gui.Tag):
             #HAVE TO ASK FOR LOGIN
 
     In order to know session expiration, you should register to on_session_expired event
-        login_manager.set_on_session_expired_listener(mylistener.on_user_logout)
+        on_session_expired.connect(mylistener.on_user_logout)
     When this event happens, ask for user login
     """
     def __init__(self, cookieInterface, session_timeout_seconds = 60, **kwargs):
         super(LoginManager, self).__init__(**kwargs)
-        self.eventManager = gui._EventManager(self)
+        gui.EventSource.__init__(self)
         self.expired = True
         self.session_uid = str(random.randint(1,999999999))
         self.cookieInterface = cookieInterface
         self.session_timeout_seconds = session_timeout_seconds
         self.timer_request_cookies() #starts the cookie refresh
         self.timeout_timer = None #checks the internal timeout
-        self.EVENT_ONSESSIONEXPIRED = "on_session_expired"
     
     def timer_request_cookies(self):
         self.cookieInterface.request_cookies()
         threading.Timer(self.session_timeout_seconds/10.0, self.timer_request_cookies).start()
 
-    def set_on_session_expired_listener(self, callback, *userdata):
-        """Registers the listener for the on_session_expired event.
-
-        Note: The prototype of the listener have to be like my_on_session_expired(self, widget).
-
-        Args:
-            callback (function): Callback function pointer.
-        """
-        self.eventManager.register_listener(self.EVENT_ONSESSIONEXPIRED, callback, *userdata)
-
+    @gui.decorate_event
     def on_session_expired(self):
         self.expired = True
-        return self.eventManager.propagate(self.EVENT_ONSESSIONEXPIRED, ())
+        return ()
 
     def renew_session(self):
         """Have to be called on user actions to check and renew session
@@ -187,13 +168,13 @@ class MyApp(App):
 
     def main(self, name='world'):
         self.login_manager = LoginManager(CookieInterface(self), 5)
-        self.login_manager.set_on_session_expired_listener(self.on_logout)
+        self.login_manager.on_session_expired.connect(self.on_logout)
 
         wid = gui.VBox(width=200, height=300, margin='0px auto')
         btlogin = gui.Button('LOGIN')
-        btlogin.set_on_click_listener(self.on_login)
+        btlogin.onclick.connect(self.on_login)
         btrenew = gui.Button('RENEW BEFORE EXPIRATION')
-        btrenew.set_on_click_listener(self.on_renew)
+        btrenew.onclick.connect(self.on_renew)
 
         self.lblsession_status = gui.Label('NOT LOGGED IN')
 

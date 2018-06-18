@@ -38,7 +38,7 @@ class MyApp(App):
         label.style['background-color'] = 'lightgreen'
         
         button = gui.Button('Change layout', height='100%')
-        button.set_on_click_listener(self.redefine_grid, main_container)
+        button.onclick.connect(self.redefine_grid, main_container)
         
         text = gui.TextInput()
         

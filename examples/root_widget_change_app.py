@@ -39,8 +39,8 @@ class MyApp(App):
         bt1 = gui.Button("change page")
         page1 = gui.VBox(children=[lbl, bt1], style={'width':'300px', 'height':'200px', 'margin':'0px auto', 'background-color':'white'})
 
-        bt1.set_on_click_listener(self.set_different_root_widget, page2)
-        bt2.set_on_click_listener(self.set_different_root_widget, page1)
+        bt1.onclick.connect(self.set_different_root_widget, page2)
+        bt2.onclick.connect(self.set_different_root_widget, page1)
 
         # returning the root widget
         return page1
