@@ -161,7 +161,6 @@ class MyApp(App):
 
     def main(self, name='world'):
         self.wid = gui.VBox(margin='0px auto') #margin 0px auto to center the screen
-        self.wid.set_size(620, 620)
         
         self.gauge = InputGauge(200, 200, 1000, 10000)
         self.wid.append(self.gauge)
