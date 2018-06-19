@@ -629,8 +629,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;" \
-            "params['y']=event.clientY-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")
@@ -645,8 +646,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;" \
-            "params['y']=event.clientY-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")
@@ -688,8 +690,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=event.clientX-this.offsetLeft;" \
-            "params['y']=event.clientY-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")
@@ -704,8 +707,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
-            "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")
@@ -720,8 +724,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
-            "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")
@@ -736,8 +741,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
-            "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")
@@ -752,8 +758,9 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-            "params['x']=parseInt(event.changedTouches[0].clientX)-this.offsetLeft;" \
-            "params['y']=parseInt(event.changedTouches[0].clientY)-this.offsetTop;" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
             "event.stopPropagation();event.preventDefault();" \
             "return false;")

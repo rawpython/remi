@@ -493,7 +493,7 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px')
         self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px')
         self.add_widget_to_collection(gui.Svg)
-        self.add_widget_to_collection(gui.SvgLine)
+        self.add_widget_to_collection(gui.SvgLine, attributes={'stroke':'black', 'stroke-width':'1'})
         self.add_widget_to_collection(gui.SvgCircle)
         self.add_widget_to_collection(gui.SvgRectangle)
 

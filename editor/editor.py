@@ -92,13 +92,13 @@ class ResizeHelper(gui.Widget, gui.EventSource):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = int(x)
-                self.origin_y = int(y)
+                self.origin_x = float(x)
+                self.origin_y = float(y)
                 self.refWidget_origin_w = gui.from_pix(self.refWidget.style['width'])
                 self.refWidget_origin_h = gui.from_pix(self.refWidget.style['height'])
             else:
-                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + int(x) - self.origin_x )
-                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + int(y) - self.origin_y)
+                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + float(x) - self.origin_x )
+                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + float(y) - self.origin_y)
                 self.update_position()
 
     def update_position(self):
@@ -178,13 +178,13 @@ class DragHelper(gui.Widget, gui.EventSource):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = int(x)
-                self.origin_y = int(y)
+                self.origin_x = float(x)
+                self.origin_y = float(y)
                 self.refWidget_origin_x = gui.from_pix(self.refWidget.style['left'])
                 self.refWidget_origin_y = gui.from_pix(self.refWidget.style['top'])
             else:
-                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + int(x) - self.origin_x )
-                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + int(y) - self.origin_y)
+                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + float(x) - self.origin_x )
+                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + float(y) - self.origin_y)
                 self.update_position()
 
     def update_position(self):
@@ -481,23 +481,10 @@ class Editor(App):
         self.project.attributes['ondrop'] = """event.preventDefault();
                 var data = JSON.parse(event.dataTransfer.getData('application/json'));
                 var params={};
-                if( data[0] == 'resize'){
-                    document.getElementById(data[1]).style.left = parseInt(document.getElementById(data[1]).style.left) + event.clientX - data[2] + 'px';
-                    document.getElementById(data[1]).style.top = parseInt(document.getElementById(data[1]).style.top) + event.clientY - data[3] + 'px';
-                    params['left']=document.getElementById(data[1]).style.left;
-                    params['top']=document.getElementById(data[1]).style.top;
-                }
                 if( data[0] == 'add'){
                     params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
                     params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
                 }
-                if( data[0] == 'move'){
-                    document.getElementById(data[1]).style.left = parseInt(document.getElementById(data[1]).style.left) + event.clientX - data[2] + 'px';
-                    document.getElementById(data[1]).style.top = parseInt(document.getElementById(data[1]).style.top) + event.clientY - data[3] + 'px';
-                    params['left']=document.getElementById(data[1]).style.left;
-                    params['top']=document.getElementById(data[1]).style.top;
-                }
-                
                 sendCallbackParam(data[1],'%(evt)s',params);
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
@@ -574,25 +561,6 @@ class Editor(App):
         #widget.style['resize'] = 'both'
         widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
-        widget.attributes['ondragstart'] = """this.style.cursor='move'; event.dataTransfer.dropEffect = 'move'; event.dataTransfer.setData('application/json', JSON.stringify(['move',event.target.id,(event.clientX),(event.clientY)]));"""
-        widget.attributes['ondragover'] = "event.preventDefault();"   
-        widget.EVENT_ONDROPPPED = "on_dropped"
-        widget.attributes['ondrop'] = """
-                var data = JSON.parse(event.dataTransfer.getData('application/json'));
-                var params={};
-                if( data[0] == 'add'){
-                    console.debug('addd---------------------------------------------');
-                    sendCallback('%(id)s','%(event_click)s');
-                    console.debug('dopo---------------------------------------------');
-                    params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
-                    params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
-                    sendCallbackParam(data[1],'%(evt)s',params);
-                    event.stopPropagation();
-                    event.preventDefault();
-                }
-                
-                
-                return false;""" % {'evt':widget.EVENT_ONDROPPPED, 'id': widget.identifier, 'event_click': widget.EVENT_ONCLICK}
                 
         widget.attributes['tabindex']=str(self.tabindex)
         if not 'position' in widget.style.keys():
