@@ -474,6 +474,7 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px')
         self.add_widget_to_collection(gui.VBox, width='250px', height='250px')
         self.add_widget_to_collection(gui.Widget, width='250px', height='250px')
+        self.add_widget_to_collection(gui.GridBox, width='250px', height='250px')
         self.add_widget_to_collection(gui.Button, width='100px', height='30px')
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px')
         self.add_widget_to_collection(gui.Label, width='100px', height='30px')
@@ -592,7 +593,11 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         self.attributes['selected_widget_id'] = widget.identifier
         self.targetWidget = widget
         for w in self.attributesInputs:
-            #w.style['display'] = 'block'
+            w.style['display'] = 'block'
+            #w.style['visibility'] = 'visible'
+            if w.attributeDict['additional_data'].get('applies_to', None):
+                if not type(widget) in w.attributeDict['additional_data'].get('applies_to', None):
+                    w.style['display'] = 'none'
             w.set_from_dict(getattr(widget, w.attributeDict['affected_widget_attribute']))
 
 

@@ -677,15 +677,9 @@ class App(BaseHTTPRequestHandler, object):
             ws_instance_to_update.send_message(msg)
 
     def set_root_widget(self, widget):
-        if self.root:
-            if 'data-parent-widget' in self.root.attributes:
-                self.root.disable_refresh()
-                del self.root.attributes['data-parent-widget']
-                self.root.enable_refresh()
         self.root = widget
-
         self.root.disable_refresh()
-        self.root.attributes['data-parent-widget'] = str(id(self))
+        self.root._parent = self
         self.root.enable_refresh()
 
         msg = "0" + self.root.identifier + ',' + to_websocket(self.root.repr())

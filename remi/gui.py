@@ -231,6 +231,8 @@ class Tag(object):
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, usefull for public API definition.
         """
+        self._parent = None
+
         self.kwargs = kwargs
 
         self._render_children_list = []
@@ -359,6 +361,7 @@ class Tag(object):
 
         if hasattr(value, 'attributes'):
             value.attributes['data-parent-widget'] = self.identifier
+            value._parent = self
 
         if key in self.children:
             self._render_children_list.remove(key)
@@ -377,11 +380,8 @@ class Tag(object):
     def get_parent(self):
         """Returns the parent tag instance or None where not applicable
         """
-        if hasattr(self, 'attributes'):
-            if 'data-parent-widget' in self.attributes.keys():
-                return runtimeInstances.get(self.attributes['data-parent-widget'], None)
-                
-        return None
+
+        return self._parent
 
     def empty(self):
         """remove all children from the widget"""
@@ -904,6 +904,7 @@ class GridBox(Widget):
         key = value.identifier if key == '' else key
         self.add_child(key, value)
         value.style['grid-area'] = key
+        value.style['position'] = 'static'
 
         return key
     

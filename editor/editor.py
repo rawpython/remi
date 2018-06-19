@@ -607,6 +607,7 @@ class Editor(App):
         if parent == None:
             parent = self.selectedWidget
         self.configure_widget_for_editing(widget)
+        widget.attributes['id'] = widget.attributes.get('editor_varname', widget.identifier)
         key = "root" if parent==self.project else widget.identifier
         if root_tree_node:
             parent.append(widget,key)
@@ -628,7 +629,7 @@ class Editor(App):
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
-        parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
+        parent = self.selectedWidget.get_parent()
         self.resizeHelper.setup(widget,parent)
         self.dragHelper.setup(widget,parent)
         self.instancesWidget.select(self.selectedWidget)
@@ -674,13 +675,25 @@ class Editor(App):
             print("file:%s"%self.projectPathFilename)
             self.remove_box_shadow_selected_widget()
             self.project.save(self.projectPathFilename, self.projectConfiguration)
-            
+    '''
+    def recursive_get_parent(self, widget, root=None):
+        """ The ability to change the widget identifier at runtime causes 
+            that it cannot be found directly in runtimeInstances. So a parent have to be found
+        """
+        if root==None:
+            root = self.project
+        if widget in root.children.values():
+            return root
+        for c in root.children.values():
+            return self.recursive_get_parent(widget, c)
+    '''
+
     def menu_cut_selection_clicked(self, widget):
         if self.selectedWidget==self.project:
             return
         self.resizeHelper.setup(None, None)
         self.dragHelper.setup(None, None)
-        parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
+        parent = self.selectedWidget.get_parent()
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
         self.selectedWidget = parent
@@ -702,7 +715,7 @@ class Editor(App):
             return
         self.resizeHelper.setup(None, None)
         self.dragHelper.setup(None, None)
-        parent = remi.server.get_method_by_id(self.selectedWidget.attributes['data-parent-widget'])
+        parent = self.selectedWidget.get_parent()
         parent.remove_child(self.selectedWidget)
         self.instancesWidget.update(self.project, self.selectedWidget)
         self.selectedWidget = parent

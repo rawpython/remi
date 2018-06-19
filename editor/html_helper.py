@@ -107,6 +107,11 @@ editorAttributeList = [
     ('top',{'type':'css_size', 'description':'Widget top.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
     ('right',{'type':'css_size', 'description':'Widget right.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
     ('bottom',{'type':'css_size', 'description':'Widget bottom.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
+
+    ('grid-template-columns',{'type':'str', 'description':'Column sizes (i.e. 50% 30% 20%).', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'applies_to':[gui.GridBox]}}),
+    ('grid-template-rows',{'type':'str', 'description':'Row sizes (i.e. 50% 30% 20%).', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'applies_to':[gui.GridBox]}}),
+    ('grid-template-areas',{'type':'str', 'description':"Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').", 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'applies_to':[gui.GridBox]}}),
+
     ('overflow',{'type':gui.DropDown, 'description':'Visibility behavior in case of content does not fit in size.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'possible_values':('visible','hidden','scroll','auto')}}),
 
     ('background-color',{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}}),
@@ -131,7 +136,7 @@ editorAttributeList = [
     ('flex-direction',{'type':gui.DropDown, 'description':'The flex-direction property specifies the direction of the flexible items. Note: If the element is not a flexible item, the flex-direction property has no effect.'
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('row','row-reverse','column','column-reverse','initial','inherit')}}),
     ('display',{'type':gui.DropDown, 'description':'The display property specifies the type of box used for an HTML element'
-                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('inline','block','flex','inline-block','inline-flex','inline-table','list-item','run-in','none','inherit')}}),
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('inline','block','flex','grid','inline-block','inline-flex','inline-table','list-item','run-in','none','inherit')}}),
     ('justify-content',{'type':gui.DropDown, 'description':"The justify-content property aligns the flexible container's items when the items do not use all available space on the main-axis (horizontally)"
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('flex-start','flex-end','center','space-between','space-around','initial','inherit')}}),
     ('align-items',{'type':gui.DropDown, 'description':'The align-items property specifies the default alignment for items inside the flexible container'

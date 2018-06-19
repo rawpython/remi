@@ -70,8 +70,6 @@ class SvgComposedPoly(gui.SvgGroup):
         self.y_factor = y_factor
         
 
-
-
 class SvgPlot(gui.Svg):
     def __init__(self, width, height):
         super(SvgPlot, self).__init__(width, height)
@@ -165,7 +163,6 @@ class MyApp(App):
 
     def main(self, name='world'):
         self.wid = gui.VBox(margin='0px auto')
-        self.wid.set_size(620, 620)
 
         self.svgplot = SvgPlot(600, 600)
         self.svgplot.style['margin'] = '10px'
