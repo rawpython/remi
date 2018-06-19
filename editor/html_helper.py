@@ -90,10 +90,11 @@ htmlInternallyUsedTags = ('id'\
 editorAttributesGroupOrdering = {
     'Generic':1,
     'Geometry':2,
-    'Background':3,
-    'Border':4,
-    'Font':5,
-    'Layout':6
+    'WidgetSpecific':3,
+    'Background':4,
+    'Border':5,
+    'Font':6,
+    'Layout':7
 }
 
 editorAttributeList = [
@@ -107,12 +108,28 @@ editorAttributeList = [
     ('top',{'type':'css_size', 'description':'Widget top.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
     ('right',{'type':'css_size', 'description':'Widget right.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
     ('bottom',{'type':'css_size', 'description':'Widget bottom.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{}}),
-
-    ('grid-template-columns',{'type':'str', 'description':'Column sizes (i.e. 50% 30% 20%).', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'applies_to':[gui.GridBox]}}),
-    ('grid-template-rows',{'type':'str', 'description':'Row sizes (i.e. 50% 30% 20%).', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'applies_to':[gui.GridBox]}}),
-    ('grid-template-areas',{'type':'str', 'description':"Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').", 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'applies_to':[gui.GridBox]}}),
-
     ('overflow',{'type':gui.DropDown, 'description':'Visibility behavior in case of content does not fit in size.', 'affected_widget_attribute':'style', 'group':'Geometry', 'additional_data':{'possible_values':('visible','hidden','scroll','auto')}}),
+
+
+    ('grid-template-columns',{'type':'str', 'description':'Column sizes (i.e. 50% 30% 20%).', 'affected_widget_attribute':'style', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.GridBox]}}),
+    ('grid-template-rows',{'type':'str', 'description':'Row sizes (i.e. 50% 30% 20%).', 'affected_widget_attribute':'style', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.GridBox]}}),
+    ('grid-template-areas',{'type':'str', 'description':"Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').", 'affected_widget_attribute':'style', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.GridBox]}}),
+    ('grid-gap',{'type':'css_size', 'description':"Defines the size of the gap between the rows and columns.", 'affected_widget_attribute':'style', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.GridBox]}}),
+
+    ('stroke',{'type':gui.ColorPicker, 'description':"Color for svg elements.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine, gui.SvgCircle, gui.SvgGroup, gui.SvgPolyline, gui.SvgRectangle]}}),
+    ('stroke-width',{'type':int, 'description':"Stroke width for svg elements.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine, gui.SvgCircle, gui.SvgGroup, gui.SvgPolyline, gui.SvgRectangle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('fill',{'type':gui.ColorPicker, 'description':"Fill color for svg elements.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgCircle, gui.SvgGroup, gui.SvgRectangle]}}),
+    ('x',{'type':int, 'description':"Coordinate for SvgShape.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgRectangle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('y',{'type':int, 'description':"Coordinate for SvgShape.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgRectangle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('width',{'type':int, 'description':"Width for SvgShape.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgRectangle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('height',{'type':int, 'description':"Height for SvgShape.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgRectangle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('cx',{'type':int, 'description':"Center coordinate for SvgCircle.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgCircle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('cy',{'type':int, 'description':"Center coordinate for SvgCircle.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgCircle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('r',{'type':int, 'description':"Radius of SvgCircle.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgCircle], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('x1',{'type':int, 'description':"P1 coordinate for SvgLine.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('y1',{'type':int, 'description':"P1 coordinate for SvgLine.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('x2',{'type':int, 'description':"P2 coordinate for SvgLine.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
+    ('y2',{'type':int, 'description':"P2 coordinate for SvgLine.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
 
     ('background-color',{'type':gui.ColorPicker, 'description':'Background color of the widget', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}}),
     ('background-image',{'type':'url_editor', 'description':'An optional background image', 'affected_widget_attribute':'style', 'group':'Background', 'additional_data':{}}),

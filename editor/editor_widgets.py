@@ -492,6 +492,10 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.Link, width='100px', height='30px')
         self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px')
         self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px')
+        self.add_widget_to_collection(gui.Svg)
+        self.add_widget_to_collection(gui.SvgLine)
+        self.add_widget_to_collection(gui.SvgCircle)
+        self.add_widget_to_collection(gui.SvgRectangle)
 
     def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
         #create an helper that will be created on click

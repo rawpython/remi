@@ -2903,7 +2903,7 @@ class SvgGroup(SvgShape):
 class SvgRectangle(SvgShape):
     """svg rectangle - a rectangle represented filled and with a stroke."""
 
-    @decorate_constructor_parameter_types([int, int, int])
+    @decorate_constructor_parameter_types([int, int, int, int])
     def __init__(self, x, y, w, h, *args, **kwargs):
         """
         Args:
