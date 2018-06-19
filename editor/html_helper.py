@@ -136,7 +136,7 @@ editorAttributeList = [
     ('flex-direction',{'type':gui.DropDown, 'description':'The flex-direction property specifies the direction of the flexible items. Note: If the element is not a flexible item, the flex-direction property has no effect.'
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('row','row-reverse','column','column-reverse','initial','inherit')}}),
     ('display',{'type':gui.DropDown, 'description':'The display property specifies the type of box used for an HTML element'
-                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('inline','block','flex','grid','inline-block','inline-flex','inline-table','list-item','run-in','none','inherit')}}),
+                        , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('inline','block','contents','flex','grid','inline-block','inline-flex','inline-grid','inline-table','list-item','run-in','table','none','inherit')}}),
     ('justify-content',{'type':gui.DropDown, 'description':"The justify-content property aligns the flexible container's items when the items do not use all available space on the main-axis (horizontally)"
                         , 'affected_widget_attribute':'style', 'group':'Layout', 'additional_data':{'possible_values':('flex-start','flex-end','center','space-between','space-around','initial','inherit')}}),
     ('align-items',{'type':gui.DropDown, 'description':'The align-items property specifies the default alignment for items inside the flexible container'

@@ -313,6 +313,9 @@ table {
     border: 1px solid white;
     outline: 0px;
 }
+.TableEditableItem>.TextInput {
+    height: 100%;
+}
 td {
     border: 1px solid white;
     outline: 0px;

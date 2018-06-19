@@ -679,6 +679,7 @@ class App(BaseHTTPRequestHandler, object):
     def set_root_widget(self, widget):
         self.root = widget
         self.root.disable_refresh()
+        self.root.attributes['data-parent-widget'] = str(id(self))
         self.root._parent = self
         self.root.enable_refresh()
 

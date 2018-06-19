@@ -1883,6 +1883,7 @@ class TableWidget(Table):
         self._column_count = 0
         self.set_column_count(n_columns)
         self.set_row_count(n_rows)
+        self.style['display'] = 'table'
 
     def set_use_title(self, use_title):
         """Returns the TableItem instance at row, column cordinates
