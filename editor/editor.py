@@ -158,9 +158,10 @@ class ResizeHelper(gui.Widget, DraggableItem):
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
+                                gui.ListView, gui.DropDown, gui.Label, gui.Image, gui.Link,
                                 gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
                                 gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
-                                gui.Svg]:
+                                gui.Svg, gui.VideoPlayer]:
             DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
@@ -179,8 +180,8 @@ class ResizeHelper(gui.Widget, DraggableItem):
         self.style['position']='absolute'
         if self.refWidget:
             if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
-                self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
-                self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
+                self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) )
+                self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) )
 
 
 class DragHelper(gui.Widget, DraggableItem):
@@ -198,9 +199,10 @@ class DragHelper(gui.Widget, DraggableItem):
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
+                                gui.ListView, gui.DropDown, gui.Label, gui.Image, gui.Link,
                                 gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
                                 gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
-                                gui.Svg]:
+                                gui.Svg, gui.VideoPlayer]:
             DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
@@ -219,8 +221,8 @@ class DragHelper(gui.Widget, DraggableItem):
         self.style['position']='absolute'
         if self.refWidget:
             if 'left' in self.refWidget.style and 'top' in self.refWidget.style:
-                self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']))
-                self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']))
+                self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left'])-gui.from_pix(self.style['width']))
+                self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['width']))
 
 
 class Project(gui.Widget):
@@ -596,12 +598,12 @@ class Editor(App):
         widget.attributes['draggable'] = 'true'
                 
         widget.attributes['tabindex']=str(self.tabindex)
-        if not 'position' in widget.style.keys():
-            widget.style['position'] = 'absolute'
-        if not 'left' in widget.style.keys():
-            widget.style['left'] = '1px'
-        if not 'top' in widget.style.keys():
-            widget.style['top'] = '1px'
+        #if not 'position' in widget.style.keys():
+        #    widget.style['position'] = 'absolute'
+        #if not 'left' in widget.style.keys():
+        #    widget.style['left'] = '1px'
+        #if not 'top' in widget.style.keys():
+        #    widget.style['top'] = '1px'
         self.tabindex += 1
         
     def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):

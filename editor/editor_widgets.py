@@ -444,10 +444,10 @@ class WidgetHelper(gui.HBox):
             'editor_newclass':'True' if self.dialog.get_field("editor_newclass").get_value() else 'False',
             'editor_baseclass':widget.__class__.__name__}) #__class__.__bases__[0].__name__
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"
-        if not 'position' in widget.style:
-            widget.style['position'] = 'absolute'
-        if not 'display' in widget.style:
-            widget.style['display'] = 'block'
+        #if not 'position' in widget.style:
+        #    widget.style['position'] = 'absolute'
+        #if not 'display' in widget.style:
+        #    widget.style['display'] = 'block'
 
         for key in self.optional_style_dict:
             widget.style[key] = self.optional_style_dict[key]
@@ -471,28 +471,28 @@ class WidgetCollection(gui.Widget):
         self.append([self.lblTitle, self.widgetsContainer])
 
         #load all widgets
-        self.add_widget_to_collection(gui.HBox, width='250px', height='250px')
-        self.add_widget_to_collection(gui.VBox, width='250px', height='250px')
-        self.add_widget_to_collection(gui.Widget, width='250px', height='250px')
-        self.add_widget_to_collection(gui.GridBox, width='250px', height='250px')
-        self.add_widget_to_collection(gui.Button, width='100px', height='30px')
-        self.add_widget_to_collection(gui.TextInput, width='100px', height='30px')
-        self.add_widget_to_collection(gui.Label, width='100px', height='30px')
-        self.add_widget_to_collection(gui.ListView, width='100px', height='30px')
-        self.add_widget_to_collection(gui.ListItem, width='100px', height='30px')
-        self.add_widget_to_collection(gui.DropDown, width='100px', height='30px')
-        self.add_widget_to_collection(gui.DropDownItem, width='100px', height='30px')
-        self.add_widget_to_collection(gui.Image, width='100px', height='100px')
-        self.add_widget_to_collection(gui.CheckBoxLabel, width='100px', height='30px')
-        self.add_widget_to_collection(gui.CheckBox, width='30px', height='30px')
-        self.add_widget_to_collection(gui.SpinBox, width='100px', height='30px')
-        self.add_widget_to_collection(gui.Slider, width='100px', height='30px')
-        self.add_widget_to_collection(gui.ColorPicker, width='100px', height='30px')
-        self.add_widget_to_collection(gui.Date, width='100px', height='30px')
-        self.add_widget_to_collection(gui.Link, width='100px', height='30px')
-        self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px')
-        self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px')
-        self.add_widget_to_collection(gui.Svg)
+        self.add_widget_to_collection(gui.HBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.VBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Widget, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Button, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Label, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.ListView, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute', 'border':'1px solid lightgray'})
+        self.add_widget_to_collection(gui.ListItem)
+        self.add_widget_to_collection(gui.DropDown, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.DropDownItem)
+        self.add_widget_to_collection(gui.Image, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.CheckBoxLabel, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.CheckBox, width='30px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.SpinBox, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Slider, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.ColorPicker, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Date, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Link, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Svg, style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.SvgLine, attributes={'stroke':'black', 'stroke-width':'1'})
         self.add_widget_to_collection(gui.SvgCircle)
         self.add_widget_to_collection(gui.SvgRectangle)
