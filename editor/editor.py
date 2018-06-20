@@ -24,27 +24,17 @@ import editor_widgets
 import html_helper
 import threading
 
-class ResizeHelper(gui.Widget, gui.EventSource):
 
+class DraggableItem(gui.EventSource):
     def __init__(self, project, **kwargs):
-        super(ResizeHelper, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
-        self.style['float'] = 'none'
-        self.style['background-image'] = "url('/res/resize.png')"
-        self.style['background-color'] = "rgba(255,255,255,0.0)"
-        self.style['position'] = 'absolute'
-        self.style['left']='0px'
-        self.style['top']='0px'
         self.project = project
-
-        self.parent = None
         self.refWidget = None
+        self.parent = None
         self.active = False
-        self.onmousedown.connect(self.start_drag)
-
         self.origin_x = -1
         self.origin_y = -1
-        
+
     def setup(self, refWidget, newParent):
         #refWidget is the target widget that will be resized
         #newParent is the container
@@ -52,27 +42,16 @@ class ResizeHelper(gui.Widget, gui.EventSource):
             try:
                 self.parent.remove_child(self)
             except:
-                #there was no ResizeHelper placed
                 pass
         if newParent==None:
             return
         self.parent = newParent
         self.refWidget = refWidget
         
-        self.static_positioning = False
-        if 'position' in self.refWidget.style:
-            if self.refWidget.style['position'] != 'absolute':
-                self.static_positioning = True
-
-        if self.static_positioning:
-            return
-
         try:
             self.parent.append(self)
         except:
-            #the selected widget's parent can't contain a ResizeHelper
             pass
-        #self.refWidget.style['position'] = 'relative'
         self.update_position()
             
     def start_drag(self, emitter, x, y):
@@ -88,6 +67,101 @@ class ResizeHelper(gui.Widget, gui.EventSource):
         self.active = False
         self.update_position()
         return ()
+
+    def on_drag(self, emitter, x, y):
+        pass
+
+    def update_position(self):
+        pass
+
+
+class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
+    def __init__(self, project, name_coord_x, name_coord_y, compatibility_iterable, **kwargs):
+        self.w = 15
+        self.h = 15
+        super(SvgDraggablePoint, self).__init__(0, 0, self.w, self.h, **kwargs)
+        DraggableItem.__init__(self, project, **kwargs)
+        self.attributes['stroke-dasharray'] = "2,2"
+        self.name_coord_x = name_coord_x
+        self.name_coord_y = name_coord_y
+        self.set_stroke(1, 'black')
+        self.set_fill('#ffcc00')
+        self.compatibility_iterable = compatibility_iterable
+        self.onmousedown.connect(self.start_drag)
+
+    def setup(self, refWidget, newParent):
+        if type(refWidget) in self.compatibility_iterable or refWidget == None:
+            DraggableItem.setup(self, refWidget, newParent)
+
+    def on_drag(self, emitter, x, y):
+        if self.active:
+            if self.origin_x == -1:
+                self.origin_x = float(x)
+                self.origin_y = float(y)
+                self.refWidget_origin_x = float(self.refWidget.attributes[self.name_coord_x])
+                self.refWidget_origin_y = float(self.refWidget.attributes[self.name_coord_y])
+            else:
+                self.refWidget.attributes[self.name_coord_x] = self.refWidget_origin_x + float(x) - self.origin_x
+                self.refWidget.attributes[self.name_coord_y] = self.refWidget_origin_y + float(y) - self.origin_y
+                self.update_position()
+
+    def update_position(self):
+        if self.refWidget:
+            self.set_position(float(self.refWidget.attributes[self.name_coord_x])-self.w/2, float(self.refWidget.attributes[self.name_coord_y])-self.h/2)
+
+
+class SvgDraggableRectangleResizePoint(gui.SvgRectangle, DraggableItem):
+    def __init__(self, project, compatibility_iterable, **kwargs):
+        self.w = 15
+        self.h = 15
+        super(SvgDraggableRectangleResizePoint, self).__init__(0, 0, self.w, self.h, **kwargs)
+        DraggableItem.__init__(self, project, **kwargs)
+        self.attributes['stroke-dasharray'] = "2,2"
+        self.set_stroke(1, 'black')
+        self.set_fill('#ffcc00')
+        self.compatibility_iterable = compatibility_iterable
+        self.onmousedown.connect(self.start_drag)
+
+    def setup(self, refWidget, newParent):
+        if type(refWidget) in self.compatibility_iterable or refWidget == None:
+            DraggableItem.setup(self, refWidget, newParent)
+
+    def on_drag(self, emitter, x, y):
+        if self.active:
+            if self.origin_x == -1:
+                self.origin_x = float(x)
+                self.origin_y = float(y)
+                self.refWidget_origin_w = float(self.refWidget.attributes['width'])
+                self.refWidget_origin_h = float(self.refWidget.attributes['height'])
+            else:
+                self.refWidget.attributes['width'] = self.refWidget_origin_w + float(x) - self.origin_x
+                self.refWidget.attributes['height'] = self.refWidget_origin_h + float(y) - self.origin_y
+                self.update_position()
+
+    def update_position(self):
+        if self.refWidget:
+            self.set_position(float(self.refWidget.attributes['x'])+float(self.refWidget.attributes['width'])-self.w/2, float(self.refWidget.attributes['y'])+float(self.refWidget.attributes['height'])-self.h/2)
+
+
+class ResizeHelper(gui.Widget, DraggableItem):
+
+    def __init__(self, project, **kwargs):
+        super(ResizeHelper, self).__init__(**kwargs)
+        DraggableItem.__init__(self, project, **kwargs)
+        self.style['float'] = 'none'
+        self.style['background-image'] = "url('/res/resize.png')"
+        self.style['background-color'] = "rgba(255,255,255,0.0)"
+        self.style['position'] = 'absolute'
+        self.style['left']='0px'
+        self.style['top']='0px'
+        self.onmousedown.connect(self.start_drag)
+
+    def setup(self, refWidget, newParent):
+        if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
+                                gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
+                                gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
+                                gui.Svg]:
+            DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -109,71 +183,25 @@ class ResizeHelper(gui.Widget, gui.EventSource):
                 self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
 
 
-class DragHelper(gui.Widget, gui.EventSource):
+class DragHelper(gui.Widget, DraggableItem):
 
     def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
-        gui.EventSource.__init__(self)
+        DraggableItem.__init__(self, project, **kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/res/drag.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
-        
-        self.project = project
-
-        self.parent = None
-        self.refWidget = None
-        self.active = False
         self.onmousedown.connect(self.start_drag)
 
-        self.origin_x = -1
-        self.origin_y = -1
-        
     def setup(self, refWidget, newParent):
-        #refWidget is the target widget that will be resized
-        #newParent is the container
-        if self.parent:
-            try:
-                self.parent.remove_child(self)
-            except:
-                #there was no ResizeHelper placed
-                pass
-        if newParent==None:
-            return
-        self.parent = newParent
-        self.refWidget = refWidget
-        
-        self.static_positioning = False
-        if 'position' in self.refWidget.style:
-            if self.refWidget.style['position'] != 'absolute':
-                self.static_positioning = True
-
-        if self.static_positioning:
-            return
-
-        try:
-            self.parent.append(self)
-        except:
-            #the selected widget's parent can't contain a ResizeHelper
-            pass
-        #self.refWidget.style['position'] = 'relative'
-        self.update_position()
-            
-    def start_drag(self, emitter, x, y):
-        self.active = True
-        self.project.onmousemove.connect(self.on_drag)
-        self.project.onmouseup.connect(self.stop_drag)
-        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
-        self.origin_x = -1
-        self.origin_y = -1
-    
-    @gui.decorate_event
-    def stop_drag(self, emitter, x, y):
-        self.active = False
-        self.update_position()
-        return ()
+        if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
+                                gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
+                                gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
+                                gui.Svg]:
+            DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -411,8 +439,8 @@ class Editor(App):
         super(Editor, self).__init__(*args, static_file_path=editor_res_path)
 
     def idle(self):
-        self.resizeHelper.update_position()
-        self.dragHelper.update_position()
+        for drag_helper in self.drag_helpers:
+            drag_helper.update_position()
 
     def main(self):
         self.mainContainer = gui.Widget(width='100%', height='100%', layout_orientation=gui.Widget.LAYOUT_VERTICAL)
@@ -527,10 +555,15 @@ class Editor(App):
         self.subContainer.append([self.subContainerLeft, self.centralContainer, self.subContainerRight])
         self.project.style['position'] = 'relative'
         
-        self.resizeHelper = ResizeHelper(self.project, width=16, height=16)
-        self.dragHelper = DragHelper(self.project, width=15, height=15)
-        self.resizeHelper.stop_drag.connect(self.on_drag_resize_end)
-        self.dragHelper.stop_drag.connect(self.on_drag_resize_end)
+        self.drag_helpers = [ResizeHelper(self.project, width=16, height=16), 
+                            DragHelper(self.project, width=15, height=15), 
+                            SvgDraggablePoint(self.project, 'cx', 'cy', [gui.SvgCircle]),
+                            SvgDraggablePoint(self.project, 'x1', 'y1', [gui.SvgLine]),
+                            SvgDraggablePoint(self.project, 'x2', 'y2', [gui.SvgLine]),
+                            SvgDraggablePoint(self.project, 'x', 'y', [gui.SvgRectangle]),
+                            SvgDraggableRectangleResizePoint(self.project, [gui.SvgRectangle])]
+        for drag_helper in self.drag_helpers:
+            drag_helper.stop_drag.connect(self.on_drag_resize_end)
 
         self.menu_new_clicked(None)
         
@@ -598,8 +631,8 @@ class Editor(App):
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
         parent = self.selectedWidget.get_parent()
-        self.resizeHelper.setup(widget,parent)
-        self.dragHelper.setup(widget,parent)
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(widget, parent)
         self.instancesWidget.select(self.selectedWidget)
         print("selected widget: " + widget.identifier)
         
@@ -608,8 +641,8 @@ class Editor(App):
         self.project.new()
         self.tabindex = 0 #incremental number to allow widgets selection
         self.selectedWidget = self.project
-        self.resizeHelper.setup(None, None)
-        self.dragHelper.setup(None, None)
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(None, None)
         if 'root' in self.project.children.keys():
             self.project.remove_child( self.project.children['root'] )
 
@@ -622,8 +655,8 @@ class Editor(App):
         
     def menu_save_clicked(self, widget):
         #the dragHelper have to be removed
-        self.resizeHelper.setup(None, None)
-        self.dragHelper.setup(None, None)
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(None, None)
         if self.projectPathFilename == '':
             self.fileSaveAsDialog.show()
         else:
@@ -635,9 +668,8 @@ class Editor(App):
             del self.selectedWidget.style['box-shadow']
         
     def on_saveas_dialog_confirm(self, widget, path):
-        #the resizeHelper have to be removed
-        self.resizeHelper.setup(None, None)
-        self.dragHelper.setup(None, None)
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(None, None)
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
             print("file:%s"%self.projectPathFilename)
@@ -659,8 +691,8 @@ class Editor(App):
     def menu_cut_selection_clicked(self, widget):
         if self.selectedWidget==self.project:
             return
-        self.resizeHelper.setup(None, None)
-        self.dragHelper.setup(None, None)
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(None, None)
         parent = self.selectedWidget.get_parent()
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
@@ -681,8 +713,8 @@ class Editor(App):
     def toolbar_delete_clicked(self, widget):
         if self.selectedWidget==self.project:
             return
-        self.resizeHelper.setup(None, None)
-        self.dragHelper.setup(None, None)
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(None, None)
         parent = self.selectedWidget.get_parent()
         parent.remove_child(self.selectedWidget)
         self.instancesWidget.update(self.project, self.selectedWidget)
