@@ -610,7 +610,7 @@ class Editor(App):
                             SvgDraggableCircleResizeRadius(self.project, [gui.SvgCircle]),
                             SvgDraggablePoint(self.project, 'x1', 'y1', [gui.SvgLine]),
                             SvgDraggablePoint(self.project, 'x2', 'y2', [gui.SvgLine]),
-                            SvgDraggablePoint(self.project, 'x', 'y', [gui.SvgRectangle]),
+                            SvgDraggablePoint(self.project, 'x', 'y', [gui.SvgRectangle, gui.SvgText]),
                             SvgDraggableRectangleResizePoint(self.project, [gui.SvgRectangle])]
         for drag_helper in self.drag_helpers:
             drag_helper.stop_drag.connect(self.on_drag_resize_end)

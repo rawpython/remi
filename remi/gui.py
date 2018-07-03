@@ -3081,3 +3081,39 @@ class SvgText(SvgShape, _MixinTextualWidget):
         self.type = 'text'
         self.set_fill()
         self.set_text(text)
+
+
+class SvgPath(Widget):
+
+    @decorate_constructor_parameter_types([str])
+    def __init__(self, path_value, *args, **kwargs):
+        super(SvgPath, self).__init__(*args, **kwargs)
+        self.type = 'path'
+        self.set_fill()
+        self.attributes['d'] = path_value
+
+    def add_position(self, x, y):
+        self.attributes['d'] = self.attributes['d'] + "M %s %s"%(x,y)
+
+    def add_arc(self, x, y, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag):
+        #A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+        self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x, 
+            'y':y, 'rx':rx, 'ry':ry, 'x-axis-rotation':x_axis_rotation, 'large-arc-flag':large_arc_flag, 'sweep-flag':sweep_flag}
+
+    def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
+        self.attributes['stroke'] = color
+        self.attributes['stroke-width'] = str(width)
+
+    def set_fill(self, color='black'):
+        """Sets the fill color.
+
+        Args:
+            color (str): stroke color
+        """
+        self.attributes['fill'] = color

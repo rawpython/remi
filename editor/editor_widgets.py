@@ -498,6 +498,8 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.SvgLine, attributes={'stroke':'black', 'stroke-width':'1'})
         self.add_widget_to_collection(gui.SvgCircle)
         self.add_widget_to_collection(gui.SvgRectangle)
+        self.add_widget_to_collection(gui.SvgText)
+        self.add_widget_to_collection(gui.SvgPath, attributes={'stroke':'black', 'stroke-width':'1'})
 
     def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
         #create an helper that will be created on click
