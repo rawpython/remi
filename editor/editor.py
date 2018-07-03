@@ -34,6 +34,7 @@ class DraggableItem(gui.EventSource):
         self.active = False
         self.origin_x = -1
         self.origin_y = -1
+        self.snap_grid_size = 1
 
     def setup(self, refWidget, newParent):
         #refWidget is the target widget that will be resized
@@ -74,6 +75,12 @@ class DraggableItem(gui.EventSource):
     def update_position(self):
         pass
 
+    def set_snap_grid_size(self, value):
+        self.snap_grid_size = value
+    
+    def round_grid(self, value):
+        return int(value/self.snap_grid_size)*self.snap_grid_size
+
 
 class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
     def __init__(self, project, name_coord_x, name_coord_y, compatibility_iterable, **kwargs):
@@ -101,8 +108,8 @@ class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
                 self.refWidget_origin_x = float(self.refWidget.attributes[self.name_coord_x])
                 self.refWidget_origin_y = float(self.refWidget.attributes[self.name_coord_y])
             else:
-                self.refWidget.attributes[self.name_coord_x] = self.refWidget_origin_x + float(x) - self.origin_x
-                self.refWidget.attributes[self.name_coord_y] = self.refWidget_origin_y + float(y) - self.origin_y
+                self.refWidget.attributes[self.name_coord_x] = self.round_grid( self.refWidget_origin_x + float(x) - self.origin_x )
+                self.refWidget.attributes[self.name_coord_y] = self.round_grid( self.refWidget_origin_y + float(y) - self.origin_y )
                 self.update_position()
 
     def update_position(self):
@@ -134,13 +141,45 @@ class SvgDraggableRectangleResizePoint(gui.SvgRectangle, DraggableItem):
                 self.refWidget_origin_w = float(self.refWidget.attributes['width'])
                 self.refWidget_origin_h = float(self.refWidget.attributes['height'])
             else:
-                self.refWidget.attributes['width'] = self.refWidget_origin_w + float(x) - self.origin_x
-                self.refWidget.attributes['height'] = self.refWidget_origin_h + float(y) - self.origin_y
+                self.refWidget.attributes['width'] = self.round_grid( self.refWidget_origin_w + float(x) - self.origin_x )
+                self.refWidget.attributes['height'] = self.round_grid( self.refWidget_origin_h + float(y) - self.origin_y )
                 self.update_position()
 
     def update_position(self):
         if self.refWidget:
             self.set_position(float(self.refWidget.attributes['x'])+float(self.refWidget.attributes['width'])-self.w/2, float(self.refWidget.attributes['y'])+float(self.refWidget.attributes['height'])-self.h/2)
+
+
+class SvgDraggableCircleResizeRadius(gui.SvgRectangle, DraggableItem):
+    def __init__(self, project, compatibility_iterable, **kwargs):
+        self.w = 15
+        self.h = 15
+        super(SvgDraggableCircleResizeRadius, self).__init__(0, 0, self.w, self.h, **kwargs)
+        DraggableItem.__init__(self, project, **kwargs)
+        self.attributes['stroke-dasharray'] = "2,2"
+        self.set_stroke(1, 'black')
+        self.set_fill('#ffcc00')
+        self.compatibility_iterable = compatibility_iterable
+        self.onmousedown.connect(self.start_drag)
+
+    def setup(self, refWidget, newParent):
+        if type(refWidget) in self.compatibility_iterable or refWidget == None:
+            DraggableItem.setup(self, refWidget, newParent)
+
+    def on_drag(self, emitter, x, y):
+        if self.active:
+            if self.origin_x == -1:
+                self.origin_x = float(x)
+                self.origin_y = float(y)
+                self.refWidget_origin_r = float(self.refWidget.attributes['r'])
+            else:
+                r = self.round_grid( self.refWidget_origin_r + float(x) - self.origin_x )
+                self.refWidget.attributes['r'] = str(max(0,r))
+                self.update_position()
+
+    def update_position(self):
+        if self.refWidget:
+            self.set_position(float(self.refWidget.attributes['cx'])+float(self.refWidget.attributes['r'])-self.w/2, float(self.refWidget.attributes['cy'])-self.h/2)
 
 
 class ResizeHelper(gui.Widget, DraggableItem):
@@ -172,8 +211,8 @@ class ResizeHelper(gui.Widget, DraggableItem):
                 self.refWidget_origin_w = gui.from_pix(self.refWidget.style['width'])
                 self.refWidget_origin_h = gui.from_pix(self.refWidget.style['height'])
             else:
-                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + float(x) - self.origin_x )
-                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + float(y) - self.origin_y)
+                self.refWidget.style['width'] = gui.to_pix( self.round_grid( self.refWidget_origin_w + float(x) - self.origin_x ) )
+                self.refWidget.style['height'] = gui.to_pix( self.round_grid( self.refWidget_origin_h + float(y) - self.origin_y ) )
                 self.update_position()
 
     def update_position(self):
@@ -213,8 +252,8 @@ class DragHelper(gui.Widget, DraggableItem):
                 self.refWidget_origin_x = gui.from_pix(self.refWidget.style['left'])
                 self.refWidget_origin_y = gui.from_pix(self.refWidget.style['top'])
             else:
-                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + float(x) - self.origin_x )
-                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + float(y) - self.origin_y)
+                self.refWidget.style['left'] = gui.to_pix( self.round_grid( self.refWidget_origin_x + float(x) - self.origin_x ) )
+                self.refWidget.style['top'] = gui.to_pix( self.round_grid( self.refWidget_origin_y + float(y) - self.origin_y ) )
                 self.update_position()
 
     def update_position(self):
@@ -334,9 +373,6 @@ class Project(gui.Widget):
 
         code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
         
-        backup_editor_onclick = widget.onclick.callback
-        widget.onclick.callback = widget.backup_onclick_listener
-
         #for all the methods of this widget
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
             #if the member is decorated by decorate_set_on_listener
@@ -345,6 +381,12 @@ class Project(gui.Widget):
                 if getattr(widget, setOnEventListenerFuncname).callback: 
                     listenerPrototype = setOnEventListenerFunc._event_info['prototype']
                     listener = getattr(widget, setOnEventListenerFuncname).callback.__self__
+                    
+                    if getattr(widget, setOnEventListenerFuncname) == widget.onclick:
+                        if widget.backup_onclick_listener == None:
+                            continue
+                        listener = widget.backup_onclick_listener.__self__
+
                     listenerFunctionName = setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
                         
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
@@ -372,8 +414,6 @@ class Project(gui.Widget):
             children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"%s,'%s'"%(child.attributes['editor_varname'],child.attributes['editor_varname'])}
         
         children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
-                        
-        widget.onclick.callback = backup_editor_onclick
 
         if newClass:# and not (classname in self.code_declared_classes.keys()):
             if not widget.identifier in self.code_declared_classes:
@@ -478,6 +518,13 @@ class Editor(App):
         self.toolbar.add_command('/res/delete.png', self.toolbar_delete_clicked, 'Delete Widget')
         self.toolbar.add_command('/res/cut.png', self.menu_cut_selection_clicked, 'Cut Widget')
         self.toolbar.add_command('/res/paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
+
+        
+        lbl = gui.Label("Snap grid", width = 100)
+        spin_grid_size = gui.SpinBox('1','1','100', width = 50)
+        spin_grid_size.set_on_change_listener(self.on_snap_grid_size_change)
+        grid_size = gui.HBox(children=[lbl, spin_grid_size], style={'outline':'1px solid gray', 'margin':'2px', 'margin-left':'10px'})
+        self.toolbar.append(grid_size)
         
         self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
         self.fileOpenDialog.confirm_value.connect(self.on_open_dialog_confirm)
@@ -560,6 +607,7 @@ class Editor(App):
         self.drag_helpers = [ResizeHelper(self.project, width=16, height=16), 
                             DragHelper(self.project, width=15, height=15), 
                             SvgDraggablePoint(self.project, 'cx', 'cy', [gui.SvgCircle]),
+                            SvgDraggableCircleResizeRadius(self.project, [gui.SvgCircle]),
                             SvgDraggablePoint(self.project, 'x1', 'y1', [gui.SvgLine]),
                             SvgDraggablePoint(self.project, 'x2', 'y2', [gui.SvgLine]),
                             SvgDraggablePoint(self.project, 'x', 'y', [gui.SvgRectangle]),
@@ -575,6 +623,11 @@ class Editor(App):
         # returning the root widget
         return self.mainContainer
     
+    def on_snap_grid_size_change(self, emitter, value):
+        value = float(value)
+        for drag_helper in self.drag_helpers:
+            drag_helper.set_snap_grid_size(value)
+
     def on_drag_resize_end(self, emitter):
         self.attributeEditor.set_widget( self.selectedWidget )
 
@@ -585,7 +638,6 @@ class Editor(App):
         
         if not 'editor_varname' in widget.attributes:
             return
-        
         widget.backup_onclick_listener = widget.onclick.callback
         widget.onclick.connect(self.on_widget_selection)
         
@@ -610,7 +662,7 @@ class Editor(App):
         if parent == None:
             parent = self.selectedWidget
         self.configure_widget_for_editing(widget)
-        widget.attributes['id'] = widget.attributes.get('editor_varname', widget.identifier)
+        widget.set_identifier( widget.attributes.get('editor_varname', widget.identifier) )
         key = "root" if parent==self.project else widget.identifier
         if root_tree_node:
             parent.append(widget,key)

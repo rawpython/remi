@@ -119,9 +119,6 @@ class SignalConnection(gui.Widget):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
 
-        backup_editor_onclick = widget.onclick.callback
-        widget.onclick.callback = widget.backup_onclick_listener
-
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style.update({'overflow':'visible', 'height':'24px', 'display':'block', 'outline':'1px solid lightgray'})
         self.label = gui.Label(eventConnectionFuncName, width='49%')
@@ -142,26 +139,26 @@ class SignalConnection(gui.Widget):
             ddi.listenerInstance = w
             self.dropdown.append(ddi)
         if self.eventConnectionFunc.callback: #if the callback is not None, and so there is a listener
-            if getattr(self.refWidget, eventConnectionFuncName):
-                connectedListenerName = getattr(self.refWidget, eventConnectionFuncName).callback.__self__.attributes['editor_varname']
-                self.dropdown.set_value( connectedListenerName )
-
-        widget.onclick.callback = backup_editor_onclick
+            connectedListenerName = eventConnectionFunc.callback.__self__.attributes['editor_varname']
+            self.dropdown.set_value( connectedListenerName )
 
     def on_connection(self, widget, dropDownValue):
-        backup_editor_onclick = self.refWidget.onclick.callback
-
+        if self.eventConnectionFuncName == 'onclick':
+            back = self.refWidget.onclick.callback
+            self.refWidget.onclick.callback = self.refWidget.backup_onclick_listener
+        
         if self.dropdown.get_value()=='None':
-            self.refWidget.connect(None) #removing listener
-            return
-        listener = self.dropdown._selected_item.listenerInstance
-        listener.attributes['editor_newclass'] = "True"
-        print("signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
-        listener.__class__.fakeListenerFunc = fakeListenerFunc
-        getattr(self.refWidget, self.eventConnectionFuncName).connect(listener.fakeListenerFunc)
+            self.eventConnectionFunc.connect(None)
+        else:
+            listener = self.dropdown._selected_item.listenerInstance
+            listener.attributes['editor_newclass'] = "True"
+            print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
+            listener.__class__.fakeListenerFunc = fakeListenerFunc
+            getattr(self.refWidget, self.eventConnectionFuncName).connect(listener.fakeListenerFunc)
 
-        self.refWidget.backup_onclick_listener = self.refWidget.onclick.callback
-        self.refWidget.onclick.callback = backup_editor_onclick
+        if self.eventConnectionFuncName == 'onclick':
+            self.refWidget.backup_onclick_listener = self.refWidget.onclick.callback
+            self.refWidget.onclick.callback = back
 
 
 def fakeListenerFunc(self,*args):
@@ -197,7 +194,7 @@ class SignalConnectionManager(gui.Widget):
         self.build_widget_list_from_tree(widget_tree)
 
         self.label.set_text('Signal connections: ' + widget.attributes['editor_varname'])
-        del self.container
+        #del self.container
         self.container = gui.VBox(width='100%', height='90%')
         self.container.style['justify-content'] = 'flex-start'
         self.container.style['overflow-y'] = 'scroll'
@@ -207,12 +204,17 @@ class SignalConnectionManager(gui.Widget):
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
             #if the member is decorated by decorate_set_on_listener and the function is referred to this event
             if hasattr(setOnEventListenerFunc, '_event_info'):
-                print(setOnEventListenerFuncname)
+                if setOnEventListenerFuncname == "onclick":
+                    backup_editor_onclick = widget.onclick.callback
+                    widget.onclick.callback = widget.backup_onclick_listener
+                    setOnEventListenerFunc = widget.onclick
                 self.container.append( SignalConnection(widget, 
                     self.listeners_list, 
                     setOnEventListenerFuncname, 
                     setOnEventListenerFunc, 
                     width='100%') )
+                if setOnEventListenerFuncname == "onclick":
+                    widget.onclick.callback = backup_editor_onclick
 
 
 class ProjectConfigurationDialog(gui.GenericDialog, gui.EventSource):

@@ -267,6 +267,15 @@ class Tag(object):
     def identifier(self):
         return self.attributes['id']
 
+    def set_identifier(self, new_identifier):
+        """Allows to set a unique id for the Tag.
+
+        Args:
+            new_identifier (str): a unique id for the tag
+        """
+        self.attributes['id'] = new_identifier
+        runtimeInstances[new_identifier] = self
+
     def repr(self, changed_widgets={}):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
@@ -792,6 +801,40 @@ class Widget(Tag, EventSource):
         """
         return ()
 
+    @decorate_set_on_listener("(self, emitter, key, ctrl, shift, alt)")
+    @decorate_event_js("""var params={};params['key']=event.key;
+            params['ctrl']=event.ctrlKey;
+            params['shift']=event.shiftKey;
+            params['alt']=event.altKey;
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+            event.stopPropagation();event.preventDefault();return false;""")
+    def onkeyup(self, key, ctrl, shift, alt):
+        """Called when user types and releases a key. 
+        The widget should be able to receive the focus in order to emit the event.
+        Assign a 'tabindex' attribute to make it focusable.
+        
+        Args:
+            key (str): the character value
+        """
+        return (key, ctrl, shift, alt)
+
+    @decorate_set_on_listener("(self, emitter, key, ctrl, shift, alt)")
+    @decorate_event_js("""var params={};params['key']=event.key;
+            params['ctrl']=event.ctrlKey;
+            params['shift']=event.shiftKey;
+            params['alt']=event.altKey;
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+            event.stopPropagation();event.preventDefault();return false;""")
+    def onkeydown(self, key, ctrl, shift, alt):
+        """Called when user types and releases a key.
+        The widget should be able to receive the focus in order to emit the event.
+        Assign a 'tabindex' attribute to make it focusable.
+        
+        Args:
+            key (str): the character value
+        """
+        return (key, ctrl, shift, alt)
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_focus_listener(self, callback, *userdata):
         self.onfocus.connect(callback, *userdata)
@@ -855,6 +898,14 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchcancel_listener(self, callback, *userdata):
         self.ontouchcancel.connect(callback, *userdata)
+
+    @decorate_explicit_alias_for_listener_registration
+    def set_on_key_up_listener(self, callback, *userdata):
+        self.onkeyup.connect(callback, *userdata)
+
+    @decorate_explicit_alias_for_listener_registration
+    def set_on_key_down_listener(self, callback, *userdata):
+        self.onkeydown.connect(callback, *userdata)
 
 
 class GridBox(Widget):
