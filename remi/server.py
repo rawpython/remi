@@ -98,13 +98,16 @@ def get_method_by_id(_id):
 def parse_session_cookie(cookie_to_cook):
     """ cookie_to_cook = http_header['cookie']
     """
-    print("cookie_to_cook: " + cookie_to_cook)
-    session_value = False
+    #print("cookie_to_cook: %s"%str(cookie_to_cook))
+    session_value = None
     tokens = cookie_to_cook.split(";")
     for tok in tokens:
-        if 'session=' in tok:
-            print("found session id: " + tok)
-            session_value = int(tok.replace('session=', ''))
+        if 'remi_session=' in tok:
+            #print("found session id: %s"%str(tok))
+            try:
+                session_value = int(tok.replace('remi_session=', ''))
+            except:
+                pass
     return session_value
 
 
@@ -337,7 +340,7 @@ class App(BaseHTTPRequestHandler, object):
             #send session to browser
             self.send_response(200)
             del self.headers['cookie']
-            self.send_header("Set-Cookie", "session=%s"%(self.session))
+            self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
 
         if not(self.session in clients):
             runtimeInstances[str(id(self))] = self
