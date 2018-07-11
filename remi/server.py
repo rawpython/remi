@@ -102,7 +102,7 @@ def parse_session_cookie(cookie_to_cook):
     session_value = False
     tokens = cookie_to_cook.split(";")
     for tok in tokens:
-        if 'session' in tok:
+        if 'session=' in tok:
             print("found session id: " + tok)
             session_value = int(tok.replace('session=', ''))
     return session_value
