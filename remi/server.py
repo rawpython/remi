@@ -349,8 +349,9 @@ class App(BaseHTTPRequestHandler, object):
         websocket_type = 'ws' if self.server.ssl_version==None else 'wss'
 
         net_interface_ip = self.connection.getsockname()[0]
+        net_interface_address = "%s:%s"%(net_interface_ip,self.server.server_address[1])
         if self.server.host_name is not None:
-            net_interface_ip = self.server.host_name
+            net_interface_address = self.server.host_name
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
@@ -394,7 +395,7 @@ class App(BaseHTTPRequestHandler, object):
 
         function openSocket(){
             try{
-                ws = new WebSocket('%(websocket_type)s://%(websocket_ip)s:%(websocket_port)s/');
+                ws = new WebSocket('%(websocket_type)s://%(websocket_url)s/');
                 console.debug('opening websocket');
                 ws.onopen = websocketOnOpen;
                 ws.onmessage = websocketOnMessage;
@@ -591,8 +592,7 @@ class App(BaseHTTPRequestHandler, object):
             xhr.send(fd);
         };
         </script>""" % {'websocket_type':websocket_type,
-                        'websocket_ip':net_interface_ip, 
-                        'websocket_port':self.server.server_address[1], 
+                        'websocket_url':net_interface_address, 
                         'max_pending_messages':pending_messages_queue_length, 
                         'messaging_timeout':websocket_timeout_timer_ms}
 
