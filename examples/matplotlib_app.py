@@ -99,4 +99,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, debug=True)
+    start(MyApp, debug=True, address='0.0.0.0', port=0)

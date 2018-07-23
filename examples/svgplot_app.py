@@ -208,4 +208,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0', update_interval=0.1, multiple_instance=True)
+    start(MyApp, address='0.0.0.0', port=0, update_interval=0.1, multiple_instance=True)

@@ -77,13 +77,13 @@ class ResizeHelper(gui.Widget, gui.EventSource):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = int(x)
-                self.origin_y = int(y)
+                self.origin_x = float(x)
+                self.origin_y = float(y)
                 self.refWidget_origin_w = gui.from_pix(self.refWidget.style['width'])
                 self.refWidget_origin_h = gui.from_pix(self.refWidget.style['height'])
             else:
-                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + int(x) - self.origin_x )
-                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + int(y) - self.origin_y)
+                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + float(x) - self.origin_x )
+                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + float(y) - self.origin_y)
                 self.update_position()
             return ()
 
@@ -231,4 +231,4 @@ class MyApp(App):
 
     
 if __name__ == "__main__":
-    start(MyApp, debug=False, address='0.0.0.0', port=8082, update_interval=0.01)
+    start(MyApp, debug=False, address='0.0.0.0', port=0, update_interval=0.01)

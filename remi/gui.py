@@ -648,8 +648,8 @@ class Widget(Tag, EventSource):
         """Called when the user presses left or right mouse button over a Widget.
 
         Args:
-            x (int): position of the mouse inside the widget
-            y (int): position of the mouse inside the widget
+            x (float): position of the mouse inside the widget
+            y (float): position of the mouse inside the widget
         """
         return (x, y)
 
@@ -665,8 +665,8 @@ class Widget(Tag, EventSource):
         """Called when the user releases left or right mouse button over a Widget.
 
         Args:
-            x (int): position of the mouse inside the widget
-            y (int): position of the mouse inside the widget
+            x (float): position of the mouse inside the widget
+            y (float): position of the mouse inside the widget
         """
         return (x, y)
 
@@ -709,8 +709,8 @@ class Widget(Tag, EventSource):
         """Called when the mouse cursor moves inside the Widget.
 
         Args:
-            x (int): position of the mouse inside the widget
-            y (int): position of the mouse inside the widget
+            x (float): position of the mouse inside the widget
+            y (float): position of the mouse inside the widget
         """
         return (x, y)
 
@@ -726,8 +726,8 @@ class Widget(Tag, EventSource):
         """Called continuously while a finger is dragged across the screen, over a Widget.
 
         Args:
-            x (int): position of the finger inside the widget
-            y (int): position of the finger inside the widget
+            x (float): position of the finger inside the widget
+            y (float): position of the finger inside the widget
         """
         return (x, y)
 
@@ -743,8 +743,8 @@ class Widget(Tag, EventSource):
         """Called when a finger touches the widget.
 
         Args:
-            x (int): position of the finger inside the widget
-            y (int): position of the finger inside the widget
+            x (float): position of the finger inside the widget
+            y (float): position of the finger inside the widget
         """
         return (x, y)
 
@@ -760,8 +760,8 @@ class Widget(Tag, EventSource):
         """Called when a finger is released from the widget.
 
         Args:
-            x (int): position of the finger inside the widget
-            y (int): position of the finger inside the widget
+            x (float): position of the finger inside the widget
+            y (float): position of the finger inside the widget
         """
         return (x, y)
 
@@ -777,8 +777,8 @@ class Widget(Tag, EventSource):
         """Called when a finger touches from outside to inside the widget.
 
         Args:
-            x (int): position of the finger inside the widget
-            y (int): position of the finger inside the widget
+            x (float): position of the finger inside the widget
+            y (float): position of the finger inside the widget
         """
         return (x, y)
 

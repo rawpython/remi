@@ -82,7 +82,7 @@ class untitled(App):
 
 
 #Configuration
-configuration = {'config_enable_file_cache': True, 'config_multiple_instance': True, 'config_port': 8081, 'config_address': '0.0.0.0', 'config_start_browser': True, 'config_project_name': 'untitled', 'config_resourcepath': './res/'}
+configuration = {'config_enable_file_cache': True, 'config_multiple_instance': True, 'config_port': 0, 'config_address': '0.0.0.0', 'config_start_browser': True, 'config_project_name': 'untitled', 'config_resourcepath': './res/'}
 
 if __name__ == "__main__":
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)

@@ -201,4 +201,4 @@ class MyApp(App):
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='0.0.0.0', port=8081, multiple_instance=False, debug=False)
+    start(MyApp, address='0.0.0.0', port=0, multiple_instance=False, debug=False)

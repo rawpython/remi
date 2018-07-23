@@ -102,4 +102,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0', start_browser=True)
+    start(MyApp, address='0.0.0.0', port=0, start_browser=True)

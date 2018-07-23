@@ -147,11 +147,11 @@ class Gauge(gui.Svg):
         self.arrow_preview.attributes['transform'] = "translate(%s,%s) rotate(%s)" % (xy[0], xy[1], math.degrees(-angle))
 
     def onmousedown(self, widget, x, y):
-        value = self.xy_tuple_to_value([int(x)-self.radius, -(int(y)-self.radius)])
+        value = self.xy_tuple_to_value([float(x)-self.radius, -(float(y)-self.radius)])
         self.set_value(value)
 
     def onmousemove(self, widget, x, y):
-        value = self.xy_tuple_to_value([int(x)-self.radius, -(int(y)-self.radius)])
+        value = self.xy_tuple_to_value([float(x)-self.radius, -(float(y)-self.radius)])
         self.set_value_preview(value)
 
 
@@ -169,4 +169,4 @@ class MyApp(App):
         return self.wid
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0')
+    start(MyApp, address='0.0.0.0', port=0)
