@@ -971,6 +971,42 @@ class GridBox(Widget):
             del child.style['grid-area']
         super(GridBox,self).remove_child(child)
 
+    def set_column_sizes(self, values):
+        """Sets the size value for each column
+
+        Args:
+            values (iterable of int or str): values are treated as percentage.
+        """
+        self.style['grid-template-columns'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
+
+    def set_row_sizes(self, values):
+        """Sets the size value for each row
+
+        Args:
+            values (iterable of int or str): values are treated as percentage.
+        """
+        self.style['grid-template-rows'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
+    
+    def set_column_gap(self, value):
+        """Sets the gap value between columns
+
+        Args:
+            value (int or str): gap value (i.e. 10 or "10px")
+        """
+        value = str(value) + 'px'
+        value = value.replace('pxpx', 'px')
+        self.style['grid-column-gap'] = value
+
+    def set_row_gap(self, value):
+        """Sets the gap value between rows
+
+        Args:
+            value (int or str): gap value (i.e. 10 or "10px")
+        """
+        value = str(value) + 'px'
+        value = value.replace('pxpx', 'px')
+        self.style['grid-row-gap'] = value
+
 
 class HBox(Widget):
     """It contains widget automatically aligning them horizontally.
@@ -1611,6 +1647,13 @@ class ListView(Widget):
                 break
         return (self._selected_key,)
 
+    def get_item(self):
+        """
+        Returns:
+            ListItem: The selected item or None
+        """
+        return self._selected_item
+
     def get_value(self):
         """
         Returns:
@@ -1773,6 +1816,13 @@ class DropDown(Widget):
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
+
+    def get_item(self):
+        """
+        Returns:
+            DropDownItem: The selected item or None.
+        """
+        return self._selected_item
 
     def get_value(self):
         """
@@ -2270,7 +2320,8 @@ class CheckBox(Input):
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def onchange(self, value):
-        self.set_value(value in ('True', 'true'))
+        value = value in ('True', 'true')
+        self.set_value(value)
         return (value, )
 
     def set_value(self, checked, update_ui=1):
@@ -2293,21 +2344,21 @@ class SpinBox(Input):
     """
 
     # noinspection PyShadowingBuiltins
-    @decorate_constructor_parameter_types([str, int, int, int])
-    def __init__(self, default_value='100', min=100, max=5000, step=1, allow_editing=True, **kwargs):
+    @decorate_constructor_parameter_types([int, int, int, int])
+    def __init__(self, default_value=100, min_value=100, max_value=5000, step=1, allow_editing=True, **kwargs):
         """
         Args:
-            default_value (str):
-            min (int):
-            max (int):
-            step (int):
+            default_value (int, float, str):
+            min (int, float, str):
+            max (int, float, str):
+            step (int, float, str):
             allow_editing (bool): If true allow editing the value using backpspace/delete/enter (othewise
             only allow entering numbers)
             kwargs: See Widget.__init__()
         """
-        super(SpinBox, self).__init__('number', default_value, **kwargs)
-        self.attributes['min'] = str(min)
-        self.attributes['max'] = str(max)
+        super(SpinBox, self).__init__('number', str(default_value), **kwargs)
+        self.attributes['min'] = str(min_value)
+        self.attributes['max'] = str(max_value)
         self.attributes['step'] = str(step)
         # eat non-numeric input (return false to stop propogation of event to onchange listener)
         js = 'var key = event.keyCode || event.charCode;'
