@@ -292,7 +292,7 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
-    re_static_file = re.compile(r"^/res/([-_. $@#£'%=()\[\]!+°§^,\w\d]+)\?{0,1}(?:[\w\d]*)")  # https://regex101.com/r/uK1sX1/4
+    re_static_file = re.compile(r"^/res/((?:[^\/.]+\/?){0,}([-_. $@#£'%=()\[\]!+°§^,\w\d]+)\?{0,1}(?:[\w\d]*))") #https://regex101.com/r/uK1sX1/6
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
@@ -818,12 +818,22 @@ class App(BaseHTTPRequestHandler, object):
                 self._log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
-        static_paths = [os.path.join(os.path.dirname(__file__), 'res')]
-        static_paths.extend(self._get_list_from_app_args('static_file_path'))
-        for s in reversed(static_paths):
+        for s in reversed(self._allowed_static_paths):
             path = os.path.join(s, filename)
             if os.path.exists(path):
                 return path
+               
+    @property
+    def _allowed_static_paths(self):
+        """Get all static folders and sub-folders.
+         
+        Caching is used for optmization, preventing folder traversing on every request
+        """
+        if not hasattr(self, '_allowed_static_path_list'):
+            self._allowed_static_path_list = [x[0] for x in os.walk(os.path.join(os.path.dirname(__file__), 'res'))]
+            for path in self._get_list_from_app_args('static_file_path'):
+                self._allowed_static_path_list.extend([x[0] for x in os.walk(path)])
+        return self._allowed_static_path_list
 
     def _process_all(self, func):
         self._log.debug('get: %s' % func)
@@ -858,8 +868,9 @@ class App(BaseHTTPRequestHandler, object):
             self.wfile.write(encode_text(self.client.js_body_end))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
-            filename = self._get_static_file(static_file.groups()[0])
-            if not filename:
+            filename = self._get_static_file(static_file.groups()[1])
+            if not filename or \
+                    os.path.abspath(os.path.dirname(filename)) not in self._allowed_static_paths:
                 self.send_response(404)
                 return
             mimetype, encoding = mimetypes.guess_type(filename)
