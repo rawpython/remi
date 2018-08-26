@@ -868,7 +868,7 @@ class App(BaseHTTPRequestHandler, object):
             self.wfile.write(encode_text(self.client.js_body_end))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
-            filename = self._get_static_file(static_file.groups()[1])
+            filename = self._get_static_file(static_file.groups()[0])
             if not filename or \
                     os.path.abspath(os.path.dirname(filename)) not in self._allowed_static_paths:
                 self.send_response(404)
