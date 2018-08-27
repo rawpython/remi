@@ -34,6 +34,9 @@ And so, in order to register a listener for the *onclick* event you can do *butt
 The previous dialect is still compatible.
 
 
+The parameter host_name is now deprecated. The server automatically catch the address where to connect from the http request.
+
+
 Getting Started
 ===
 For a **stable** version:
@@ -177,7 +180,6 @@ Parameters:
 Additional Parameters:
 - username: for a basic http authentication
 - password: for a basic http authentication
-- host_name: the server hostname 
 - certfile: ssl certificale filename
 - keyfile: ssl key file
 - ssl_version: authentication version (i.e. ssl.PROTOCOL_TLSv1_2). If None, disables ssl encription
@@ -305,10 +307,9 @@ Remote access
 ===
 If you are using your REMI app remotely, with a DNS and behind a firewall, you can specify special parameters in the `start` call:
 - **port**: http server port. Don't forget to NAT this port on your router;
-- **host_name**: a string containing the host name or remote ip address that allows to access to your app.
 
 ```py
-start(MyApp, address='0.0.0.0', port=8081, host_name='myhostname.net') 
+start(MyApp, address='0.0.0.0', port=8081) 
 ```
 
 

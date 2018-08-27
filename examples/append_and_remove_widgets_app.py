@@ -62,4 +62,4 @@ class MyApp(App):
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='127.0.0.1', port=8081, host_name=None, start_browser=True, username=None, password=None)
+    start(MyApp, address='127.0.0.1', port=8081, start_browser=True, username=None, password=None)
