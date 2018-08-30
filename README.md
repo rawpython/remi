@@ -298,6 +298,10 @@ The style attributes can be altered in this way:
 
 The assignment of a new attribute automatically creates it.
 
+For a reference list of html attributes you can refer to https://www.w3schools.com/tags/ref_attributes.asp
+
+For a reference list of style attributes you can refer to https://www.w3schools.com/cssref/default.asp
+
 Take care about internally used attributes. These are:
 - **class**: It is used to store the Widget class name for styling purpose
 - **id**: It is used to store the instance id of the widget for callback management

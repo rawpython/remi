@@ -421,7 +421,7 @@ class Widget(Tag, EventSource):
     Widget can be used as generic container. You can add children by the append(value, key) function.
     Widget can be arranged in absolute positioning (assigning style['top'] and style['left'] attributes to the children
     or in a simple auto-alignment.
-    You can decide the horizontal or vertical arrangement by the function set_layout_horientation(layout_orientation)
+    You can decide the horizontal or vertical arrangement by the function set_layout_orientation(layout_orientation)
     passing as parameter Widget.LAYOUT_HORIZONTAL or Widget.LAYOUT_VERTICAL.
 
     Tips:
@@ -1009,7 +1009,8 @@ class GridBox(Widget):
 
 
 class HBox(Widget):
-    """It contains widget automatically aligning them horizontally.
+    """The purpose of this widget is to automatically horizontally aligning 
+        the widgets that are appended to it.
     Does not permit children absolute positioning.
 
     In order to add children to this container, use the append(child, key) function.
@@ -1069,7 +1070,8 @@ class HBox(Widget):
 
 
 class VBox(HBox):
-    """It contains widget automatically aligning them vertically.
+    """The purpose of this widget is to automatically vertically aligning 
+        the widgets that are appended to it.
     Does not permit children absolute positioning.
 
     In order to add children to this container, use the append(child, key) function.
