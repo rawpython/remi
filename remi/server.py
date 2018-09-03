@@ -828,7 +828,10 @@ class App(BaseHTTPRequestHandler, object):
             self._allowed_static_path_list = [x[0] for x in os.walk(os.path.join(os.path.dirname(__file__), 'res'))]
             for path in self._get_list_from_app_args('static_file_path'):
                 self._allowed_static_path_list.extend([x[0] for x in os.walk(path)])
-        #self._log.info('allowed user paths: %s' % str(self._allowed_static_path_list) )
+            #self._allowed_static_path_list = []
+            #for path in paths:
+                #self._allowed_static_path_list.append(path.replace('\\','/'))
+        self._log.info('allowed user paths: %s' % str(self._allowed_static_path_list) )
         return self._allowed_static_path_list
 
     def _process_all(self, func):
@@ -866,6 +869,7 @@ class App(BaseHTTPRequestHandler, object):
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
+            print(">>>>>>>>>>>>> requested filename" + str(os.path.abspath(os.path.dirname(filename))))
             if not filename or \
                     os.path.abspath(os.path.dirname(filename)) not in self._allowed_static_paths:
                 self.send_response(404)
