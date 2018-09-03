@@ -338,7 +338,6 @@ class App(BaseHTTPRequestHandler, object):
             if self.server.multiple_instance:
                 self.session = int(time.time()*1000)
             #send session to browser
-            self.send_response(200)
             del self.headers['cookie']
             self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
 
