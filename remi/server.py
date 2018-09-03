@@ -339,7 +339,6 @@ class App(BaseHTTPRequestHandler, object):
                 self.session = int(time.time()*1000)
             #send session to browser
             del self.headers['cookie']
-            self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
 
         if not(self.session in clients):
             runtimeInstances[str(id(self))] = self
@@ -844,6 +843,7 @@ class App(BaseHTTPRequestHandler, object):
                 html = self.client.root.repr()
 
             self.send_response(200)
+            self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
