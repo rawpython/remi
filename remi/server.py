@@ -292,7 +292,7 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
-    re_static_file = re.compile(r"^/res/((?:[^\/.]+\/?){0,}([-_. $@#£'%=()\[\]!+°§^,\w\d]+)\?{0,1}(?:[\w\d]*))") #https://regex101.com/r/uK1sX1/6
+    re_static_file = re.compile(r"^/res/([-_. $@?#£'%=()\/\[\]!+°§^,\w\d]+)") #https://regex101.com/r/uK1sX1/6
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
@@ -829,6 +829,7 @@ class App(BaseHTTPRequestHandler, object):
             self._allowed_static_path_list = [x[0] for x in os.walk(os.path.join(os.path.dirname(__file__), 'res'))]
             for path in self._get_list_from_app_args('static_file_path'):
                 self._allowed_static_path_list.extend([x[0] for x in os.walk(path)])
+        #self._log.info('allowed user paths: %s' % str(self._allowed_static_path_list) )
         return self._allowed_static_path_list
 
     def _process_all(self, func):
