@@ -344,8 +344,6 @@ class App(BaseHTTPRequestHandler, object):
             runtimeInstances[str(id(self))] = self
             clients[self.session] = self
 
-        websocket_type = 'ws' if self.server.ssl_version==None else 'wss'
-
         net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
@@ -389,8 +387,13 @@ class App(BaseHTTPRequestHandler, object):
         };
 
         function openSocket(){
+            ws_wss = "ws";
             try{
-                ws = new WebSocket('%(websocket_type)s://%(host)s/');
+                ws_wss = document.location.protocol.startsWith('https')?'wss':'ws';
+            }catch(ex){}
+
+            try{
+                ws = new WebSocket(ws_wss + '://%(host)s/');
                 console.debug('opening websocket');
                 ws.onopen = websocketOnOpen;
                 ws.onmessage = websocketOnMessage;
@@ -586,8 +589,7 @@ class App(BaseHTTPRequestHandler, object):
             fd.append('upload_file', file);
             xhr.send(fd);
         };
-        </script>""" % {'websocket_type':websocket_type,
-                        'host':net_interface_ip, 
+        </script>""" % {'host':net_interface_ip, 
                         'max_pending_messages':pending_messages_queue_length, 
                         'messaging_timeout':websocket_timeout_timer_ms}
 
