@@ -813,6 +813,7 @@ class App(BaseHTTPRequestHandler, object):
                 self._log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
+        root_path = filename.split('/')
         for s in reversed(self._allowed_static_paths):
             path = os.path.join(s, filename)
             if os.path.exists(path):
@@ -825,12 +826,9 @@ class App(BaseHTTPRequestHandler, object):
         Caching is used for optmization, preventing folder traversing on every request
         """
         if not hasattr(self, '_allowed_static_path_list'):
-            self._allowed_static_path_list = [x[0] for x in os.walk(os.path.join(os.path.dirname(__file__), 'res'))]
-            for path in self._get_list_from_app_args('static_file_path'):
+            self._app_args['static_file_path'].update({'res':os.path.dirname(__file__)})
+            for path in self._get_list_from_app_args('static_file_path').values():
                 self._allowed_static_path_list.extend([x[0] for x in os.walk(path)])
-            #self._allowed_static_path_list = []
-            #for path in paths:
-                #self._allowed_static_path_list.append(path.replace('\\','/'))
         self._log.info('allowed user paths: %s' % str(self._allowed_static_path_list) )
         return self._allowed_static_path_list
 
