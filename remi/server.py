@@ -71,7 +71,7 @@ def to_websocket(data):
 
 
 def from_websocket(data):
-    # encoding end deconding utility function
+    # encoding end decoding utility function
     if pyLessThan3:
         return unquote(data)
     return unquote(data, encoding='utf-8')
@@ -324,7 +324,7 @@ class App(BaseHTTPRequestHandler, object):
         """
 
         self.session = 0
-        #cheching previously defined session
+        #checking previously defined session
         if 'cookie' in self.headers:
             self.session = parse_session_cookie(self.headers['cookie'])
             #if not a valid session id
@@ -350,7 +350,7 @@ class App(BaseHTTPRequestHandler, object):
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         clients[self.session].update_interval = self.server.update_interval
 
-        # refreshing the script every instance() call, beacuse of different net_interface_ip connections
+        # refreshing the script every instance() call, because of different net_interface_ip connections
         # can happens for the same 'k'
         clients[self.session].js_body_end = """
         <script>
@@ -558,7 +558,7 @@ class App(BaseHTTPRequestHandler, object):
                 failedConnections = 0;
 
                 while(pendingSendMessages.length>0){
-                    ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
+                    ws.send(pendingSendMessages.shift()); /*without checking ack*/
                 }
             }
             else{
@@ -1017,7 +1017,7 @@ class Server(object):
         self._sth.start()
 
     def serve_forever(self):
-        # we could join on the threads, but join blocks all interupts (including
+        # we could join on the threads, but join blocks all interrupts (including
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:

@@ -140,7 +140,7 @@ def decorate_set_on_listener(prototype):
 
 def decorate_constructor_parameter_types(type_list):
     """ Private decorator for use in the editor. 
-        Allows Editor to instanciate widgets.
+        Allows Editor to instantiate widgets.
 
         Args:
             params (str): The list of types for the widget 
@@ -229,7 +229,7 @@ class Tag(object):
             attributes (dict): The attributes to be applied. 
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
-           id (str): the unique identifier for the class instance, usefull for public API definition.
+           id (str): the unique identifier for the class instance, useful for public API definition.
         """
         self._parent = None
 
@@ -260,7 +260,7 @@ class Tag(object):
         self._classes = []
         self.add_class(self.__class__.__name__ if _class == None else _class)
 
-        #this variable will contain the repr of this tag, in order to avoid unuseful operations
+        #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
     @property
@@ -926,7 +926,7 @@ class GridBox(Widget):
         """Populates the Table with a list of tuples of strings.
 
         Args:
-            matrix (list): list of iterables of strings (lists or someting else). 
+            matrix (list): list of iterables of strings (lists or something else). 
                 Items in the matrix have to correspond to a key for the children.
         """
         self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
@@ -2354,7 +2354,7 @@ class SpinBox(Input):
             min (int, float, str):
             max (int, float, str):
             step (int, float, str):
-            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (othewise
+            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (otherwise
             only allow entering numbers)
             kwargs: See Widget.__init__()
         """
@@ -2362,7 +2362,7 @@ class SpinBox(Input):
         self.attributes['min'] = str(min_value)
         self.attributes['max'] = str(max_value)
         self.attributes['step'] = str(step)
-        # eat non-numeric input (return false to stop propogation of event to onchange listener)
+        # eat non-numeric input (return false to stop propagation of event to onchange listener)
         js = 'var key = event.keyCode || event.charCode;'
         js += 'return (event.charCode >= 48 && event.charCode <= 57)'
         if allow_editing:

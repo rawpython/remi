@@ -113,7 +113,7 @@ class Gauge(gui.Svg):
         self.set_value(_min)
 
     def value_to_angle(self, value):
-        return self.base_angle + (value-self.min) * self.scale_angle_range / self.scale_value_range #substraction in order to go clockwise
+        return self.base_angle + (value-self.min) * self.scale_angle_range / self.scale_value_range #subtraction in order to go clockwise
     
     def angle_to_value(self, angle):
         print("angolo:" + str(math.degrees(angle)))
