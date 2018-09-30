@@ -180,7 +180,7 @@ Parameters:
 Additional Parameters:
 - username: for a basic http authentication
 - password: for a basic http authentication
-- certfile: ssl certificale filename
+- certfile: ssl certificate filename
 - keyfile: ssl key file
 - ssl_version: authentication version (i.e. ssl.PROTOCOL_TLSv1_2). If None, disables ssl encription
 
@@ -380,7 +380,7 @@ Also a small amount is really welcome.
 Contributors
 ===
 Thank you for collaborating with us to make Remi better!
-The real power of opensource are contributors. Please feel free to partecipate to this project, and consider to add yourself to the following list.
+The real power of opensource are contributors. Please feel free to participate to this project, and consider to add yourself to the following list.
 Yes I know that github already provides a list of contributors, but I feel that I must mention who helps.
 
 [Davide Rosa](https://github.com/dddomodossola)
