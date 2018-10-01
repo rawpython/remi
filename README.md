@@ -82,7 +82,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        container = gui.VBox(width = 120, height = 100)
+        container = gui.VBox(width=120, height=100)
         self.lbl = gui.Label('Hello world!')
         self.bt = gui.Button('Press me!')
 
@@ -142,13 +142,13 @@ from remi import start, App
 Subclass the `App` class and declare a `main` function that will be the entry point of the application. Inside the main function you have to <code>return</code> the root widget.
 
 ```py
-class MyApp( App ):
-    def __init__( self, *args ):
-        super( MyApp, self ).__init__( *args )
-        
-    def main( self ):
-        lbl = gui.Label( "Hello world!", width=100, height=30 )
-        
+class MyApp(App):
+    def __init__(self, *args):
+        super(MyApp, self).__init__(*args)
+
+    def main(self):
+        lbl = gui.Label("Hello world!", width=100, height=30)
+
         #return of the root widget
         return lbl
 ```
@@ -156,8 +156,8 @@ class MyApp( App ):
 Outside the main class start the application calling the function `start` passing as parameter the name of the class you declared previously.
 
 ```py
-#starts the webserver    
-start( MyApp )
+#starts the webserver
+start(MyApp)
 ```
 
 Run the script. If all it's OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
@@ -208,7 +208,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        container = gui.VBox(width = 120, height = 100)
+        container = gui.VBox(width=120, height=100)
         self.lbl = gui.Label('Hello world!')
         self.bt = gui.Button('Press me!')
 
@@ -248,7 +248,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        container = gui.VBox(width = 120, height = 100)
+        container = gui.VBox(width=120, height=100)
         self.lbl = gui.Label('Hello world!')
         self.bt = gui.Button('Hello name!')
         self.bt2 = gui.Button('Hello name surname!')
