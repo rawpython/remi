@@ -16,6 +16,19 @@ Do you need support? Reach us on:
 <a href="https://www.reddit.com/r/RemiGUI" style="font-size:25px">Reddit - (subreddit RemiGUI)</a>
 </p>
 
+
+Would you like a **rapid overview**? Here is an online example, thanks to the powerful repl.it 
+<p align="center">
+<a href="http://remiexample--daviderosa.repl.co/ " style="font-size:25px">live example at repl.it</a>
+</p>
+
+
+There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy, or try it first at:
+<p align="center">
+<a href="http://remiguieditor--daviderosa.repl.co/ " style="font-size:25px">live try GUI editor overview at repl.it</a>
+</p>
+
+
 Changelog
 ===
 The current branch includes a bunch of updates. 
