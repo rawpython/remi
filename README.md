@@ -18,7 +18,7 @@ Do you need support? Reach us on:
 
 Changelog
 ===
-The current branch includes a bunch of updates. 
+The current branch includes a bunch of updates.
 The major changes are related to the event infrastructure. Now, an event listener can be registered as:
 ```
 widget.eventname.connect(listener)
@@ -114,16 +114,16 @@ Useful on Raspberry Pi for Python script development. It allows interacting with
 
 FAQ
 ===
-- **Why another GUI lib?**  
+- **Why another GUI lib?**
 Kivy, PyQT, and PyGObject all require native code for the host operating system, which means installing or compiling large dependencies. Remi needs only a web browser to show your GUI.
 
-- **Do I need to know HTML?**  
+- **Do I need to know HTML?**
 NO, It is not required, you have to code only in Python.
 
-- **Which browsers can I use this with?**  
+- **Which browsers can I use this with?**
 Tested on Chrome Firefox and Edge (on Windows, Linux, and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
 
-- **Is it open source?**  
+- **Is it open source?**
 For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
 
 - **Do I need some kind of web server?**
@@ -165,7 +165,7 @@ Run the script. If all it's OK the GUI will be opened automatically in your brow
 You can customize optional parameters in the `start` call like.
 
 ```py
-start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True) 
+start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True)
 ```
 
 Parameters:
@@ -173,7 +173,7 @@ Parameters:
 - port: listen port
 - multiple_instance: boolean, if True multiple clients that connect to your script has different App instances (identified by unique cookie session identifier)
 - enable_file_cache: boolean, if True enable resource caching
-- update_interval: GUI update interval in seconds. If zero, the update happens at each change. If zero, the App.idle method is not called. 
+- update_interval: GUI update interval in seconds. If zero, the update happens at each change. If zero, the App.idle method is not called.
 - start_browser: boolean that defines if the browser should be opened automatically at startup
 - standalone: boolean, indicates where to run the application as a standard Desktop application with its own window. If False, the interface is shown in a browser webpage.
 
@@ -191,7 +191,7 @@ All widgets constructors accept two standards**kwargs that are:
 
 Events and callbacks
 ===
-Widgets expose a set of events that happen during user interaction. 
+Widgets expose a set of events that happen during user interaction.
 Such events are a convenient way to define the application behavior.
 Each widget has its own callbacks, depending on the type of user interaction it allows.
 The specific callbacks for the widgets will be illustrated later.
@@ -256,7 +256,7 @@ class MyApp(App):
         # setting the listener for the onclick event of the buttons
         self.bt.onclick.connect(self.on_button_pressed, "Name")
         self.bt2.onclick.connect(self.on_button_pressed, "Name", "Surname")
-        
+
         # appending a widget to another
         container.append(self.lbl)
         container.append(self.bt)
@@ -313,7 +313,7 @@ If you are using your REMI app remotely, with a DNS and behind a firewall, you c
 - **port**: HTTP server port. Don't forget to NAT this port on your router;
 
 ```py
-start(MyApp, address='0.0.0.0', port=8081) 
+start(MyApp, address='0.0.0.0', port=8081)
 ```
 
 
@@ -322,7 +322,7 @@ Standalone Execution
 I suggest using the browser as a standard interface window.
 
 However, you can avoid using the browser.
-This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview). 
+This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview).
 Here is an example about this [standalone_app.py](https://github.com/dddomodossola/remi/blob/development/examples/standalone_app.py).
 
 **Be aware that PyWebView uses qt, gtk and so on to create the window. An outdated version of these libraries can cause UI problems. If you experience UI issues, update these libraries, or better avoid standalone execution.**
@@ -333,7 +333,7 @@ Authentication
 In order to limit the remote access to your interface, you can define a username and password. It consists of a simple authentication process.
 Just define the parameters **username** and **password** in the start call:
 ```py
-start(MyApp, username='myusername', password='mypassword') 
+start(MyApp, username='myusername', password='mypassword')
 ```
 
 
@@ -346,7 +346,7 @@ class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(MyApp, self).__init__(*args, static_file_path=res_path)
-``` 
+```
 
 Make a copy the standard style.css from the remi folder and paste it inside your *res* folder. Edit it in order to customize.
 This way the standard *style.css* file gets overridden by the one you created.
@@ -359,7 +359,7 @@ Remi is made to be compatible from Python2.7 to Python3.X. Please notify compati
 
 Security
 ===
-Remi should be intended as a standard desktop GUI framework. 
+Remi should be intended as a standard desktop GUI framework.
 The library itself doesn't implement security strategies, and so it is advised to not expose its access to unsafe public networks.
 
 When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
