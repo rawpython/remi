@@ -149,14 +149,14 @@ class MyApp(App):
     def main(self):
         lbl = gui.Label("Hello world!", width=100, height=30)
 
-        #return of the root widget
+        # return of the root widget
         return lbl
 ```
 
 Outside the main class start the application calling the function `start` passing as parameter the name of the class you declared previously.
 
 ```py
-#starts the webserver
+# starts the webserver
 start(MyApp)
 ```
 
