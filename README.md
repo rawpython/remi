@@ -26,7 +26,7 @@ widget.eventname.connect(listener)
 
 instead of:
 ```
-widget.set_on_xxx_listerner(listener)
+widget.set_on_xxx_listener(listener)
 ```
 
 And so, in order to register a listener for the *onclick* event, you can do *button.onclick.connect(myapp.on_button_pressed)*.
