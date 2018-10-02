@@ -292,7 +292,7 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
-    re_static_file = re.compile(r"^/res/([-_. $@?#£'%=()\/\[\]!+°§^,\w\d]+)") #https://regex101.com/r/uK1sX1/6
+    re_static_file = re.compile(r"^([\/]*[\w\d]+://[-_. $@?#£'%=()\/\[\]!+°§^,\w\d]+)") #https://regex101.com/r/uK1sX1/6
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
@@ -594,9 +594,10 @@ class App(BaseHTTPRequestHandler, object):
         # add built in js, extend with user js
         clients[self.session].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
         # use the default css, but append a version based on its hash, to stop browser caching
-        with open(self._get_static_file('style.css'), 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            clients[self.session].css_head = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
+        with open(self._get_static_file('remi_internal_res://style.css'), 'rb') as f:
+            # md5 = hashlib.md5(f.read()).hexdigest()
+            #clients[self.session].css_head = "<link href='remi_internal_res://style.css?%s' rel='stylesheet' />\n" % md5
+            clients[self.session].css_head = "<link href='remi_internal_res://style.css' rel='stylesheet' />\n"
         # add built in css, extend with user css
         clients[self.session].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
 
@@ -813,24 +814,15 @@ class App(BaseHTTPRequestHandler, object):
                 self._log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
-        root_path = filename.split('/')
-        for s in reversed(self._allowed_static_paths):
-            path = os.path.join(s, filename)
-            if os.path.exists(path):
-                return path
-               
-    @property
-    def _allowed_static_paths(self):
-        """Get all static folders and sub-folders.
-         
-        Caching is used for optmization, preventing folder traversing on every request
-        """
-        if not hasattr(self, '_allowed_static_path_list'):
-            self._app_args['static_file_path'].update({'res':os.path.dirname(__file__)})
-            for path in self._get_list_from_app_args('static_file_path').values():
-                self._allowed_static_path_list.extend([x[0] for x in os.walk(path)])
-        self._log.info('allowed user paths: %s' % str(self._allowed_static_path_list) )
-        return self._allowed_static_path_list
+        filename = filename.replace("..", "") #avoid backdirs
+        key, path = filename.split('://')
+        key = key.replace("/","")
+        paths = {'remi_internal_res': os.path.join(os.path.dirname(__file__), "res")}
+        paths.update(self._app_args['static_file_path'])
+        if not key in paths:
+            return None
+        
+        return os.path.join(paths[key], path)
 
     def _process_all(self, func):
         self._log.debug('get: %s' % func)
@@ -867,9 +859,7 @@ class App(BaseHTTPRequestHandler, object):
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
-            print(">>>>>>>>>>>>> requested filename" + str(os.path.abspath(os.path.dirname(filename))))
-            if not filename or \
-                    os.path.abspath(os.path.dirname(filename)) not in self._allowed_static_paths:
+            if not filename:
                 self.send_response(404)
                 return
             mimetype, encoding = mimetypes.guess_type(filename)

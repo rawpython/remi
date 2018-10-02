@@ -72,7 +72,7 @@ class Cell(gui.Widget):
         self.style['background-image'] = "''"
         if self.opened:
             if self.has_mine:
-                self.style['background-image'] = "url('/res/mine.png')"
+                self.style['background-image'] = "url('my_resources://minefield/mine.png')"
             else:
                 if self.nearest_mine > 0:
                     self.add_child('nearestbomb', "%s" % self.nearest_mine)
@@ -80,9 +80,9 @@ class Cell(gui.Widget):
                     self.style['background-color'] = 'rgb(200,255,100)'
             return
         if self.state == 2:
-            self.style['background-image'] = "url('/res/doubt.png')"
+            self.style['background-image'] = "url('my_resources://minefield/doubt.png')"
         if self.state == 1:
-            self.style['background-image'] = "url('/res/flag.png')"
+            self.style['background-image'] = "url('my_resources://minefield/flag.png')"
 
     def add_nearest_mine(self):
         self.nearest_mine += 1
@@ -91,7 +91,7 @@ class Cell(gui.Widget):
 class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        super(MyApp, self).__init__(*args, static_file_path=res_path)
+        super(MyApp, self).__init__(*args, static_file_path={'my_resources':res_path})
 
     def display_time(self):
         self.lblTime.set_text('Play time: ' + str(self.time_count))
@@ -134,10 +134,10 @@ class MyApp(App):
         self.horizontal_container.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.horizontal_container.style['margin'] = '10px'
         self.horizontal_container.append(self.info)
-        imgMine = gui.Image('/res/mine.png')
+        imgMine = gui.Image('my_resources://minefield/mine.png')
         imgMine.set_size(30, 30)
         self.horizontal_container.append([imgMine, self.lblMineCount])
-        imgFlag = gui.Image('/res/flag.png')
+        imgFlag = gui.Image('my_resources://minefield/flag.png')
         imgFlag.set_size(30, 30)
         self.horizontal_container.append([imgFlag, self.lblFlagCount, self.lblTime, self.btReset])
 
@@ -246,4 +246,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, multiple_instance=True, address='0.0.0.0', port=0, debug=False, start_browser=True )
+    start(MyApp, multiple_instance=True, address='0.0.0.0', port=0, debug=True, start_browser=True )
