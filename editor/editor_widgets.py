@@ -341,7 +341,7 @@ class WidgetHelper(gui.HBox):
         super(WidgetHelper, self).__init__()
         self.style['display'] = 'block'
         self.style['background-color'] = 'white'
-        self.icon = gui.Image('/res/widget_%s.png'%self.widgetClass.__name__, width='auto', margin='2px')
+        self.icon = gui.Image('editor_resources://widget_%s.png'%self.widgetClass.__name__, width='auto', margin='2px')
         self.icon.style['max-width'] = '100%'
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'
@@ -522,7 +522,7 @@ class EditorAttributesGroup(gui.Widget):
         self.title = gui.Label(title)
         self.title.add_class("Title")
         self.title.style.update({'padding-left':'32px',
-            'background-image':"url('/res/minus.png')",
+            'background-image':"url('editor_resources://minus.png')",
             'background-repeat':'no-repeat',
             'background-position':'5px',
             'border-top':'3px solid lightgray'})
@@ -531,7 +531,7 @@ class EditorAttributesGroup(gui.Widget):
 
     def openClose(self, widget):
         self.opened = not self.opened
-        backgroundImage = "url('/res/minus.png')" if self.opened else "url('/res/plus.png')"
+        backgroundImage = "url('editor_resources://minus.png')" if self.opened else "url('editor_resources://plus.png')"
         self.title.style['background-image'] = backgroundImage
         display = 'block' if self.opened else 'none'
         for widget in self.children.values():
@@ -668,7 +668,7 @@ class UrlPathInput(gui.Widget, gui.EventSource):
 
         self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
         self.btFileFolderSelection.style.update({'background-repeat':'round',
-            'background-image':"url('/res/folder.png')",
+            'background-image':"url('remi_internal_res://folder.png')",
             'background-color':'transparent'})
         self.append(self.btFileFolderSelection)
         self.btFileFolderSelection.onclick.connect(self.on_file_selection_bt_pressed)
@@ -688,7 +688,7 @@ class UrlPathInput(gui.Widget, gui.EventSource):
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
-            self.txtInput.set_value("url('/res/" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
+            self.txtInput.set_value("url('editor_resources://" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
             return self.onchange(None, self.txtInput.get_value())
 
     def set_value(self, value):
@@ -737,7 +737,7 @@ class EditorAttributeInput(gui.Widget, gui.EventSource):
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
 
         self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
-        self.removeAttribute = gui.Image('/res/delete.png', width='5%')
+        self.removeAttribute = gui.Image('editor_resources://delete.png', width='5%')
         self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
         self.removeAttribute.onclick.connect(self.on_attribute_remove)
         self.append(self.removeAttribute)

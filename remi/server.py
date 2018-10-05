@@ -818,7 +818,10 @@ class App(BaseHTTPRequestHandler, object):
         key, path = filename.split('://')
         key = key.replace("/","")
         paths = {'remi_internal_res': os.path.join(os.path.dirname(__file__), "res")}
-        paths.update(self._app_args['static_file_path'])
+        if not type(self._app_args.get('static_file_path'))==dict:
+            self._log.error("App's parameter static_file_path must be a Dictionary.", exc_info=True)
+        else:
+            paths.update(self._app_args.get('static_file_path', {}))
         if not key in paths:
             return None
         

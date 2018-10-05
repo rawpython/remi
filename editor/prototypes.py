@@ -38,7 +38,7 @@ proto_code_main_class = """
 class %(classname)s(App):
     def __init__(self, *args, **kwargs):
         if not 'editing_mode' in kwargs.keys():
-            super(%(classname)s, self).__init__(*args, static_file_path='%(config_resourcepath)s')
+            super(%(classname)s, self).__init__(*args, static_file_path={'res':'%(config_resourcepath)s')
 
     def idle(self):
         #idle function called every update cycle
