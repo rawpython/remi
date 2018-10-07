@@ -158,7 +158,7 @@ def decorate_set_on_listener(prototype):
 
 def decorate_constructor_parameter_types(type_list):
     """ Private decorator for use in the editor. 
-        Allows Editor to instanciate widgets.
+        Allows Editor to instantiate widgets.
 
         Args:
             params (str): The list of types for the widget 
@@ -247,7 +247,7 @@ class Tag(object):
             attributes (dict): The attributes to be applied. 
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
-           id (str): the unique identifier for the class instance, usefull for public API definition.
+           id (str): the unique identifier for the class instance, useful for public API definition.
         """
         self._parent = None
 
@@ -278,7 +278,7 @@ class Tag(object):
         self._classes = []
         self.add_class(self.__class__.__name__ if _class == None else _class)
 
-        #this variable will contain the repr of this tag, in order to avoid unuseful operations
+        #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
     @property
@@ -439,7 +439,7 @@ class Widget(Tag, EventSource):
     Widget can be used as generic container. You can add children by the append(value, key) function.
     Widget can be arranged in absolute positioning (assigning style['top'] and style['left'] attributes to the children
     or in a simple auto-alignment.
-    You can decide the horizontal or vertical arrangement by the function set_layout_horientation(layout_orientation)
+    You can decide the horizontal or vertical arrangement by the function set_layout_orientation(layout_orientation)
     passing as parameter Widget.LAYOUT_HORIZONTAL or Widget.LAYOUT_VERTICAL.
 
     Tips:
@@ -944,7 +944,7 @@ class GridBox(Widget):
         """Populates the Table with a list of tuples of strings.
 
         Args:
-            matrix (list): list of iterables of strings (lists or someting else). 
+            matrix (list): list of iterables of strings (lists or something else). 
                 Items in the matrix have to correspond to a key for the children.
         """
         self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
@@ -1027,7 +1027,8 @@ class GridBox(Widget):
 
 
 class HBox(Widget):
-    """It contains widget automatically aligning them horizontally.
+    """The purpose of this widget is to automatically horizontally aligning 
+        the widgets that are appended to it.
     Does not permit children absolute positioning.
 
     In order to add children to this container, use the append(child, key) function.
@@ -1087,7 +1088,8 @@ class HBox(Widget):
 
 
 class VBox(HBox):
-    """It contains widget automatically aligning them vertically.
+    """The purpose of this widget is to automatically vertically aligning 
+        the widgets that are appended to it.
     Does not permit children absolute positioning.
 
     In order to add children to this container, use the append(child, key) function.
@@ -2401,7 +2403,7 @@ class SpinBox(Input):
             min (int, float, str):
             max (int, float, str):
             step (int, float, str):
-            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (othewise
+            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (otherwise
             only allow entering numbers)
             kwargs: See Widget.__init__()
         """
@@ -2409,7 +2411,7 @@ class SpinBox(Input):
         self.attributes['min'] = str(min_value)
         self.attributes['max'] = str(max_value)
         self.attributes['step'] = str(step)
-        # eat non-numeric input (return false to stop propogation of event to onchange listener)
+        # eat non-numeric input (return false to stop propagation of event to onchange listener)
         js = 'var key = event.keyCode || event.charCode;'
         js += 'return (event.charCode >= 48 && event.charCode <= 57)'
         if allow_editing:

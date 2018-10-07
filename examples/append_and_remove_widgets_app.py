@@ -45,7 +45,7 @@ class MyApp(App):
         return main_container
     
     def on_add_a_label_pressed(self, emitter):
-        # I create a unique id for the new label that will be instanciated
+        # I create a unique id for the new label that will be instantiated
         key = str(len(self.lbls_container.children))
         lbl = gui.Label("label id: " + key, style={'border':'1px solid gray', 'margin':'3px'})
         self.lbls_container.append(lbl, key)
@@ -62,4 +62,4 @@ class MyApp(App):
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='127.0.0.1', port=8081, host_name=None, start_browser=True, username=None, password=None)
+    start(MyApp, address='127.0.0.1', port=8081, start_browser=True, username=None, password=None)

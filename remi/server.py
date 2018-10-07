@@ -71,7 +71,7 @@ def to_websocket(data):
 
 
 def from_websocket(data):
-    # encoding end deconding utility function
+    # encoding end decoding utility function
     if pyLessThan3:
         return unquote(data)
     return unquote(data, encoding='utf-8')
@@ -324,7 +324,7 @@ class App(BaseHTTPRequestHandler, object):
         """
 
         self.session = 0
-        #cheching previously defined session
+        #checking previously defined session
         if 'cookie' in self.headers:
             self.session = parse_session_cookie(self.headers['cookie'])
             #if not a valid session id
@@ -338,25 +338,19 @@ class App(BaseHTTPRequestHandler, object):
             if self.server.multiple_instance:
                 self.session = int(time.time()*1000)
             #send session to browser
-            self.send_response(200)
             del self.headers['cookie']
-            self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
 
         if not(self.session in clients):
             runtimeInstances[str(id(self))] = self
             clients[self.session] = self
 
-        websocket_type = 'ws' if self.server.ssl_version==None else 'wss'
-
-        net_interface_ip = self.connection.getsockname()[0]
-        if self.server.host_name is not None:
-            net_interface_ip = self.server.host_name
+        net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
 
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         clients[self.session].update_interval = self.server.update_interval
 
-        # refreshing the script every instance() call, beacuse of different net_interface_ip connections
+        # refreshing the script every instance() call, because of different net_interface_ip connections
         # can happens for the same 'k'
         clients[self.session].js_body_end = """
         <script>
@@ -393,8 +387,13 @@ class App(BaseHTTPRequestHandler, object):
         };
 
         function openSocket(){
+            ws_wss = "ws";
             try{
-                ws = new WebSocket('%(websocket_type)s://%(websocket_ip)s:%(websocket_port)s/');
+                ws_wss = document.location.protocol.startsWith('https')?'wss':'ws';
+            }catch(ex){}
+
+            try{
+                ws = new WebSocket(ws_wss + '://%(host)s/');
                 console.debug('opening websocket');
                 ws.onopen = websocketOnOpen;
                 ws.onmessage = websocketOnMessage;
@@ -559,7 +558,7 @@ class App(BaseHTTPRequestHandler, object):
                 failedConnections = 0;
 
                 while(pendingSendMessages.length>0){
-                    ws.send(pendingSendMessages.shift()); /*whithout checking ack*/
+                    ws.send(pendingSendMessages.shift()); /*without checking ack*/
                 }
             }
             else{
@@ -590,9 +589,7 @@ class App(BaseHTTPRequestHandler, object):
             fd.append('upload_file', file);
             xhr.send(fd);
         };
-        </script>""" % {'websocket_type':websocket_type,
-                        'websocket_ip':net_interface_ip, 
-                        'websocket_port':self.server.server_address[1], 
+        </script>""" % {'host':net_interface_ip, 
                         'max_pending_messages':pending_messages_queue_length, 
                         'messaging_timeout':websocket_timeout_timer_ms}
 
@@ -837,6 +834,7 @@ class App(BaseHTTPRequestHandler, object):
                 html = self.client.root.repr()
 
             self.send_response(200)
+            self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
@@ -923,7 +921,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     # noinspection PyPep8Naming
     def __init__(self, server_address, RequestHandlerClass,
                  auth, multiple_instance, enable_file_cache, update_interval,
-                 websocket_timeout_timer_ms, host_name, pending_messages_queue_length,
+                 websocket_timeout_timer_ms, pending_messages_queue_length,
                  title, server_starter_instance, certfile, keyfile, ssl_version, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.auth = auth
@@ -931,7 +929,6 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.enable_file_cache = enable_file_cache
         self.update_interval = update_interval
         self.websocket_timeout_timer_ms = websocket_timeout_timer_ms
-        self.host_name = host_name
         self.pending_messages_queue_length = pending_messages_queue_length
         self.title = title
         self.server_starter_instance = server_starter_instance
@@ -948,8 +945,8 @@ class Server(object):
     # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
-                 websocket_timeout_timer_ms=1000, host_name=None,
-                 pending_messages_queue_length=1000, certfile=None, keyfile=None, ssl_version=None,  userdata=()):
+                 websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, 
+                 certfile=None, keyfile=None, ssl_version=None,  userdata=()):
 
         self._gui = gui_class
         self._title = title or gui_class.__name__
@@ -963,7 +960,6 @@ class Server(object):
         self._update_interval = update_interval
         self._start_browser = start_browser
         self._websocket_timeout_timer_ms = websocket_timeout_timer_ms
-        self._host_name = host_name
         self._pending_messages_queue_length = pending_messages_queue_length
         self._certfile = certfile
         self._keyfile = keyfile
@@ -998,8 +994,8 @@ class Server(object):
         self._sserver = ThreadedHTTPServer((self._address, self._sport), self._gui, self._auth,
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
-                                           self._host_name, self._pending_messages_queue_length,
-                                           self._title, self, self._certfile, self._keyfile, self._ssl_version, *self._userdata)
+                                           self._pending_messages_queue_length, self._title, 
+                                           self, self._certfile, self._keyfile, self._ssl_version, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
@@ -1021,7 +1017,7 @@ class Server(object):
         self._sth.start()
 
     def serve_forever(self):
-        # we could join on the threads, but join blocks all interupts (including
+        # we could join on the threads, but join blocks all interrupts (including
         # ctrl+c, so just spin here
         # noinspection PyBroadException
         try:
@@ -1056,8 +1052,7 @@ class StandaloneServer(Server):
         Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
                         password=None,
                         multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                        websocket_timeout_timer_ms=1000, host_name=None,
-                        pending_messages_queue_length=1000, userdata=userdata)
+                        websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, userdata=userdata)
 
         self._application_conf = {'width': width, 'height': height, 'resizable': resizable, 'fullscreen': fullscreen}
 

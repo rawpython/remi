@@ -13,7 +13,7 @@
 """
 
 """ This example permits to play with VBox and HBox layouts.
-    Different style parameters plays a specific role in layout arrangment,
+    Different style parameters plays a specific role in layout arrangement,
      and this little application allows to test each parameter behavior.
 """
 
