@@ -19,8 +19,26 @@ import functools
 import threading
 import collections
 import inspect
+import cgi
+escape = cgi.escape
+try:
+    # Python 2.6-2.7 
+    from HTMLParser import HTMLParser
+    h = HTMLParser()
+    unescape = h.unescape
+except ImportError:
+    # Python 3
+    try:
+        from html.parser import HTMLParser
+        h = HTMLParser()
+        unescape = h.unescape
+    except ImportError:
+        # Python 3.4+
+        import html
+        unescape = html.unescape
 
 from .server import runtimeInstances
+
 
 log = logging.getLogger('remi.gui')
 
@@ -1198,7 +1216,7 @@ class _MixinTextualWidget(object):
         Args:
             text (str): The string label of the Widget.
         """
-        self.add_child('text', text)
+        self.add_child('text', escape(text))
 
     def get_text(self):
         """
@@ -1207,7 +1225,7 @@ class _MixinTextualWidget(object):
         """
         if 'text' not in self.children.keys():
             return ''
-        return self.get_child('text')
+        return unescape(self.get_child('text'))
 
 
 class Button(Widget, _MixinTextualWidget):
@@ -1380,6 +1398,37 @@ class Label(Widget, _MixinTextualWidget):
         super(Label, self).__init__(*args, **kwargs)
         self.type = 'p'
         self.set_text(text)
+
+
+class Progress(Widget):
+    """ Progress bar widget.
+    """
+    @decorate_constructor_parameter_types([int, int])
+    def __init__(self, value=0, _max=100, *args, **kwargs):
+        """
+        Args:
+            value (int): The actual progress value.
+            max (int): The maximum progress value.
+            kwargs: See Widget.__init__()
+        """
+        super(Progress, self).__init__(*args, **kwargs)
+        self.type = 'progress'
+        self.set_value(value)
+        self.attributes['max'] = str(_max)
+
+    def set_value(self, value):
+        """
+        Args:
+            value (int): The actual progress value.
+        """
+        self.attributes['value'] = str(value)     
+
+    def set_max(self, _max):
+        """
+        Args:
+            max (int): The maximum progress value.
+        """
+        self.attributes['max'] = str(_max)  
 
 
 class GenericDialog(Widget):

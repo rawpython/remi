@@ -23,6 +23,7 @@ class MyApp(App):
 
     def idle(self):
         self.counter.set_text('Running Time: ' + str(self.count))
+        self.progress.set_value(self.count%100)
 
     def main(self):
         # the margin 0px auto centers the main container
@@ -57,8 +58,10 @@ class MyApp(App):
         self.txt.set_text('This is a TEXTAREA')
         self.txt.onchange.connect(self.on_text_area_change)
 
-        self.spin = gui.SpinBox(-10, -100, 1000, width=200, height=30, margin='10px')
+        self.spin = gui.SpinBox(1, 0, 100, width=200, height=30, margin='10px')
         self.spin.onchange.connect(self.on_spin_change)
+
+        self.progress = gui.Progress(1, 100, width=200, height=5)
 
         self.check = gui.CheckBoxLabel('Label checkbox', True, width=200, height=30, margin='10px')
         self.check.onchange.connect(self.on_check_change)
@@ -116,7 +119,7 @@ class MyApp(App):
         subti4.append([subsubti1, subsubti2, subsubti3])
         
         # appending a widget to another, the first argument is a string key
-        subContainerRight.append([self.counter, self.lbl, self.bt, self.txt, self.spin, self.check, self.btInputDiag, self.btFileDiag])
+        subContainerRight.append([self.counter, self.lbl, self.bt, self.txt, self.spin, self.progress, self.check, self.btInputDiag, self.btFileDiag])
         # use a defined key as we replace this widget later
         fdownloader = gui.FileDownloader('download test', '../remi/res/logo.png', width=200, height=30, margin='10px')
         subContainerRight.append(fdownloader, key='file_downloader')
