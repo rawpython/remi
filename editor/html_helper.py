@@ -116,6 +116,9 @@ editorAttributeList = [
     ('grid-template-areas',{'type':'str', 'description':"Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').", 'affected_widget_attribute':'style', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.GridBox]}}),
     ('grid-gap',{'type':'css_size', 'description':"Defines the size of the gap between the rows and columns.", 'affected_widget_attribute':'style', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.GridBox]}}),
 
+    ('value',{'type':int, 'description':"Defines the actual value for the progress bar.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.Progress], 'possible_values':'', 'min':0, 'max':10000, 'default':0, 'step':1}}),
+    ('max',{'type':int, 'description':"Defines the maximum value for the progress bar.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.Progress], 'possible_values':'', 'min':0, 'max':10000, 'default':0, 'step':1}}),
+
     ('stroke',{'type':gui.ColorPicker, 'description':"Color for svg elements.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine, gui.SvgCircle, gui.SvgGroup, gui.SvgPolyline, gui.SvgRectangle, gui.SvgText, gui.SvgPath]}}),
     ('stroke-width',{'type':int, 'description':"Stroke width for svg elements.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgLine, gui.SvgCircle, gui.SvgGroup, gui.SvgPolyline, gui.SvgRectangle, gui.SvgText, gui.SvgPath], 'possible_values':'', 'min':0.0, 'max':10000.0, 'default':1.0, 'step':0.1}}),
     ('fill',{'type':gui.ColorPicker, 'description':"Fill color for svg elements.", 'affected_widget_attribute':'attributes', 'group':'WidgetSpecific', 'additional_data':{'applies_to':[gui.SvgCircle, gui.SvgGroup, gui.SvgRectangle, gui.SvgText, gui.SvgPath]}}),
