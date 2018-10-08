@@ -5,7 +5,7 @@
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
-    src: local('Roboto'), local('Roboto-Regular'), url('/res/font.woff2') format('woff2');
+    src: local('Roboto'), local('Roboto-Regular'), url('/res:font.woff2') format('woff2');
 }
 textarea:focus,
 input[type='checkbox']:focus,
@@ -639,11 +639,11 @@ ul.TreeView{
     display: block;
 }
 .TreeItem[has-subtree='true'][treeopen='false']{
-    background-image: url('/res/plus.png');
+    background-image: url('/res:plus.png');
     background-position: 0px 4px;
 }
 .TreeItem[has-subtree='true'][treeopen='true']{
-    background-image: url('/res/minus.png');
+    background-image: url('/res:minus.png');
     background-position: 0px 4px;
     border-bottom: 0;
 }

@@ -75,7 +75,7 @@ class screen2Widget(Widget):
 class multiscreen(App):
     def __init__(self, *args, **kwargs):
         if not 'editing_mode' in kwargs.keys():
-            super(multiscreen, self).__init__(*args, static_file_path='./res/')
+            super(multiscreen, self).__init__(*args)
 
     def idle(self):
         #idle function called every update cycle

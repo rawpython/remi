@@ -1250,7 +1250,7 @@ class TextInput(Widget, _MixinTextualWidget):
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
             self.attributes[self.EVENT_ONKEYDOWN] = "if((event.charCode||event.keyCode)==13){" \
-                "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur();" \
+                "event.keyCode = 0;event.charCode = 0; document.body.tabIndex=100000; document.body.focus(); document.body.blur(); document.getElementById('%(id)s').blur();" \
                 "return false;}" % {'id': self.identifier}
 
         self.set_value('')
@@ -1312,7 +1312,7 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event_js("var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
             "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);if((event.charCode||event.keyCode)==13){" \
-            "event.keyCode = 0;event.charCode = 0; document.getElementById('%(emitter_identifier)s').blur(); return false;}")
+            "event.keyCode = 0;event.charCode = 0; document.body.tabIndex=100000; document.body.focus(); document.body.blur(); document.getElementById('%(emitter_identifier)s').blur(); return false;}")
     def onkeydown(self, new_value):
         """Called when the user types a key into the TextInput.
 
@@ -2622,7 +2622,7 @@ class FileFolderItem(Widget):
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
             self.icon.onclick.connect(self.onclick)
-        icon_file = 'remi_internal_res://folder.png' if is_folder else 'remi_internal_res:///file.png'
+        icon_file = '/res:folder.png' if is_folder else '/res:file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.set_size(400, 30)

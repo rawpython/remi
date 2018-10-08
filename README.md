@@ -18,23 +18,22 @@ Do you need support? Reach us on:
 
 Changelog
 ===
-The current branch includes a bunch of updates. 
-The major changes are related to the event infrastructure. Now, an event listener can be registered as:
+The current branch includes improvements about resource files handling. 
+App constructor accepts **static_file_path** parameter. Its value have to be a dictionary, where elements represents named resources paths.
+
+i.e.
+```python
+super(MyApp, self).__init__(*args, static_file_path = {'my_resources':'./files/resources/', 'my_other_res':'./other/'})
 ```
-widget.eventname.connect(listener)
+To address a specific resource, the user have to specify the resource folder key, prepending it to the filename in the format **'/key:'**
+i.e.
+```python
+my_widget.attributes['background-image'] = "url('/my_resources:image.png')"
 ```
-
-instead of:
+Subfolders are accepted, and so:
+```python
+my_widget.attributes['background-image'] = "url('/my_resources:subfolder/other_subfolder/image.png')"
 ```
-widget.set_on_xxx_listerner(listener)
-```
-
-And so, in order to register a listener for the *onclick* event you can do *button.onclick.connect(myapp.on_button_pressed)* .
-
-The previous dialect is still compatible.
-
-
-The parameter host_name is now deprecated. The server automatically catch the address where to connect from the http request.
 
 
 Getting Started

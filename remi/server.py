@@ -292,7 +292,7 @@ class App(BaseHTTPRequestHandler, object):
         - file requests
     """
 
-    re_static_file = re.compile(r"^([\/]*[\w\d]+://[-_. $@?#£'%=()\/\[\]!+°§^,\w\d]+)") #https://regex101.com/r/uK1sX1/6
+    re_static_file = re.compile(r"^([\/]*[\w\d]+:[-_. $@?#£'%=()\/\[\]!+°§^,\w\d]+)") #https://regex101.com/r/uK1sX1/6
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
@@ -594,10 +594,10 @@ class App(BaseHTTPRequestHandler, object):
         # add built in js, extend with user js
         clients[self.session].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
         # use the default css, but append a version based on its hash, to stop browser caching
-        with open(self._get_static_file('remi_internal_res://style.css'), 'rb') as f:
+        with open(self._get_static_file('/res:style.css'), 'rb') as f:
             # md5 = hashlib.md5(f.read()).hexdigest()
-            #clients[self.session].css_head = "<link href='remi_internal_res://style.css?%s' rel='stylesheet' />\n" % md5
-            clients[self.session].css_head = "<link href='remi_internal_res://style.css' rel='stylesheet' />\n"
+            #clients[self.session].css_head = "<link href='/res:style.css?%s' rel='stylesheet' />\n" % md5
+            clients[self.session].css_head = "<link href='/res:style.css' rel='stylesheet' />\n"
         # add built in css, extend with user css
         clients[self.session].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
 
@@ -815,16 +815,20 @@ class App(BaseHTTPRequestHandler, object):
 
     def _get_static_file(self, filename):
         filename = filename.replace("..", "") #avoid backdirs
-        key, path = filename.split('://')
+        __i = filename.find(':')
+        if __i < 0:
+            return None
+        key = filename[:__i]
+        path = filename[__i+1:]
         key = key.replace("/","")
-        paths = {'remi_internal_res': os.path.join(os.path.dirname(__file__), "res")}
-        if not type(self._app_args.get('static_file_path'))==dict:
-            self._log.error("App's parameter static_file_path must be a Dictionary.", exc_info=True)
-        else:
-            paths.update(self._app_args.get('static_file_path', {}))
+        paths = {'res': os.path.join(os.path.dirname(__file__), "res")}
+        static_paths = self._app_args.get('static_file_path', {})
+        if not type(static_paths)==dict:
+            self._log.error("App's parameter static_file_path must be a Dictionary.", exc_info=False)
+            static_paths = {}
+        paths.update(static_paths)
         if not key in paths:
             return None
-        
         return os.path.join(paths[key], path)
 
     def _process_all(self, func):

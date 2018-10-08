@@ -23,7 +23,7 @@ from remi import start, App
 
 class PILImageViewverWidget(gui.Image):
     def __init__(self, pil_image=None, **kwargs):
-        super(PILImageViewverWidget, self).__init__("/res/logo.png", **kwargs)
+        super(PILImageViewverWidget, self).__init__("/res:logo.png", **kwargs)
         self._buf = None
 
     def load(self, file_path_name):

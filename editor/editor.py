@@ -188,7 +188,7 @@ class ResizeHelper(gui.Widget, DraggableItem):
         super(ResizeHelper, self).__init__(**kwargs)
         DraggableItem.__init__(self, project, **kwargs)
         self.style['float'] = 'none'
-        self.style['background-image'] = "url('editor_resources://resize.png')"
+        self.style['background-image'] = "url('/editor_resources:resize.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'
@@ -229,7 +229,7 @@ class DragHelper(gui.Widget, DraggableItem):
         super(DragHelper, self).__init__(**kwargs)
         DraggableItem.__init__(self, project, **kwargs)
         self.style['float'] = 'none'
-        self.style['background-image'] = "url('editor_resources://drag.png')"
+        self.style['background-image'] = "url('/editor_resources:drag.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left']='0px'
@@ -275,7 +275,7 @@ class Project(gui.Widget):
         self.style.update({'position':'relative',
             'overflow':'auto',
             'background-color':'rgb(250,248,240)',
-            'background-image':"url('editor_resources://background.png')"})
+            'background-image':"url('/editor_resources:background.png')"})
     
     def new(self):
         #remove the main widget
@@ -515,9 +515,9 @@ class Editor(App):
         
         self.toolbar = editor_widgets.ToolBar(width='100%', height='30px', margin='0px 0px')
         self.toolbar.style['border-bottom'] = '1px solid rgba(0,0,0,.12)'
-        self.toolbar.add_command('editor_resources://delete.png', self.toolbar_delete_clicked, 'Delete Widget')
-        self.toolbar.add_command('editor_resources://cut.png', self.menu_cut_selection_clicked, 'Cut Widget')
-        self.toolbar.add_command('editor_resources://paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
+        self.toolbar.add_command('/editor_resources:delete.png', self.toolbar_delete_clicked, 'Delete Widget')
+        self.toolbar.add_command('/editor_resources:cut.png', self.menu_cut_selection_clicked, 'Cut Widget')
+        self.toolbar.add_command('/editor_resources:paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
 
         
         lbl = gui.Label("Snap grid", width = 100)

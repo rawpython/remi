@@ -72,7 +72,7 @@ class Cell(gui.Widget):
         self.style['background-image'] = "''"
         if self.opened:
             if self.has_mine:
-                self.style['background-image'] = "url('my_resources://minefield/mine.png')"
+                self.style['background-image'] = "url('/my_resources:mine.png')"
             else:
                 if self.nearest_mine > 0:
                     self.add_child('nearestbomb', "%s" % self.nearest_mine)
@@ -80,9 +80,9 @@ class Cell(gui.Widget):
                     self.style['background-color'] = 'rgb(200,255,100)'
             return
         if self.state == 2:
-            self.style['background-image'] = "url('my_resources://minefield/doubt.png')"
+            self.style['background-image'] = "url('/my_resources:doubt.png')"
         if self.state == 1:
-            self.style['background-image'] = "url('my_resources://minefield/flag.png')"
+            self.style['background-image'] = "url('/my_resources:flag.png')"
 
     def add_nearest_mine(self):
         self.nearest_mine += 1
@@ -134,10 +134,10 @@ class MyApp(App):
         self.horizontal_container.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.horizontal_container.style['margin'] = '10px'
         self.horizontal_container.append(self.info)
-        imgMine = gui.Image('my_resources://minefield/mine.png')
+        imgMine = gui.Image('/my_resources:mine.png')
         imgMine.set_size(30, 30)
         self.horizontal_container.append([imgMine, self.lblMineCount])
-        imgFlag = gui.Image('my_resources://minefield/flag.png')
+        imgFlag = gui.Image('/my_resources:flag.png')
         imgFlag.set_size(30, 30)
         self.horizontal_container.append([imgFlag, self.lblFlagCount, self.lblTime, self.btReset])
 

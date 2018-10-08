@@ -25,7 +25,7 @@ from remi import start, App
 class untitled(App):
     def __init__(self, *args, **kwargs):
         if not 'editing_mode' in kwargs.keys():
-            super(untitled, self).__init__(*args, static_file_path='./res/')
+            super(untitled, self).__init__(*args, static_file_path={'res':'./res'})
 
     def idle(self):
         #idle function called every update cycle
