@@ -19,8 +19,26 @@ import functools
 import threading
 import collections
 import inspect
+import cgi
+escape = cgi.escape
+try:
+    # Python 2.6-2.7 
+    from HTMLParser import HTMLParser
+    h = HTMLParser()
+    unescape = h.unescape
+except ImportError:
+    # Python 3
+    try:
+        from html.parser import HTMLParser
+        h = HTMLParser()
+        unescape = h.unescape
+    except ImportError:
+        # Python 3.4+
+        import html
+        unescape = html.unescape
 
 from .server import runtimeInstances
+
 
 log = logging.getLogger('remi.gui')
 
@@ -140,7 +158,7 @@ def decorate_set_on_listener(prototype):
 
 def decorate_constructor_parameter_types(type_list):
     """ Private decorator for use in the editor. 
-        Allows Editor to instanciate widgets.
+        Allows Editor to instantiate widgets.
 
         Args:
             params (str): The list of types for the widget 
@@ -229,7 +247,7 @@ class Tag(object):
             attributes (dict): The attributes to be applied. 
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
-           id (str): the unique identifier for the class instance, usefull for public API definition.
+           id (str): the unique identifier for the class instance, useful for public API definition.
         """
         self._parent = None
 
@@ -260,7 +278,7 @@ class Tag(object):
         self._classes = []
         self.add_class(self.__class__.__name__ if _class == None else _class)
 
-        #this variable will contain the repr of this tag, in order to avoid unuseful operations
+        #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
     @property
@@ -926,7 +944,7 @@ class GridBox(Widget):
         """Populates the Table with a list of tuples of strings.
 
         Args:
-            matrix (list): list of iterables of strings (lists or someting else). 
+            matrix (list): list of iterables of strings (lists or something else). 
                 Items in the matrix have to correspond to a key for the children.
         """
         self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
@@ -1200,7 +1218,7 @@ class _MixinTextualWidget(object):
         Args:
             text (str): The string label of the Widget.
         """
-        self.add_child('text', text)
+        self.add_child('text', escape(text))
 
     def get_text(self):
         """
@@ -1209,7 +1227,7 @@ class _MixinTextualWidget(object):
         """
         if 'text' not in self.children.keys():
             return ''
-        return self.get_child('text')
+        return unescape(self.get_child('text'))
 
 
 class Button(Widget, _MixinTextualWidget):
@@ -1382,6 +1400,37 @@ class Label(Widget, _MixinTextualWidget):
         super(Label, self).__init__(*args, **kwargs)
         self.type = 'p'
         self.set_text(text)
+
+
+class Progress(Widget):
+    """ Progress bar widget.
+    """
+    @decorate_constructor_parameter_types([int, int])
+    def __init__(self, value=0, _max=100, *args, **kwargs):
+        """
+        Args:
+            value (int): The actual progress value.
+            max (int): The maximum progress value.
+            kwargs: See Widget.__init__()
+        """
+        super(Progress, self).__init__(*args, **kwargs)
+        self.type = 'progress'
+        self.set_value(value)
+        self.attributes['max'] = str(_max)
+
+    def set_value(self, value):
+        """
+        Args:
+            value (int): The actual progress value.
+        """
+        self.attributes['value'] = str(value)     
+
+    def set_max(self, _max):
+        """
+        Args:
+            max (int): The maximum progress value.
+        """
+        self.attributes['max'] = str(_max)  
 
 
 class GenericDialog(Widget):
@@ -2354,7 +2403,7 @@ class SpinBox(Input):
             min (int, float, str):
             max (int, float, str):
             step (int, float, str):
-            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (othewise
+            allow_editing (bool): If true allow editing the value using backpspace/delete/enter (otherwise
             only allow entering numbers)
             kwargs: See Widget.__init__()
         """
@@ -2362,7 +2411,7 @@ class SpinBox(Input):
         self.attributes['min'] = str(min_value)
         self.attributes['max'] = str(max_value)
         self.attributes['step'] = str(step)
-        # eat non-numeric input (return false to stop propogation of event to onchange listener)
+        # eat non-numeric input (return false to stop propagation of event to onchange listener)
         js = 'var key = event.keyCode || event.charCode;'
         js += 'return (event.charCode >= 48 && event.charCode <= 57)'
         if allow_editing:

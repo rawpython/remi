@@ -5,7 +5,11 @@
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
+<<<<<<< HEAD
     src: local('Roboto'), local('Roboto-Regular'), url('/res:font.woff2') format('woff2');
+=======
+    src: local('Roboto'), local('Roboto-Regular'), url('/res/font.woff2') format('woff2');
+>>>>>>> 7fcce47bb22cc8383c5563c7e944f31415a8a1b1
 }
 textarea:focus,
 input[type='checkbox']:focus,
