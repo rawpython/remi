@@ -26,6 +26,7 @@ if __name__ == "__main__":
 proto_code_class = """
 class %(classname)s( %(superclassname)s ):
     def __init__(self, *args):
+        #DON'T MAKE CHANGES HERE, THIS METHOD GETS OVERWRITTEN WHEN SAVING IN THE EDITOR
         super( %(classname)s, self ).__init__(*args)
         %(nested_code)s
 """
@@ -37,8 +38,9 @@ proto_code_function = "    def %(funcname)s%(parameters)s:\n        pass\n\n"
 proto_code_main_class = """
 class %(classname)s(App):
     def __init__(self, *args, **kwargs):
+        #DON'T MAKE CHANGES HERE, THIS METHOD GETS OVERWRITTEN WHEN SAVING IN THE EDITOR
         if not 'editing_mode' in kwargs.keys():
-            super(%(classname)s, self).__init__(*args, static_file_path={'res':'%(config_resourcepath)s')
+            super(%(classname)s, self).__init__(*args, static_file_path={'res':'%(config_resourcepath)s'})
 
     def idle(self):
         #idle function called every update cycle
@@ -49,6 +51,7 @@ class %(classname)s(App):
         
     @staticmethod
     def construct_ui(self):
+        #DON'T MAKE CHANGES HERE, THIS METHOD GETS OVERWRITTEN WHEN SAVING IN THE EDITOR
         %(code_nested)s
 
         self.%(mainwidgetname)s = %(mainwidgetname)s

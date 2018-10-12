@@ -15,7 +15,6 @@
 import remi.gui as gui
 import remi.server
 from remi import start, App
-import imp
 import inspect
 import sys
 import os #for path handling
@@ -23,6 +22,20 @@ import prototypes
 import editor_widgets
 import html_helper
 import threading
+
+if remi.server.pyLessThan3:
+    import imp
+    def load_source(filename):
+        return imp.load_source('project', filename)
+else:
+    import importlib.machinery
+    import importlib.util
+    def load_source(filename):
+        loader = importlib.machinery.SourceFileLoader('project', filename)
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        _module = importlib.util.module_from_spec(spec)
+        loader.exec_module(_module)
+        return _module
 
 
 class DraggableItem(gui.EventSource):
@@ -284,7 +297,7 @@ class Project(gui.Widget):
     def load(self, ifile, configuration):
         self.ifile = ifile
         
-        _module = imp.load_source('project', self.ifile) #imp.load_source('module.name', '/path/to/file.py')
+        _module = load_source(self.ifile)
         
         configuration.configDict = _module.configuration
         
