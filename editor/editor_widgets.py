@@ -138,27 +138,22 @@ class SignalConnection(gui.Widget):
             ddi = gui.DropDownItem(w.attributes['editor_varname'])
             ddi.listenerInstance = w
             self.dropdown.append(ddi)
-        if self.eventConnectionFunc.callback: #if the callback is not None, and so there is a listener
-            connectedListenerName = eventConnectionFunc.callback.__self__.attributes['editor_varname']
+        if hasattr(self.eventConnectionFunc, 'callback_copy'): #if the callback is not None, and so there is a listener
+            connectedListenerName = eventConnectionFunc.callback_copy.__self__.attributes['editor_varname']
             self.dropdown.set_value( connectedListenerName )
 
     def on_connection(self, widget, dropDownValue):
-        if self.eventConnectionFuncName == 'onclick':
-            back = self.refWidget.onclick.callback
-            self.refWidget.onclick.callback = self.refWidget.backup_onclick_listener
-        
         if self.dropdown.get_value()=='None':
             self.eventConnectionFunc.connect(None)
         else:
             listener = self.dropdown._selected_item.listenerInstance
             listener.attributes['editor_newclass'] = "True"
             print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
+            back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
             listener.__class__.fakeListenerFunc = fakeListenerFunc
             getattr(self.refWidget, self.eventConnectionFuncName).connect(listener.fakeListenerFunc)
-
-        if self.eventConnectionFuncName == 'onclick':
-            self.refWidget.backup_onclick_listener = self.refWidget.onclick.callback
-            self.refWidget.onclick.callback = back
+            getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
+            getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
 
 
 def fakeListenerFunc(self,*args):
@@ -204,17 +199,11 @@ class SignalConnectionManager(gui.Widget):
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
             #if the member is decorated by decorate_set_on_listener and the function is referred to this event
             if hasattr(setOnEventListenerFunc, '_event_info'):
-                if setOnEventListenerFuncname == "onclick":
-                    backup_editor_onclick = widget.onclick.callback
-                    widget.onclick.callback = widget.backup_onclick_listener
-                    setOnEventListenerFunc = widget.onclick
                 self.container.append( SignalConnection(widget, 
                     self.listeners_list, 
                     setOnEventListenerFuncname, 
                     setOnEventListenerFunc, 
                     width='100%') )
-                if setOnEventListenerFuncname == "onclick":
-                    widget.onclick.callback = backup_editor_onclick
 
 
 class ProjectConfigurationDialog(gui.GenericDialog, gui.EventSource):

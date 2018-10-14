@@ -315,11 +315,26 @@ class Project(gui.Widget):
         members_list = app_init_fnc.__dict__.values()
         for m in members_list:
             if inspect.isfunction(m) and m.__name__ not in ['__init__', 'main', 'idle']:
-                setattr(self, m.__name__, self.fakeListenerFunc)
-        return app_init_fnc.construct_ui(self)
+                #setattr(self, m.__name__, self.fakeListenerFunc)
+                import types
+                setattr(self, m.__name__, types.MethodType( m, self ))
+        root_widget = app_init_fnc.construct_ui(self)
+        self.create_callback_copy(root_widget)
+        return root_widget
 
-    def fakeListenerFunc(*args):
-        pass
+    def create_callback_copy(self, widget):
+        if not hasattr( widget, 'children' ):
+            return #no nested code
+        #for all the methods of this widget
+        for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
+            #if the member is decorated by decorate_set_on_listener
+            if hasattr(setOnEventListenerFunc, '_event_info'):
+                #if there is a callback
+                if getattr(widget, setOnEventListenerFuncname).callback: 
+                    getattr(widget, setOnEventListenerFuncname).callback_copy = getattr(widget, setOnEventListenerFuncname).callback
+                    getattr(widget, setOnEventListenerFuncname).connect(None)
+        for w in widget.children.values():
+            self.create_callback_copy(w)
         
     def check_pending_listeners(self, widget, widgetVarName, force=False):
         code_nested_listener = ''
@@ -391,19 +406,18 @@ class Project(gui.Widget):
             #if the member is decorated by decorate_set_on_listener
             if hasattr(setOnEventListenerFunc, '_event_info'):
                 #if there is a callback
-                if getattr(widget, setOnEventListenerFuncname).callback: 
+                if hasattr(getattr(widget, setOnEventListenerFuncname), 'callback_copy'): 
                     listenerPrototype = setOnEventListenerFunc._event_info['prototype']
-                    listener = getattr(widget, setOnEventListenerFuncname).callback.__self__
-                    
-                    if getattr(widget, setOnEventListenerFuncname) == widget.onclick:
-                        if widget.backup_onclick_listener == None:
-                            continue
-                        listener = widget.backup_onclick_listener.__self__
+                    listener = getattr(widget, setOnEventListenerFuncname).callback_copy.__self__
 
                     listenerFunctionName = setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
-                        
+                    
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
                                                                                 'parameters': listenerPrototype}
+                    #override, if already implemented, we use this code
+                    if hasattr(listener, listenerFunctionName):
+                        listenerClassFunction = inspect.getsource(getattr(listener, listenerFunctionName))
+                                                                            
                     self.pending_listener_registration.append({'done':False,
                         'eventsource':widget, 
                         'eventlistener':listener,
@@ -651,7 +665,6 @@ class Editor(App):
         
         if not 'editor_varname' in widget.attributes:
             return
-        widget.backup_onclick_listener = widget.onclick.callback
         widget.onclick.connect(self.on_widget_selection)
         
         #setup of the on_dropped function of the widget in order to manage the dragNdrop 
