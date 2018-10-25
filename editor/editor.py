@@ -566,14 +566,7 @@ class Editor(App):
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
         self.project.attributes['editor_varname'] = 'App'
-        self.project.attributes[self.project.EVENT_ONKEYDOWN] = """
-                var params={};
-                params['keypressed']=event.keyCode;
-                sendCallbackParam('%(id)s','%(evt)s',params);
-                if(event.keyCode==46){
-                    return false;
-                }
-            """ % {'id':str(id(self)), 'evt':self.project.EVENT_ONKEYDOWN}
+        self.project.onkeydown.connect(self.onkeydown)
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
@@ -775,10 +768,10 @@ class Editor(App):
         self.selectedWidget = parent
         print("tag deleted")
         
-    def onkeydown(self, keypressed):
-        if str(keypressed)=='46': #46 the delete keycode
+    def onkeydown(self, emitter, key, keycode, ctrl, shift, alt):
+        if str(keycode)=='46': #46 the delete keycode
             self.toolbar_delete_clicked(None)
-        print("Key pressed: " + str(keypressed))
+        print("Key pressed: " + str(keycode))
 
         
 def on_dropped(self, left, top):

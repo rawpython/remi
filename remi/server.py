@@ -415,9 +415,15 @@ class App(BaseHTTPRequestHandler, object):
                 document.body.innerHTML += decodeURIComponent(content);
             }else if( received_msg[0]=='1' ){ /*update_widget*/
                 var focusedElement=-1;
+                var caretStart=-1;
+                var caretEnd=-1;
                 if (document.activeElement)
                 {
                     focusedElement = document.activeElement.id;
+                    try{
+                        caretStart = document.activeElement.selectionStart;
+                        caretEnd = document.activeElement.selectionEnd;
+                    }catch(e){}
                 }
                 var index = received_msg.indexOf(',')+1;
                 var idElem = received_msg.substr(1,index-2);
@@ -436,7 +442,11 @@ class App(BaseHTTPRequestHandler, object):
 
                 var elemToFocus = document.getElementById(focusedElement);
                 if( elemToFocus != null ){
-                    document.getElementById(focusedElement).focus();
+                    elemToFocus.focus();
+                    try{
+                        elemToFocus = document.getElementById(focusedElement);
+                        if(caretStart>-1 && caretEnd>-1) elemToFocus.setSelectionRange(caretStart, caretEnd);
+                    }catch(e){}
                 }
             }else if( received_msg[0]=='2' ){ /*javascript*/
                 var content = received_msg.substr(1,received_msg.length-1);

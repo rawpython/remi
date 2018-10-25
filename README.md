@@ -49,6 +49,12 @@ The previous dialect is still compatible.
 
 The parameter host_name is now deprecated. The server automatically catches the address where to connect from the HTTP request.
 
+The event TextInput.onenter is no more supported.
+
+The events TextInput.onkeydown and TextInput.onkeyup are now different, and require a different listener format. There is an additional parameter keycode.
+
+The TextInput.onchange event now occurs also in case of Enter key pressed, if TextInput is single_line.
+
 
 Getting Started
 ===

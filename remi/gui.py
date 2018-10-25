@@ -473,6 +473,7 @@ class Widget(Tag, EventSource):
     EVENT_ONKEYPRESS = 'onkeypress'
     EVENT_ONKEYUP = 'onkeyup'
     EVENT_ONCHANGE = 'onchange'
+    EVENT_ONINPUT = 'oninput'
     EVENT_ONFOCUS = 'onfocus'
     EVENT_ONBLUR = 'onblur'
     EVENT_ONCONTEXTMENU = "oncontextmenu"
@@ -819,39 +820,43 @@ class Widget(Tag, EventSource):
         """
         return ()
 
-    @decorate_set_on_listener("(self, emitter, key, ctrl, shift, alt)")
+    @decorate_set_on_listener("(self, emitter, key, keycode, ctrl, shift, alt)")
     @decorate_event_js("""var params={};params['key']=event.key;
+            params['keycode']=(event.which||event.keyCode);
             params['ctrl']=event.ctrlKey;
             params['shift']=event.shiftKey;
             params['alt']=event.altKey;
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();return false;""")
-    def onkeyup(self, key, ctrl, shift, alt):
+    def onkeyup(self, key, keycode, ctrl, shift, alt):
         """Called when user types and releases a key. 
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
         
         Args:
             key (str): the character value
+            keycode (str): the numeric char code
         """
-        return (key, ctrl, shift, alt)
+        return (key, keycode, ctrl, shift, alt)
 
-    @decorate_set_on_listener("(self, emitter, key, ctrl, shift, alt)")
+    @decorate_set_on_listener("(self, emitter, key, keycode, ctrl, shift, alt)")
     @decorate_event_js("""var params={};params['key']=event.key;
+            params['keycode']=(event.which||event.keyCode);
             params['ctrl']=event.ctrlKey;
             params['shift']=event.shiftKey;
             params['alt']=event.altKey;
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();return false;""")
-    def onkeydown(self, key, ctrl, shift, alt):
+    def onkeydown(self, key, keycode, ctrl, shift, alt):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
         
         Args:
             key (str): the character value
+            keycode (str): the numeric char code
         """
-        return (key, ctrl, shift, alt)
+        return (key, keycode, ctrl, shift, alt)
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_focus_listener(self, callback, *userdata):
@@ -1267,9 +1272,20 @@ class TextInput(Widget, _MixinTextualWidget):
         if single_line:
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
-            self.attributes[self.EVENT_ONKEYDOWN] = "if((event.charCode||event.keyCode)==13){" \
-                "event.keyCode = 0;event.charCode = 0; document.getElementById('%(id)s').blur();" \
-                "return false;}" % {'id': self.identifier}
+            self.attributes[self.EVENT_ONINPUT] = """
+                var elem = document.getElementById('%(emitter_identifier)s');
+                var enter_pressed = (elem.value.indexOf('\\n') > -1);
+                if(enter_pressed){
+                    elem.value = elem.value.split('\\n').join(''); 
+                    var params={};params['new_value']=elem.value;
+                    sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+                }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+        #else:
+        #    self.attributes[self.EVENT_ONINPUT] = """
+        #        var elem = document.getElementById('%(emitter_identifier)s');
+        #        var params={};params['new_value']=elem.value;
+        #        sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+        #        """ % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
         self.set_value('')
 
@@ -1303,70 +1319,47 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event
     def onchange(self, new_value):
-        """Called when the user finishes to edit the TextInput content.
+        """Called when the user changes the TextInput content.
+        With single_line=True it fires in case of focus lost and Enter key pressed.
+        With single_line=False it fires at each key released.
 
         Args:
             new_value (str): the new string content of the TextInput.
         """
+        self.disable_refresh()
         self.set_value(new_value)
+        self.enable_refresh()
         return (new_value, )
 
-    @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');elem.value = elem.value.split('\\n').join('');
-            var params={};params['new_value']=elem.value;
+    @decorate_set_on_listener("(self, emitter, new_value, keycode)")
+    @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
+            var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
-    def onkeyup(self, new_value):
+    def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
         
+        Note: This event can't be registered together with Widget.onchange.
+
         Args:
             new_value (str): the new string content of the TextInput
+            keycode (str): the numeric char code
         """
-        self.disable_refresh()
-        self.set_value(new_value)
-        self.enable_refresh()
-        self._set_updated()
-        return (new_value, )
+        return (new_value, keycode)
 
-    @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);if((event.charCode||event.keyCode)==13){" \
-            "event.keyCode = 0;event.charCode = 0; document.getElementById('%(emitter_identifier)s').blur(); return false;}")
-    def onkeydown(self, new_value):
+    @decorate_set_on_listener("(self, emitter, new_value, keycode)")
+    @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
+            var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
+    def onkeydown(self, new_value, keycode):
         """Called when the user types a key into the TextInput.
 
-        Note: This event can't be registered together with Widget.onenter.
+        Note: This event can't be registered together with Widget.onchange.
 
         Args:
             new_value (str): the new string content of the TextInput.
+            keycode (str): the numeric char code
         """
-        self.disable_refresh()
-        self.set_value(new_value)
-        self.enable_refresh()
-        self._set_updated()
-        return (new_value, )
-
-    @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("""
-            if (event.keyCode == 13) {
-                var params={};
-                params['new_value']=document.getElementById('%(emitter_identifier)s').value;
-                document.getElementById('%(emitter_identifier)s').value = '';
-                document.getElementById('%(emitter_identifier)s').onchange = '';
-                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                return false;
-            }""")
-    def onenter(self, new_value):
-        """Called when the user types an ENTER into the TextInput.
-        Note: This event can't be registered together with Widget.onkeydown.
-
-        Args:
-            new_value (str): the new string content of the TextInput.
-        """
-        self.disable_refresh()
-        self.set_value(new_value)
-        self.enable_refresh()
-        self._set_updated()
-        return (new_value, )
+        return (new_value, keycode)
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_change_listener(self, callback, *userdata):
@@ -1379,10 +1372,6 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_explicit_alias_for_listener_registration
     def set_on_key_down_listener(self, callback, *userdata):
         self.onkeydown.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_enter_listener(self, callback, *userdata):
-        self.onenter.connect(callback, *userdata)
 
 
 class Label(Widget, _MixinTextualWidget):
@@ -1594,21 +1583,21 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(title, message, *args, **kwargs)
 
         self.inputText = TextInput()
-        self.inputText.onenter.connect(self.on_text_enter_listener)
+        self.inputText.onkeydown.connect(self.on_keydown_listener)
         self.add_field('textinput', self.inputText)
         self.inputText.set_text(initial_value)
 
         self.confirm_dialog.connect(self.confirm_value)
 
-    @decorate_set_on_listener("(self, emitter, value)")
-    @decorate_event
-    def on_text_enter_listener(self, widget, value):
+    def on_keydown_listener(self, widget, value, keycode):
         """event called pressing on ENTER key.
 
         propagates the string content of the input field
         """
-        self.hide()
-        return (value, )
+        if keycode=="13":
+            self.hide()
+            self.inputText.set_text(value)
+            self.confirm_value(self)
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
