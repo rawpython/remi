@@ -136,6 +136,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             while True:
                 if not self.read_next_message():
                     clients[self.session].websockets.remove(self)
+                    clients[self.session].on_websocket_disconnect()                    
                     self.handshake_done = False
                     self._log.debug('ws ending websocket service')
                     break
@@ -215,7 +216,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         #if an update happens since the websocket connection to its handshake, 
         # it gets not displayed. it is required to inform App about handshake done, 
         # to get a full refresh
-        clients[self.session].websocket_handshake_done(self)
+        clients[self.session].on_websocket_connect(self)
 
         return True
 
@@ -257,7 +258,6 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         try:
             self.request.shutdown(socket.SHUT_WR)
             self.finish()
-            self.server.shutdown()
         except:
             self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
 
@@ -298,9 +298,10 @@ class App(BaseHTTPRequestHandler, object):
     def __init__(self, request, client_address, server, **app_args):
         self.update_lock = threading.RLock()
         self._app_args = app_args
-        self.client = None
+        self.websockets = []
         self.root = None
         self._log = logging.getLogger('remi.request')
+        self.expire_countdown_timer = None
         super(App, self).__init__(request, client_address, server)
 
     def _get_list_from_app_args(self, name):
@@ -343,6 +344,8 @@ class App(BaseHTTPRequestHandler, object):
         if not(self.session in clients):
             runtimeInstances[str(id(self))] = self
             clients[self.session] = self
+            #if no ws clients will connect the instance will be unloaded
+            self.expire_countdown_start()
 
         net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
 
@@ -610,11 +613,6 @@ class App(BaseHTTPRequestHandler, object):
         clients[self.session].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
         clients[self.session].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
 
-        self.client = clients[self.session]
-
-        if not hasattr(clients[self.session], 'websockets'):
-            clients[self.session].websockets = []
-
         if not hasattr(clients[self.session], '_need_update_flag'):
             clients[self.session]._need_update_flag = False
             clients[self.session]._stop_update_flag = False
@@ -672,10 +670,22 @@ class App(BaseHTTPRequestHandler, object):
                 self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
         self._need_update_flag = False
 
-    def websocket_handshake_done(self, ws_instance_to_update):
+    def on_websocket_connect(self, ws_instance_to_update):
         with self.update_lock:
             msg = "0" + self.root.identifier + ',' + to_websocket(self.root.repr())
             ws_instance_to_update.send_message(msg)
+
+    def on_websocket_disconnect(self):
+        self.expire_countdown_start()
+
+    def expire_countdown_start(self):
+        #if a countdown already running, restart
+        if self.expire_countdown_timer: 
+            self.expire_countdown_timer.cancel()
+            self.expire_countdown_timer = None
+
+        if self.server.expire_time > 0 and len(clients[self.session].websockets)<1:
+            self.expire_countdown_timer = threading.Timer(self.server.expire_time, self.on_expired).start()
 
     def set_root_widget(self, widget):
         self.root = widget
@@ -688,7 +698,7 @@ class App(BaseHTTPRequestHandler, object):
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
-        for ws in self.client.websockets:
+        for ws in clients[self.session].websockets:
             # noinspection PyBroadException
             try:
                 #self._log.debug("sending websocket spontaneous message")
@@ -696,7 +706,7 @@ class App(BaseHTTPRequestHandler, object):
             except:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
                 try:
-                    self.client.websockets.remove(ws)
+                    clients[self.session].websockets.remove(ws)
                     ws.close()
                 except:
                     self._log.error("unable to remove websocket client - already not in list", exc_info=True)
@@ -808,9 +818,9 @@ class App(BaseHTTPRequestHandler, object):
                 # build the page (call main()) in user code, if not built yet
                 with self.update_lock:
                     # build the root page once if necessary
-                    if not hasattr(self.client, 'root') or self.client.root is None:
+                    if not hasattr(clients[self.session], 'root') or clients[self.session].root is None:
                         self._log.info('built UI (path=%s)' % path)
-                        self.client.set_root_widget(self.main(*self.server.userdata))
+                        clients[self.session].set_root_widget(self.main(*self.server.userdata))
                 self._process_all(path)
             except:
                 self._log.error('error processing GET request', exc_info=True)
@@ -842,7 +852,7 @@ class App(BaseHTTPRequestHandler, object):
         if (func == '/') or (not func):
             with self.update_lock:
                 # render the HTML
-                html = self.client.root.repr()
+                html = clients[self.session].root.repr()
 
             self.send_response(200)
             self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
@@ -854,17 +864,17 @@ class App(BaseHTTPRequestHandler, object):
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
-            self.wfile.write(encode_text(self.client.css_head))
-            self.wfile.write(encode_text(self.client.html_head))
-            self.wfile.write(encode_text(self.client.js_head))
+            self.wfile.write(encode_text(clients[self.session].css_head))
+            self.wfile.write(encode_text(clients[self.session].html_head))
+            self.wfile.write(encode_text(clients[self.session].js_head))
             self.wfile.write(encode_text("\n<title>%s</title>\n" % self.server.title))
             self.wfile.write(encode_text("\n</head>\n<body>\n"))
-            self.wfile.write(encode_text(self.client.js_body_start))
-            self.wfile.write(encode_text(self.client.html_body_start))
+            self.wfile.write(encode_text(clients[self.session].js_body_start))
+            self.wfile.write(encode_text(clients[self.session].html_body_start))
             self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
             self.wfile.write(encode_text(html))
-            self.wfile.write(encode_text(self.client.html_body_end))
-            self.wfile.write(encode_text(self.client.js_body_end))
+            self.wfile.write(encode_text(clients[self.session].html_body_end))
+            self.wfile.write(encode_text(clients[self.session].js_body_end))
             self.wfile.write(encode_text("</body>\n</html>"))
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
@@ -916,13 +926,27 @@ class App(BaseHTTPRequestHandler, object):
         """
         self._log.debug('shutting down...')
         self.server.server_starter_instance.stop()
+        self.server.shutdown()
 
     def on_close(self):
-        """ Called by the server when the App have to be terminated
+        """ Called by the server when the App have to be closed
         """
         self._stop_update_flag = True
-        for ws in self.client.websockets:
-            ws.close()
+        for ws in clients[self.session].websockets:
+            try:
+                ws.close()
+            except:
+                pass
+
+    def on_expired(self):
+        """ Triggered after expiration countdown
+        """
+        if len(clients[self.session].websockets)<1:
+            self._log.debug('App terminating. User session id:%s'%self.session)
+            self.on_close()
+            with self.update_lock:
+                if self.session in clients.keys():
+                    del clients[self.session]
 
    
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
@@ -933,7 +957,8 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     def __init__(self, server_address, RequestHandlerClass,
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, pending_messages_queue_length,
-                 title, server_starter_instance, certfile, keyfile, ssl_version, *userdata):
+                 title, server_starter_instance, certfile, keyfile, ssl_version, 
+                 expire_time, *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.auth = auth
         self.multiple_instance = multiple_instance
@@ -950,6 +975,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.ssl_version = ssl_version
         if self.ssl_version!=None:
             self.socket = ssl.wrap_socket(self.socket, keyfile=self.keyfile, certfile=self.certfile, server_side=True, ssl_version=self.ssl_version, do_handshake_on_connect=True)
+        self.expire_time = expire_time
 
 
 class Server(object):
@@ -957,7 +983,7 @@ class Server(object):
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, 
-                 certfile=None, keyfile=None, ssl_version=None,  userdata=()):
+                 certfile=None, keyfile=None, ssl_version=None, expire_time=0, userdata=()):
 
         self._gui = gui_class
         self._title = title or gui_class.__name__
@@ -975,6 +1001,7 @@ class Server(object):
         self._certfile = certfile
         self._keyfile = keyfile
         self._ssl_version = ssl_version
+        self._expire_time = expire_time
         self._userdata = userdata
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
@@ -1006,7 +1033,8 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._pending_messages_queue_length, self._title, 
-                                           self, self._certfile, self._keyfile, self._ssl_version, *self._userdata)
+                                           self, self._certfile, self._keyfile, self._ssl_version, 
+                                           self._expire_time, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':

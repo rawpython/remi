@@ -14,6 +14,7 @@
 
 import remi.gui as gui
 from remi import start, App
+from remi import server
 from threading import Timer
 
 
@@ -22,7 +23,8 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def idle(self):
-        self.counter.set_text('Running Time: ' + str(self.count))
+        #self.counter.set_text('Running Time: ' + str(self.count))
+        self.counter.set_text('Instance Num: ' + str(len(server.clients)))
         self.progress.set_value(self.count%100)
 
     def main(self):
@@ -326,4 +328,4 @@ if __name__ == "__main__":
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
     import ssl
-    start(MyApp, debug=True, address='0.0.0.0', port=0, start_browser=True, multiple_instance=False)
+    start(MyApp, debug=True, address='0.0.0.0', port=0, start_browser=True, multiple_instance=True, expire_time=5)
