@@ -848,6 +848,7 @@ class App(BaseHTTPRequestHandler, object):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
+            
             self.wfile.write(encode_text("<html>\n<head>\n"))
             self.wfile.write(encode_text(
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>

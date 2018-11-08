@@ -235,6 +235,55 @@ class _EventDictionary(dict, EventSource):
         return ()
 
 
+class HTML(Tag):
+    def __init__(self, **kwargs):
+        super(HTML, self).__init__(*args, **kwargs, _type='html')
+
+        head = HEAD()
+        body = BODY()
+        self.add_child('head', head)
+        self.add_child('body', body)
+
+
+class HEAD(Tag):
+    def __init__(self, title, js, css, html, **kwargs):
+        super(HEAD, self).__init__(*args, **kwargs, _type='head')
+        self.add_child('meta', 
+                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+                <meta content='utf-8' http-equiv='encoding'>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
+        
+        self.set_css(css)
+        self.set_html(html)
+        self.set_javascript(js)
+        self.set_title(title)
+
+    def set_javascript(self, js):
+        self.add_child("js", js)
+    
+    def set_html(self, html):
+        self.add_child("html", html)
+
+    def set_css(self, css):
+        self.add_child("css", css)
+
+    def set_title(self, title):
+        self.add_child('title', "<title>%s</title>" % title)
+
+
+class BODY(Widget):
+    EVENT_ONLOAD = 'onload'
+
+    def __init__(self, *args, **kwargs):
+        super(BODY, self).__init__(*args, **kwargs, _type='body')
+        loading_anim = Widget()
+        loading_anim.set_identifier("loading-animation")
+        loading_widget = Widget(children=[loading_anim])
+        loading_widget.set_identifier("loading")
+
+        self.append(loading_widget)
+
+
 class Tag(object):
     """
     Tag is the base class of the framework. It represents an element that can be added to the GUI,
@@ -333,7 +382,8 @@ class Tag(object):
         #if there is an emitter, it means self is the actual changed widget
         if emitter:
             tmp = dict(self.attributes)
-            tmp['style'] = jsonize(self.style)
+            if len(self.style):
+                tmp['style'] = jsonize(self.style)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                                 tmp.items())
         if not self.ignore_update:
@@ -356,7 +406,8 @@ class Tag(object):
 
     def add_class(self, cls):
         self._classes.append(cls)
-        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
+        if len(self._classes):
+            self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
     def remove_class(self, cls):
         try:
