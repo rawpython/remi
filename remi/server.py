@@ -839,33 +839,23 @@ class App(BaseHTTPRequestHandler, object):
         attr_call = self.re_attr_call.match(func)
 
         if (func == '/') or (not func):
-            with self.update_lock:
-                # render the HTML
-                html = self.client.root.repr()
-
             self.send_response(200)
             self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(encode_text("<!DOCTYPE html>\n"))
             
-            self.wfile.write(encode_text("<html>\n<head>\n"))
-            self.wfile.write(encode_text(
-                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
-                <meta content='utf-8' http-equiv='encoding'>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">"""))
-            self.wfile.write(encode_text(self.client.css_head))
-            self.wfile.write(encode_text(self.client.html_head))
-            self.wfile.write(encode_text(self.client.js_head))
-            self.wfile.write(encode_text("\n<title>%s</title>\n" % self.server.title))
-            self.wfile.write(encode_text("\n</head>\n<body>\n"))
-            self.wfile.write(encode_text(self.client.js_body_start))
-            self.wfile.write(encode_text(self.client.html_body_start))
-            self.wfile.write(encode_text('<div id="loading"><div id="loading-animation"></div></div>'))
-            self.wfile.write(encode_text(html))
-            self.wfile.write(encode_text(self.client.html_body_end))
-            self.wfile.write(encode_text(self.client.js_body_end))
-            self.wfile.write(encode_text("</body>\n</html>"))
+            self.client.head = HEAD(self.server.title, self.client.js_head, self.client.css_head, self.client.html_head)
+            self.client.body = BODY()
+            self.client.body.append(self.client.root)
+            self.client.page = HTML(children=[self.client.head, self.client.body])
+
+            with self.update_lock:
+                # render the HTML
+                page_content = self.client.body.repr()
+
+            self.wfile.write(encode_text("<!DOCTYPE html>\n"))
+            self.wfile.write(encode_text(page_content))
+            
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
             if not filename:

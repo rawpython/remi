@@ -273,6 +273,11 @@ class HEAD(Tag):
 
 class BODY(Widget):
     EVENT_ONLOAD = 'onload'
+    EVENT_ONERROR = 'onerror'
+    EVENT_ONONLINE = 'ononline'
+    EVENT_ONPAGEHIDE = 'onpagehide'
+    EVENT_ONPAGESHOW = 'onpageshow'
+    EVENT_ONRESIZE = 'onresize'
 
     def __init__(self, *args, **kwargs):
         super(BODY, self).__init__(*args, **kwargs, _type='body')
@@ -282,6 +287,57 @@ class BODY(Widget):
         loading_widget.set_identifier("loading")
 
         self.append(loading_widget)
+    
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onload(self):
+        """Called when page gets loaded."""
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""
+            function(message, source, lineno, colno, error){
+                var params={};params['message']=message;
+                params['source']=source;
+                params['lineno']=lineno;
+                params['colno']=colno;
+                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+                return false;
+            }""")
+    def onerror(self, message, source, lineno, colno):
+        """Called when an error occurs."""
+        print("DOCUMENT ERROR: " + message)
+        return (message, source, lineno, colno)
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def ononline(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onpagehide(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onpageshow(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onresize(self):
+        return ()
 
 
 class Tag(object):
