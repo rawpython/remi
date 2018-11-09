@@ -51,6 +51,8 @@ except ImportError:
 import cgi
 import weakref
 
+from remi import gui
+
 
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
@@ -844,14 +846,17 @@ class App(BaseHTTPRequestHandler, object):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             
-            self.client.head = HEAD(self.server.title, self.client.js_head, self.client.css_head, self.client.html_head)
-            self.client.body = BODY()
+            #WARNING !!! MUTUAL/CIRCUAL import???
+            self.client.head = gui.HEAD(self.server.title, self.client.js_head + '\n' + self.client.js_body_end, self.client.css_head, self.client.html_head)
+            self.client.body = gui.BODY()
             self.client.body.append(self.client.root)
-            self.client.page = HTML(children=[self.client.head, self.client.body])
+            self.client.page = gui.HTML()
+            self.client.page.add_child('head', self.client.head)
+            self.client.page.add_child('body', self.client.body)
 
             with self.update_lock:
                 # render the HTML
-                page_content = self.client.body.repr()
+                page_content = self.client.page.repr()
 
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
             self.wfile.write(encode_text(page_content))

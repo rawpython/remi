@@ -235,111 +235,6 @@ class _EventDictionary(dict, EventSource):
         return ()
 
 
-class HTML(Tag):
-    def __init__(self, **kwargs):
-        super(HTML, self).__init__(*args, **kwargs, _type='html')
-
-        head = HEAD()
-        body = BODY()
-        self.add_child('head', head)
-        self.add_child('body', body)
-
-
-class HEAD(Tag):
-    def __init__(self, title, js, css, html, **kwargs):
-        super(HEAD, self).__init__(*args, **kwargs, _type='head')
-        self.add_child('meta', 
-                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
-                <meta content='utf-8' http-equiv='encoding'>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
-        
-        self.set_css(css)
-        self.set_html(html)
-        self.set_javascript(js)
-        self.set_title(title)
-
-    def set_javascript(self, js):
-        self.add_child("js", js)
-    
-    def set_html(self, html):
-        self.add_child("html", html)
-
-    def set_css(self, css):
-        self.add_child("css", css)
-
-    def set_title(self, title):
-        self.add_child('title', "<title>%s</title>" % title)
-
-
-class BODY(Widget):
-    EVENT_ONLOAD = 'onload'
-    EVENT_ONERROR = 'onerror'
-    EVENT_ONONLINE = 'ononline'
-    EVENT_ONPAGEHIDE = 'onpagehide'
-    EVENT_ONPAGESHOW = 'onpageshow'
-    EVENT_ONRESIZE = 'onresize'
-
-    def __init__(self, *args, **kwargs):
-        super(BODY, self).__init__(*args, **kwargs, _type='body')
-        loading_anim = Widget()
-        loading_anim.set_identifier("loading-animation")
-        loading_widget = Widget(children=[loading_anim])
-        loading_widget.set_identifier("loading")
-
-        self.append(loading_widget)
-    
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
-    def onload(self):
-        """Called when page gets loaded."""
-        return ()
-
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""
-            function(message, source, lineno, colno, error){
-                var params={};params['message']=message;
-                params['source']=source;
-                params['lineno']=lineno;
-                params['colno']=colno;
-                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                return false;
-            }""")
-    def onerror(self, message, source, lineno, colno):
-        """Called when an error occurs."""
-        print("DOCUMENT ERROR: " + message)
-        return (message, source, lineno, colno)
-
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
-    def ononline(self):
-        return ()
-
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
-    def onpagehide(self):
-        return ()
-
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
-    def onpageshow(self):
-        return ()
-
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
-    def onresize(self):
-        return ()
-
-
 class Tag(object):
     """
     Tag is the base class of the framework. It represents an element that can be added to the GUI,
@@ -1036,6 +931,153 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_key_down_listener(self, callback, *userdata):
         self.onkeydown.connect(callback, *userdata)
+
+
+class HTML(Tag):
+    def __init__(self, *args, **kwargs):
+        super(HTML, self).__init__(*args, _type='html', **kwargs)
+        self._classes = []
+
+    def repr(self, changed_widgets={}):
+            """It is used to automatically represent the object to HTML format
+            packs all the attributes, children and so on.
+
+            Args:
+                changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
+                    The tag that have to be updated is the key, and the value is its textual repr.
+            """
+            local_changed_widgets = {}
+            innerHTML = ''
+            for k in self._render_children_list:
+                s = self.children[k]
+                if isinstance(s, Tag):
+                    innerHTML = innerHTML + s.repr(local_changed_widgets)
+                elif isinstance(s, type('')):
+                    innerHTML = innerHTML + s
+                elif isinstance(s, type(u'')):
+                    innerHTML = innerHTML + s.encode('utf-8')
+                else:
+                    innerHTML = innerHTML + repr(s)
+                innerHTML += '\n' 
+            return ''.join(('<', self.type, '>\n', innerHTML, '\n</', self.type, '>'))
+
+
+class HEAD(Tag):
+    def __init__(self, title, js, css, html, *args, **kwargs):
+        super(HEAD, self).__init__(*args, _type='head', **kwargs)
+        self.add_child('meta', 
+                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+                <meta content='utf-8' http-equiv='encoding'>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
+        self._classes = []
+        self.set_css(css)
+        self.set_html(html)
+        self.set_javascript(js)
+        self.set_title(title)
+
+    def set_javascript(self, js):
+        self.add_child("js", js)
+    
+    def set_html(self, html):
+        self.add_child("html", html)
+
+    def set_css(self, css):
+        self.add_child("css", css)
+
+    def set_title(self, title):
+        self.add_child('title', "<title>%s</title>" % title)
+
+    def repr(self, changed_widgets={}):
+        """It is used to automatically represent the object to HTML format
+        packs all the attributes, children and so on.
+
+        Args:
+            changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
+                The tag that have to be updated is the key, and the value is its textual repr.
+        """
+        local_changed_widgets = {}
+        innerHTML = ''
+        for k in self._render_children_list:
+            s = self.children[k]
+            if isinstance(s, Tag):
+                innerHTML = innerHTML + s.repr(local_changed_widgets)
+            elif isinstance(s, type('')):
+                innerHTML = innerHTML + s
+            elif isinstance(s, type(u'')):
+                innerHTML = innerHTML + s.encode('utf-8')
+            else:
+                innerHTML = innerHTML + repr(s)
+            innerHTML += '\n' 
+        return ''.join(('<', self.type, '>\n', innerHTML, '\n</', self.type, '>'))
+
+
+class BODY(Widget):
+    EVENT_ONLOAD = 'onload'
+    EVENT_ONERROR = 'onerror'
+    EVENT_ONONLINE = 'ononline'
+    EVENT_ONPAGEHIDE = 'onpagehide'
+    EVENT_ONPAGESHOW = 'onpageshow'
+    EVENT_ONRESIZE = 'onresize'
+
+    def __init__(self, *args, **kwargs):
+        super(BODY, self).__init__(*args, _type='body', **kwargs)
+        loading_anim = Widget()
+        loading_anim.set_identifier("loading-animation")
+        loading_widget = Widget(children=[loading_anim])
+        loading_widget.set_identifier("loading")
+
+        self.append(loading_widget)
+    
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onload(self):
+        """Called when page gets loaded."""
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""
+            function(message, source, lineno, colno, error){
+                var params={};params['message']=message;
+                params['source']=source;
+                params['lineno']=lineno;
+                params['colno']=colno;
+                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+                return false;
+            }""")
+    def onerror(self, message, source, lineno, colno):
+        """Called when an error occurs."""
+        print("DOCUMENT ERROR: " + message)
+        return (message, source, lineno, colno)
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def ononline(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onpagehide(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onpageshow(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onresize(self):
+        return ()
 
 
 class GridBox(Widget):
