@@ -623,6 +623,14 @@ class App(BaseHTTPRequestHandler, object):
 
         self.client = clients[self.session]
 
+        if not hasattr(self.client, 'page'):
+            head = gui.HEAD(self.server.title, self.client.js_head + '\n' + self.client.js_body_end, self.client.css_head, self.client.html_head)
+            body = gui.BODY()
+            body.disable_refresh()
+            self.client.page = gui.HTML()
+            self.client.page.add_child('head', head)
+            self.client.page.add_child('body', body)
+
         if not hasattr(clients[self.session], 'websockets'):
             clients[self.session].websockets = []
 
@@ -689,6 +697,7 @@ class App(BaseHTTPRequestHandler, object):
             ws_instance_to_update.send_message(msg)
 
     def set_root_widget(self, widget):
+        self.page.children['body'].append(widget, 'root')
         self.root = widget
         self.root.disable_refresh()
         self.root.attributes['data-parent-widget'] = str(id(self))
@@ -819,7 +828,7 @@ class App(BaseHTTPRequestHandler, object):
                 # build the page (call main()) in user code, if not built yet
                 with self.update_lock:
                     # build the root page once if necessary
-                    if not hasattr(self.client, 'root') or self.client.root is None:
+                    if not 'root' in self.client.page.children['body'].children.keys():
                         self._log.info('built UI (path=%s)' % path)
                         self.client.set_root_widget(self.main(*self.server.userdata))
                 self._process_all(path)
@@ -846,14 +855,6 @@ class App(BaseHTTPRequestHandler, object):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             
-            #WARNING !!! MUTUAL/CIRCUAL import???
-            self.client.head = gui.HEAD(self.server.title, self.client.js_head + '\n' + self.client.js_body_end, self.client.css_head, self.client.html_head)
-            self.client.body = gui.BODY()
-            self.client.body.append(self.client.root)
-            self.client.page = gui.HTML()
-            self.client.page.add_child('head', self.client.head)
-            self.client.page.add_child('body', self.client.body)
-
             with self.update_lock:
                 # render the HTML
                 page_content = self.client.page.repr()

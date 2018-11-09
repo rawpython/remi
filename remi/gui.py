@@ -1037,18 +1037,15 @@ class BODY(Widget):
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""
-            function(message, source, lineno, colno, error){
-                var params={};params['message']=message;
-                params['source']=source;
-                params['lineno']=lineno;
-                params['colno']=colno;
+    @decorate_event_js("""var params={};params['message']=event.message;
+                params['source']=event.source;
+                params['lineno']=event.lineno;
+                params['colno']=event.colno;
                 sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
                 return false;
-            }""")
+            """)
     def onerror(self, message, source, lineno, colno):
         """Called when an error occurs."""
-        print("DOCUMENT ERROR: " + message)
         return (message, source, lineno, colno)
 
     @decorate_set_on_listener("(self, emitter)")
