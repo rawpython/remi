@@ -296,6 +296,21 @@ class Tag(object):
         self.attributes['id'] = new_identifier
         runtimeInstances[new_identifier] = self
 
+    def innerHTML(self, local_changed_widgets):
+        ret = ''
+        for k in self._render_children_list:
+            s = self.children[k]
+            if isinstance(s, Tag):
+                ret = ret + s.repr(local_changed_widgets)
+            elif isinstance(s, type('')):
+                ret = ret + s
+            elif isinstance(s, type(u'')):
+                ret = ret + s.encode('utf-8')
+            else:
+                ret = ret + repr(s)
+            ret += '\n'
+        return ret
+
     def repr(self, changed_widgets=None):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
@@ -307,23 +322,13 @@ class Tag(object):
         if changed_widgets is None:
             changed_widgets = {}
         local_changed_widgets = {}
-        innerHTML = ''
-        for k in self._render_children_list:
-            s = self.children[k]
-            if isinstance(s, Tag):
-                innerHTML = innerHTML + s.repr(local_changed_widgets)
-            elif isinstance(s, type('')):
-                innerHTML = innerHTML + s
-            elif isinstance(s, type(u'')):
-                innerHTML = innerHTML + s.encode('utf-8')
-            else:
-                innerHTML = innerHTML + repr(s)
+        _innerHTML = self.innerHTML(local_changed_widgets)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>', 
-                                        innerHTML, '</', self.type, '>'))
+                                        _innerHTML, '</', self.type, '>'))
             #faster but unsupported before python3.6
-            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{innerHTML}</{self.type}>'
+            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
         if self._ischanged():
             # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
@@ -957,19 +962,7 @@ class HTML(Tag):
             if changed_widgets is None:
                 changed_widgets={}
             local_changed_widgets = {}
-            innerHTML = ''
-            for k in self._render_children_list:
-                s = self.children[k]
-                if isinstance(s, Tag):
-                    innerHTML = innerHTML + s.repr(local_changed_widgets)
-                elif isinstance(s, type('')):
-                    innerHTML = innerHTML + s
-                elif isinstance(s, type(u'')):
-                    innerHTML = innerHTML + s.encode('utf-8')
-                else:
-                    innerHTML = innerHTML + repr(s)
-                innerHTML += '\n' 
-            return ''.join(('<', self.type, '>\n', innerHTML, '\n</', self.type, '>'))
+            return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
 
 
 class HEAD(Tag):
@@ -1040,8 +1033,7 @@ class HEAD(Tag):
                         /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
                         var content = received_msg.substr(index,received_msg.length-index);
 
-                        document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
-                        document.body.innerHTML += decodeURIComponent(content);
+                        document.body.innerHTML = decodeURIComponent(content);
                     }else if( received_msg[0]=='1' ){ /*update_widget*/
                         var focusedElement=-1;
                         var caretStart=-1;
@@ -1248,19 +1240,7 @@ class HEAD(Tag):
         if changed_widgets is None:
             changed_widgets={}
         local_changed_widgets = {}
-        innerHTML = ''
-        for k in self._render_children_list:
-            s = self.children[k]
-            if isinstance(s, Tag):
-                innerHTML = innerHTML + s.repr(local_changed_widgets)
-            elif isinstance(s, type('')):
-                innerHTML = innerHTML + s
-            elif isinstance(s, type(u'')):
-                innerHTML = innerHTML + s.encode('utf-8')
-            else:
-                innerHTML = innerHTML + repr(s)
-            innerHTML += '\n' 
-        return ''.join(('<', self.type, '>\n', innerHTML, '\n</', self.type, '>'))
+        return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
 
 
 class BODY(Widget):
@@ -1274,8 +1254,10 @@ class BODY(Widget):
     def __init__(self, *args, **kwargs):
         super(BODY, self).__init__(*args, _type='body', **kwargs)
         loading_anim = Widget()
+        del loading_anim.style['margin']
         loading_anim.set_identifier("loading-animation")
-        loading_widget = Widget(children=[loading_anim])
+        loading_widget = Widget(children=[loading_anim], style={'display':'none'})
+        del loading_widget.style['margin']
         loading_widget.set_identifier("loading")
 
         self.append(loading_widget)

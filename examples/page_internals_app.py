@@ -28,9 +28,13 @@ class MyApp(App):
         main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
         self.page.children['head'].add_child('test', '<meta patate>')
         self.page.children['body'].style['background-color'] = 'lightyellow'
+        self.page.children['body'].onkeydown.connect(self.onkeydown)
         # returning the root widget
         return main_container
     
+    def onkeydown(self, emitter, key, keycode, ctrl, shift, alt):
+        print("keydown: %s"%key)
+
     def onload(self, emitter):
         print(">>>>>>>>> ON PAGE LOADED")
 

@@ -436,7 +436,7 @@ class App(BaseHTTPRequestHandler, object):
 
     def websocket_handshake_done(self, ws_instance_to_update):
         with self.update_lock:
-            msg = "0" + self.root.identifier + ',' + to_websocket(self.root.repr())
+            msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
             ws_instance_to_update.send_message(msg)
 
     def set_root_widget(self, widget):
@@ -447,7 +447,7 @@ class App(BaseHTTPRequestHandler, object):
         self.root._parent = self
         self.root.enable_refresh()
 
-        msg = "0" + self.root.identifier + ',' + to_websocket(self.root.repr())
+        msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):

@@ -18,6 +18,17 @@ import os
 
 class MyApp(App):
     def __init__(self, *args):
+        res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
+        #static_file_path can be an array of strings allowing to define
+        #  multiple resource path in where the resources will be placed
+        super(MyApp, self).__init__(*args, static_file_path=res_path)
+
+    def idle(self):
+        #idle loop, you can place here custom code
+        # avoid to use infinite iterations, it would stop gui update
+        pass
+
+    def main(self):
         #custom additional html head tags
         my_html_head = """<title>Bootstrap Test</title>"""
 
@@ -38,18 +49,11 @@ class MyApp(App):
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
             """
+        #appending elements to page header
+        self.page.children['head'].add_child('myhtml', my_html_head)
+        self.page.children['head'].add_child('mycss', my_css_head)
+        self.page.children['head'].add_child('myjs', my_js_head)
 
-        res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        #static_file_path can be an array of strings allowing to define
-        #  multiple resource path in where the resources will be placed
-        super(MyApp, self).__init__(*args, static_file_path=res_path, html_head=my_html_head, css_head=my_css_head, js_head=my_js_head)
-
-    def idle(self):
-        #idle loop, you can place here custom code
-        # avoid to use infinite iterations, it would stop gui update
-        pass
-
-    def main(self):
         #creating a container VBox type, vertical (you can use also HBox or Widget)
         main_container = gui.VBox(width='500px', height='500px', style={'margin':'0px auto','padding':'10px'})
 
@@ -105,6 +109,6 @@ class MyApp(App):
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='127.0.0.1', port=8085, start_browser=True, username=None, password=None)
+    start(MyApp, debug=True, address='127.0.0.1', port=8085, start_browser=True, username=None, password=None)
 
 
