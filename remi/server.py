@@ -51,8 +51,6 @@ except ImportError:
 import cgi
 import weakref
 
-from remi import gui
-
 
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
@@ -352,281 +350,26 @@ class App(BaseHTTPRequestHandler, object):
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         clients[self.session].update_interval = self.server.update_interval
 
-        # refreshing the script every instance() call, because of different net_interface_ip connections
-        # can happens for the same 'k'
-        clients[self.session].js_body_end = """
-        <script>
-        // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
-        // using UTF8 strings I noticed that the javascript .length of a string returned less
-        // characters than they actually were
-        var pendingSendMessages = [];
-        var ws = null;
-        var comTimeout = null;
-        var failedConnections = 0;
-
-        function byteLength(str) {
-            // returns the byte length of an utf8 string
-            var s = str.length;
-            for (var i=str.length-1; i>=0; i--) {
-                var code = str.charCodeAt(i);
-                if (code > 0x7f && code <= 0x7ff) s++;
-                else if (code > 0x7ff && code <= 0xffff) s+=2;
-                if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
-            }
-            return s;
-        }
-
-        var paramPacketize = function (ps){
-            var ret = '';
-            for (var pkey in ps) {
-                if( ret.length>0 )ret = ret + '|';
-                var pstring = pkey+'='+ps[pkey];
-                var pstring_length = byteLength(pstring);
-                pstring = pstring_length+'|'+pstring;
-                ret = ret + pstring;
-            }
-            return ret;
-        };
-
-        function openSocket(){
-            ws_wss = "ws";
-            try{
-                ws_wss = document.location.protocol.startsWith('https')?'wss':'ws';
-            }catch(ex){}
-
-            try{
-                ws = new WebSocket(ws_wss + '://%(host)s/');
-                console.debug('opening websocket');
-                ws.onopen = websocketOnOpen;
-                ws.onmessage = websocketOnMessage;
-                ws.onclose = websocketOnClose;
-                ws.onerror = websocketOnError;
-            }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
-        }
-        openSocket();
-
-        function websocketOnMessage (evt){
-            var received_msg = evt.data;
-
-            if( received_msg[0]=='0' ){ /*show_window*/
-                var index = received_msg.indexOf(',')+1;
-                /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
-                var content = received_msg.substr(index,received_msg.length-index);
-
-                document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
-                document.body.innerHTML += decodeURIComponent(content);
-            }else if( received_msg[0]=='1' ){ /*update_widget*/
-                var focusedElement=-1;
-                var caretStart=-1;
-                var caretEnd=-1;
-                if (document.activeElement)
-                {
-                    focusedElement = document.activeElement.id;
-                    try{
-                        caretStart = document.activeElement.selectionStart;
-                        caretEnd = document.activeElement.selectionEnd;
-                    }catch(e){}
-                }
-                var index = received_msg.indexOf(',')+1;
-                var idElem = received_msg.substr(1,index-2);
-                var content = received_msg.substr(index,received_msg.length-index);
-
-                var elem = document.getElementById(idElem);
-                try{
-                    elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
-                    elem.parentElement.removeChild(elem);
-                }catch(e){
-                    /*Microsoft EDGE doesn't support insertAdjacentHTML for SVGElement*/
-                    var ns = document.createElementNS("http://www.w3.org/2000/svg",'tmp');
-                    ns.innerHTML = decodeURIComponent(content);
-                    elem.parentElement.replaceChild(ns.firstChild, elem);
-                }
-
-                var elemToFocus = document.getElementById(focusedElement);
-                if( elemToFocus != null ){
-                    elemToFocus.focus();
-                    try{
-                        elemToFocus = document.getElementById(focusedElement);
-                        if(caretStart>-1 && caretEnd>-1) elemToFocus.setSelectionRange(caretStart, caretEnd);
-                    }catch(e){}
-                }
-            }else if( received_msg[0]=='2' ){ /*javascript*/
-                var content = received_msg.substr(1,received_msg.length-1);
-                try{
-                    eval(content);
-                }catch(e){console.debug(e.message);};
-            }else if( received_msg[0]=='3' ){ /*ack*/
-                pendingSendMessages.shift() /*remove the oldest*/
-                if(comTimeout!=null)
-                    clearTimeout(comTimeout);
-            }
-        };
-
-        /*this uses websockets*/
-        var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
-            var paramStr = '';
-            if(params!=null) paramStr=paramPacketize(params);
-            var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
-            pendingSendMessages.push(message);
-            if( pendingSendMessages.length < %(max_pending_messages)s ){
-                ws.send(message);
-                if(comTimeout==null)
-                    comTimeout = setTimeout(checkTimeout, %(messaging_timeout)s);
-            }else{
-                console.debug('Renewing connection, ws.readyState when trying to send was: ' + ws.readyState)
-                renewConnection();
-            }
-        };
-
-        /*this uses websockets*/
-        var sendCallback = function (widgetID,functionName){
-            sendCallbackParam(widgetID,functionName,null);
-        };
-
-        function renewConnection(){
-            // ws.readyState:
-            //A value of 0 indicates that the connection has not yet been established.
-            //A value of 1 indicates that the connection is established and communication is possible.
-            //A value of 2 indicates that the connection is going through the closing handshake.
-            //A value of 3 indicates that the connection has been closed or could not be opened.
-            if( ws.readyState == 1){
-                try{
-                    ws.close();
-                }catch(err){};
-            }
-            else if(ws.readyState == 0){
-            // Don't do anything, just wait for the connection to be stablished
-            }
-            else{
-                openSocket();
-            }
-        };
-
-        function checkTimeout(){
-            if(pendingSendMessages.length>0)
-                renewConnection();
-        };
-
-        function websocketOnClose(evt){
-            /* websocket is closed. */
-            console.debug('Connection is closed... event code: ' + evt.code + ', reason: ' + evt.reason);
-            // Some explanation on this error: http://stackoverflow.com/questions/19304157/getting-the-reason-why-websockets-closed
-            // In practice, on a unstable network (wifi with a lot of traffic for example) this error appears
-            // Got it with Chrome saying:
-            // WebSocket connection to 'ws://x.x.x.x:y/' failed: Could not decode a text frame as UTF-8.
-            // WebSocket connection to 'ws://x.x.x.x:y/' failed: Invalid frame header
-
-            try {
-                document.getElementById("loading").style.display = '';
-            } catch(err) {
-                console.log('Error hiding loading overlay ' + err.message);
-            }
-
-            failedConnections += 1;
-
-            console.debug('failed connections=' + failedConnections + ' queued messages=' + pendingSendMessages.length);
-
-            if(failedConnections > 3) {
-
-                // check if the server has been restarted - which would give it a new websocket address,
-                // new state, and require a reload
-                console.debug('Checking if GUI still up ' + location.href);
-
-                var http = new XMLHttpRequest();
-                http.open('HEAD', location.href);
-                http.onreadystatechange = function() {
-                    if (http.status == 200) {
-                        // server is up but has a new websocket address, reload
-                        location.reload();
-                    }
-                };
-                http.send();
-
-                failedConnections = 0;
-            }
-
-            if(evt.code == 1006){
-                renewConnection();
-            }
-
-        };
-
-        function websocketOnError(evt){
-            /* websocket is closed. */
-            /* alert('Websocket error...');*/
-            console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
-        };
-
-        function websocketOnOpen(evt){
-            if(ws.readyState == 1){
-                ws.send('connected');
-
-                try {
-                    document.getElementById("loading").style.display = 'none';
-                } catch(err) {
-                    console.log('Error hiding loading overlay ' + err.message);
-                }
-
-                failedConnections = 0;
-
-                while(pendingSendMessages.length>0){
-                    ws.send(pendingSendMessages.shift()); /*without checking ack*/
-                }
-            }
-            else{
-                console.debug('onopen fired but the socket readyState was not 1');
-            }
-        };
-
-        function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
-            var url = '/';
-            var xhr = new XMLHttpRequest();
-            var fd = new FormData();
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('filename', file.name);
-            xhr.setRequestHeader('listener', widgetID);
-            xhr.setRequestHeader('listener_function', eventData);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    /* Every thing ok, file uploaded */
-                    var params={};params['filename']=file.name;
-                    sendCallbackParam(widgetID, eventSuccess,params);
-                    console.log('upload success: ' + file.name);
-                }else if(xhr.status == 400){
-                    var params={};params['filename']=file.name;
-                    sendCallbackParam(widgetID,eventFail,params);
-                    console.log('upload failed: ' + file.name);
-                }
-            };
-            fd.append('upload_file', file);
-            xhr.send(fd);
-        };
-        </script>""" % {'host':net_interface_ip, 
-                        'max_pending_messages':pending_messages_queue_length, 
-                        'messaging_timeout':websocket_timeout_timer_ms}
-
-        # add built in js, extend with user js
-        clients[self.session].js_body_end += ('\n' + '\n'.join(self._get_list_from_app_args('js_body_end')))
-        # use the default css, but append a version based on its hash, to stop browser caching
-        with open(self._get_static_file('style.css'), 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            clients[self.session].css_head = "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5
-        # add built in css, extend with user css
-        clients[self.session].css_head += ('\n' + '\n'.join(self._get_list_from_app_args('css_head')))
-
-        # add user supplied extra html,css,js
-        clients[self.session].html_head = '\n'.join(self._get_list_from_app_args('html_head'))
-        clients[self.session].html_body_start = '\n'.join(self._get_list_from_app_args('html_body_start'))
-        clients[self.session].html_body_end = '\n'.join(self._get_list_from_app_args('html_body_end'))
-        clients[self.session].js_body_start = '\n'.join(self._get_list_from_app_args('js_body_start'))
-        clients[self.session].js_head = '\n'.join(self._get_list_from_app_args('js_head'))
 
         self.client = clients[self.session]
 
         if not hasattr(self.client, 'page'):
-            head = gui.HEAD(self.server.title, self.client.js_head + '\n' + self.client.js_body_end, self.client.css_head, self.client.html_head)
+            from remi import gui
+            
+            head = gui.HEAD(self.server.title, 
+                net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
+            with open(self.client._get_static_file('style.css'), 'rb') as f:
+                md5 = hashlib.md5(f.read()).hexdigest()
+            # use the default css, but append a version based on its hash, to stop browser caching
+            head.add_child('internal_css', "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5)
+            
             body = gui.BODY()
-            body.disable_refresh()
+            body.onload.connect(self.client.onload)
+            body.onerror.connect(self.client.onerror)
+            body.ononline.connect(self.client.ononline)
+            body.onpagehide.connect(self.client.onpagehide)
+            body.onpageshow.connect(self.client.onpageshow)
+            body.onresize.connect(self.client.onresize)
             self.client.page = gui.HTML()
             self.client.page.add_child('head', head)
             self.client.page.add_child('body', body)
@@ -920,7 +663,38 @@ class App(BaseHTTPRequestHandler, object):
         for ws in self.client.websockets:
             ws.close()
 
-   
+    def onload(self, emitter):
+        """ WebPage Event that occurs on webpage loaded
+        """
+        self._log.debug('App.onload event occurred')
+
+    def onerror(self, emitter, message, source, lineno, colno):
+        """ WebPage Event that occurs on webpage errors
+        """
+        self._log.debug("""App.onerror event occurred in webpage: 
+            \nMESSAGE:%s\nSOURCE:%s\nLINENO:%s\nCOLNO:%s\n"""%(message, source, lineno, colno))
+
+    def ononline(self, emitter):
+        """ WebPage Event that occurs on webpage goes online after a disconnection
+        """
+        self._log.debug('App.ononline event occurred')
+
+    def onpagehide(self, emitter):
+        """ WebPage Event that occurs on webpage when the user navigates away
+        """
+        self._log.debug('App.onpagehide event occurred')
+
+    def onpageshow(self, emitter):
+        """ WebPage Event that occurs on webpage gets shown
+        """
+        self._log.debug('App.onpageshow event occurred')
+
+    def onresize(self, emitter, width, height):
+        """ WebPage Event that occurs on webpage gets resized
+        """
+        self._log.debug('App.onresize event occurred. Width:%s Height:%s'%(width, height))
+
+
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     daemon_threads = False

@@ -241,7 +241,7 @@ class Tag(object):
     but it is not necessarily graphically representable.
     You can use this class for sending javascript code to the clients.
     """
-    def __init__(self, attributes = {}, _type = '', _class = None,  **kwargs):
+    def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
         Args:
             attributes (dict): The attributes to be applied. 
@@ -249,6 +249,8 @@ class Tag(object):
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, useful for public API definition.
         """
+        if attributes is None:
+            attributes={}
         self._parent = None
 
         self.kwargs = kwargs
@@ -294,7 +296,7 @@ class Tag(object):
         self.attributes['id'] = new_identifier
         runtimeInstances[new_identifier] = self
 
-    def repr(self, changed_widgets={}):
+    def repr(self, changed_widgets=None):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
@@ -302,6 +304,8 @@ class Tag(object):
             changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
+        if changed_widgets is None:
+            changed_widgets = {}
         local_changed_widgets = {}
         innerHTML = ''
         for k in self._render_children_list:
@@ -482,7 +486,7 @@ class Widget(Tag, EventSource):
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, children = None, style = {}, *args, **kwargs):
+    def __init__(self, children = None, style = None, *args, **kwargs):
 
         """
         Args:
@@ -495,6 +499,8 @@ class Widget(Tag, EventSource):
             layout_orientation (Widget.LAYOUT_VERTICAL, Widget.LAYOUT_HORIZONTAL): Widget layout, only honoured for
                 some widget types
         """
+        if style is None:
+            style={}
         if '_type' not in kwargs:
             kwargs['_type'] = 'div'
 
@@ -568,7 +574,7 @@ class Widget(Tag, EventSource):
         """Forces a graphic update of the widget"""
         self._need_update()
 
-    def repr(self, changed_widgets={}):
+    def repr(self, changed_widgets=None):
         """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Args:
@@ -576,6 +582,8 @@ class Widget(Tag, EventSource):
             changed_widgets (dict): A dictionary containing a collection of widgets that have to be updated.
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
+        if changed_widgets is None:
+            changed_widgets={}
         return super(Widget, self).repr(changed_widgets)
 
     def append(self, value, key=''):
@@ -938,7 +946,7 @@ class HTML(Tag):
         super(HTML, self).__init__(*args, _type='html', **kwargs)
         self._classes = []
 
-    def repr(self, changed_widgets={}):
+    def repr(self, changed_widgets=None):
             """It is used to automatically represent the object to HTML format
             packs all the attributes, children and so on.
 
@@ -946,6 +954,8 @@ class HTML(Tag):
                 changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
                     The tag that have to be updated is the key, and the value is its textual repr.
             """
+            if changed_widgets is None:
+                changed_widgets={}
             local_changed_widgets = {}
             innerHTML = ''
             for k in self._render_children_list:
@@ -963,31 +973,271 @@ class HTML(Tag):
 
 
 class HEAD(Tag):
-    def __init__(self, title, js, css, html, *args, **kwargs):
+    def __init__(self, title, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms, *args, **kwargs):
         super(HEAD, self).__init__(*args, _type='head', **kwargs)
         self.add_child('meta', 
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
+        
+        self.add_child('internal_js',
+                """
+                <script>
+                // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
+                // using UTF8 strings I noticed that the javascript .length of a string returned less
+                // characters than they actually were
+                var pendingSendMessages = [];
+                var ws = null;
+                var comTimeout = null;
+                var failedConnections = 0;
+
+                function byteLength(str) {
+                    // returns the byte length of an utf8 string
+                    var s = str.length;
+                    for (var i=str.length-1; i>=0; i--) {
+                        var code = str.charCodeAt(i);
+                        if (code > 0x7f && code <= 0x7ff) s++;
+                        else if (code > 0x7ff && code <= 0xffff) s+=2;
+                        if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+                    }
+                    return s;
+                }
+
+                var paramPacketize = function (ps){
+                    var ret = '';
+                    for (var pkey in ps) {
+                        if( ret.length>0 )ret = ret + '|';
+                        var pstring = pkey+'='+ps[pkey];
+                        var pstring_length = byteLength(pstring);
+                        pstring = pstring_length+'|'+pstring;
+                        ret = ret + pstring;
+                    }
+                    return ret;
+                };
+
+                function openSocket(){
+                    ws_wss = "ws";
+                    try{
+                        ws_wss = document.location.protocol.startsWith('https')?'wss':'ws';
+                    }catch(ex){}
+
+                    try{
+                        ws = new WebSocket(ws_wss + '://%(host)s/');
+                        console.debug('opening websocket');
+                        ws.onopen = websocketOnOpen;
+                        ws.onmessage = websocketOnMessage;
+                        ws.onclose = websocketOnClose;
+                        ws.onerror = websocketOnError;
+                    }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
+                }
+                openSocket();
+
+                function websocketOnMessage (evt){
+                    var received_msg = evt.data;
+
+                    if( received_msg[0]=='0' ){ /*show_window*/
+                        var index = received_msg.indexOf(',')+1;
+                        /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
+                        var content = received_msg.substr(index,received_msg.length-index);
+
+                        document.body.innerHTML = '<div id="loading" style="display: none;"><div id="loading-animation"></div></div>';
+                        document.body.innerHTML += decodeURIComponent(content);
+                    }else if( received_msg[0]=='1' ){ /*update_widget*/
+                        var focusedElement=-1;
+                        var caretStart=-1;
+                        var caretEnd=-1;
+                        if (document.activeElement)
+                        {
+                            focusedElement = document.activeElement.id;
+                            try{
+                                caretStart = document.activeElement.selectionStart;
+                                caretEnd = document.activeElement.selectionEnd;
+                            }catch(e){}
+                        }
+                        var index = received_msg.indexOf(',')+1;
+                        var idElem = received_msg.substr(1,index-2);
+                        var content = received_msg.substr(index,received_msg.length-index);
+
+                        var elem = document.getElementById(idElem);
+                        try{
+                            elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
+                            elem.parentElement.removeChild(elem);
+                        }catch(e){
+                            /*Microsoft EDGE doesn't support insertAdjacentHTML for SVGElement*/
+                            var ns = document.createElementNS("http://www.w3.org/2000/svg",'tmp');
+                            ns.innerHTML = decodeURIComponent(content);
+                            elem.parentElement.replaceChild(ns.firstChild, elem);
+                        }
+
+                        var elemToFocus = document.getElementById(focusedElement);
+                        if( elemToFocus != null ){
+                            elemToFocus.focus();
+                            try{
+                                elemToFocus = document.getElementById(focusedElement);
+                                if(caretStart>-1 && caretEnd>-1) elemToFocus.setSelectionRange(caretStart, caretEnd);
+                            }catch(e){}
+                        }
+                    }else if( received_msg[0]=='2' ){ /*javascript*/
+                        var content = received_msg.substr(1,received_msg.length-1);
+                        try{
+                            eval(content);
+                        }catch(e){console.debug(e.message);};
+                    }else if( received_msg[0]=='3' ){ /*ack*/
+                        pendingSendMessages.shift() /*remove the oldest*/
+                        if(comTimeout!=null)
+                            clearTimeout(comTimeout);
+                    }
+                };
+
+                /*this uses websockets*/
+                var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
+                    var paramStr = '';
+                    if(params!=null) paramStr=paramPacketize(params);
+                    var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
+                    pendingSendMessages.push(message);
+                    if( pendingSendMessages.length < %(max_pending_messages)s ){
+                        ws.send(message);
+                        if(comTimeout==null)
+                            comTimeout = setTimeout(checkTimeout, %(messaging_timeout)s);
+                    }else{
+                        console.debug('Renewing connection, ws.readyState when trying to send was: ' + ws.readyState)
+                        renewConnection();
+                    }
+                };
+
+                /*this uses websockets*/
+                var sendCallback = function (widgetID,functionName){
+                    sendCallbackParam(widgetID,functionName,null);
+                };
+
+                function renewConnection(){
+                    // ws.readyState:
+                    //A value of 0 indicates that the connection has not yet been established.
+                    //A value of 1 indicates that the connection is established and communication is possible.
+                    //A value of 2 indicates that the connection is going through the closing handshake.
+                    //A value of 3 indicates that the connection has been closed or could not be opened.
+                    if( ws.readyState == 1){
+                        try{
+                            ws.close();
+                        }catch(err){};
+                    }
+                    else if(ws.readyState == 0){
+                    // Don't do anything, just wait for the connection to be stablished
+                    }
+                    else{
+                        openSocket();
+                    }
+                };
+
+                function checkTimeout(){
+                    if(pendingSendMessages.length>0)
+                        renewConnection();
+                };
+
+                function websocketOnClose(evt){
+                    /* websocket is closed. */
+                    console.debug('Connection is closed... event code: ' + evt.code + ', reason: ' + evt.reason);
+                    // Some explanation on this error: http://stackoverflow.com/questions/19304157/getting-the-reason-why-websockets-closed
+                    // In practice, on a unstable network (wifi with a lot of traffic for example) this error appears
+                    // Got it with Chrome saying:
+                    // WebSocket connection to 'ws://x.x.x.x:y/' failed: Could not decode a text frame as UTF-8.
+                    // WebSocket connection to 'ws://x.x.x.x:y/' failed: Invalid frame header
+
+                    try {
+                        document.getElementById("loading").style.display = '';
+                    } catch(err) {
+                        console.log('Error hiding loading overlay ' + err.message);
+                    }
+
+                    failedConnections += 1;
+
+                    console.debug('failed connections=' + failedConnections + ' queued messages=' + pendingSendMessages.length);
+
+                    if(failedConnections > 3) {
+
+                        // check if the server has been restarted - which would give it a new websocket address,
+                        // new state, and require a reload
+                        console.debug('Checking if GUI still up ' + location.href);
+
+                        var http = new XMLHttpRequest();
+                        http.open('HEAD', location.href);
+                        http.onreadystatechange = function() {
+                            if (http.status == 200) {
+                                // server is up but has a new websocket address, reload
+                                location.reload();
+                            }
+                        };
+                        http.send();
+
+                        failedConnections = 0;
+                    }
+
+                    if(evt.code == 1006){
+                        renewConnection();
+                    }
+
+                };
+
+                function websocketOnError(evt){
+                    /* websocket is closed. */
+                    /* alert('Websocket error...');*/
+                    console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
+                };
+
+                function websocketOnOpen(evt){
+                    if(ws.readyState == 1){
+                        ws.send('connected');
+
+                        try {
+                            document.getElementById("loading").style.display = 'none';
+                        } catch(err) {
+                            console.log('Error hiding loading overlay ' + err.message);
+                        }
+
+                        failedConnections = 0;
+
+                        while(pendingSendMessages.length>0){
+                            ws.send(pendingSendMessages.shift()); /*without checking ack*/
+                        }
+                    }
+                    else{
+                        console.debug('onopen fired but the socket readyState was not 1');
+                    }
+                };
+
+                function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
+                    var url = '/';
+                    var xhr = new XMLHttpRequest();
+                    var fd = new FormData();
+                    xhr.open('POST', url, true);
+                    xhr.setRequestHeader('filename', file.name);
+                    xhr.setRequestHeader('listener', widgetID);
+                    xhr.setRequestHeader('listener_function', eventData);
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            /* Every thing ok, file uploaded */
+                            var params={};params['filename']=file.name;
+                            sendCallbackParam(widgetID, eventSuccess,params);
+                            console.log('upload success: ' + file.name);
+                        }else if(xhr.status == 400){
+                            var params={};params['filename']=file.name;
+                            sendCallbackParam(widgetID,eventFail,params);
+                            console.log('upload failed: ' + file.name);
+                        }
+                    };
+                    fd.append('upload_file', file);
+                    xhr.send(fd);
+                };
+                </script>""" % {'host':net_interface_ip, 
+                                'max_pending_messages':pending_messages_queue_length, 
+                                'messaging_timeout':websocket_timeout_timer_ms})
         self._classes = []
-        self.set_css(css)
-        self.set_html(html)
-        self.set_javascript(js)
         self.set_title(title)
-
-    def set_javascript(self, js):
-        self.add_child("js", js)
-    
-    def set_html(self, html):
-        self.add_child("html", html)
-
-    def set_css(self, css):
-        self.add_child("css", css)
 
     def set_title(self, title):
         self.add_child('title', "<title>%s</title>" % title)
 
-    def repr(self, changed_widgets={}):
+    def repr(self, changed_widgets=None):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
@@ -995,6 +1245,8 @@ class HEAD(Tag):
             changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
+        if changed_widgets is None:
+            changed_widgets={}
         local_changed_widgets = {}
         innerHTML = ''
         for k in self._render_children_list:
@@ -1070,11 +1322,15 @@ class BODY(Widget):
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+    @decorate_event_js("""
+            var params={};
+            params['width']=window.innerWidth;
+            params['height']=window.innerHeight;
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();
             return false;""")
-    def onresize(self):
-        return ()
+    def onresize(self, width, height):
+        return (width, height)
 
 
 class GridBox(Widget):
