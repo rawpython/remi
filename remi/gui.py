@@ -308,7 +308,6 @@ class Tag(object):
                 ret = ret + s.encode('utf-8')
             else:
                 ret = ret + repr(s)
-            ret += '\n'
         return ret
 
     def repr(self, changed_widgets=None):
