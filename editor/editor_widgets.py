@@ -295,7 +295,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog, gui.EventSource):
 
     def add_fileinput_field(self, defaultname='untitled'):
         self.txtFilename = gui.TextInput()
-        self.txtFilename.onenter.connect(self.on_enter_key_pressed)
+        self.txtFilename.onkeydown.connect(self.on_enter_key_pressed)
         self.txtFilename.set_text(defaultname)
 
         self.add_field_with_label("filename","Filename",self.txtFilename)
@@ -303,8 +303,9 @@ class EditorFileSaveDialog(gui.FileSelectionDialog, gui.EventSource):
     def get_fileinput_value(self):
         return self.get_field('filename').get_value()
 
-    def on_enter_key_pressed(self, widget, value):
-        self.confirm_value(None)
+    def on_enter_key_pressed(self, widget, value, keycode):
+        if keycode=="13":
+            self.confirm_value(None)
 
     @gui.decorate_event
     def confirm_value(self, widget):
@@ -651,7 +652,7 @@ class UrlPathInput(gui.Widget, gui.EventSource):
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
 
-        self.txtInput = StringEditor(width='80%', height='100%')
+        self.txtInput = gui.TextInput(width='80%', height='100%')
         self.txtInput.style['float'] = 'left'
         self.txtInput.onchange.connect(self.on_txt_changed)
         self.append(self.txtInput)
@@ -683,32 +684,6 @@ class UrlPathInput(gui.Widget, gui.EventSource):
 
     def set_value(self, value):
         self.txtInput.set_value(value)
-
-
-class StringEditor(gui.TextInput, gui.EventSource):
-    """ This class sends the input directly to the listener, but don't applies the changes
-        to the widget itself in order to avoid to get updated losting the focus.
-        The value will be committed to the widget itself when blurs.
-    """
-    def __init__(self, *args, **kwargs):
-        super(StringEditor, self).__init__(True, *args, **kwargs)
-        gui.EventSource.__init__(self)
-        self.attributes[self.EVENT_ONBLUR] = \
-            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join('');
-            var params={};params['new_value']=elem.value;
-            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
-
-        self.attributes[self.EVENT_ONKEYUP] = \
-            """var elem=document.getElementById('%(id)s');elem.value = elem.value.split('\\n').join('');
-            var params={};params['new_value']=elem.value;
-            sendCallbackParam('%(id)s','%(evt)s',params);""" % {'id': self.identifier, 'evt': self.EVENT_ONKEYUP}
-
-        self.attributes[self.EVENT_ONKEYDOWN] = \
-            """if((event.charCode||event.keyCode)==13){event.keyCode = 0;event.charCode = 0; return false;}""" % {'id': self.identifier}
-
-    @gui.decorate_event
-    def onkeyup(self, new_value):
-        return (new_value,)
 
 
 #widget that allows to edit a specific html and css attributes
@@ -757,7 +732,7 @@ class EditorAttributeInput(gui.Widget, gui.EventSource):
                 self.inputWidget = CssSizeInput(appInstance)
 
         else: #default editor is string
-            self.inputWidget = StringEditor()
+            self.inputWidget = gui.TextInput()
 
         self.inputWidget.onchange.connect(self.on_attribute_changed)
         self.inputWidget.set_size('50%','22px')

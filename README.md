@@ -48,6 +48,12 @@ Subfolders are accepted, and so:
 my_widget.attributes['background-image'] = "url('/my_resources:subfolder/other_subfolder/image.png')"
 ```
 
+The event TextInput.onenter is no more supported.
+
+The events TextInput.onkeydown and TextInput.onkeyup are now different, and require a different listener format. There is an additional parameter keycode.
+
+The TextInput.onchange event now occurs also in case of Enter key pressed, if TextInput is single_line.
+
 
 Getting Started
 ===

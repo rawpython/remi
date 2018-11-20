@@ -28,7 +28,7 @@ class MyApp(App):
     def ChangeColor(self, Text, Side, Num, BtUp, BtDn):
         self.In = 1
         with self.update_lock:
-            Text.set_text(Num)
+            Text.set_text(str(Num))
             Side.style['background-color'] = 'red'
             BtUp.attributes['class']='up80red'
             BtDn.attributes['class']='dn80red'
@@ -89,22 +89,22 @@ class MyApp(App):
         self.wid3 = gui.Widget(width=230, height=350, margin='5px', style={'background':'green'})
         # Left side interface
         self.lblLeftName = gui.Label(self.Name1, width='95%', height='60px', style={'margin':'20px 2px 0px', 'font-size':'40px', 'line-height':'60px', 'text-align':'center', 'overflow':'hidden'})
-        self.lblLeftNum = gui.Label(self.LeftNum, width='100%', height='130px', style={'margin':'0px 0px 10px', 'font-size':'140px', 'line-height':'130px', 'text-align':'center'})
+        self.lblLeftNum = gui.Label(str(self.LeftNum), width='100%', height='130px', style={'margin':'0px 0px 10px', 'font-size':'140px', 'line-height':'130px', 'text-align':'center'})
         self.btLeftPlus = gui.Button('', width='80px', height='80px', style={'margin':'0px 10px 20px', 'font-size':'50px', 'line-height':'50px', 'text-align':'center'})
         self.btLeftPlus.attributes['class']='up80'
         self.btLeftMinus = gui.Button('', width='80px', height='80px', style={'margin':'0px 10px 20px', 'font-size':'50px', 'line-height':'50px', 'text-align':'center'})
         self.btLeftMinus.attributes['class']='dn80'
         lblLeftMatch = gui.Label('MATCHES WON:', width=150, height='30px', style={'margin':'0px 5px', 'font-size':'20px', 'line-height':'30px', 'text-align':'left', 'display':'inline'})
-        self.lblLeftMatches = gui.Label(self.LeftMatchNum, width=30, height='30px', style={'margin':'0px 5px', 'font-size':'20px', 'line-height':'30px', 'text-align':'left', 'display':'inline'})
+        self.lblLeftMatches = gui.Label(str(self.LeftMatchNum), width=30, height='30px', style={'margin':'0px 5px', 'font-size':'20px', 'line-height':'30px', 'text-align':'left', 'display':'inline'})
         # Right side interface
         self.lblRightName = gui.Label(self.Name2, width='95%', height='60px', style={'margin':'20px 2px 0px', 'font-size':'40px', 'line-height':'60px', 'text-align':'center', 'overflow':'hidden'})
-        self.lblRightNum = gui.Label(self.LeftNum, width='100%', height='130px', style={'margin':'0px 0px 10px', 'font-size':'140px', 'line-height':'130px', 'text-align':'center'})
+        self.lblRightNum = gui.Label(str(self.LeftNum), width='100%', height='130px', style={'margin':'0px 0px 10px', 'font-size':'140px', 'line-height':'130px', 'text-align':'center'})
         self.btRightPlus = gui.Button('', width='80px', height='80px', style={'margin':'0px 10px 20px', 'font-size':'50px', 'line-height':'50px', 'text-align':'center'})
         self.btRightPlus.attributes['class']='up80'
         self.btRightMinus = gui.Button('', width='80px', height='80px', style={'margin':'0px 10px 20px', 'font-size':'50px', 'line-height':'50px', 'text-align':'center'})
         self.btRightMinus.attributes['class']='dn80'
         lblRightMatch = gui.Label('MATCHES WON:', width=150, height='30px', style={'margin':'0px 5px', 'font-size':'20px', 'line-height':'30px', 'text-align':'left', 'display':'inline'})
-        self.lblRightMatches = gui.Label(self.RightMatchNum, width=30, height='30px', style={'margin':'0px 5px', 'font-size':'20px', 'line-height':'30px', 'text-align':'left', 'display':'inline'})
+        self.lblRightMatches = gui.Label(str(self.RightMatchNum), width=30, height='30px', style={'margin':'0px 5px', 'font-size':'20px', 'line-height':'30px', 'text-align':'left', 'display':'inline'})
         # Appends all the widgets to create the interface
         self.wid2.append([self.lblLeftName, self.lblLeftNum, self.btLeftPlus, self.btLeftMinus, lblLeftMatch, self.lblLeftMatches])
         self.wid3.append([self.lblRightName, self.lblRightNum, self.btRightPlus, self.btRightMinus, lblRightMatch, self.lblRightMatches])
@@ -113,7 +113,7 @@ class MyApp(App):
         # Extra labels and button to manage:
         # The number of games to win, to win a match
         lblMatch = gui.Label('GAMES FOR MATCH:', width='50%', height='50px', style={'margin':'15px 2px 0px 10px', 'font-size':'25px', 'line-height':'35px', 'text-align':'center'})
-        self.lblMatches = gui.Label(self.MatchNum, width='8%', height='50px', style={'margin':'15px 2px 0px', 'font-size':'25px', 'line-height':'35px', 'text-align':'center'})
+        self.lblMatches = gui.Label(str(self.MatchNum), width='8%', height='50px', style={'margin':'15px 2px 0px', 'font-size':'25px', 'line-height':'35px', 'text-align':'center'})
         btMatchPlus = gui.Button('', width='50px', height='50px', style={'margin':'5px 2px 0px 20px', 'font-size':'30px', 'line-height':'30px', 'text-align':'center'})
         btMatchPlus.attributes['class']='up50'
         btMatchMinus = gui.Button('', width='50px', height='50px', style={'margin':'5px 2px', 'font-size':'30px', 'line-height':'30px', 'text-align':'center'})
@@ -185,11 +185,11 @@ class MyApp(App):
     def check_score(self):
         # Here the software update automatically any number you can see in the app
         if (self.LeftNum < self.MatchNum) and (self.RightNum < self.MatchNum):
-            self.lblLeftNum.set_text(self.LeftNum)
-            self.lblRightNum.set_text(self.RightNum)
-            self.lblLeftMatches.set_text(self.LeftMatchNum)
-            self.lblRightMatches.set_text(self.RightMatchNum)
-            self.lblMatches.set_text(self.MatchNum)
+            self.lblLeftNum.set_text(str(self.LeftNum))
+            self.lblRightNum.set_text(str(self.RightNum))
+            self.lblLeftMatches.set_text(str(self.LeftMatchNum))
+            self.lblRightMatches.set_text(str(self.RightMatchNum))
+            self.lblMatches.set_text(str(self.MatchNum))
         # Here the software check if a background needs to be green or orange.
         if (self.LeftNum < self.MatchNum - 1):
             self.wid2.style['background-color'] = 'green'

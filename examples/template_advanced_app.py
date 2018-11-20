@@ -18,6 +18,20 @@ import os
 
 class MyApp(App):
     def __init__(self, *args):
+        res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
+        #static_file_path can be an array of strings allowing to define
+        #  multiple resource path in where the resources will be placed
+        super(MyApp, self).__init__(*args, static_file_path=res_path)
+
+    def idle(self):
+        """ Idle loop, you can place here custom code,
+             avoid to use infinite iterations, it would stop gui update.
+            This is a Thread safe method where you can update the 
+             gui with information from external Threads.
+        """
+        pass
+
+    def main(self):
         #custom additional html head tags
         my_html_head = """
             """
@@ -31,21 +45,15 @@ class MyApp(App):
         my_js_head = """
             <script></script>
             """
+        #appending elements to page header
+        self.page.children['head'].add_child('myhtml', my_html_head)
+        self.page.children['head'].add_child('mycss', my_css_head)
+        self.page.children['head'].add_child('myjs', my_js_head)
+        #eventually set up body attributes/style
+        #self.page.children['body'].style['background-color'] = 'lightyellow'
+        #eventually set up body event listeners
+        #self.page.children['body'].onkeydown.connect(self.onkeydown)
 
-        res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        #static_file_path can be an array of strings allowing to define
-        #  multiple resource path in where the resources will be placed
-        super(MyApp, self).__init__(*args, static_file_path=res_path, html_head=my_html_head, css_head=my_css_head, js_head=my_js_head)
-
-    def idle(self):
-        """ Idle loop, you can place here custom code,
-             avoid to use infinite iterations, it would stop gui update.
-            This is a Thread safe method where you can update the 
-             gui with information from external Threads.
-        """
-        pass
-
-    def main(self):
         #creating a container VBox type, vertical (you can use also HBox or Widget)
         main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
 
@@ -54,11 +62,34 @@ class MyApp(App):
                 
     def on_close(self):
         """ Overloading App.on_close event allows to perform some 
-             activities before app termination.
-        """
+             activities before app termination. """
         super(MyApp, self).on_close()
+
+    def onload(self, emitter):
+        """ WebPage Event that occurs on webpage loaded """
+        super(MyApp, self).onload(emitter)
+
+    def onerror(self, emitter, message, source, lineno, colno):
+        """ WebPage Event that occurs on webpage errors """
+        super(MyApp, self).onerror(emitter, message, source, lineno, colno)
+
+    def ononline(self, emitter):
+        """ WebPage Event that occurs on webpage goes online after a disconnection """
+        super(MyApp, self).ononline(emitter)
+
+    def onpagehide(self, emitter):
+        """ WebPage Event that occurs on webpage when the user navigates away """
+        super(MyApp, self).onpagehide(emitter)
+
+    def onpageshow(self, emitter):
+        """ WebPage Event that occurs on webpage gets shown """
+        super(MyApp, self).onpageshow(emitter)
+
+    def onresize(self, emitter, width, height):
+        """ WebPage Event that occurs on webpage gets resized """
+        super(MyApp, self).onresize(emitter, width, height)
 
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='0.0.0.0', port=0, start_browser=True, username=None, password=None)
+    start(MyApp, debug=True, address='0.0.0.0', port=0, start_browser=True, username=None, password=None)

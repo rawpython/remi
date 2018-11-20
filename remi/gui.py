@@ -241,7 +241,7 @@ class Tag(object):
     but it is not necessarily graphically representable.
     You can use this class for sending javascript code to the clients.
     """
-    def __init__(self, attributes = {}, _type = '', _class = None,  **kwargs):
+    def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
         Args:
             attributes (dict): The attributes to be applied. 
@@ -249,6 +249,8 @@ class Tag(object):
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, useful for public API definition.
         """
+        if attributes is None:
+            attributes={}
         self._parent = None
 
         self.kwargs = kwargs
@@ -294,7 +296,21 @@ class Tag(object):
         self.attributes['id'] = new_identifier
         runtimeInstances[new_identifier] = self
 
-    def repr(self, changed_widgets={}):
+    def innerHTML(self, local_changed_widgets):
+        ret = ''
+        for k in self._render_children_list:
+            s = self.children[k]
+            if isinstance(s, Tag):
+                ret = ret + s.repr(local_changed_widgets)
+            elif isinstance(s, type('')):
+                ret = ret + s
+            elif isinstance(s, type(u'')):
+                ret = ret + s.encode('utf-8')
+            else:
+                ret = ret + repr(s)
+        return ret
+
+    def repr(self, changed_widgets=None):
         """It is used to automatically represent the object to HTML format
         packs all the attributes, children and so on.
 
@@ -302,24 +318,16 @@ class Tag(object):
             changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
+        if changed_widgets is None:
+            changed_widgets = {}
         local_changed_widgets = {}
-        innerHTML = ''
-        for k in self._render_children_list:
-            s = self.children[k]
-            if isinstance(s, Tag):
-                innerHTML = innerHTML + s.repr(local_changed_widgets)
-            elif isinstance(s, type('')):
-                innerHTML = innerHTML + s
-            elif isinstance(s, type(u'')):
-                innerHTML = innerHTML + s.encode('utf-8')
-            else:
-                innerHTML = innerHTML + repr(s)
+        _innerHTML = self.innerHTML(local_changed_widgets)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>', 
-                                        innerHTML, '</', self.type, '>'))
+                                        _innerHTML, '</', self.type, '>'))
             #faster but unsupported before python3.6
-            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{innerHTML}</{self.type}>'
+            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
         if self._ischanged():
             # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
@@ -333,7 +341,8 @@ class Tag(object):
         #if there is an emitter, it means self is the actual changed widget
         if emitter:
             tmp = dict(self.attributes)
-            tmp['style'] = jsonize(self.style)
+            if len(self.style):
+                tmp['style'] = jsonize(self.style)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                                 tmp.items())
         if not self.ignore_update:
@@ -356,7 +365,8 @@ class Tag(object):
 
     def add_class(self, cls):
         self._classes.append(cls)
-        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
+        if len(self._classes):
+            self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
 
     def remove_class(self, cls):
         try:
@@ -473,13 +483,14 @@ class Widget(Tag, EventSource):
     EVENT_ONKEYPRESS = 'onkeypress'
     EVENT_ONKEYUP = 'onkeyup'
     EVENT_ONCHANGE = 'onchange'
+    EVENT_ONINPUT = 'oninput'
     EVENT_ONFOCUS = 'onfocus'
     EVENT_ONBLUR = 'onblur'
     EVENT_ONCONTEXTMENU = "oncontextmenu"
     EVENT_ONUPDATE = 'onupdate'
 
     @decorate_constructor_parameter_types([])
-    def __init__(self, children = None, style = {}, *args, **kwargs):
+    def __init__(self, children = None, style = None, *args, **kwargs):
 
         """
         Args:
@@ -492,6 +503,8 @@ class Widget(Tag, EventSource):
             layout_orientation (Widget.LAYOUT_VERTICAL, Widget.LAYOUT_HORIZONTAL): Widget layout, only honoured for
                 some widget types
         """
+        if style is None:
+            style={}
         if '_type' not in kwargs:
             kwargs['_type'] = 'div'
 
@@ -565,7 +578,7 @@ class Widget(Tag, EventSource):
         """Forces a graphic update of the widget"""
         self._need_update()
 
-    def repr(self, changed_widgets={}):
+    def repr(self, changed_widgets=None):
         """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Args:
@@ -573,6 +586,8 @@ class Widget(Tag, EventSource):
             changed_widgets (dict): A dictionary containing a collection of widgets that have to be updated.
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
+        if changed_widgets is None:
+            changed_widgets={}
         return super(Widget, self).repr(changed_widgets)
 
     def append(self, value, key=''):
@@ -819,39 +834,43 @@ class Widget(Tag, EventSource):
         """
         return ()
 
-    @decorate_set_on_listener("(self, emitter, key, ctrl, shift, alt)")
+    @decorate_set_on_listener("(self, emitter, key, keycode, ctrl, shift, alt)")
     @decorate_event_js("""var params={};params['key']=event.key;
+            params['keycode']=(event.which||event.keyCode);
             params['ctrl']=event.ctrlKey;
             params['shift']=event.shiftKey;
             params['alt']=event.altKey;
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();return false;""")
-    def onkeyup(self, key, ctrl, shift, alt):
+    def onkeyup(self, key, keycode, ctrl, shift, alt):
         """Called when user types and releases a key. 
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
         
         Args:
             key (str): the character value
+            keycode (str): the numeric char code
         """
-        return (key, ctrl, shift, alt)
+        return (key, keycode, ctrl, shift, alt)
 
-    @decorate_set_on_listener("(self, emitter, key, ctrl, shift, alt)")
+    @decorate_set_on_listener("(self, emitter, key, keycode, ctrl, shift, alt)")
     @decorate_event_js("""var params={};params['key']=event.key;
+            params['keycode']=(event.which||event.keyCode);
             params['ctrl']=event.ctrlKey;
             params['shift']=event.shiftKey;
             params['alt']=event.altKey;
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();return false;""")
-    def onkeydown(self, key, ctrl, shift, alt):
+    def onkeydown(self, key, keycode, ctrl, shift, alt):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
         
         Args:
             key (str): the character value
+            keycode (str): the numeric char code
         """
-        return (key, ctrl, shift, alt)
+        return (key, keycode, ctrl, shift, alt)
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_focus_listener(self, callback, *userdata):
@@ -924,6 +943,377 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_key_down_listener(self, callback, *userdata):
         self.onkeydown.connect(callback, *userdata)
+
+
+class HTML(Tag):
+    def __init__(self, *args, **kwargs):
+        super(HTML, self).__init__(*args, _type='html', **kwargs)
+        self._classes = []
+
+    def repr(self, changed_widgets=None):
+        """It is used to automatically represent the object to HTML format
+        packs all the attributes, children and so on.
+
+        Args:
+            changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
+                The tag that have to be updated is the key, and the value is its textual repr.
+        """
+        if changed_widgets is None:
+            changed_widgets={}
+        local_changed_widgets = {}
+        self._set_updated()
+        return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
+
+
+class HEAD(Tag):
+    def __init__(self, title, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms, *args, **kwargs):
+        super(HEAD, self).__init__(*args, _type='head', **kwargs)
+        self.add_child('meta', 
+                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+                <meta content='utf-8' http-equiv='encoding'>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
+        
+        self.add_child('internal_js',
+                """
+                <script>
+                // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
+                // using UTF8 strings I noticed that the javascript .length of a string returned less
+                // characters than they actually were
+                var pendingSendMessages = [];
+                var ws = null;
+                var comTimeout = null;
+                var failedConnections = 0;
+
+                function byteLength(str) {
+                    // returns the byte length of an utf8 string
+                    var s = str.length;
+                    for (var i=str.length-1; i>=0; i--) {
+                        var code = str.charCodeAt(i);
+                        if (code > 0x7f && code <= 0x7ff) s++;
+                        else if (code > 0x7ff && code <= 0xffff) s+=2;
+                        if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+                    }
+                    return s;
+                }
+
+                var paramPacketize = function (ps){
+                    var ret = '';
+                    for (var pkey in ps) {
+                        if( ret.length>0 )ret = ret + '|';
+                        var pstring = pkey+'='+ps[pkey];
+                        var pstring_length = byteLength(pstring);
+                        pstring = pstring_length+'|'+pstring;
+                        ret = ret + pstring;
+                    }
+                    return ret;
+                };
+
+                function openSocket(){
+                    ws_wss = "ws";
+                    try{
+                        ws_wss = document.location.protocol.startsWith('https')?'wss':'ws';
+                    }catch(ex){}
+
+                    try{
+                        ws = new WebSocket(ws_wss + '://%(host)s/');
+                        console.debug('opening websocket');
+                        ws.onopen = websocketOnOpen;
+                        ws.onmessage = websocketOnMessage;
+                        ws.onclose = websocketOnClose;
+                        ws.onerror = websocketOnError;
+                    }catch(ex){ws=false;alert('websocketnot supported or server unreachable');}
+                }
+                openSocket();
+
+                function websocketOnMessage (evt){
+                    var received_msg = evt.data;
+
+                    if( received_msg[0]=='0' ){ /*show_window*/
+                        var index = received_msg.indexOf(',')+1;
+                        /*var idRootNodeWidget = received_msg.substr(0,index-1);*/
+                        var content = received_msg.substr(index,received_msg.length-index);
+
+                        document.body.innerHTML = decodeURIComponent(content);
+                    }else if( received_msg[0]=='1' ){ /*update_widget*/
+                        var focusedElement=-1;
+                        var caretStart=-1;
+                        var caretEnd=-1;
+                        if (document.activeElement)
+                        {
+                            focusedElement = document.activeElement.id;
+                            try{
+                                caretStart = document.activeElement.selectionStart;
+                                caretEnd = document.activeElement.selectionEnd;
+                            }catch(e){}
+                        }
+                        var index = received_msg.indexOf(',')+1;
+                        var idElem = received_msg.substr(1,index-2);
+                        var content = received_msg.substr(index,received_msg.length-index);
+
+                        var elem = document.getElementById(idElem);
+                        try{
+                            elem.insertAdjacentHTML('afterend',decodeURIComponent(content));
+                            elem.parentElement.removeChild(elem);
+                        }catch(e){
+                            /*Microsoft EDGE doesn't support insertAdjacentHTML for SVGElement*/
+                            var ns = document.createElementNS("http://www.w3.org/2000/svg",'tmp');
+                            ns.innerHTML = decodeURIComponent(content);
+                            elem.parentElement.replaceChild(ns.firstChild, elem);
+                        }
+
+                        var elemToFocus = document.getElementById(focusedElement);
+                        if( elemToFocus != null ){
+                            elemToFocus.focus();
+                            try{
+                                elemToFocus = document.getElementById(focusedElement);
+                                if(caretStart>-1 && caretEnd>-1) elemToFocus.setSelectionRange(caretStart, caretEnd);
+                            }catch(e){}
+                        }
+                    }else if( received_msg[0]=='2' ){ /*javascript*/
+                        var content = received_msg.substr(1,received_msg.length-1);
+                        try{
+                            eval(content);
+                        }catch(e){console.debug(e.message);};
+                    }else if( received_msg[0]=='3' ){ /*ack*/
+                        pendingSendMessages.shift() /*remove the oldest*/
+                        if(comTimeout!=null)
+                            clearTimeout(comTimeout);
+                    }
+                };
+
+                /*this uses websockets*/
+                var sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
+                    var paramStr = '';
+                    if(params!=null) paramStr=paramPacketize(params);
+                    var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
+                    pendingSendMessages.push(message);
+                    if( pendingSendMessages.length < %(max_pending_messages)s ){
+                        ws.send(message);
+                        if(comTimeout==null)
+                            comTimeout = setTimeout(checkTimeout, %(messaging_timeout)s);
+                    }else{
+                        console.debug('Renewing connection, ws.readyState when trying to send was: ' + ws.readyState)
+                        renewConnection();
+                    }
+                };
+
+                /*this uses websockets*/
+                var sendCallback = function (widgetID,functionName){
+                    sendCallbackParam(widgetID,functionName,null);
+                };
+
+                function renewConnection(){
+                    // ws.readyState:
+                    //A value of 0 indicates that the connection has not yet been established.
+                    //A value of 1 indicates that the connection is established and communication is possible.
+                    //A value of 2 indicates that the connection is going through the closing handshake.
+                    //A value of 3 indicates that the connection has been closed or could not be opened.
+                    if( ws.readyState == 1){
+                        try{
+                            ws.close();
+                        }catch(err){};
+                    }
+                    else if(ws.readyState == 0){
+                    // Don't do anything, just wait for the connection to be stablished
+                    }
+                    else{
+                        openSocket();
+                    }
+                };
+
+                function checkTimeout(){
+                    if(pendingSendMessages.length>0)
+                        renewConnection();
+                };
+
+                function websocketOnClose(evt){
+                    /* websocket is closed. */
+                    console.debug('Connection is closed... event code: ' + evt.code + ', reason: ' + evt.reason);
+                    // Some explanation on this error: http://stackoverflow.com/questions/19304157/getting-the-reason-why-websockets-closed
+                    // In practice, on a unstable network (wifi with a lot of traffic for example) this error appears
+                    // Got it with Chrome saying:
+                    // WebSocket connection to 'ws://x.x.x.x:y/' failed: Could not decode a text frame as UTF-8.
+                    // WebSocket connection to 'ws://x.x.x.x:y/' failed: Invalid frame header
+
+                    try {
+                        document.getElementById("loading").style.display = '';
+                    } catch(err) {
+                        console.log('Error hiding loading overlay ' + err.message);
+                    }
+
+                    failedConnections += 1;
+
+                    console.debug('failed connections=' + failedConnections + ' queued messages=' + pendingSendMessages.length);
+
+                    if(failedConnections > 3) {
+
+                        // check if the server has been restarted - which would give it a new websocket address,
+                        // new state, and require a reload
+                        console.debug('Checking if GUI still up ' + location.href);
+
+                        var http = new XMLHttpRequest();
+                        http.open('HEAD', location.href);
+                        http.onreadystatechange = function() {
+                            if (http.status == 200) {
+                                // server is up but has a new websocket address, reload
+                                location.reload();
+                            }
+                        };
+                        http.send();
+
+                        failedConnections = 0;
+                    }
+
+                    if(evt.code == 1006){
+                        renewConnection();
+                    }
+
+                };
+
+                function websocketOnError(evt){
+                    /* websocket is closed. */
+                    /* alert('Websocket error...');*/
+                    console.debug('Websocket error... event code: ' + evt.code + ', reason: ' + evt.reason);
+                };
+
+                function websocketOnOpen(evt){
+                    if(ws.readyState == 1){
+                        ws.send('connected');
+
+                        try {
+                            document.getElementById("loading").style.display = 'none';
+                        } catch(err) {
+                            console.log('Error hiding loading overlay ' + err.message);
+                        }
+
+                        failedConnections = 0;
+
+                        while(pendingSendMessages.length>0){
+                            ws.send(pendingSendMessages.shift()); /*without checking ack*/
+                        }
+                    }
+                    else{
+                        console.debug('onopen fired but the socket readyState was not 1');
+                    }
+                };
+
+                function uploadFile(widgetID, eventSuccess, eventFail, eventData, file){
+                    var url = '/';
+                    var xhr = new XMLHttpRequest();
+                    var fd = new FormData();
+                    xhr.open('POST', url, true);
+                    xhr.setRequestHeader('filename', file.name);
+                    xhr.setRequestHeader('listener', widgetID);
+                    xhr.setRequestHeader('listener_function', eventData);
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            /* Every thing ok, file uploaded */
+                            var params={};params['filename']=file.name;
+                            sendCallbackParam(widgetID, eventSuccess,params);
+                            console.log('upload success: ' + file.name);
+                        }else if(xhr.status == 400){
+                            var params={};params['filename']=file.name;
+                            sendCallbackParam(widgetID,eventFail,params);
+                            console.log('upload failed: ' + file.name);
+                        }
+                    };
+                    fd.append('upload_file', file);
+                    xhr.send(fd);
+                };
+                </script>""" % {'host':net_interface_ip, 
+                                'max_pending_messages':pending_messages_queue_length, 
+                                'messaging_timeout':websocket_timeout_timer_ms})
+        self._classes = []
+        self.set_title(title)
+
+    def set_title(self, title):
+        self.add_child('title', "<title>%s</title>" % title)
+
+    def repr(self, changed_widgets=None):
+        """It is used to automatically represent the object to HTML format
+        packs all the attributes, children and so on.
+
+        Args:
+            changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
+                The tag that have to be updated is the key, and the value is its textual repr.
+        """
+        if changed_widgets is None:
+            changed_widgets={}
+        local_changed_widgets = {}
+        self._set_updated()
+        return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
+
+
+class BODY(Widget):
+    EVENT_ONLOAD = 'onload'
+    EVENT_ONERROR = 'onerror'
+    EVENT_ONONLINE = 'ononline'
+    EVENT_ONPAGEHIDE = 'onpagehide'
+    EVENT_ONPAGESHOW = 'onpageshow'
+    EVENT_ONRESIZE = 'onresize'
+
+    def __init__(self, *args, **kwargs):
+        super(BODY, self).__init__(*args, _type='body', **kwargs)
+        loading_anim = Widget()
+        del loading_anim.style['margin']
+        loading_anim.set_identifier("loading-animation")
+        loading_widget = Widget(children=[loading_anim], style={'display':'none'})
+        del loading_widget.style['margin']
+        loading_widget.set_identifier("loading")
+
+        self.append(loading_widget)
+    
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onload(self):
+        """Called when page gets loaded."""
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""var params={};params['message']=event.message;
+                params['source']=event.source;
+                params['lineno']=event.lineno;
+                params['colno']=event.colno;
+                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+                return false;
+            """)
+    def onerror(self, message, source, lineno, colno):
+        """Called when an error occurs."""
+        return (message, source, lineno, colno)
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def ononline(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onpagehide(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onpageshow(self):
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("""
+            var params={};
+            params['width']=window.innerWidth;
+            params['height']=window.innerHeight;
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+            event.stopPropagation();event.preventDefault();
+            return false;""")
+    def onresize(self, width, height):
+        return (width, height)
 
 
 class GridBox(Widget):
@@ -1267,9 +1657,20 @@ class TextInput(Widget, _MixinTextualWidget):
         if single_line:
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
-            self.attributes[self.EVENT_ONKEYDOWN] = "if((event.charCode||event.keyCode)==13){" \
-                "event.keyCode = 0;event.charCode = 0; document.body.tabIndex=100000; document.body.focus(); document.body.blur(); document.getElementById('%(id)s').blur();" \
-                "return false;}" % {'id': self.identifier}
+            self.attributes[self.EVENT_ONINPUT] = """
+                var elem = document.getElementById('%(emitter_identifier)s');
+                var enter_pressed = (elem.value.indexOf('\\n') > -1);
+                if(enter_pressed){
+                    elem.value = elem.value.split('\\n').join(''); 
+                    var params={};params['new_value']=elem.value;
+                    sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+                }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+        #else:
+        #    self.attributes[self.EVENT_ONINPUT] = """
+        #        var elem = document.getElementById('%(emitter_identifier)s');
+        #        var params={};params['new_value']=elem.value;
+        #        sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+        #        """ % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
         self.set_value('')
 
@@ -1303,70 +1704,47 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event
     def onchange(self, new_value):
-        """Called when the user finishes to edit the TextInput content.
+        """Called when the user changes the TextInput content.
+        With single_line=True it fires in case of focus lost and Enter key pressed.
+        With single_line=False it fires at each key released.
 
         Args:
             new_value (str): the new string content of the TextInput.
         """
+        self.disable_refresh()
         self.set_value(new_value)
+        self.enable_refresh()
         return (new_value, )
 
-    @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');elem.value = elem.value.split('\\n').join('');
-            var params={};params['new_value']=elem.value;
+    @decorate_set_on_listener("(self, emitter, new_value, keycode)")
+    @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
+            var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
-    def onkeyup(self, new_value):
+    def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
         
+        Note: This event can't be registered together with Widget.onchange.
+
         Args:
             new_value (str): the new string content of the TextInput
+            keycode (str): the numeric char code
         """
-        self.disable_refresh()
-        self.set_value(new_value)
-        self.enable_refresh()
-        self._set_updated()
-        return (new_value, )
+        return (new_value, keycode)
 
-    @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);if((event.charCode||event.keyCode)==13){" \
-            "event.keyCode = 0;event.charCode = 0; document.body.tabIndex=100000; document.body.focus(); document.body.blur(); document.getElementById('%(emitter_identifier)s').blur(); return false;}")
-    def onkeydown(self, new_value):
+    @decorate_set_on_listener("(self, emitter, new_value, keycode)")
+    @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
+            var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
+    def onkeydown(self, new_value, keycode):
         """Called when the user types a key into the TextInput.
 
-        Note: This event can't be registered together with Widget.onenter.
+        Note: This event can't be registered together with Widget.onchange.
 
         Args:
             new_value (str): the new string content of the TextInput.
+            keycode (str): the numeric char code
         """
-        self.disable_refresh()
-        self.set_value(new_value)
-        self.enable_refresh()
-        self._set_updated()
-        return (new_value, )
-
-    @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event_js("""
-            if (event.keyCode == 13) {
-                var params={};
-                params['new_value']=document.getElementById('%(emitter_identifier)s').value;
-                document.getElementById('%(emitter_identifier)s').value = '';
-                document.getElementById('%(emitter_identifier)s').onchange = '';
-                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                return false;
-            }""")
-    def onenter(self, new_value):
-        """Called when the user types an ENTER into the TextInput.
-        Note: This event can't be registered together with Widget.onkeydown.
-
-        Args:
-            new_value (str): the new string content of the TextInput.
-        """
-        self.disable_refresh()
-        self.set_value(new_value)
-        self.enable_refresh()
-        self._set_updated()
-        return (new_value, )
+        return (new_value, keycode)
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_change_listener(self, callback, *userdata):
@@ -1379,10 +1757,6 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_explicit_alias_for_listener_registration
     def set_on_key_down_listener(self, callback, *userdata):
         self.onkeydown.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_enter_listener(self, callback, *userdata):
-        self.onenter.connect(callback, *userdata)
 
 
 class Label(Widget, _MixinTextualWidget):
@@ -1594,21 +1968,21 @@ class InputDialog(GenericDialog):
         super(InputDialog, self).__init__(title, message, *args, **kwargs)
 
         self.inputText = TextInput()
-        self.inputText.onenter.connect(self.on_text_enter_listener)
+        self.inputText.onkeydown.connect(self.on_keydown_listener)
         self.add_field('textinput', self.inputText)
         self.inputText.set_text(initial_value)
 
         self.confirm_dialog.connect(self.confirm_value)
 
-    @decorate_set_on_listener("(self, emitter, value)")
-    @decorate_event
-    def on_text_enter_listener(self, widget, value):
+    def on_keydown_listener(self, widget, value, keycode):
         """event called pressing on ENTER key.
 
         propagates the string content of the input field
         """
-        self.hide()
-        return (value, )
+        if keycode=="13":
+            self.hide()
+            self.inputText.set_text(value)
+            self.confirm_value(self)
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
