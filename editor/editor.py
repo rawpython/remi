@@ -213,7 +213,7 @@ class ResizeHelper(gui.Widget, DraggableItem):
                                 gui.ListView, gui.DropDown, gui.Label, gui.Image, gui.Link,
                                 gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
                                 gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
-                                gui.Svg, gui.VideoPlayer]:
+                                gui.Svg, gui.VideoPlayer, gui.Progress]:
             DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
@@ -254,7 +254,7 @@ class DragHelper(gui.Widget, DraggableItem):
                                 gui.ListView, gui.DropDown, gui.Label, gui.Image, gui.Link,
                                 gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
                                 gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
-                                gui.Svg, gui.VideoPlayer]:
+                                gui.Svg, gui.VideoPlayer, gui.Progress]:
             DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
