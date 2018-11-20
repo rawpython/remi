@@ -952,17 +952,18 @@ class HTML(Tag):
         self._classes = []
 
     def repr(self, changed_widgets=None):
-            """It is used to automatically represent the object to HTML format
-            packs all the attributes, children and so on.
+        """It is used to automatically represent the object to HTML format
+        packs all the attributes, children and so on.
 
-            Args:
-                changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
-                    The tag that have to be updated is the key, and the value is its textual repr.
-            """
-            if changed_widgets is None:
-                changed_widgets={}
-            local_changed_widgets = {}
-            return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
+        Args:
+            changed_widgets (dict): A dictionary containing a collection of tags that have to be updated.
+                The tag that have to be updated is the key, and the value is its textual repr.
+        """
+        if changed_widgets is None:
+            changed_widgets={}
+        local_changed_widgets = {}
+        self._set_updated()
+        return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
 
 
 class HEAD(Tag):
@@ -1240,6 +1241,7 @@ class HEAD(Tag):
         if changed_widgets is None:
             changed_widgets={}
         local_changed_widgets = {}
+        self._set_updated()
         return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
 
 
@@ -1663,7 +1665,9 @@ class TextInput(Widget, _MixinTextualWidget):
                     elem.value = elem.value.split('\\n').join(''); 
                     var params={};params['new_value']=elem.value;
                     sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+                }
+                event.stopPropagation();event.preventDefault();return false;
+                """ % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
         #else:
         #    self.attributes[self.EVENT_ONINPUT] = """
         #        var elem = document.getElementById('%(emitter_identifier)s');
@@ -1718,7 +1722,8 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
     @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
             var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+            event.stopPropagation();event.preventDefault();return false;""")
     def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
         
@@ -1733,7 +1738,8 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
     @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
             var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+            event.stopPropagation();event.preventDefault();return false;""")
     def onkeydown(self, new_value, keycode):
         """Called when the user types a key into the TextInput.
 

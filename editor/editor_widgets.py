@@ -306,7 +306,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog, gui.EventSource):
 
     def add_fileinput_field(self, defaultname='untitled'):
         self.txtFilename = gui.TextInput()
-        self.txtFilename.onchange.connect(self.on_enter_key_pressed)
+        self.txtFilename.onkeydown.connect(self.on_enter_key_pressed)
         self.txtFilename.set_text(defaultname)
 
         self.add_field_with_label("filename","Filename",self.txtFilename)
@@ -314,8 +314,9 @@ class EditorFileSaveDialog(gui.FileSelectionDialog, gui.EventSource):
     def get_fileinput_value(self):
         return self.get_field('filename').get_value()
 
-    def on_enter_key_pressed(self, widget, value):
-        self.confirm_value(None)
+    def on_enter_key_pressed(self, widget, value, keycode):
+        if keycode=="13":
+            self.confirm_value(None)
 
     @gui.decorate_event
     def confirm_value(self, widget):

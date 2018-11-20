@@ -296,9 +296,7 @@ class App(BaseHTTPRequestHandler, object):
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
-        self.update_lock = threading.RLock()
         self._app_args = app_args
-        self.client = None
         self.root = None
         self._log = logging.getLogger('remi.request')
         super(App, self).__init__(request, client_address, server)
@@ -340,50 +338,62 @@ class App(BaseHTTPRequestHandler, object):
             #send session to browser
             del self.headers['cookie']
 
+        #if the client instance doesn't exist
         if not(self.session in clients):
-            runtimeInstances[str(id(self))] = self
-            clients[self.session] = self
+            net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
 
-        net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
+            websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
+            pending_messages_queue_length = str(self.server.pending_messages_queue_length)
+            self.update_interval = self.server.update_interval
 
-        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
-        pending_messages_queue_length = str(self.server.pending_messages_queue_length)
-        clients[self.session].update_interval = self.server.update_interval
-
-
-        self.client = clients[self.session]
-
-        if not hasattr(self.client, 'page'):
             from remi import gui
             
             head = gui.HEAD(self.server.title, 
                 net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
-            with open(self.client._get_static_file('style.css'), 'rb') as f:
+            with open(self._get_static_file('style.css'), 'rb') as f:
                 md5 = hashlib.md5(f.read()).hexdigest()
             # use the default css, but append a version based on its hash, to stop browser caching
             head.add_child('internal_css', "<link href='/res/style.css?%s' rel='stylesheet' />\n" % md5)
             
             body = gui.BODY()
-            body.onload.connect(self.client.onload)
-            body.onerror.connect(self.client.onerror)
-            body.ononline.connect(self.client.ononline)
-            body.onpagehide.connect(self.client.onpagehide)
-            body.onpageshow.connect(self.client.onpageshow)
-            body.onresize.connect(self.client.onresize)
-            self.client.page = gui.HTML()
-            self.client.page.add_child('head', head)
-            self.client.page.add_child('body', body)
+            body.onload.connect(self.onload)
+            body.onerror.connect(self.onerror)
+            body.ononline.connect(self.ononline)
+            body.onpagehide.connect(self.onpagehide)
+            body.onpageshow.connect(self.onpageshow)
+            body.onresize.connect(self.onresize)
+            self.page = gui.HTML()
+            self.page.add_child('head', head)
+            self.page.add_child('body', body)
 
-        if not hasattr(clients[self.session], 'websockets'):
-            clients[self.session].websockets = []
+            if not hasattr(self, 'websockets'):
+                self.websockets = []
 
-        if not hasattr(clients[self.session], '_need_update_flag'):
-            clients[self.session]._need_update_flag = False
-            clients[self.session]._stop_update_flag = False
-            if clients[self.session].update_interval > 0:
-                clients[self.session]._update_thread = threading.Thread(target=self._idle_loop)
-                clients[self.session]._update_thread.setDaemon(True)
-                clients[self.session]._update_thread.start()
+            self.update_lock = threading.RLock()
+
+            if not hasattr(self, '_need_update_flag'):
+                self._need_update_flag = False
+                self._stop_update_flag = False
+                if self.update_interval > 0:
+                    self._update_thread = threading.Thread(target=self._idle_loop)
+                    self._update_thread.setDaemon(True)
+                    self._update_thread.start()
+
+            runtimeInstances[str(id(self))] = self
+            clients[self.session] = self
+        else:
+            #restore instance attributes
+            client = clients[self.session]
+
+            self.websockets = client.websockets
+            self.page = client.page
+
+            self.update_lock = client.update_lock
+
+            self.update_interval = client.update_interval
+            self._need_update_flag = client._need_update_flag
+            if hasattr(client, '_update_thread'):
+                self._update_thread = client._update_thread
 
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
@@ -451,7 +461,7 @@ class App(BaseHTTPRequestHandler, object):
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
-        for ws in self.client.websockets:
+        for ws in self.websockets:
             # noinspection PyBroadException
             try:
                 #self._log.debug("sending websocket spontaneous message")
@@ -459,7 +469,7 @@ class App(BaseHTTPRequestHandler, object):
             except:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
                 try:
-                    self.client.websockets.remove(ws)
+                    self.websockets.remove(ws)
                     ws.close()
                 except:
                     self._log.error("unable to remove websocket client - already not in list", exc_info=True)
@@ -571,9 +581,9 @@ class App(BaseHTTPRequestHandler, object):
                 # build the page (call main()) in user code, if not built yet
                 with self.update_lock:
                     # build the root page once if necessary
-                    if not 'root' in self.client.page.children['body'].children.keys():
+                    if not 'root' in self.page.children['body'].children.keys():
                         self._log.info('built UI (path=%s)' % path)
-                        self.client.set_root_widget(self.main(*self.server.userdata))
+                        self.set_root_widget(self.main(*self.server.userdata))
                 self._process_all(path)
             except:
                 self._log.error('error processing GET request', exc_info=True)
@@ -600,7 +610,7 @@ class App(BaseHTTPRequestHandler, object):
             
             with self.update_lock:
                 # render the HTML
-                page_content = self.client.page.repr()
+                page_content = self.page.repr()
 
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
             self.wfile.write(encode_text(page_content))
@@ -660,7 +670,7 @@ class App(BaseHTTPRequestHandler, object):
         """ Called by the server when the App have to be terminated
         """
         self._stop_update_flag = True
-        for ws in self.client.websockets:
+        for ws in self.websockets:
             ws.close()
 
     def onload(self, emitter):
