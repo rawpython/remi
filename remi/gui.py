@@ -1664,9 +1664,7 @@ class TextInput(Widget, _MixinTextualWidget):
                     elem.value = elem.value.split('\\n').join(''); 
                     var params={};params['new_value']=elem.value;
                     sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                }
-                event.stopPropagation();event.preventDefault();return false;
-                """ % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+                }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
         #else:
         #    self.attributes[self.EVENT_ONINPUT] = """
         #        var elem = document.getElementById('%(emitter_identifier)s');
@@ -1721,8 +1719,7 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
     @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
             var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-            event.stopPropagation();event.preventDefault();return false;""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
         
@@ -1737,8 +1734,7 @@ class TextInput(Widget, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
     @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
             var params={};params['new_value']=elem.value;params['keycode']=(event.which||event.keyCode);
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-            event.stopPropagation();event.preventDefault();return false;""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeydown(self, new_value, keycode):
         """Called when the user types a key into the TextInput.
 
