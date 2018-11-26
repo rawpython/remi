@@ -40,7 +40,7 @@ class %(classname)s(App):
     def __init__(self, *args, **kwargs):
         #DON'T MAKE CHANGES HERE, THIS METHOD GETS OVERWRITTEN WHEN SAVING IN THE EDITOR
         if not 'editing_mode' in kwargs.keys():
-            super(%(classname)s, self).__init__(*args, static_file_path={'res':'%(config_resourcepath)s'})
+            super(%(classname)s, self).__init__(*args, static_file_path={'my_res':'%(config_resourcepath)s'})
 
     def idle(self):
         #idle function called every update cycle
