@@ -195,7 +195,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def handshake(self):
         self._log.debug('handshake')
         key = self.headers['Sec-WebSocket-Key']
-        self.session = parse_session_cookie(self.headers['cookie'])
+        self.session = None
+        if 'cookie' in self.headers:
+            if self.headers['cookie']!=None:
+                self.session = parse_session_cookie(self.headers['cookie'])
         if self.session == None:
             return False
         if not self.session in clients.keys():
