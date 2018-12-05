@@ -251,7 +251,14 @@ class MyApp(App):
                 self.mine_matrix[y][x].style['background-color'] = 'red'
                 self.mine_matrix[y][x].check_mine(None, False)
         self.mine_table.empty()
-        self.mine_table.append_from_list(self.mine_matrix, False)
+
+        #self.mine_table.append_from_list(self.mine_matrix, False)
+        for x in range(0, len(self.mine_matrix[0])):
+            row = gui.TableRow()
+            for y in range(0, len(self.mine_matrix)):
+                row.append(self.mine_matrix[y][x])
+                self.mine_matrix[y][x].onclick.connect(self.mine_matrix[y][x].check_mine)
+            self.mine_table.append(row)
 
 
 if __name__ == "__main__":
