@@ -343,16 +343,11 @@ class App(BaseHTTPRequestHandler, object):
 
         #if the client instance doesn't exist
         if not(self.session in clients):
-            net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
-
-            websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
-            pending_messages_queue_length = str(self.server.pending_messages_queue_length)
             self.update_interval = self.server.update_interval
 
             from remi import gui
             
-            head = gui.HEAD(self.server.title, 
-                net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
+            head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
             head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
             
@@ -395,6 +390,11 @@ class App(BaseHTTPRequestHandler, object):
             self._need_update_flag = client._need_update_flag
             if hasattr(client, '_update_thread'):
                 self._update_thread = client._update_thread
+                
+        net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
+        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
+        pending_messages_queue_length = str(self.server.pending_messages_queue_length)
+        self.page.children['head'].set_internal_js(net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
 
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function

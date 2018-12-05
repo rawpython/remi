@@ -966,13 +966,17 @@ class HTML(Tag):
 
 
 class HEAD(Tag):
-    def __init__(self, title, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms, *args, **kwargs):
+    def __init__(self, title, *args, **kwargs):
         super(HEAD, self).__init__(*args, _type='head', **kwargs)
         self.add_child('meta', 
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
         
+        self._classes = []
+        self.set_title(title)
+
+    def set_internal_js(self, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
         self.add_child('internal_js',
                 """
                 <script>
@@ -1223,8 +1227,6 @@ class HEAD(Tag):
                 </script>""" % {'host':net_interface_ip, 
                                 'max_pending_messages':pending_messages_queue_length, 
                                 'messaging_timeout':websocket_timeout_timer_ms})
-        self._classes = []
-        self.set_title(title)
 
     def set_title(self, title):
         self.add_child('title', "<title>%s</title>" % title)

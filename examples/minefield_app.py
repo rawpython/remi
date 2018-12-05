@@ -20,13 +20,13 @@ import remi.gui as gui
 from remi import start, App
 
 
-class Cell(gui.Widget):
+class Cell(gui.TableItem):
     """
     Represent a cell in the minefield map
     """
 
     def __init__(self, width, height, x, y, game):
-        super(Cell, self).__init__()
+        super(Cell, self).__init__('')
         self.set_size(width, height)
         self.x = x
         self.y = y
@@ -75,7 +75,7 @@ class Cell(gui.Widget):
                 self.style['background-image'] = "url('/my_resources:mine.png')"
             else:
                 if self.nearest_mine > 0:
-                    self.add_child('nearestbomb', "%s" % self.nearest_mine)
+                    self.set_text(str(self.nearest_mine))
                 else:
                     self.style['background-color'] = 'rgb(200,255,100)'
             return
@@ -167,7 +167,16 @@ class MyApp(App):
         self.mine_table = gui.Table(margin='0px auto')#900, 450
         self.mine_matrix = self.build_mine_matrix(8, 8, 5)
         self.mine_table.empty()
-        self.mine_table.append_from_list(self.mine_matrix, False)
+
+
+        for x in range(0, len(self.mine_matrix[0])):
+            row = gui.TableRow()
+            for y in range(0, len(self.mine_matrix)):
+                row.append(self.mine_matrix[y][x])
+                self.mine_matrix[y][x].onclick.connect(self.mine_matrix[y][x].check_mine)
+            self.mine_table.append(row)
+
+        #self.mine_table.append_from_list(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
         self.check_if_win()
         self.set_root_widget(self.main_container)
