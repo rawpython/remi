@@ -448,7 +448,7 @@ class App(BaseHTTPRequestHandler, object):
     def websocket_handshake_done(self, ws_instance_to_update):
         with self.update_lock:
             msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
-            ws_instance_to_update.send_message(msg)
+        ws_instance_to_update.send_message(msg)
 
     def set_root_widget(self, widget):
         self.page.children['body'].append(widget, 'root')
