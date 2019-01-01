@@ -314,10 +314,11 @@ class Project(gui.Widget):
         
         members_list = app_init_fnc.__dict__.values()
         for m in members_list:
-            if inspect.isfunction(m) and m.__name__ not in ['__init__', 'main', 'idle']:
+            if inspect.isfunction(m) and m.__name__ not in ['__init__', 'main', 'idle', 'construct_ui']:
                 #setattr(self, m.__name__, self.fakeListenerFunc)
                 import types
                 setattr(self, m.__name__, types.MethodType( m, self ))
+                print(m.__name__)
         root_widget = app_init_fnc.construct_ui(self)
         self.create_callback_copy(root_widget)
         return root_widget
@@ -474,6 +475,7 @@ class Project(gui.Widget):
         self.prepare_path_to_this_widget(self.children['root'])
         ret = self.repr_widget_for_editor( self.children['root'] )
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
+
         main_code_class = prototypes.proto_code_main_class%{'classname':configuration.configDict[configuration.KEY_PRJ_NAME],
                                                         'config_resourcepath':configuration.configDict[configuration.KEY_RESOURCEPATH],
                                                         'code_nested':code_nested, 
