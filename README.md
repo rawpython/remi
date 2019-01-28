@@ -362,8 +362,8 @@ Create a *res* folder and pass it to your App class constructor:
 ```python
 class MyApp(App):
     def __init__(self, *args):
-        res_path = os.path.join(os.path.dirname(__file__), 'res')
-        super(MyApp, self).__init__(*args, static_file_path=res_path)
+        res_path = os.path.join(os.getcwd(), 'res')
+        super(MyApp, self).__init__(*args, static_file_path={'res':res_path})
 ```
 
 Make a copy the standard style.css from the remi folder and paste it inside your *res* folder. Edit it in order to customize.
@@ -448,6 +448,8 @@ Projects using Remi
 [PiPresents](https://github.com/KenT2/pipresents-gapless)
 
 [The Python Banyan Framework](https://github.com/MrYsLab/python_banyan)
+
+[LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
 
 
 Other Implementations
