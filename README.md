@@ -362,7 +362,7 @@ Create a *res* folder and pass it to your App class constructor:
 ```python
 class MyApp(App):
     def __init__(self, *args):
-        res_path = os.path.join(os.getcwd(), 'res')
+        res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(MyApp, self).__init__(*args, static_file_path={'res':res_path})
 ```
 
