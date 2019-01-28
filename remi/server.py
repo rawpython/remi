@@ -799,11 +799,11 @@ class Server(object):
                                            self._pending_messages_queue_length, self._title, 
                                            self, self._certfile, self._keyfile, self._ssl_version, *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
+        self._log.info('Started httpserver http://%s:%s/'%(shost,sport))
         # when listening on multiple net interfaces the browsers connects to localhost
         if shost == '0.0.0.0':
             shost = '127.0.0.1'
         self._base_address = 'http://%s:%s/' % (shost,sport)
-        self._log.info('Started httpserver %s' % self._base_address)
         if self._start_browser:
             try:
                 import android
