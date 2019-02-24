@@ -1834,12 +1834,12 @@ class GenericDialog(Widget):
         if len(title) > 0:
             t = Label(title)
             t.add_class('DialogTitle')
-            self.append(t)
+            self.append(t, "title")
 
         if len(message) > 0:
             m = Label(message)
             m.style['margin'] = '5px'
-            self.append(m)
+            self.append(m, "message")
 
         self.container = Widget()
         self.container.style.update({'display':'block', 'overflow':'auto', 'margin':'5px'})
@@ -1853,13 +1853,13 @@ class GenericDialog(Widget):
         hlay = Widget(height=35)
         hlay.style['display'] = 'block'
         hlay.style['overflow'] = 'visible'
-        hlay.append(self.conf)
-        hlay.append(self.cancel)
+        hlay.append(self.conf, "confirm_button")
+        hlay.append(self.cancel, "cancel_button")
         self.conf.style['float'] = 'right'
         self.cancel.style['float'] = 'right'
 
-        self.append(self.container)
-        self.append(hlay)
+        self.append(self.container, "central_container")
+        self.append(hlay, "buttons_container")
 
         self.conf.onclick.connect(self.confirm_dialog)
         self.cancel.onclick.connect(self.cancel_dialog)
@@ -2902,13 +2902,13 @@ class FileFolderNavigator(Widget):
         self.pathEditor.set_size('80%', '100%')
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
-        self.controlsContainer.append(self.controlBack)
-        self.controlsContainer.append(self.pathEditor)
-        self.controlsContainer.append(self.controlGo)
+        self.controlsContainer.append(self.controlBack, "button_back")
+        self.controlsContainer.append(self.pathEditor, "url_editor")
+        self.controlsContainer.append(self.controlGo, "button_go")
 
         self.itemContainer = Widget(width='100%',height=300)
 
-        self.append(self.controlsContainer)
+        self.append(self.controlsContainer, "controls_container")
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
 
         self.folderItems = list()

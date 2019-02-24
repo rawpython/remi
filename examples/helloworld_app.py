@@ -25,11 +25,11 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        #creating a container VBox type, vertical
+        #creating a contner VBox type, vertical
         wid = gui.VBox(width=300, height=200)
 
         #creating a text label
-        self.lbl = gui.Label('Hello', width='80%', height='50%')
+        self.lbl = gui.Label('Hello\n test', width='80%', height='50%', style={"white-space":"pre"})
 
         #a button for simple interaction
         bt = gui.Button('Press me!', width=200, height=30)
