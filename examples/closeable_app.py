@@ -22,9 +22,6 @@ from remi import start, App
 
 
 class MyApp(App):
-    def __init__(self, *args):
-        super(MyApp, self).__init__(*args)
-
     def main(self, name='world'):
         # margin 0px auto allows to center the app to the screen
         wid = gui.VBox(width=300, height=200, margin='0px auto')
@@ -36,8 +33,6 @@ class MyApp(App):
         bt.onclick.connect(self.on_button_pressed)
 
         wid.append(bt)
-
-        # returning the root widget
         return wid
 
     # listener function
@@ -53,7 +48,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    # starts the webserver
-    # optional parameters
-    # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=True)
-    start(MyApp, debug=True, address='0.0.0.0', start_browser=True)
+    start(MyApp)

@@ -23,12 +23,6 @@ from remi import start, App
 import os
 
 class MyApp(App):
-    def __init__(self, *args):
-        res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        #static_file_path can be an array of strings allowing to define
-        #  multiple resource path in where the resources will be placed
-        super(MyApp, self).__init__(*args, static_file_path=res_path)
-
     def main(self):        
         main_container = gui.VBox()
         lbl = gui.Label("Press the buttons to add or remove labels")
@@ -61,5 +55,4 @@ class MyApp(App):
         self.lbls_container.empty()
 
 if __name__ == "__main__":
-    # starts the webserver
-    start(MyApp, address='127.0.0.1', port=8081, start_browser=True, username=None, password=None)
+    start(MyApp)

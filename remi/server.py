@@ -745,7 +745,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 class Server(object):
     # noinspection PyShadowingNames
-    def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=8081, username=None, password=None,
+    def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=0, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, 
                  certfile=None, keyfile=None, ssl_version=None,  userdata=()):

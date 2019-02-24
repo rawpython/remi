@@ -156,9 +156,6 @@ class Gauge(gui.Svg):
 
 
 class MyApp(App):
-    def __init__(self, *args):
-        super(MyApp, self).__init__(*args)
-
     def main(self, name='world'):
         self.wid = gui.VBox(margin='0px auto') #margin 0px auto to center the screen
         
@@ -169,4 +166,4 @@ class MyApp(App):
         return self.wid
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0', port=0)
+    start(MyApp)

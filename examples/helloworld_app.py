@@ -25,10 +25,10 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        #creating a contner VBox type, vertical
+        #creating a container VBox type, vertical
         wid = gui.VBox(width=300, height=200)
 
-        #creating a text label
+        #creating a text label, "white-space":"pre" preserves newline
         self.lbl = gui.Label('Hello\n test', width='80%', height='50%', style={"white-space":"pre"})
 
         #a button for simple interaction
