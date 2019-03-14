@@ -3551,6 +3551,31 @@ class SvgPolyline(Widget):
         self.style['stroke-width'] = str(width)
 
 
+class SvgPolygon(SvgPolyline):
+    def __init__(self, _maxlen=None, *args, **kwargs):
+        super(SvgPolygon, self).__init__(_maxlen, *args, **kwargs)
+        self.type = 'polygon'
+
+    def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
+        self.attributes['stroke'] = color
+        self.attributes['stroke-width'] = str(width)
+
+    def set_fill(self, color='black'):
+        """Sets the fill color.
+
+        Args:
+            color (str): stroke color
+        """
+        self.style['fill'] = color
+        self.attributes['fill'] = color
+
+
 class SvgText(SvgShape, _MixinTextualWidget):
 
     @decorate_constructor_parameter_types([int, int, str])
@@ -3595,3 +3620,4 @@ class SvgPath(Widget):
             color (str): stroke color
         """
         self.attributes['fill'] = color
+        
