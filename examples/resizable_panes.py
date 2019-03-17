@@ -152,13 +152,13 @@ class DragHelper(gui.Widget, gui.EventSource):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = int(x)
-                self.origin_y = int(y)
+                self.origin_x = float(x)
+                self.origin_y = float(y)
                 self.refWidget_origin_x = gui.from_pix(self.refWidget.style['left'])
                 self.refWidget_origin_y = gui.from_pix(self.refWidget.style['top'])
             else:
-                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + int(x) - self.origin_x )
-                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + int(y) - self.origin_y)
+                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + float(x) - self.origin_x )
+                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + float(y) - self.origin_y)
                 self.update_position()
             return ()
 
