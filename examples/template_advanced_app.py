@@ -52,7 +52,7 @@ class MyApp(App):
         #eventually set up body attributes/style
         #self.page.children['body'].style['background-color'] = 'lightyellow'
         #eventually set up body event listeners
-        #self.page.children['body'].onkeydown.connect(self.onkeydown)
+        #self.page.children['body'].onkeydown.do(self.onkeydown)
 
         #creating a container VBox type, vertical (you can use also HBox or Widget)
         main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})

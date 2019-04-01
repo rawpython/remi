@@ -61,8 +61,8 @@ class untitled(App):
         mainContainer.append(comboAlignItems,'comboAlignItems')
         lblAlignItems = Label('align-items', style='left:40px; position:absolute; top:100px; width:100px; height:30px')
         mainContainer.append(lblAlignItems,'lblAlignItems')
-        mainContainer.children['comboJustifyContent'].onchange.connect(self.onchange_comboJustifyContent,vbox,hbox)
-        mainContainer.children['comboAlignItems'].onchange.connect(self.onchange_comboAlignItems,vbox,hbox)
+        mainContainer.children['comboJustifyContent'].onchange.do(self.onchange_comboJustifyContent,vbox,hbox)
+        mainContainer.children['comboAlignItems'].onchange.do(self.onchange_comboAlignItems,vbox,hbox)
 
         lblTitle = gui.Label("The following example shows the two main layout style properties for the VBox and HBox containers. Change the value of the two combo boxes.",
                                     style='position:absolute; left:0px; top:0px')

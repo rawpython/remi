@@ -28,7 +28,7 @@ class MyApp(App):
         self.bt.style['margin'] = 'auto 50px'
 
         # setting the listener for the onclick event of the button
-        self.bt.onclick.connect(self.on_button_pressed)
+        self.bt.onclick.do(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)

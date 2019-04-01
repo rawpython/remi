@@ -78,7 +78,7 @@ class MyApp(App):
         
         bt = gui.Button('Data', width=100, height=30)
         bt.style['margin'] = '10px'
-        bt.onclick.connect(self.on_button_pressed)
+        bt.onclick.do(self.on_button_pressed)
 
         self.plot_data = [0, 1]
         self.mpl = MatplotImage(width=250, height=250)

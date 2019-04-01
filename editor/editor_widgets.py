@@ -28,7 +28,7 @@ class InstancesTree(gui.TreeView, gui.EventSource):
         if parent==None:
             parent = self
         item.instance = instance
-        item.onclick.connect(self.on_tree_item_selected)
+        item.onclick.do(self.on_tree_item_selected)
         parent.append(item)
         return item
 
@@ -110,7 +110,7 @@ class ToolBar(gui.Widget):
     def add_command(self, imagePath, callback, title):
         icon = gui.Image(imagePath, height='90%', margin='0px 1px')
         icon.style['outline'] = '1px solid lightgray'
-        icon.onclick.connect(callback)
+        icon.onclick.do(callback)
         icon.attributes['title'] = title
         self.append(icon)
 
@@ -125,7 +125,7 @@ class SignalConnection(gui.Widget):
         self.label.style.update({'float':'left', 'font-size':'10px', 'overflow':'hidden', 'outline':'1px solid lightgray'})
 
         self.dropdown = gui.DropDown(width='49%', height='100%')
-        self.dropdown.onchange.connect(self.on_connection)
+        self.dropdown.onchange.do(self.on_connection)
         self.append([self.label, self.dropdown])
         self.dropdown.style['float'] = 'right'
 
@@ -144,14 +144,14 @@ class SignalConnection(gui.Widget):
 
     def on_connection(self, widget, dropDownValue):
         if self.dropdown.get_value()=='None':
-            self.eventConnectionFunc.connect(None)
+            self.eventConnectionFunc.do(None)
         else:
             listener = self.dropdown._selected_item.listenerInstance
             listener.attributes['editor_newclass'] = "True"
             print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
             back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
             listener.__class__.fakeListenerFunc = fakeListenerFunc
-            getattr(self.refWidget, self.eventConnectionFuncName).connect(listener.fakeListenerFunc)
+            getattr(self.refWidget, self.eventConnectionFuncName).do(listener.fakeListenerFunc)
             getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
             getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
 
@@ -295,7 +295,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog, gui.EventSource):
 
     def add_fileinput_field(self, defaultname='untitled'):
         self.txtFilename = gui.TextInput()
-        self.txtFilename.onkeydown.connect(self.on_enter_key_pressed)
+        self.txtFilename.onkeydown.do(self.on_enter_key_pressed)
         self.txtFilename.set_text(defaultname)
 
         self.add_field_with_label("filename","Filename",self.txtFilename)
@@ -345,7 +345,7 @@ class WidgetHelper(gui.HBox):
 
         self.optional_style_dict = {} #this dictionary will contain optional style attributes that have to be added to the widget once created
 
-        self.onclick.connect(self.prompt_new_widget)
+        self.onclick.do(self.prompt_new_widget)
 
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
@@ -384,7 +384,7 @@ class WidgetHelper(gui.HBox):
             self.dialog.add_field_with_label(param, param + note, editWidget)
 
         self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
-        self.dialog.confirm_dialog.connect(self.on_dialog_confirm)
+        self.dialog.confirm_dialog.do(self.on_dialog_confirm)
         self.dialog.show(self.appInstance)
 
     def on_dropped(self, left, top):
@@ -517,7 +517,7 @@ class EditorAttributesGroup(gui.Widget):
             'background-repeat':'no-repeat',
             'background-position':'5px',
             'border-top':'3px solid lightgray'})
-        self.title.onclick.connect(self.openClose)
+        self.title.onclick.do(self.openClose)
         self.append(self.title, '0')
 
     def openClose(self, widget):
@@ -559,8 +559,8 @@ class EditorAttributes(gui.VBox, gui.EventSource):
             attributeName = attribute[0]
             attributeValue = attribute[1]
             attributeEditor = EditorAttributeInput(attributeName, attributeValue, appInstance)
-            attributeEditor.on_attribute_changed.connect(self.onattribute_changed)
-            attributeEditor.on_attribute_remove.connect(self.onattribute_remove)
+            attributeEditor.on_attribute_changed.do(self.onattribute_changed)
+            attributeEditor.on_attribute_remove.do(self.onattribute_remove)
             #attributeEditor.style['display'] = 'none'
             if not attributeValue['group'] in self.attributeGroups.keys():
                 groupContainer = EditorAttributesGroup(attributeValue['group'], width='100%')
@@ -610,7 +610,7 @@ class CssSizeInput(gui.Widget, gui.EventSource):
         self.style['overflow'] = 'hidden'
 
         self.numInput = gui.SpinBox('0',-999999999, 999999999, 1, width='60%', height='100%')
-        self.numInput.onchange.connect(self.onchange)
+        self.numInput.onchange.do(self.onchange)
         self.numInput.style['text-align'] = 'right'
         self.append(self.numInput)
 
@@ -618,7 +618,7 @@ class CssSizeInput(gui.Widget, gui.EventSource):
         self.dropMeasureUnit.append( gui.DropDownItem('px'), 'px' )
         self.dropMeasureUnit.append( gui.DropDownItem('%'), '%' )
         self.dropMeasureUnit.select_by_key('px')
-        self.dropMeasureUnit.onchange.connect(self.onchange)
+        self.dropMeasureUnit.onchange.do(self.onchange)
         self.append(self.dropMeasureUnit)
 
     @gui.decorate_event
@@ -654,7 +654,7 @@ class UrlPathInput(gui.Widget, gui.EventSource):
 
         self.txtInput = gui.TextInput(width='80%', height='100%')
         self.txtInput.style['float'] = 'left'
-        self.txtInput.onchange.connect(self.on_txt_changed)
+        self.txtInput.onchange.do(self.on_txt_changed)
         self.append(self.txtInput)
 
         self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
@@ -662,10 +662,10 @@ class UrlPathInput(gui.Widget, gui.EventSource):
             'background-image':"url('/res:folder.png')",
             'background-color':'transparent'})
         self.append(self.btFileFolderSelection)
-        self.btFileFolderSelection.onclick.connect(self.on_file_selection_bt_pressed)
+        self.btFileFolderSelection.onclick.do(self.on_file_selection_bt_pressed)
 
         self.selectionDialog = gui.FileSelectionDialog('Select a file', '', False, './', True, False)
-        self.selectionDialog.confirm_value.connect(self.file_dialog_confirmed)
+        self.selectionDialog.confirm_value.do(self.file_dialog_confirmed)
 
     @gui.decorate_event
     def onchange(self, widget, value):
@@ -704,7 +704,7 @@ class EditorAttributeInput(gui.Widget, gui.EventSource):
         self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
         self.removeAttribute = gui.Image('/editor_resources:delete.png', width='5%')
         self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
-        self.removeAttribute.onclick.connect(self.on_attribute_remove)
+        self.removeAttribute.onclick.do(self.on_attribute_remove)
         self.append(self.removeAttribute)
 
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
@@ -734,7 +734,7 @@ class EditorAttributeInput(gui.Widget, gui.EventSource):
         else: #default editor is string
             self.inputWidget = gui.TextInput()
 
-        self.inputWidget.onchange.connect(self.on_attribute_changed)
+        self.inputWidget.onchange.do(self.on_attribute_changed)
         self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
         self.label.attributes['title'] = attributeDict['description']

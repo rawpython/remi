@@ -31,6 +31,16 @@ There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/
 
 Changelog
 ===
+*2019 April 1*
+
+Event listener registration can now be done by the **do** instruction instead of **connect** (that stays available for compatibility reasons).
+i.e. 
+```python
+mybutton.onclick.do(myevent_listener)
+```
+
+*Older changes*
+
 The current branch includes improvements about resource files handling. 
 App constructor accepts **static_file_path** parameter. Its value have to be a dictionary, where elements represents named resources paths.
 
@@ -105,7 +115,7 @@ class MyApp(App):
         self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.onclick.connect(self.on_button_pressed)
+        self.bt.onclick.do(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         container.append(self.lbl)
@@ -214,7 +224,7 @@ Such events are a convenient way to define the application behavior.
 Each widget has its own callbacks, depending on the type of user interaction it allows.
 The specific callbacks for the widgets will be illustrated later.
 
-In order to register a function as an event listener you have to call a function like eventname.connect (i.e. onclick.connect) passing as parameters the callback that will manage the event.
+In order to register a function as an event listener you have to call a function like eventname.do (i.e. onclick.do) passing as parameters the callback that will manage the event.
 Follows an example:
 
 ```py
@@ -231,7 +241,7 @@ class MyApp(App):
         self.bt = gui.Button('Press me!')
 
         # setting the listener for the onclick event of the button
-        self.bt.onclick.connect(self.on_button_pressed)
+        self.bt.onclick.do(self.on_button_pressed)
 
         # appending a widget to another, the first argument is a string key
         container.append(self.lbl)
@@ -249,13 +259,13 @@ class MyApp(App):
 start(MyApp)
 ```
 
-In the shown example *self.bt.onclick.connect(self.on_button_pressed)* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
+In the shown example *self.bt.onclick.do(self.on_button_pressed)* registers the self's *on_button_pressed* function as a listener for the event *onclick* exposed by the Button widget.
 Simple, easy.
 
 Listener's callbacks will receive the emitter's instance firstly, then all other parameters provided by the specific event.
 
 
-Besides the standard event registration (as aforementioned), it is possible to pass user parameters to listener functions. This can be achieves appending parameters to the *connect* function call.
+Besides the standard event registration (as aforementioned), it is possible to pass user parameters to listener functions. This can be achieves appending parameters to the *do* function call.
 
 ```py
 import remi.gui as gui
@@ -272,8 +282,8 @@ class MyApp(App):
         self.bt2 = gui.Button('Hello name surname!')
 
         # setting the listener for the onclick event of the buttons
-        self.bt.onclick.connect(self.on_button_pressed, "Name")
-        self.bt2.onclick.connect(self.on_button_pressed, "Name", "Surname")
+        self.bt.onclick.do(self.on_button_pressed, "Name")
+        self.bt2.onclick.do(self.on_button_pressed, "Name", "Surname")
 
         # appending a widget to another
         container.append(self.lbl)

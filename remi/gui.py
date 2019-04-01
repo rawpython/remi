@@ -92,8 +92,9 @@ class ClassEventConnector(object):
         self.event_method_bound = event_method_bound
         self.callback = None
         self.userdata = None
+        self.connect = self.do #for compatibility reasons
         
-    def connect(self, callback, *userdata):
+    def do(self, callback, *userdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
         """

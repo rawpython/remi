@@ -121,7 +121,7 @@ class LoginManager(gui.Tag, gui.EventSource):
             #HAVE TO ASK FOR LOGIN
 
     In order to know session expiration, you should register to on_session_expired event
-        on_session_expired.connect(mylistener.on_user_logout)
+        on_session_expired.do(mylistener.on_user_logout)
     When this event happens, ask for user login
     """
     def __init__(self, cookieInterface, session_timeout_seconds = 60, **kwargs):
@@ -168,13 +168,13 @@ class MyApp(App):
 
     def main(self, name='world'):
         self.login_manager = LoginManager(CookieInterface(self), 5)
-        self.login_manager.on_session_expired.connect(self.on_logout)
+        self.login_manager.on_session_expired.do(self.on_logout)
 
         wid = gui.VBox(width=200, height=300, margin='0px auto')
         btlogin = gui.Button('LOGIN')
-        btlogin.onclick.connect(self.on_login)
+        btlogin.onclick.do(self.on_login)
         btrenew = gui.Button('RENEW BEFORE EXPIRATION')
-        btrenew.onclick.connect(self.on_renew)
+        btrenew.onclick.do(self.on_renew)
 
         self.lblsession_status = gui.Label('NOT LOGGED IN')
 

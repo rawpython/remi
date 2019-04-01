@@ -33,9 +33,9 @@ class MyApp(App):
         b3 = gui.Button('Show first tab', width=200, height=30)
         tb.add_tab(b3, 'Third', None)
         
-        b1.onclick.connect(self.on_bt1_pressed, tb, b2)
-        b2.onclick.connect(self.on_bt2_pressed, tb, 'Third')
-        b3.onclick.connect(self.on_bt3_pressed, tb, 0)
+        b1.onclick.do(self.on_bt1_pressed, tb, b2)
+        b2.onclick.do(self.on_bt2_pressed, tb, 'Third')
+        b3.onclick.do(self.on_bt3_pressed, tb, 0)
 
         return tb
 
