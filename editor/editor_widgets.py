@@ -466,7 +466,7 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.VBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Widget, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        #self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Button, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Label, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
