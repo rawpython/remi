@@ -2308,7 +2308,7 @@ class Image(Widget):
     def __init__(self, filename, *args, **kwargs):
         """
         Args:
-            filename (str): an url to an image
+            filename (str): an url to an image or a base64 data string
             kwargs: See Widget.__init__()
         """
         super(Image, self).__init__(*args, **kwargs)
@@ -2318,7 +2318,7 @@ class Image(Widget):
     def set_image(self, filename):
         """
         Args:
-            filename (str): an url to an image
+            filename (str): an url to an image or a base64 data string
         """
         self.attributes['src'] = filename
 
@@ -3462,6 +3462,33 @@ class SvgRectangle(SvgShape):
         """
         self.attributes['width'] = str(w)
         self.attributes['height'] = str(h)
+
+
+class SvgImage(SvgRectangle):
+    """svg image - a raster image element for svg graphics, 
+        this have to be appended into Svg elements."""
+
+    @decorate_constructor_parameter_types([str, int, int, int, int])
+    def __init__(self, filename, x, y, w, h, *args, **kwargs):
+        """
+        Args:
+            filename (str): an url to an image
+            x (int): the x coordinate of the top left corner of the rectangle
+            y (int): the y coordinate of the top left corner of the rectangle
+            w (int): width of the rectangle
+            h (int): height of the rectangle
+            kwargs: See Widget.__init__()
+        """
+        super(SvgImage, self).__init__( x, y, w, h, *args, **kwargs)
+        self.type = 'image'
+        self.set_image(filename)
+
+    def set_image(self, filename):
+        """
+        Args:
+            filename (str): an url to an image or a base64 data string
+        """
+        self.attributes["xlink:href"] = filename
 
 
 class SvgCircle(SvgShape):
