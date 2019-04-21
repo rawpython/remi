@@ -35,7 +35,7 @@ class MyApp(App):
         bt = gui.Button('Press me!', width=200, height=30)
 
         #setting up the listener for the click event
-        bt.onclick.connect(self.on_button_pressed)
+        bt.onclick.do(self.on_button_pressed)
         
         #adding the widgets to the main container
         wid.append(self.lbl)

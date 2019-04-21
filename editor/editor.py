@@ -70,9 +70,9 @@ class DraggableItem(gui.EventSource):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.connect(self.on_drag)
-        self.project.onmouseup.connect(self.stop_drag)
-        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
+        self.project.onmousemove.do(self.on_drag)
+        self.project.onmouseup.do(self.stop_drag)
+        self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -107,7 +107,7 @@ class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
         self.set_stroke(1, 'black')
         self.set_fill('#ffcc00')
         self.compatibility_iterable = compatibility_iterable
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in self.compatibility_iterable or refWidget == None:
@@ -140,7 +140,7 @@ class SvgDraggableRectangleResizePoint(gui.SvgRectangle, DraggableItem):
         self.set_stroke(1, 'black')
         self.set_fill('#ffcc00')
         self.compatibility_iterable = compatibility_iterable
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in self.compatibility_iterable or refWidget == None:
@@ -173,7 +173,7 @@ class SvgDraggableCircleResizeRadius(gui.SvgRectangle, DraggableItem):
         self.set_stroke(1, 'black')
         self.set_fill('#ffcc00')
         self.compatibility_iterable = compatibility_iterable
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in self.compatibility_iterable or refWidget == None:
@@ -206,7 +206,7 @@ class ResizeHelper(gui.Widget, DraggableItem):
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
@@ -247,7 +247,7 @@ class DragHelper(gui.Widget, DraggableItem):
         self.style['position'] = 'absolute'
         self.style['left']='0px'
         self.style['top']='0px'
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
         if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
@@ -333,7 +333,7 @@ class Project(gui.Widget):
                 #if there is a callback
                 if getattr(widget, setOnEventListenerFuncname).callback: 
                     getattr(widget, setOnEventListenerFuncname).callback_copy = getattr(widget, setOnEventListenerFuncname).callback
-                    getattr(widget, setOnEventListenerFuncname).connect(None)
+                    getattr(widget, setOnEventListenerFuncname).do(None)
         for w in widget.children.values():
             self.create_callback_copy(w)
         
@@ -556,20 +556,20 @@ class Editor(App):
         self.toolbar.append(grid_size)
         
         self.fileOpenDialog = editor_widgets.EditorFileSelectionDialog('Open Project', 'Select the project file.<br>It have to be a python program created with this editor.', False, '.', True, False, self)
-        self.fileOpenDialog.confirm_value.connect(self.on_open_dialog_confirm)
+        self.fileOpenDialog.confirm_value.do(self.on_open_dialog_confirm)
         
         self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog('Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
         self.fileSaveAsDialog.add_fileinput_field('untitled.py')
-        self.fileSaveAsDialog.confirm_value.connect(self.on_saveas_dialog_confirm)        
+        self.fileSaveAsDialog.confirm_value.do(self.on_saveas_dialog_confirm)        
 
-        m10.onclick.connect(self.menu_new_clicked)
-        m11.onclick.connect(self.fileOpenDialog.show)
-        m121.onclick.connect(self.menu_save_clicked)
-        m122.onclick.connect(self.fileSaveAsDialog.show)
-        m21.onclick.connect(self.menu_cut_selection_clicked)
-        m22.onclick.connect(self.menu_paste_selection_clicked)
+        m10.onclick.do(self.menu_new_clicked)
+        m11.onclick.do(self.fileOpenDialog.show)
+        m121.onclick.do(self.menu_save_clicked)
+        m122.onclick.do(self.fileSaveAsDialog.show)
+        m21.onclick.do(self.menu_cut_selection_clicked)
+        m22.onclick.do(self.menu_paste_selection_clicked)
         
-        m3.onclick.connect(self.menu_project_config_clicked)
+        m3.onclick.do(self.menu_project_config_clicked)
         
         self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL)
         self.subContainer.style.update({'position':'relative',
@@ -595,7 +595,7 @@ class Editor(App):
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
         self.project.attributes['editor_varname'] = 'App'
-        self.project.onkeydown.connect(self.onkeydown)
+        self.project.onkeydown.do(self.onkeydown)
         
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
@@ -619,7 +619,7 @@ class Editor(App):
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
-        self.instancesWidget.treeView.on_tree_item_selected.connect(self.on_instances_widget_selection)
+        self.instancesWidget.treeView.on_tree_item_selected.do(self.on_instances_widget_selection)
         
         self.subContainerRight.append([self.instancesWidget, self.attributeEditor])
         
@@ -635,7 +635,7 @@ class Editor(App):
                             SvgDraggablePoint(self.project, 'x', 'y', [gui.SvgRectangle, gui.SvgText]),
                             SvgDraggableRectangleResizePoint(self.project, [gui.SvgRectangle])]
         for drag_helper in self.drag_helpers:
-            drag_helper.stop_drag.connect(self.on_drag_resize_end)
+            drag_helper.stop_drag.do(self.on_drag_resize_end)
 
         self.menu_new_clicked(None)
         
@@ -660,7 +660,7 @@ class Editor(App):
         
         if not 'editor_varname' in widget.attributes:
             return
-        widget.onclick.connect(self.on_widget_selection)
+        widget.onclick.do(self.on_widget_selection)
         
         #setup of the on_dropped function of the widget in order to manage the dragNdrop 
         widget.__class__.on_dropped = on_dropped

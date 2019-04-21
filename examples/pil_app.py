@@ -58,11 +58,11 @@ class MyApp(App):
         m1 = gui.MenuItem('File', width=100, height=30)
         m11 = gui.MenuItem('Save', width=100, height=30)
         m12 = gui.MenuItem('Open', width=100, height=30)
-        m12.onclick.connect(self.menu_open_clicked)
+        m12.onclick.do(self.menu_open_clicked)
         m111 = gui.MenuItem('Save', width=100, height=30)
-        m111.onclick.connect(self.menu_save_clicked)
+        m111.onclick.do(self.menu_save_clicked)
         m112 = gui.MenuItem('Save as', width=100, height=30)
-        m112.onclick.connect(self.menu_saveas_clicked)
+        m112.onclick.do(self.menu_saveas_clicked)
 
         self.menu.append(m1)
         m1.append(m11)
@@ -78,9 +78,9 @@ class MyApp(App):
 
     def menu_open_clicked(self, widget):
         self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select an image file', False, '.')
-        self.fileselectionDialog.confirm_value.connect(
+        self.fileselectionDialog.confirm_value.do(
             self.on_image_file_selected)
-        self.fileselectionDialog.cancel_dialog.connect(
+        self.fileselectionDialog.cancel_dialog.do(
             self.on_dialog_cancel)
         # here is shown the dialog as root widget
         self.fileselectionDialog.show(self)

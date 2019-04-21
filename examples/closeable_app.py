@@ -30,7 +30,7 @@ class MyApp(App):
         bt.style['margin'] = 'auto 50px'
         bt.style['background-color'] = 'red'
 
-        bt.onclick.connect(self.on_button_pressed)
+        bt.onclick.do(self.on_button_pressed)
 
         wid.append(bt)
         return wid

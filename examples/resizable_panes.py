@@ -35,7 +35,7 @@ class ResizeHelper(gui.Widget, gui.EventSource):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -63,9 +63,9 @@ class ResizeHelper(gui.Widget, gui.EventSource):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.connect(self.on_drag)
-        self.project.onmouseup.connect(self.stop_drag)
-        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
+        self.project.onmousemove.do(self.on_drag)
+        self.project.onmouseup.do(self.stop_drag)
+        self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -110,7 +110,7 @@ class DragHelper(gui.Widget, gui.EventSource):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.onmousedown.connect(self.start_drag)
+        self.onmousedown.do(self.start_drag)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -138,9 +138,9 @@ class DragHelper(gui.Widget, gui.EventSource):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.connect(self.on_drag)
-        self.project.onmouseup.connect(self.stop_drag)
-        self.project.onmouseleave.connect(self.stop_drag, 0, 0)
+        self.project.onmousemove.do(self.on_drag)
+        self.project.onmouseup.do(self.stop_drag)
+        self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
     
@@ -174,8 +174,8 @@ class FloatingPanesContainer(gui.Widget):
         super(FloatingPanesContainer, self).__init__(**kwargs)
         self.resizeHelper = ResizeHelper(self, width=16, height=16)
         self.dragHelper = DragHelper(self, width=15, height=15)
-        self.resizeHelper.on_drag.connect(self.on_helper_dragged_update_the_latter_pos, self.dragHelper)
-        self.dragHelper.on_drag.connect(self.on_helper_dragged_update_the_latter_pos, self.resizeHelper)
+        self.resizeHelper.on_drag.do(self.on_helper_dragged_update_the_latter_pos, self.dragHelper)
+        self.dragHelper.on_drag.do(self.on_helper_dragged_update_the_latter_pos, self.resizeHelper)
 
         self.style['position'] = 'relative'    
         self.style['overflow'] = 'auto'
@@ -186,7 +186,7 @@ class FloatingPanesContainer(gui.Widget):
     def add_pane(self, pane, x, y):
         pane.style['left'] = gui.to_pix(x)
         pane.style['top'] = gui.to_pix(y)
-        pane.onclick.connect(self.on_pane_selection)
+        pane.onclick.do(self.on_pane_selection)
         pane.style['position'] = 'absolute'
         self.append(pane)
         self.on_pane_selection(pane)

@@ -45,7 +45,7 @@ class MyApp(App):
         t = threading.Thread(target=self.my_intensive_long_time_algorithm)
         t.start()
         
-        bt.onclick.connect(self.on_button_pressed)
+        bt.onclick.do(self.on_button_pressed)
 
         # returning the root widget
         return wid

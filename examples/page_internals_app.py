@@ -28,7 +28,7 @@ class MyApp(App):
         main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
         self.page.children['head'].add_child('test', '<meta patate>')
         self.page.children['body'].style['background-color'] = 'lightyellow'
-        self.page.children['body'].onkeydown.connect(self.onkeydown)
+        self.page.children['body'].onkeydown.do(self.onkeydown)
         # returning the root widget
         return main_container
     

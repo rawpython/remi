@@ -33,8 +33,8 @@ class InputGauge(gui.VBox, gui.EventSource):
         self.gauge.set_value(_min)
         self.append(self.gauge)
         
-        self.onmousedown.connect(self.confirm_value)
-        self.onmousemove.connect(self.gauge.onmousemove)
+        self.onmousedown.do(self.confirm_value)
+        self.onmousemove.do(self.gauge.onmousemove)
     
     @gui.decorate_event
     def confirm_value(self, widget, x, y):
