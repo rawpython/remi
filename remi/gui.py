@@ -21,6 +21,7 @@ import collections
 import inspect
 import cgi
 escape = cgi.escape
+import mimetypes
 try:
     # Python 2.6-2.7 
     from HTMLParser import HTMLParser
@@ -976,6 +977,26 @@ class HEAD(Tag):
         
         self._classes = []
         self.set_title(title)
+
+    def set_icon_file(self, filename, rel="icon"):
+        """ Allows to define an icon for the App
+
+            Args:
+                filename (str): the resource file name (ie. "/res:myicon.png")
+                rel (str): leave it unchanged (standard "icon")
+        """
+        mimetype, encoding = mimetypes.guess_type(filename)
+        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, filename, mimetype))
+
+    def set_icon_data(self, base64_data, mimetype="image/png", rel="icon"):
+        """ Allows to define an icon for the App
+        
+            Args:
+                base64_data (str): base64 encoded image data  (ie. "data:image/x-icon;base64,AAABAAEAEBA....")
+                mimetype (str): mimetype of the image ("image/png" or "image/x-icon"...)
+                rel (str): leave it unchanged (standard "icon")
+        """
+        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, base64_data, mimetype))
 
     def set_internal_js(self, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
         self.add_child('internal_js',
