@@ -1439,6 +1439,71 @@ class GridBox(Widget):
         value = value.replace('pxpx', 'px')
         self.style['grid-row-gap'] = value
 
+    def set_from_asciiart(self, asciipattern):
+        """Defines the GridBox layout from a simple and intuitive ascii art table
+
+            Pipe "|" is the column separator.
+            Rows are separated by \n .
+            Identical rows are considered as unique bigger rows.
+            Single table cells must contain the 'key' string value of the contained widgets.
+            Column sizes are proportionally applied to the defined grid.
+            Columns must be alligned between rows.
+
+            es.
+                \"\"\"
+                | |label|button    |
+                | |text |          |
+                \"\"\"
+
+            Args:
+                value (str): The ascii defined grid
+        """
+        rows = asciipattern.split("\n")
+        #remove empty rows
+        for r in rows[:]:
+            if len(r.replace(" ", ""))<1:
+                rows.remove(r)
+        for ri in range(0,len(rows)):
+            #slicing row removing the first and the last separators
+            rows[ri] = rows[ri][rows[ri].find("|")+1:rows[ri].rfind("|")]
+
+        columns = collections.OrderedDict()
+        row_count = 0
+        row_defs = collections.OrderedDict()
+        row_max_width = 0
+        for ri in range(0,len(rows)):
+            if ri > 0:
+                if rows[ri] == rows[ri-1]:
+                    continue
+
+            row_defs[row_count] = rows[ri].replace(" ","").split("|")
+            #placeholder . where cell is empty
+            row_defs[row_count] = ['.' if elem=='' else elem for elem in row_defs[row_count]]
+            row_count = row_count + 1
+            row_max_width = max(row_max_width, len(rows[ri]))
+
+            i=rows[ri].find("|",0)
+            while i>-1:
+                columns[i] = i
+                i=rows[ri].find("|",i+1)
+
+        columns[row_max_width] = row_max_width
+        
+        row_sizes = []
+        for r in row_defs.keys():
+            row_sizes.append(float(rows.count(rows[r]))/float(len(rows))*100.0)
+        
+        column_sizes = []
+        prev_size = 0.0
+        for c in columns.values():
+            value = float(c)/float(row_max_width)*100.0
+            column_sizes.append(value-prev_size)
+            prev_size = value
+
+        self.define_grid(row_defs.values())
+        self.set_column_sizes(column_sizes)
+        self.set_row_sizes(row_sizes)
+
 
 class HBox(Widget):
     """The purpose of this widget is to automatically horizontally aligning 
