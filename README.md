@@ -449,6 +449,9 @@ Yes, I know that GitHub already provides a list of contributors, but I feel that
 
 Projects using Remi
 ===
+[PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI)
+Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPython, Remi (in browser). Create custom layout GUI's simply. Python 2.7 & 3 Support. 100+ Demo programs & Cookbook for rapid start. Extensive documentation.
+
 [Web based dynamic reconfigure for ROS robots](https://github.com/awesomebytes/web_dyn_reconf)
 
 [razmq](https://github.com/MrYsLab/razmq)
