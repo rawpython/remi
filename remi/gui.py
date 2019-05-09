@@ -22,6 +22,7 @@ import inspect
 import cgi
 escape = cgi.escape
 import mimetypes
+import base64
 try:
     # Python 2.6-2.7 
     from HTMLParser import HTMLParser
@@ -61,6 +62,41 @@ def from_pix(x):
 
 def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
+
+
+def load_resource(filename):
+    """ Convenient function. Given a local path and filename (not in standard remi resource format),
+        loads the content and returns a base64 encoded data. 
+        This method allows to bypass the remi resource file management, accessing directly local disk files.
+
+        Args:
+            filename (str): path and filename of a local file (ie. "/home/mydirectory/image.png")
+
+        Returns:
+            str: the encoded base64 data together with mimetype packed to be displayed immediately.
+    """
+    mimetype, encoding = mimetypes.guess_type(filename)
+    data = ""
+    with open(filename, 'rb') as f:
+        data = f.read()
+    data = base64.b64encode(data)
+    if pyLessThan3:
+        data = data.encode('utf-8')
+    else:
+        data = str(data, 'utf-8')
+    return "data:%(mime)s;base64,%(data)s"%{'mime':mimetype, 'data':data}
+    
+
+def to_uri(uri_data):
+    """ Convenient function to encase the resource filename or data in url('') keyword
+
+        Args:
+            uri_data (str): filename or base64 data of the resource file
+
+        Returns:
+            str: the input string encased in url('') ie. url('/res:image.png')
+    """
+    return ("url('%s')"%uri_data)
 
 
 class EventSource(object):
