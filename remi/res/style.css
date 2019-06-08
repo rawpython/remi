@@ -1,4 +1,4 @@
-﻿@charset "UTF-8";
+@charset "UTF-8";
 /* latin */
 
 @font-face {
@@ -209,6 +209,21 @@ option:hover {
 }
 .ListItem[selected='True'] {
     background: rgba(4, 90, 188, 0.26);
+}
+.ListItem[disabled='True'] {
+    opacity:0.6;
+}
+.Label[disabled='True'] {
+    opacity:0.6;
+}
+.Progress[disabled='True'] {
+    opacity:0.6;
+}
+.DropDown[disabled='True'] {
+    opacity:0.6;
+}
+.Table[disabled='True'] {
+    opacity:0.6;
 }
 input[type='number'],
 input[type='text'],
