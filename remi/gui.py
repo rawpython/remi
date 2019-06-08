@@ -21,8 +21,6 @@ import collections
 import inspect
 import cgi
 escape = cgi.escape
-import mimetypes
-import base64
 try:
     # Python 2.6-2.7 
     from HTMLParser import HTMLParser
@@ -64,51 +62,16 @@ def jsonize(d):
     return ';'.join(map(lambda k, v: k + ':' + v + '', d.keys(), d.values()))
 
 
-def load_resource(filename):
-    """ Convenient function. Given a local path and filename (not in standard remi resource format),
-        loads the content and returns a base64 encoded data. 
-        This method allows to bypass the remi resource file management, accessing directly local disk files.
-
-        Args:
-            filename (str): path and filename of a local file (ie. "/home/mydirectory/image.png")
-
-        Returns:
-            str: the encoded base64 data together with mimetype packed to be displayed immediately.
-    """
-    mimetype, encoding = mimetypes.guess_type(filename)
-    data = ""
-    with open(filename, 'rb') as f:
-        data = f.read()
-    data = base64.b64encode(data)
-    if pyLessThan3:
-        data = data.encode('utf-8')
-    else:
-        data = str(data, 'utf-8')
-    return "data:%(mime)s;base64,%(data)s"%{'mime':mimetype, 'data':data}
-    
-
-def to_uri(uri_data):
-    """ Convenient function to encase the resource filename or data in url('') keyword
-
-        Args:
-            uri_data (str): filename or base64 data of the resource file
-
-        Returns:
-            str: the input string encased in url('') ie. url('/res:image.png')
-    """
-    return ("url('%s')"%uri_data)
-
-
 class EventSource(object):
     def __init__(self, *args, **kwargs):
         self.setup_event_methods()
-    
+
     def setup_event_methods(self):
         for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
             _event_info = None
             if hasattr(method, "_event_info"):
                 _event_info = method._event_info
-            
+
             if hasattr(method, '__is_event'):
                 e = ClassEventConnector(self, method_name, method)
                 setattr(self, method_name, e)
@@ -130,7 +93,7 @@ class ClassEventConnector(object):
         self.callback = None
         self.userdata = None
         self.connect = self.do #for compatibility reasons
-        
+
     def do(self, callback, *userdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
@@ -529,7 +492,6 @@ class Widget(Tag, EventSource):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, children = None, style = None, *args, **kwargs):
-
         """
         Args:
             children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
@@ -555,6 +517,8 @@ class Widget(Tag, EventSource):
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(style)
+        self._visible = True
+        self._enable = True
 
         if children:
             self.append(children)
@@ -572,6 +536,20 @@ class Widget(Tag, EventSource):
                     k, v = s.split(':', 1)
                     self.style[k.strip()] = v.strip()
 
+    def set_hidden(self, hided, inner=False):
+        """
+        Args:
+            inner (bool): For compatibility with containers
+        """
+        if hided:
+            try:
+                self.style['display'] = 'none'
+            except KeyError:
+                pass
+        else:
+            self.style['display'] = 'initial'
+        self._visible = not hided
+
     def set_enabled(self, enabled):
         if enabled:
             try:
@@ -579,7 +557,14 @@ class Widget(Tag, EventSource):
             except KeyError:
                 pass
         else:
-            self.attributes['disabled'] = None
+            self.attributes['disabled'] = 'true'
+        self._enable = enabled
+
+    def is_visible(self):
+        return self._visible
+
+    def is_enabled(self):
+        return self._enable
 
     def set_size(self, width, height):
         """Set the widget size.
@@ -884,7 +869,7 @@ class Widget(Tag, EventSource):
         """Called when user types and releases a key. 
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
-        
+
         Args:
             key (str): the character value
             keycode (str): the numeric char code
@@ -903,7 +888,7 @@ class Widget(Tag, EventSource):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
-        
+
         Args:
             key (str): the character value
             keycode (str): the numeric char code
@@ -913,7 +898,7 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_focus_listener(self, callback, *userdata):
         self.onfocus.connect(callback, *userdata)
-        
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_blur_listener(self, callback, *userdata):
         self.onblur.connect(callback, *userdata)
@@ -961,7 +946,7 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchend_listener(self, callback, *userdata):
         self.ontouchend.connect(callback, *userdata)
-        
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchenter_listener(self, callback, *userdata):
         self.ontouchenter.connect(callback, *userdata)
@@ -1010,29 +995,9 @@ class HEAD(Tag):
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
-        
+
         self._classes = []
         self.set_title(title)
-
-    def set_icon_file(self, filename, rel="icon"):
-        """ Allows to define an icon for the App
-
-            Args:
-                filename (str): the resource file name (ie. "/res:myicon.png")
-                rel (str): leave it unchanged (standard "icon")
-        """
-        mimetype, encoding = mimetypes.guess_type(filename)
-        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, filename, mimetype))
-
-    def set_icon_data(self, base64_data, mimetype="image/png", rel="icon"):
-        """ Allows to define an icon for the App
-        
-            Args:
-                base64_data (str): base64 encoded image data  (ie. "data:image/x-icon;base64,AAABAAEAEBA....")
-                mimetype (str): mimetype of the image ("image/png" or "image/x-icon"...)
-                rel (str): leave it unchanged (standard "icon")
-        """
-        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, base64_data, mimetype))
 
     def set_internal_js(self, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
         self.add_child('internal_js',
@@ -1322,7 +1287,7 @@ class BODY(Widget):
         loading_widget.set_identifier("loading")
 
         self.append(loading_widget)
-    
+
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
             event.stopPropagation();event.preventDefault();
@@ -1396,6 +1361,7 @@ class GridBox(Widget):
         Args:
             matrix (list): list of iterables of strings (lists or something else). 
                 Items in the matrix have to correspond to a key for the children.
+                The key must start with a letter.
         """
         self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
 
@@ -1433,7 +1399,7 @@ class GridBox(Widget):
         value.style['position'] = 'static'
 
         return key
-    
+
     def remove_child(self, child):
         if 'grid-area' in child.style.keys():
             del child.style['grid-area']
@@ -1454,7 +1420,7 @@ class GridBox(Widget):
             values (iterable of int or str): values are treated as percentage.
         """
         self.style['grid-template-rows'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
-    
+
     def set_column_gap(self, value):
         """Sets the gap value between columns
 
@@ -1475,70 +1441,26 @@ class GridBox(Widget):
         value = value.replace('pxpx', 'px')
         self.style['grid-row-gap'] = value
 
-    def set_from_asciiart(self, asciipattern):
-        """Defines the GridBox layout from a simple and intuitive ascii art table
+    def set_enabled(self, enabled):
+        for key in self.children:
+            self.children[key].set_enabled(enabled)
 
-            Pipe "|" is the column separator.
-            Rows are separated by \n .
-            Identical rows are considered as unique bigger rows.
-            Single table cells must contain the 'key' string value of the contained widgets.
-            Column sizes are proportionally applied to the defined grid.
-            Columns must be alligned between rows.
-
-            es.
-                \"\"\"
-                | |label|button    |
-                | |text |          |
-                \"\"\"
-
-            Args:
-                value (str): The ascii defined grid
+    def set_hidden(self, hided, inner=False):
         """
-        rows = asciipattern.split("\n")
-        #remove empty rows
-        for r in rows[:]:
-            if len(r.replace(" ", ""))<1:
-                rows.remove(r)
-        for ri in range(0,len(rows)):
-            #slicing row removing the first and the last separators
-            rows[ri] = rows[ri][rows[ri].find("|")+1:rows[ri].rfind("|")]
-
-        columns = collections.OrderedDict()
-        row_count = 0
-        row_defs = collections.OrderedDict()
-        row_max_width = 0
-        for ri in range(0,len(rows)):
-            if ri > 0:
-                if rows[ri] == rows[ri-1]:
-                    continue
-
-            row_defs[row_count] = rows[ri].replace(" ","").split("|")
-            #placeholder . where cell is empty
-            row_defs[row_count] = ['.' if elem=='' else elem for elem in row_defs[row_count]]
-            row_count = row_count + 1
-            row_max_width = max(row_max_width, len(rows[ri]))
-
-            i=rows[ri].find("|",0)
-            while i>-1:
-                columns[i] = i
-                i=rows[ri].find("|",i+1)
-
-        columns[row_max_width] = row_max_width
-        
-        row_sizes = []
-        for r in row_defs.keys():
-            row_sizes.append(float(rows.count(rows[r]))/float(len(rows))*100.0)
-        
-        column_sizes = []
-        prev_size = 0.0
-        for c in columns.values():
-            value = float(c)/float(row_max_width)*100.0
-            column_sizes.append(value-prev_size)
-            prev_size = value
-
-        self.define_grid(row_defs.values())
-        self.set_column_sizes(column_sizes)
-        self.set_row_sizes(row_sizes)
+        Args:
+            inner (bool): hide container with childrens if True
+        """
+        if not inner:
+            for key in self.children:
+                self.children[key].set_hidden(hided)
+        else:
+            if hided:
+                try:
+                    self.style['display'] = 'none'
+                except KeyError:
+                    pass
+            else:
+                self.style['display'] = 'grid'
 
 
 class HBox(Widget):
@@ -1580,7 +1502,7 @@ class HBox(Widget):
             for child in value:
                 keys.append( self.append(child) )
             return keys
-        
+
         key = str(key)
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
@@ -1600,6 +1522,27 @@ class HBox(Widget):
         self.add_child(key, value)
 
         return key
+
+    def set_enabled(self, enabled):
+        for key in self.children:
+            self.children[key].set_enabled(enabled)
+
+    def set_hidden(self, hided, inner=False):
+        """
+        Args:
+            inner (bool): hide container with childrens if True
+        """
+        if not inner:
+            for key in self.children:
+                self.children[key].set_hidden(hided)
+        else:
+            if hided:
+                try:
+                    self.style['display'] = 'none'
+                except KeyError:
+                    pass
+            else:
+                self.style['display'] = 'flex'
 
 
 class VBox(HBox):
@@ -1847,7 +1790,7 @@ class TextInput(Widget, _MixinTextualWidget):
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
-        
+
         Note: This event can't be registered together with Widget.onchange.
 
         Args:
@@ -2127,7 +2070,7 @@ class ListView(Widget):
     """
 
     @decorate_constructor_parameter_types([bool])
-    def __init__(self, selectable = True, *args, **kwargs):
+    def __init__(self, selectable=True, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -2258,6 +2201,15 @@ class ListView(Widget):
     @decorate_explicit_alias_for_listener_registration
     def set_on_selection_listener(self, callback, *userdata):
         self.onselection.connect(callback, *userdata)
+
+    def set_enabled(self, enabled):
+        if enabled:
+            self.style['pointer-events'] = 'true'
+        else:
+            self.style['pointer-events'] = 'none'
+#        super(ListView, self).set_enabled(enabled)
+        for child in self.children:
+            self.children[child].set_enabled(enabled)
 
 
 class ListItem(Widget, _MixinTextualWidget):
@@ -2431,7 +2383,7 @@ class Image(Widget):
     def __init__(self, filename, *args, **kwargs):
         """
         Args:
-            filename (str): an url to an image or a base64 data string
+            filename (str): an url to an image
             kwargs: See Widget.__init__()
         """
         super(Image, self).__init__(*args, **kwargs)
@@ -2441,7 +2393,7 @@ class Image(Widget):
     def set_image(self, filename):
         """
         Args:
-            filename (str): an url to an image or a base64 data string
+            filename (str): an url to an image
         """
         self.attributes['src'] = filename
 
@@ -2517,6 +2469,28 @@ class Table(Widget):
     @decorate_explicit_alias_for_listener_registration
     def set_on_table_row_click_listener(self, callback, *userdata):
         self.on_table_row_click.connect(callback, *userdata)
+
+    def set_enabled(self, enabled):
+        if enabled:
+            self.style['pointer-events'] = 'true'
+        else:
+            self.style['pointer-events'] = 'none'
+        for child in self.children:
+            self.children[child].set_enabled(enabled)
+        super(Table, self).set_enabled(enabled)
+
+    def set_hidden(self, hided, inner=False):
+        """
+        Args:
+            inner (bool): hide container with childrens if True
+        """
+        if hided:
+            try:
+                self.style['display'] = 'none'
+            except KeyError:
+                pass
+        else:
+            self.style['display'] = 'table'
 
 
 class TableWidget(Table):
@@ -2708,6 +2682,11 @@ class TableRow(Widget):
     def set_on_row_item_click_listener(self, callback, *userdata):
         self.on_row_item_click.connect(callback, *userdata)
 
+#    def set_enabled(self, enabled):
+#        print "rrrrrrrrrrrrrrrrr2222"
+#        for key in self.children:
+#            self.children[key].set_enabled(enabled)
+
 
 class TableEditableItem(Widget, _MixinTextualWidget):
     """item widget for the TableRow."""
@@ -2847,6 +2826,18 @@ class CheckBoxLabel(Widget):
     @decorate_explicit_alias_for_listener_registration
     def set_on_change_listener(self, callback, *userdata):
         self.onchange.connect(callback, *userdata)
+
+    def set_enabled(self, enabled):
+        self._checkbox.set_enabled(enabled)
+        self._label.set_enabled(enabled)
+
+
+class RadioHBox(Input):
+    """todo"""
+
+
+class RadioVBox(Input):
+    """todo"""
 
 
 class CheckBox(Input):
@@ -3284,7 +3275,6 @@ class MenuItem(Widget, _MixinTextualWidget):
         self.set_text(text)
 
     def append(self, value, key=''):
-        
         return self.sub_container.append(value, key=key)
 
 
@@ -3585,33 +3575,6 @@ class SvgRectangle(SvgShape):
         """
         self.attributes['width'] = str(w)
         self.attributes['height'] = str(h)
-
-
-class SvgImage(SvgRectangle):
-    """svg image - a raster image element for svg graphics, 
-        this have to be appended into Svg elements."""
-
-    @decorate_constructor_parameter_types([str, int, int, int, int])
-    def __init__(self, filename, x, y, w, h, *args, **kwargs):
-        """
-        Args:
-            filename (str): an url to an image
-            x (int): the x coordinate of the top left corner of the rectangle
-            y (int): the y coordinate of the top left corner of the rectangle
-            w (int): width of the rectangle
-            h (int): height of the rectangle
-            kwargs: See Widget.__init__()
-        """
-        super(SvgImage, self).__init__( x, y, w, h, *args, **kwargs)
-        self.type = 'image'
-        self.set_image(filename)
-
-    def set_image(self, filename):
-        """
-        Args:
-            filename (str): an url to an image or a base64 data string
-        """
-        self.attributes["xlink:href"] = filename
 
 
 class SvgCircle(SvgShape):
