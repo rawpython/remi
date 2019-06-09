@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,9 +30,11 @@ class MyApp(App):
         # the margin 0px auto centers the main container
         verticalContainer = gui.Widget(width=540, margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
 
-        horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px', style={'display': 'block', 'overflow': 'auto'})
-        
-        subContainerLeft = gui.Widget(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
+        horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px',
+                style={'display': 'block', 'overflow': 'auto'})
+
+        self.subContainerLeft = subContainerLeft = gui.Widget(width=320,
+                style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.img = gui.Image('/res:logo.png', height=100, margin='10px')
         self.img.onclick.do(self.on_img_clicked)
 
@@ -44,7 +47,7 @@ class MyApp(App):
         self.table.on_table_row_click.do(self.on_table_row_click)
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
+        self.subContainerRight = subContainerRight = gui.Widget(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.count = 0
         self.counter = gui.Label('', width=200, height=30, margin='10px')
 
@@ -102,7 +105,7 @@ class MyApp(App):
         self.video.attributes['height'] = '100%'
         self.video.attributes['controls'] = 'true'
         self.video.style['border'] = 'none'
-                                     
+
         self.tree = gui.TreeView(width='100%', height=300)
         ti1 = gui.TreeItem("Item1")
         ti2 = gui.TreeItem("Item2")
@@ -117,7 +120,7 @@ class MyApp(App):
         self.tree.append([ti1, ti2, ti3])
         ti2.append([subti1, subti2, subti3, subti4])
         subti4.append([subsubti1, subsubti2, subsubti3])
-        
+
         # appending a widget to another, the first argument is a string key
         subContainerRight.append([self.counter, self.lbl, self.bt, self.txt, self.spin, self.progress, self.check, self.btInputDiag, self.btFileDiag])
         # use a defined key as we replace this widget later
@@ -130,10 +133,8 @@ class MyApp(App):
 
         horizontalContainer.append([subContainerLeft, subContainerRight])
 
-        menu = gui.Menu(width='100%', height='30px')
+        self.menu = menu = gui.Menu(width='100%', height='30px')
         m1 = gui.MenuItem('File', width=100, height=30)
-        m2 = gui.MenuItem('View', width=100, height=30)
-        m2.onclick.do(self.menu_view_clicked)
         m11 = gui.MenuItem('Save', width=100, height=30)
         m12 = gui.MenuItem('Open', width=100, height=30)
         m12.onclick.do(self.menu_open_clicked)
@@ -141,12 +142,32 @@ class MyApp(App):
         m111.onclick.do(self.menu_save_clicked)
         m112 = gui.MenuItem('Save as', width=100, height=30)
         m112.onclick.do(self.menu_saveas_clicked)
+        m2 = gui.MenuItem('View', width=100, height=30)
+        m21 = gui.MenuItem('Left panel', width=100, height=30)
+        m211 = gui.MenuItem('Disable', width=100, height=30)
+        m211.onclick.do(self.menu_disable_left_panel_clicked)
+        m212 = gui.MenuItem('Hide', width=100, height=30)
+        m212.onclick.do(self.menu_hide_left_panel_clicked)
+        m22 = gui.MenuItem('Right panel', width=100, height=30)
+        m221 = gui.MenuItem('Disable', width=100, height=30)
+        m221.onclick.do(self.menu_disable_right_panel_clicked)
+        m222 = gui.MenuItem('Hide', width=100, height=30)
+        m222.onclick.do(self.menu_hide_right_panel_clicked)
+        m23 = gui.MenuItem('About', width=100, height=30)
+        m231 = gui.MenuItem('Disable', width=100, height=30)
+        m231.onclick.do(self.menu_disable_about_clicked)
         m3 = gui.MenuItem('Dialog', width=100, height=30)
         m3.onclick.do(self.menu_dialog_clicked)
+        m4 = gui.MenuItem('About', width=100, height=30)
+        m4.onclick.do(self.menu_about_clicked)
 
-        menu.append([m1, m2, m3])
+        menu.append([m1, m2, m3, {'about':m4}])
         m1.append([m11, m12])
         m11.append([m111, m112])
+        m2.append([m21, m22, m23])
+        m21.append([m211, m212])
+        m22.append([m221, m222])
+        m23.append([m231])
 
         menubar = gui.MenuBar(width='100%', height='30px')
         menubar.append(menu)
@@ -305,14 +326,45 @@ class MyApp(App):
     def menu_open_clicked(self, widget):
         self.lbl.set_text('Menu clicked: Open')
 
-    def menu_view_clicked(self, widget):
-        self.lbl.set_text('Menu clicked: View')
+    def menu_disable_left_panel_clicked(self, widget):
+        self.lbl.set_text('Disable left panel')
+        flag = self.subContainerLeft.is_enabled()
+        self.subContainerLeft.set_enabled(not flag)
+        widget.set_text('Enable' if flag else 'Disable')
+
+    def menu_disable_right_panel_clicked(self, widget):
+        self.lbl.set_text('Disable right panel')
+        flag = self.subContainerRight.is_enabled()
+        self.subContainerRight.set_enabled(not flag)
+        widget.set_text('Enable' if flag else 'Disable')
+
+    def menu_hide_left_panel_clicked(self, widget):
+        self.lbl.set_text('Hide left panel')
+        flag = self.subContainerLeft.is_visible()
+        self.subContainerLeft.set_hidden(flag)
+        widget.set_text('Show' if flag else 'Hide')
+
+    def menu_hide_right_panel_clicked(self, widget):
+        self.lbl.set_text('Hide right panel')
+        flag = self.subContainerRight.is_visible()
+        self.subContainerRight.set_hidden(flag)
+        widget.set_text('Show' if flag else 'Hide')
+
+    def menu_disable_about_clicked(self, widget):
+        menu_about = self.menu.get_child('about')
+        flag = menu_about.is_enabled()
+        menu_about.set_enabled(not flag)
+        widget.set_text('Enable' if flag else 'Disable')
+        self.lbl.set_text('%s About' % ('Disable'if flag else 'Enable' ))
 
     def fileupload_on_success(self, widget, filename):
         self.lbl.set_text('File upload success: ' + filename)
 
     def fileupload_on_failed(self, widget, filename):
         self.lbl.set_text('File upload failed: ' + filename)
+
+    def menu_about_clicked(self, widget):
+        self.lbl.set_text('Menu clicked: About')
 
     def on_close(self):
         """ Overloading App.on_close event to stop the Timer.
