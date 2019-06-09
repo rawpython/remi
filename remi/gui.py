@@ -66,7 +66,7 @@ def jsonize(d):
 
 def load_resource(filename):
     """ Convenient function. Given a local path and filename (not in standard remi resource format),
-        loads the content and returns a base64 encoded data. 
+        loads the content and returns a base64 encoded data.
         This method allows to bypass the remi resource file management, accessing directly local disk files.
 
         Args:
@@ -85,7 +85,7 @@ def load_resource(filename):
     else:
         data = str(data, 'utf-8')
     return "data:%(mime)s;base64,%(data)s"%{'mime':mimetype, 'data':data}
-    
+
 
 def to_uri(uri_data):
     """ Convenient function to encase the resource filename or data in url('') keyword
@@ -102,13 +102,13 @@ def to_uri(uri_data):
 class EventSource(object):
     def __init__(self, *args, **kwargs):
         self.setup_event_methods()
-    
+
     def setup_event_methods(self):
         for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
             _event_info = None
             if hasattr(method, "_event_info"):
                 _event_info = method._event_info
-            
+
             if hasattr(method, '__is_event'):
                 e = ClassEventConnector(self, method_name, method)
                 setattr(self, method_name, e)
@@ -130,7 +130,7 @@ class ClassEventConnector(object):
         self.callback = None
         self.userdata = None
         self.connect = self.do #for compatibility reasons
-        
+
     def do(self, callback, *userdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
@@ -529,7 +529,6 @@ class Widget(Tag, EventSource):
 
     @decorate_constructor_parameter_types([])
     def __init__(self, children = None, style = None, *args, **kwargs):
-
         """
         Args:
             children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
@@ -555,6 +554,10 @@ class Widget(Tag, EventSource):
         self.set_layout_orientation(kwargs.get('layout_orientation', Widget.LAYOUT_VERTICAL))
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(style)
+        self._saved_display_style = None
+        self._saved_pointer_events_style = None
+        self._visible = True
+        self._enable = True
 
         if children:
             self.append(children)
@@ -572,14 +575,60 @@ class Widget(Tag, EventSource):
                     k, v = s.split(':', 1)
                     self.style[k.strip()] = v.strip()
 
+    def set_hidden(self, hided):
+        """
+        Args:
+            hided (bool): hide - if True, show - if False
+        """
+#        for child in self.children.values():
+#            if type(child) not in (type(''), type(u'')):
+#                child.set_hidden(hided)
+        if hided:
+            self._saved_display_style = self.style.get('display', None)
+            try:
+                self.style['display'] = 'none'
+            except KeyError:
+                pass
+        else:
+            if self.style['display'] == 'none':
+                if self._saved_display_style is None:
+                    del self.style['display']
+                else:
+                    self.style['display'] = self._saved_display_style
+        self._visible = not hided
+
     def set_enabled(self, enabled):
-        if enabled:
+        """
+        Args:
+            enabled (bool): enable - if True, disable - if False
+        """
+        for child in self.children.values():
+            if type(child) not in (type(''), type(u'')):
+                child.set_enabled(enabled)
+        if not enabled:
+            self.attributes['disabled'] = 'true'
+            self._saved_pointer_events_style = self.style.get('pointer-events', None)
+            try:
+                self.style['pointer-events'] = 'none'
+            except KeyError:
+                pass
+        else:
             try:
                 del self.attributes['disabled']
             except KeyError:
                 pass
-        else:
-            self.attributes['disabled'] = 'True'
+            if self.style['pointer-events'] == 'none':
+                if self._saved_pointer_events_style is None:
+                    del self.style['pointer-events']
+                else:
+                    self.style['pointer-events'] = self._saved_pointer_events_style
+        self._enable = enabled
+
+    def is_visible(self):
+        return self._visible
+
+    def is_enabled(self):
+        return self._enable
 
     def set_size(self, width, height):
         """Set the widget size.
@@ -884,7 +933,7 @@ class Widget(Tag, EventSource):
         """Called when user types and releases a key. 
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
-        
+
         Args:
             key (str): the character value
             keycode (str): the numeric char code
@@ -903,7 +952,7 @@ class Widget(Tag, EventSource):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
-        
+
         Args:
             key (str): the character value
             keycode (str): the numeric char code
@@ -913,7 +962,7 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_focus_listener(self, callback, *userdata):
         self.onfocus.connect(callback, *userdata)
-        
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_blur_listener(self, callback, *userdata):
         self.onblur.connect(callback, *userdata)
@@ -961,7 +1010,7 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchend_listener(self, callback, *userdata):
         self.ontouchend.connect(callback, *userdata)
-        
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchenter_listener(self, callback, *userdata):
         self.ontouchenter.connect(callback, *userdata)
@@ -1010,7 +1059,7 @@ class HEAD(Tag):
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
-        
+
         self._classes = []
         self.set_title(title)
 
@@ -1026,7 +1075,7 @@ class HEAD(Tag):
 
     def set_icon_data(self, base64_data, mimetype="image/png", rel="icon"):
         """ Allows to define an icon for the App
-        
+
             Args:
                 base64_data (str): base64 encoded image data  (ie. "data:image/x-icon;base64,AAABAAEAEBA....")
                 mimetype (str): mimetype of the image ("image/png" or "image/x-icon"...)
@@ -1322,7 +1371,7 @@ class BODY(Widget):
         loading_widget.set_identifier("loading")
 
         self.append(loading_widget)
-    
+
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
             event.stopPropagation();event.preventDefault();
@@ -1396,6 +1445,7 @@ class GridBox(Widget):
         Args:
             matrix (list): list of iterables of strings (lists or something else). 
                 Items in the matrix have to correspond to a key for the children.
+                The key must start with a letter.
         """
         self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
 
@@ -1433,7 +1483,7 @@ class GridBox(Widget):
         value.style['position'] = 'static'
 
         return key
-    
+
     def remove_child(self, child):
         if 'grid-area' in child.style.keys():
             del child.style['grid-area']
@@ -1454,7 +1504,7 @@ class GridBox(Widget):
             values (iterable of int or str): values are treated as percentage.
         """
         self.style['grid-template-rows'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
-    
+
     def set_column_gap(self, value):
         """Sets the gap value between columns
 
@@ -1524,11 +1574,11 @@ class GridBox(Widget):
                 i=rows[ri].find("|",i+1)
 
         columns[row_max_width] = row_max_width
-        
+
         row_sizes = []
         for r in row_defs.keys():
             row_sizes.append(float(rows.count(rows[r]))/float(len(rows))*100.0)
-        
+
         column_sizes = []
         prev_size = 0.0
         for c in columns.values():
@@ -1580,7 +1630,7 @@ class HBox(Widget):
             for child in value:
                 keys.append( self.append(child) )
             return keys
-        
+
         key = str(key)
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
@@ -1847,7 +1897,7 @@ class TextInput(Widget, _MixinTextualWidget):
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
-        
+
         Note: This event can't be registered together with Widget.onchange.
 
         Args:
@@ -2127,7 +2177,7 @@ class ListView(Widget):
     """
 
     @decorate_constructor_parameter_types([bool])
-    def __init__(self, selectable = True, *args, **kwargs):
+    def __init__(self, selectable=True, *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -2848,6 +2898,19 @@ class CheckBoxLabel(Widget):
     def set_on_change_listener(self, callback, *userdata):
         self.onchange.connect(callback, *userdata)
 
+    def set_enabled(self, enabled):
+        self._checkbox.set_enabled(enabled)
+        self._label.set_enabled(enabled)
+        super(CheckBoxLabel, self).set_enabled(enabled)
+
+
+class RadioHBox(Input):
+    """todo"""
+
+
+class RadioVBox(Input):
+    """todo"""
+
 
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
@@ -3284,7 +3347,6 @@ class MenuItem(Widget, _MixinTextualWidget):
         self.set_text(text)
 
     def append(self, value, key=''):
-        
         return self.sub_container.append(value, key=key)
 
 
@@ -3588,7 +3650,7 @@ class SvgRectangle(SvgShape):
 
 
 class SvgImage(SvgRectangle):
-    """svg image - a raster image element for svg graphics, 
+    """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
 
     @decorate_constructor_parameter_types([str, int, int, int, int])
