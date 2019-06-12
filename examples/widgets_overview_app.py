@@ -273,7 +273,7 @@ class MyApp(App):
         self.lbl.set_text('CheckBox changed, new value: ' + str(newValue))
 
     def on_radio_change(self, widget, value, idx, oldIdx):
-        self.lbl.set_text('Radio changed, on: radio%s' % value)
+        self.lbl.set_text('Radio changed, on: radio%i' % (idx+1))
 
     def open_input_dialog(self, widget):
         self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?',
