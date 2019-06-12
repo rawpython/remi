@@ -2445,7 +2445,6 @@ class DropDown(Widget):
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
-        log.debug('combo box. selected %s' % value)
         self.select_by_value(value)
         return (value, )
 
@@ -2898,19 +2897,6 @@ class CheckBoxLabel(Widget):
     def set_on_change_listener(self, callback, *userdata):
         self.onchange.connect(callback, *userdata)
 
-    def set_enabled(self, enabled):
-        self._checkbox.set_enabled(enabled)
-        self._label.set_enabled(enabled)
-        super(CheckBoxLabel, self).set_enabled(enabled)
-
-
-class RadioHBox(Input):
-    """todo"""
-
-
-class RadioVBox(Input):
-    """todo"""
-
 
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
@@ -2936,6 +2922,124 @@ class CheckBox(Input):
         value = value in ('True', 'true')
         self.set_value(value)
         return (value, )
+
+    def set_value(self, checked, update_ui=1):
+        if checked:
+            self.attributes['checked'] = 'checked'
+        else:
+            if 'checked' in self.attributes:
+                del self.attributes['checked']
+
+    def get_value(self):
+        """
+        Returns:
+            bool:
+        """
+        return 'checked' in self.attributes
+
+
+class RadioHGroup(Widget):
+
+    @decorate_constructor_parameter_types([[str], int, [str]])
+    def __init__(self, labels, checked=0, user_data=[], **kwargs):
+        """
+        Args:
+            label [(str)]:
+            checked (int) or (str):
+            user_data [(str)]:
+            kwargs: See Widget.__init__()
+        """
+        super(RadioHGroup, self).__init__(**kwargs)
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
+        user_data = user_data or [ '%i' % i for i in xrange(len(labels)) ]
+        self._radiogroup = [ RadioBoxLabel(label, False, data) for label, data in zip(labels, user_data) ]
+        if type(checked) in (type(''), type(u'')):
+            checked = int(user_data.index(checked))
+        self._radiogroup[checked].set_value(True)
+        self._idx = checked
+        self.append(self._radiogroup)
+        for radiobox in self._radiogroup:
+            radiobox.onchange.connect(self.onchange)
+
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def onchange(self, widget, value):
+        prev_idx = self._idx
+        self._radiogroup[prev_idx].set_value(False)
+        self._idx = self._radiogroup.index(widget)
+        return (value, self._idx, prev_idx)
+
+    @decorate_explicit_alias_for_listener_registration
+    def set_on_change_listener(self, callback, *userdata):
+        self.onchange.connect(callback, *userdata)
+
+
+#class RadioVGroup(RadioHGroup):
+#    def __init__(self, labels, checked=0, user_data=[], **kwargs):
+#        """
+#        Args:
+#            label [(str)]:
+#            checked (int) or (str):
+#            user_data [(str)]:
+#            kwargs: See Widget.__init__()
+#        """
+#        super(RadioVGroup, self).__init__(labels, checked, user_data, **kwargs)
+#        self.set_layout_orientation(Widget.LAYOUT_VERTICAL)
+
+
+class RadioBoxLabel(Widget):
+
+    @decorate_constructor_parameter_types([str, bool, str])
+    def __init__(self, label='', checked=False, user_data='', **kwargs):
+        """
+        Args:
+            label (str):
+            checked (bool):
+            user_data (str):
+            kwargs: See Widget.__init__()
+        """
+        super(RadioBoxLabel, self).__init__(**kwargs)
+        self.set_layout_orientation(Widget.LAYOUT_HORIZONTAL)
+        self._radiobox = RadioBox(checked, user_data)
+        self._label = Label(label)
+        self.append(self._radiobox, key='radiobox')
+        self.append(self._label, key='label')
+
+        self.set_value = self._radiobox.set_value
+        self.get_value = self._radiobox.get_value
+
+        self._radiobox.onchange.connect(self.onchange)
+
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def onchange(self, widget, value):
+        return (value, )
+
+
+class RadioBox(Input):
+    """check box widget useful as numeric input field implements the onchange event."""
+
+    @decorate_constructor_parameter_types([bool, str])
+    def __init__(self, checked=False, user_data='', **kwargs):
+        """
+        Args:
+            checked (bool):
+            user_data (str):
+            kwargs: See Widget.__init__()
+        """
+        super(RadioBox, self).__init__('radio', user_data, **kwargs)
+        self.set_value(checked)
+        self.attributes[Widget.EVENT_ONCHANGE] = \
+            "var params={};params['value']=document.getElementById('%(emitter_identifier)s').checked;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
+
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def onchange(self, value):
+        value = value in ('True', 'true')
+        self.set_value(value)
+        return (self.attributes['value'], )
 
     def set_value(self, checked, update_ui=1):
         if checked:
