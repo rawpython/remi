@@ -2973,7 +2973,7 @@ class RadioHGroup(Widget):
     def set_on_change_listener(self, callback, *userdata):
         self.onchange.connect(callback, *userdata)
 
-
+# TODO
 #class RadioVGroup(RadioHGroup):
 #    def __init__(self, labels, checked=0, user_data=[], **kwargs):
 #        """
@@ -3936,4 +3936,3 @@ class SvgPath(Widget):
             color (str): stroke color
         """
         self.attributes['fill'] = color
-        
