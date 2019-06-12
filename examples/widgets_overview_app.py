@@ -99,6 +99,9 @@ class MyApp(App):
         self.date = gui.Date('2015-04-13', width=200, height=20, margin='10px')
         self.date.onchange.do(self.date_changed)
 
+        self.radioGroup = gui.RadioHGroup(['radio1', 'radio2'], 0, width=200, height=20, margin='10px')
+        self.radioGroup.onchange.do(self.on_radio_change)
+
         self.video = gui.Widget( _type='iframe', width=290, height=200, margin='10px')
         self.video.attributes['src'] = "https://drive.google.com/file/d/0B0J9Lq_MRyn4UFRsblR3UTBZRHc/preview"
         self.video.attributes['width'] = '100%'
@@ -122,7 +125,8 @@ class MyApp(App):
         subti4.append([subsubti1, subsubti2, subsubti3])
 
         # appending a widget to another, the first argument is a string key
-        subContainerRight.append([self.counter, self.lbl, self.bt, self.txt, self.spin, self.progress, self.check, self.btInputDiag, self.btFileDiag])
+        subContainerRight.append([self.counter, self.lbl, self.bt, self.txt, self.spin, self.progress, self.check,
+                self.radioGroup, self.btInputDiag, self.btFileDiag])
         # use a defined key as we replace this widget later
         fdownloader = gui.FileDownloader('download test', '../remi/res/logo.png', width=200, height=30, margin='10px')
         subContainerRight.append(fdownloader, key='file_downloader')
@@ -267,6 +271,9 @@ class MyApp(App):
 
     def on_check_change(self, widget, newValue):
         self.lbl.set_text('CheckBox changed, new value: ' + str(newValue))
+
+    def on_radio_change(self, widget, value, idx, oldIdx):
+        self.lbl.set_text('Radio changed, on: radio%s' % value)
 
     def open_input_dialog(self, widget):
         self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?',
