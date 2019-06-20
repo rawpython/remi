@@ -327,6 +327,8 @@ class Tag(object):
 
     def set_identifier(self, new_identifier):
         """Allows to set a unique id for the Tag.
+           Warning: in some classes, the default identifier is passed to the JS,
+           so changing the identifier may result in loss of connection between the script message and the receiver.
 
         Args:
             new_identifier (str): a unique id for the tag
