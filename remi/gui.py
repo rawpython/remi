@@ -579,7 +579,7 @@ class Widget(Tag, EventSource):
             except KeyError:
                 pass
         else:
-            self.attributes['disabled'] = None
+            self.attributes['disabled'] = 'True'
 
     def set_size(self, width, height):
         """Set the widget size.
