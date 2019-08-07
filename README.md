@@ -1,12 +1,3 @@
-| Python 2.7         | Python 3.4        | Python 3.5        | Python 3.6            |
-|-------------------|-------------------|-------------------|-------------------|
-| [![Build1][1]][5] | [![Build2][2]][5] | [![Build3][3]][5] | [![Build4][4]][5] |
-
-[1]: https://travis-matrix-badges.herokuapp.com/repos/Bethany-1/remi/branches/master/1
-[2]: https://travis-matrix-badges.herokuapp.com/repos/Bethany-1/remi/branches/master/2
-[3]: https://travis-matrix-badges.herokuapp.com/repos/Bethany-1/remi/branches/master/3
-[4]: https://travis-matrix-badges.herokuapp.com/repos/Bethany-1/remi/branches/master/4
-[5]: https://travis-ci.com/Bethany-1/remi
 [![Build Status](https://travis-ci.com/Bethany-1/remi.svg?branch=master)](https://travis-ci.com/Bethany-1/remi)
 
 <p align="center">
