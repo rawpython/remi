@@ -871,6 +871,7 @@ class StandaloneServer(Server):
         else:
             Server.start(self)
             webview.create_window(self.title, self.address, **self._application_conf)
+            webview.start()
             Server.stop(self)
 
 
