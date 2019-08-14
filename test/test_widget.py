@@ -14,10 +14,12 @@ class TestLabel(unittest.TestCase):
     def test_init(self):
         self.assertEqual(gui.Label('Testing').innerHTML({}), 'Testing')
 
-        different_types = [{}, [], 123, (4, 5)]
-        for each_type in different_types:
+        invalid_types = [{}, [], 123, (4, 5)]
+        for each_type in invalid_types:
             with self.assertRaises(Exception) as error:
                 gui.Label(each_type)
+
+
 
 if __name__ == '__main__':
     unittest.main()
