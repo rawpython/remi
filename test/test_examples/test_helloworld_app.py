@@ -5,7 +5,7 @@ import unittest
 import remi.gui as gui
 import sys
 import os.path
-from mock_server_and_request import MockServer, MockRequest
+from .mock_server_and_request import MockServer, MockRequest
 
 examples_dir = os.path.realpath(os.path.join(os.path.abspath(\
                                 os.path.dirname(__file__)), '../../examples'))
