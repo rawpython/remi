@@ -19,8 +19,12 @@ import functools
 import threading
 import collections
 import inspect
-import cgi
-escape = cgi.escape
+try:
+    import html
+    escape = html.escape
+except ImportError:
+    import cgi
+    escape = cgi.escape
 import mimetypes
 import base64
 try:
