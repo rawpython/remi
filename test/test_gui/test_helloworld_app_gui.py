@@ -2,6 +2,7 @@
 import unittest
 import sys
 import os
+import remi
 examples_dir = os.path.realpath(os.path.join(os.path.abspath(\
                                 os.path.dirname(__file__)), '../../examples'))
 sys.path.append(examples_dir)
@@ -24,13 +25,8 @@ remote_url = "https://ondemand.saucelabs.com:443/wd/hub"
 @unittest.skipIf(webdriver is None, "Skipping Selenium test.")
 class Module1Test(unittest.TestCase):
 
-    def __init__(self,*args):
-        unittest.TestCase.__init__(self,*args)
-        self.server = None
-
-
     def setUp(self):
-        self.server = remi.Server(helloworld_app.MyApp, start=False, address='0.0.0.0')
+        self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False)
         self.server.start()
         # the desired_capabilities parameter tells us which browsers and OS to spin up.
         desired_cap = {
@@ -49,7 +45,7 @@ class Module1Test(unittest.TestCase):
 
     # Here is our actual test code. In this test we open the saucedemo app in chrome
     # and assert that the title is correct.
-    #@unittest.skip("You need to input Sauce Credentials")
+    @unittest.skip("You need to input Sauce Credentials")
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
         assert ("MyApp" in self.driver.title)
