@@ -15,6 +15,9 @@ class MockRequest(object):
     def getsockname(self):
     	return '/'
 
+    def sendall(self):
+        pass
+
 
 class MockServer(object):
     def __init__(self):
