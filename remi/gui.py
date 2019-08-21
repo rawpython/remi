@@ -1737,7 +1737,7 @@ class _MixinTextualWidget(object):
         Args:
             text (str): The string label of the Widget.
         """
-        self.add_child('text', escape(text))
+        self.add_child('text', escape(text, quote=False))
 
     def get_text(self):
         """
