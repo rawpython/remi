@@ -1,24 +1,31 @@
 # Selenium 3.14+ doesn't enable certificate checking
 import unittest
+import sys
 import os
-from selenium import webdriver
 examples_dir = os.path.realpath(os.path.join(os.path.abspath(\
                                 os.path.dirname(__file__)), '../../examples'))
 sys.path.append(examples_dir)
 from helloworld_app import MyApp
+try:
+    from selenium import webdriver
+except ImportError:
+    webdriver = None
+
 
 
 # This is the only code you need to edit in this script.
 # Enter in your Sauce Labs Credentials in order to run this test
-sauce_username = os.environment.get("SAUCE_USERNAME")
-sauce_access_key = os.environment.get("SAUCE_ACCESS_KEY")
-tunnel_identifier = os.environment.get("TRAVIS_JOB_NUMBER8")
+sauce_username = os.environ.get("SAUCE_USERNAME")
+sauce_access_key = os.environ.get("SAUCE_ACCESS_KEY")
+tunnel_identifier = os.environ.get("TRAVIS_JOB_NUMBER8")
 # This variable contains the service address for the Sauce Labs VM hub
 remote_url = "https://ondemand.saucelabs.com:443/wd/hub"
 
+@unittest.skipIf(webdriver is None, "Skipping Selenium test.")
 class Module1Test(unittest.TestCase):
 
-    def __init__(self):
+    def __init__(self,*args):
+        unittest.TestCase.__init__(self,*args)
         self.server = None
 
 
