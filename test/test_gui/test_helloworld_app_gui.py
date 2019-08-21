@@ -23,7 +23,7 @@ tunnel_identifier = os.environ.get("TRAVIS_JOB_NUMBER8")
 remote_url = "https://ondemand.saucelabs.com:443/wd/hub"
 
 @unittest.skipIf(webdriver is None, "Skipping Selenium test.")
-class Module1Test(unittest.TestCase):
+class TestHelloWorld(unittest.TestCase):
 
     def setUp(self):
         self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False)
@@ -45,7 +45,7 @@ class Module1Test(unittest.TestCase):
 
     # Here is our actual test code. In this test we open the saucedemo app in chrome
     # and assert that the title is correct.
-    @unittest.skip("You need to input Sauce Credentials")
+    #@unittest.skip("You need to input Sauce Credentials")
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
         assert ("MyApp" in self.driver.title)

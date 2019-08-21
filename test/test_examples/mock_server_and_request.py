@@ -15,7 +15,7 @@ class MockRequest(object):
     def getsockname(self):
     	return '/'
 
-    def sendall(self):
+    def sendall(self, *args):
         pass
 
 

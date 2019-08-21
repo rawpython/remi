@@ -42,7 +42,7 @@ class TestButton(unittest.TestCase):
                 gui.Button(each_type)
 
 
-class test_VBox(unittest.TestCase):
+class Test_VBox(unittest.TestCase):
     def test_init(self):
         pass
 
