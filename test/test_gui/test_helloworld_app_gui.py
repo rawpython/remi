@@ -42,6 +42,7 @@ class TestHelloWorld(unittest.TestCase):
 
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
         self.driver = webdriver.Remote(command_executor=remote_url, desired_capabilities=desired_cap)
+        self.driver.implicity.wait(5)
 
     # Here is our actual test code. In this test we open the saucedemo app in chrome
     # and assert that the title is correct.
@@ -49,6 +50,8 @@ class TestHelloWorld(unittest.TestCase):
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
         assert ("MyApp" in self.driver.title)
+        print('\n the line below')
+        print(self.driver.title)
 
     # Here we send the results to Sauce Labs and tear down our driver session
     def tearDown(self):
