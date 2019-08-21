@@ -11,6 +11,7 @@ python:
 # command to install dependencies
 install:
   - pip install -e .
+  - pip install selenium
 # command to run tests
 script:
   - python -m unittest discover -t . -s test -v
