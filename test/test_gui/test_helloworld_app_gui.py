@@ -30,7 +30,7 @@ class Module1Test(unittest.TestCase):
 
 
     def setUp(self):
-        self.server = remi.Server(helloworld_app.MyApp,start=False)
+        self.server = remi.Server(helloworld_app.MyApp, start=False, address='0.0.0.0')
         self.server.start()
         # the desired_capabilities parameter tells us which browsers and OS to spin up.
         desired_cap = {
@@ -49,7 +49,7 @@ class Module1Test(unittest.TestCase):
 
     # Here is our actual test code. In this test we open the saucedemo app in chrome
     # and assert that the title is correct.
-    @unittest.skip("You need to input Sauce Credentials")
+    #@unittest.skip("You need to input Sauce Credentials")
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
         assert ("MyApp" in self.driver.title)
