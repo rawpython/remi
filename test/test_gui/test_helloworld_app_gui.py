@@ -1,5 +1,6 @@
 # Selenium 3.14+ doesn't enable certificate checking
 import unittest
+import time
 import sys
 import os
 import remi
@@ -42,24 +43,41 @@ class TestHelloWorld(unittest.TestCase):
 
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
         self.driver = webdriver.Remote(command_executor=remote_url, desired_capabilities=desired_cap)
-        self.driver.implicitly_wait(5)
+        # self.driver = webdriver.Chrome()
+        # self.driver.implicitly_wait(5)
 
     # Here is our actual test code. In this test we open the saucedemo app in chrome
     # and assert that the title is correct.
-    #@unittest.skip("You need to input Sauce Credentials")
+    # @unittest.skip("You need to input Sauce Credentials")
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
-        assert ("MyApp" in self.driver.title)
-        print('\n the line below')
-        print(self.driver.title)
+        button = self.driver.find_element_by_tag_name('button')
+        self.assertTrue('Press me!' in button.text)
+
+    def test_button_press(self):
+        self.driver.get(self.server.address)
+        body = self.driver.find_element_by_tag_name('body')
+        self.assertFalse('Hello World!' in body.text)
+        print(body.text, "hereee")
+
+        time.sleep(1.0)
+        button = self.driver.find_element_by_tag_name('button')
+        button.click()
+        time.sleep(1.0)
+        body = self.driver.find_elements_by_tag_name('body')[-1]
+        print(body.text, "hereee")
+        self.assertTrue('Hello World!' in body.text)
+        time.sleep(1.0)
+
 
     # Here we send the results to Sauce Labs and tear down our driver session
     def tearDown(self):
-        if self.driver.title == 'MyApp':
-            # we use the JavaScript Executor to send results to Sauce Labs Service Hub
-            self.driver.execute_script('sauce:job-result=passed')
-        else:
-            self.driver.execute_script('sauce:job-result=failed')
+        if sauce_username:
+            if self.driver.title == 'MyApp':
+                # we use the JavaScript Executor to send results to Sauce Labs Service Hub
+                self.driver.execute_script('sauce:job-result=passed')
+            else:
+                self.driver.execute_script('sauce:job-result=failed')
         # This is where you tell Sauce Labs to stop running tests on your behalf.
         # It's important so that you aren't billed after your test finishes.
         self.driver.quit()
@@ -67,4 +85,4 @@ class TestHelloWorld(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(buffer=True)
