@@ -14,3 +14,5 @@ install:
 # command to run tests
 script:
   - python -m unittest discover -t . -s test -v
+addons:
+  sauce_connect: true
