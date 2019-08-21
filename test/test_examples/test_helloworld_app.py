@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 import unittest
 import remi.gui as gui
 import sys
