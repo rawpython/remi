@@ -458,6 +458,8 @@ Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPytho
 
 [LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
 
+[rElectrum](https://github.com/emanuelelaface/rElectrum)
+A powerful promising Electrum wallet manager for safe transactions.
 
 Other Implementations
 ===
