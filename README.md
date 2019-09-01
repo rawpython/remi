@@ -17,12 +17,6 @@ Do you need support? Reach us on:
 </p>
 
 
-Would you like a **rapid overview**? Here is an online example, thanks to the powerful repl.it 
-<p align="center">
-<a href="http://remiexample--daviderosa.repl.co/ " style="font-size:25px">live example at repl.it</a>
-</p>
-
-
 There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy, or try it first at:
 <p align="center">
 <a href="http://remiguieditor--daviderosa.repl.co/ " style="font-size:25px">live try GUI editor overview at repl.it</a>
@@ -449,6 +443,9 @@ Yes, I know that GitHub already provides a list of contributors, but I feel that
 
 Projects using Remi
 ===
+[PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI)
+Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPython, Remi (in browser). Create custom layout GUI's simply. Python 2.7 & 3 Support. 100+ Demo programs & Cookbook for rapid start. Extensive documentation.
+
 [Web based dynamic reconfigure for ROS robots](https://github.com/awesomebytes/web_dyn_reconf)
 
 [razmq](https://github.com/MrYsLab/razmq)
@@ -461,6 +458,8 @@ Projects using Remi
 
 [LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
 
+[rElectrum](https://github.com/emanuelelaface/rElectrum)
+A powerful promising Electrum wallet manager for safe transactions.
 
 Other Implementations
 ===

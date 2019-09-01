@@ -49,6 +49,10 @@ class MyApp(App):
         self.page.children['head'].add_child('myhtml', my_html_head)
         self.page.children['head'].add_child('mycss', my_css_head)
         self.page.children['head'].add_child('myjs', my_js_head)
+
+        #setting up the application icon
+        self.page.children['head'].set_icon_file("/res:icon.png")
+
         #eventually set up body attributes/style
         #self.page.children['body'].style['background-color'] = 'lightyellow'
         #eventually set up body event listeners

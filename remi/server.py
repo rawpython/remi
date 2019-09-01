@@ -256,11 +256,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
 
-    def close(self):
+    def close(self, terminate_server=True):
         try:
             self.request.shutdown(socket.SHUT_WR)
             self.finish()
-            self.server.shutdown()
+            if terminate_server:
+                self.server.shutdown()
         except:
             self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
 
@@ -462,7 +463,7 @@ class App(BaseHTTPRequestHandler, object):
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
-        for ws in self.websockets:
+        for ws in self.websockets[:]:
             # noinspection PyBroadException
             try:
                 #self._log.debug("sending websocket spontaneous message")
@@ -471,7 +472,7 @@ class App(BaseHTTPRequestHandler, object):
                 self._log.error("sending websocket spontaneous message", exc_info=True)
                 try:
                     self.websockets.remove(ws)
-                    ws.close()
+                    ws.close(terminate_server=False)
                 except:
                     self._log.error("unable to remove websocket client - already not in list", exc_info=True)
 
@@ -871,6 +872,7 @@ class StandaloneServer(Server):
         else:
             Server.start(self)
             webview.create_window(self.title, self.address, **self._application_conf)
+            webview.start()
             Server.stop(self)
 
 

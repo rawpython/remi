@@ -29,6 +29,7 @@ import remi.gui as gui
 from remi import start, App
 import os
 
+
 class MyApp(App):
     def main(self):
         #creating a container GridBox type
@@ -41,23 +42,27 @@ class MyApp(App):
         button.onclick.do(self.redefine_grid, main_container)
         
         text = gui.TextInput()
+
         
-        #defining layout matrix, have to be iterable of iterable
-        main_container.define_grid(['ab',
-                                    'ac'])
-        main_container.append({'a':label, 'b':button, 'c':text})
-        #setting sizes for rows and columns
-        main_container.style.update({'grid-template-columns':'10% 90%', 'grid-template-rows':'10% 90%'})
+        main_container.set_from_asciiart("""
+            |label |button                      |
+            |label |text                        |
+            |label |text                        |
+            |label |text                        |
+            |label |text                        |
+            """)
+
+        main_container.append({'label':label, 'button':button, 'text':text})
 
         # returning the root widget
         return main_container
     
     def redefine_grid(self, emitter, container):
         #redefining grid layout
-        container.define_grid(['cab'])
-        container.style.update({'grid-template-columns':'33% 33% 33%', 'grid-template-rows':'50%'})
-        #emitter.set_text("Done")
+        container.define_grid([ ['text','label','button'],['text','.','.']])
+        container.style.update({'grid-template-columns':'33% 33% 33%', 'grid-template-rows':'50% 50%'})
+        emitter.set_text("Done")
 
 
 if __name__ == "__main__":
-    start(MyApp)
+    start(MyApp, debug=True)
