@@ -316,11 +316,11 @@ class WebSocketHandler(object):
                                  len(msg_type) + len(widget_id) + len(function_name) + 3:]
 
                         param_dict = parse_parametrs(params)
-                        print("widget", widget_id)
-                        print(function_name, param_dict)
+                        # print("widget", widget_id)
+                        # print(function_name, param_dict)
 
                         callback = get_method_by_name(runtimeInstances[widget_id], function_name)
-                        print(runtimeInstances[widget_id], callback)
+                        # print(runtimeInstances[widget_id], callback)
                         if callback is not None:
                             callback(**param_dict)
 
@@ -382,7 +382,7 @@ class Application(object):
             #     if self._need_update_flag:
             #         await self.do_gui_update()
             if self._need_update_flag:
-                print("NEED UPDATE!!!!")
+                # print("NEED UPDATE!!!!")
                 await self.do_gui_update()
             elif self._root_changed:
                 self.logger.debug("ROOT CHANGED!!!")
@@ -476,7 +476,7 @@ class Application(object):
     @classmethod
     async def create(cls, cookie: str, stream: trio.SocketStream, headers: dict, server=None):
         logging.debug("CREATING Application")
-        print(cls, cookie, stream, headers, server)
+        # print(cls, cookie, stream, headers, server)
         application = cls(cookie, stream, headers, server)
         return application
 
@@ -653,7 +653,7 @@ class Application(object):
             changed_widget_dict = {}
             self.root.repr(changed_widget_dict)
             for widget in changed_widget_dict.keys():
-                print("CHANGED WIDGET!", widget)
+                # print("CHANGED WIDGET!", widget)
                 html = changed_widget_dict[widget]
                 __id = str(widget.identifier)
 
@@ -706,10 +706,10 @@ class Application(object):
 
     async def handle_get(self, stream, path, query, data, headers):
 
-        print(headers)
+        # print(headers)
 
         if 'Upgrade' in headers:
-            print("UPGRADE stream!!!!")
+            # print("UPGRADE stream!!!!")
 
             ws_handler = WebSocketHandler(self.cookie, headers, stream)
 
@@ -938,7 +938,7 @@ class BasicAuthFactory(AuthFactory):
                 user, password = user_pass_pare.decode().split(":", 1)
                 if user in self.users:
                     user = self.users.get(user, None)
-                    print(user, password)
+                    # print(user, password)
                     if user and user['password'] == password:
                         return user
                     else:
@@ -994,11 +994,11 @@ class AServer(object):
 
         user = await self.auth_factory.get_user(request_parser.headers)
 
-        self.logger.debug(f"app: {application}")
-        self.logger.debug(f"user: {user}")
+        # self.logger.debug(f"app: {application}")
+        # self.logger.debug(f"user: {user}")
 
         if not user:
-            print(request_parser.headers)
+            # print(request_parser.headers)
 
             response = (
                 "HTTP/1.1 401 OK",
@@ -1074,7 +1074,7 @@ class AServer(object):
 
 
 def start(app: AServer, key_file=None, cert_file=None):
-    print(app, key_file, cert_file, app.port)
+    # print(app, key_file, cert_file, app.port)
     trio_asyncio.run(app.run, key_file, cert_file)
 
 
