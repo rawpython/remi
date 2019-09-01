@@ -15,22 +15,31 @@
 """
 import base64
 import hashlib
+import locale
 import mimetypes
 import os
 import re
 import ssl
 import logging
 import struct
+import sys
+import urllib
 import uuid
 import weakref
 from abc import abstractmethod
+from cgi import parse_header, MiniFieldStorage, valid_boundary
+from email.feedparser import FeedParser
+from email.message import Message
+from io import BytesIO, TextIOWrapper
+from typing import Mapping
+
+from requests_toolbelt import MultipartDecoder
 
 import trio
 import trio_asyncio
 from remi import gui
 
 from trio_websocket import serve_websocket, ConnectionClosed
-
 
 from .server import (
     to_websocket, from_websocket,
@@ -56,6 +65,19 @@ class SingletonDecorator:
         if self.instance is None:
             self.instance = self.klass(*args, **kwds)
         return self.instance
+
+
+@SingletonDecorator
+class Globals(object):
+
+    def __init__(self):
+        self.items = dict()
+
+    def set(self, name, value):
+        self.items[name] = value
+
+    def get(self, name):
+        return self.items.get(name, None)
 
 
 @SingletonDecorator
@@ -164,7 +186,10 @@ class WebSocketHandler(object):
         self.session = None
         self.cookie = cookie
         self.stream: trio.SocketStream = stream
-        self.client_address = stream.socket.getpeername()[0]
+        if isinstance(stream, trio.SSLStream):
+            self.client_address = stream.transport_stream.socket.getpeername()[0]
+        else:
+            self.client_address = stream.socket.getpeername()[0]
         self.handshake_done = False
         self._log = logging.getLogger('remi.aserver.ws')
         self.clients_manager = ClientsManager()
@@ -303,14 +328,17 @@ class WebSocketHandler(object):
                 self._log.error('error parsing websocket', exc_info=True)
 
     async def close(self):
-        await self.stream.send_eof()
+        if isinstance(self.stream, trio.SSLStream):
+            await self.stream.aclose()
+        else:
+            await self.stream.send_eof()
         await self.stream.wait_send_all_might_not_block()
         self.closed = True
 
 
 class Application(object):
 
-    def __init__(self, cookie: str, stream: trio.SocketStream, headers: dict):
+    def __init__(self, cookie: str, stream: trio.SocketStream, headers: dict, server: 'AServer'):
         self.logger = logging.getLogger('remi.aserver.Application')
         self._log = self.logger
         self.stream = stream
@@ -321,6 +349,7 @@ class Application(object):
         self.started = False
         self.active = False
         self.nursery = None
+        self.server = server
 
         self.websockets = list()
 
@@ -328,6 +357,7 @@ class Application(object):
 
         self._need_update_flag = False
         self._stop_update_flag = False
+        self._root_changed = False
         self.update_interval = 0.1
 
         self.root = None
@@ -337,13 +367,31 @@ class Application(object):
 
     async def _idle_loop(self):
         while not self._stop_update_flag:
+
+            while len(self.foreground_workers) > 0:
+
+                async with trio.open_nursery() as nursery:
+                    worker = self.foreground_workers.pop(0)
+                    self.logger.debug("ADDING NEW WORKER!!!")
+                    self.logger.debug(str(worker))
+                    nursery.start_soon(worker, nursery)
+
             await trio.sleep(
                 self.update_interval)
             # async with self.update_lock:
             #     if self._need_update_flag:
             #         await self.do_gui_update()
             if self._need_update_flag:
+                print("NEED UPDATE!!!!")
                 await self.do_gui_update()
+            elif self._root_changed:
+                self.logger.debug("ROOT CHANGED!!!")
+                self._root_changed = False
+                await self._send_spontaneous_ws_msg(
+                    "0" +
+                    self.root.identifier + ',' +
+                    to_websocket(self.page.children['body'].innerHTML({}))
+                )
 
     def onload(self, emitter):
         """ WebPage Event that occurs on webpage loaded
@@ -404,12 +452,19 @@ class Application(object):
 
     def set_page_internals(self, stream: trio.SocketStream, headers: dict):
 
-        print(stream.socket.getsockname())
+        if isinstance(stream, trio.SocketStream):
+            sockname = stream.socket.getsockname()
+            peername = stream.socket.getpeernanme()
+        elif isinstance(stream, trio.SSLStream):
+            sockname = stream.transport_stream.socket.getsockname()
+            peername = stream.transport_stream.socket.getpeername()
+        else:
+            raise TypeError(type(stream))
 
         net_interface_ip = headers.get(
             'Host', "{}:{}".format(
-                stream.socket.getsockname()[0],
-                stream.socket.getpeername()[1])
+                sockname[0],
+                peername[1])
         )
         websocket_timeout_timer_ms = str(1000)
         pending_messages_queue_length = str(1000)
@@ -419,14 +474,15 @@ class Application(object):
             websocket_timeout_timer_ms)
 
     @classmethod
-    async def create(cls, cookie: str, stream: trio.SocketStream, headers: dict):
+    async def create(cls, cookie: str, stream: trio.SocketStream, headers: dict, server=None):
         logging.debug("CREATING Application")
-        application = cls(cookie, stream, headers)
+        print(cls, cookie, stream, headers, server)
+        application = cls(cookie, stream, headers, server)
         return application
 
     async def handle_request(self, stream, method, path, query, data, headers):
         self.logger.debug("handle_request called")
-        self.logger.debug(''.join(map(str, (method, path, query, data))))
+        self.logger.debug(''.join(map(str, (method, path, query, len(data) if data else None))))
 
         if method == "GET":
             return await self.handle_get(
@@ -447,6 +503,8 @@ class Application(object):
         await stream.send_all("\r\n".encode())
 
     async def send(self, stream, data):
+        if data is None:
+            return
         if isinstance(data, str):
             data = data.encode()
         await stream.send_all(data)
@@ -458,6 +516,7 @@ class Application(object):
         self.root.attributes['data-parent-widget'] = str(id(self))
         self.root._parent = self
         self.root.enable_refresh()
+        self._root_changed = True
 
     async def ws_handshake_done(self, ws_instance_to_update):
         async with self.update_lock:
@@ -523,6 +582,7 @@ class Application(object):
             await self.send(
                 stream,
                 encode_text(page_content))
+            self.logger.debug("CONTENT WAS SENT!!!")
 
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
@@ -541,27 +601,27 @@ class Application(object):
             await self.send(stream, content)
 
         elif attr_call:
-            with self.update_lock:
-                param_dict = parse_qs(urlparse(func).query)
-                # parse_qs returns patameters as list, here we take the first element
-                for k in param_dict:
-                    param_dict[k] = param_dict[k][0]
+            # with self.update_lock:
+            param_dict = parse_qs(urlparse(func).query)
+            # parse_qs returns patameters as list, here we take the first element
+            for k in param_dict:
+                param_dict[k] = param_dict[k][0]
 
-                widget, func = attr_call.group(1, 2)
-                try:
-                    content, headers = get_method_by_name(get_method_by_id(widget), func)(**param_dict)
-                    if content is None:
-                        await self.send_response(stream, 503)
-                        return
-                    await self.send_response(stream, 200)
-                except IOError:
-                    self._log.error('attr %s/%s call error' % (widget, func), exc_info=True)
-                    await self.send_response(stream, 404)
-                    return
-                except (TypeError, AttributeError):
-                    self._log.error('attr %s/%s not available' % (widget, func))
+            widget, func = attr_call.group(1, 2)
+            try:
+                content, headers = get_method_by_name(get_method_by_id(widget), func)(**param_dict)
+                if content is None:
                     await self.send_response(stream, 503)
                     return
+                await self.send_response(stream, 200)
+            except IOError:
+                self._log.error('attr %s/%s call error' % (widget, func), exc_info=True)
+                await self.send_response(stream, 404)
+                return
+            except (TypeError, AttributeError):
+                self._log.error('attr %s/%s not available' % (widget, func))
+                await self.send_response(stream, 503)
+                return
 
             for k in headers:
                 await self.send_header(stream, k, headers[k])
@@ -583,6 +643,9 @@ class Application(object):
             #will be updated after idle loop
             self._need_update_flag = True
 
+    def set_need_update(self):
+        self._need_update_flag = True
+
     async def do_gui_update(self):
         """ This method gets called also by Timer, a new thread, and so needs to lock the update
         """
@@ -590,6 +653,7 @@ class Application(object):
             changed_widget_dict = {}
             self.root.repr(changed_widget_dict)
             for widget in changed_widget_dict.keys():
+                print("CHANGED WIDGET!", widget)
                 html = changed_widget_dict[widget]
                 __id = str(widget.identifier)
 
@@ -668,10 +732,27 @@ class Application(object):
         await self.end_headers(stream)
 
     async def handle_post(self, stream, path, query, data, headers):
-        pass
+        file_data = None
+        try:
+            filename = headers['filename']
+            listener_widget = runtimeInstances[headers['listener']]
+            listener_function = headers['listener_function']
+            for field in data.keys():
+                field_item = data[field]
+                if field_item.get('filename', None):
+                    file_data = field_item['data']
+
+                    get_method_by_name(listener_widget, listener_function)(file_data, filename)
+        except KeyError:
+            self._log.error("post: failed", exc_info=True)
+            await self.send_response(stream, 400)
+        await self.send_header(stream, 'Content-type', 'text/plain')
+        await self.end_headers(stream)
+
+        # print(data)
 
     def add_foreground_worker(self, worker):
-        pass
+        self.foreground_workers.append(worker)
 
     async def foreground_handler(self, nursery):
         pass
@@ -712,6 +793,9 @@ class HttpRequestParser(object):
 
     def parse_raw_request(self, raw_request):
         headers = dict()
+
+        raw_request, req_body = raw_request.split(b"\r\n\r\n", 1)
+
         try:
             request_line, headers_alone = raw_request.decode().split('\r\n', 1)
             headers_alone: str
@@ -728,10 +812,23 @@ class HttpRequestParser(object):
             self._headers = headers
 
             # TODO: Handle POST ???
+            # print(self._headers)
+
+            content_len = self._headers.get("Content-Length", '-1')
+            content_len = int(content_len)
+
+            self.logger.debug(f'cl = {content_len}, req_body_len = {len(req_body)}')
+
+            if self._method == "POST":
+                if content_len == len(req_body):
+                    self._data = req_body
+                    return True
+                else:
+                    return False
             return True
 
         except Exception as e:
-            print(e)
+            # print(e)
             self.logger.error(str(e))
             return False
 
@@ -767,10 +864,13 @@ class HttpRequestParser(object):
 
     async def parse_request(self):
         raw_request = b""
+
         while True:
             new_chunk = await self.stream.receive_some(
                 2**16)
             if not new_chunk:
+                break
+            if len(new_chunk) == 0:
                 break
             raw_request += new_chunk
 
@@ -778,6 +878,10 @@ class HttpRequestParser(object):
                 break
 
         # self.logger.debug(raw_request)
+        self.logger.debug(f"req len = {len(raw_request)}")
+
+        if self.method == "POST":
+            self.handle_postpayload()
 
         # print("RH", self.headers)
         # print(self.h_cookie)
@@ -790,6 +894,25 @@ class HttpRequestParser(object):
             return self.application
         else:
             return None
+
+    def handle_postpayload(self):
+
+        data = dict()
+
+        decoder = MultipartDecoder(
+            content_type=self.headers['Content-Type'],
+            content=self.data)
+
+        for index, part in enumerate(decoder.parts):
+            import requests_toolbelt.multipart.decoder
+            part: requests_toolbelt.multipart.decoder.BodyPart
+            # print(part)
+            # print(part.headers)
+            # print("CONTENT", type(part.content), len(part.content))
+            filename = part.headers.get(b'Content-Disposition').decode().replace('"', '').rpartition('filename=')[2]
+            data[index] = dict(filename=filename, data=part.content)
+
+        self._data = data
 
 
 class AuthFactory(object):
@@ -815,15 +938,24 @@ class BasicAuthFactory(AuthFactory):
                 user, password = user_pass_pare.decode().split(":", 1)
                 if user in self.users:
                     user = self.users.get(user, None)
-                    # print(user)
-                    return user
+                    print(user, password)
+                    if user and user['password'] == password:
+                        return user
+                    else:
+                        return None
             except Exception as e:
                 # print("EX", e)
                 return None
 
+    def is_admin(self, username):
+        try:
+            return self.users[username]['is_admin']
+        except:
+            return False
+
     def add_user(self, username=None, password=None, **credentials):
         self.users[username] = credentials
-        self.users[username].update({'username': username})
+        self.users[username].update({'username': username, 'password': password})
 
 
 class AServer(object):
@@ -841,26 +973,45 @@ class AServer(object):
         self.logger = logging.getLogger('remi.aserver.AServer')
         self.logger.setLevel(logging.DEBUG)
 
-    async def connection_handler(self, stream: trio.SocketStream):
+    async def send_eof(self, stream):
+        if isinstance(stream, trio.SocketStream):
+            return await stream.send_eof()
+        elif isinstance(stream, trio.SSLStream):
+            return await stream.aclose()
+
+    async def connection_handler(self, stream):
+        try:
+            return await self._connection_handler(stream)
+        except Exception as e:
+            self.logger.debug(str(e))
+            logging.exception("message")
+
+    async def _connection_handler(self, stream: trio.SocketStream):
+
         self.logger.debug("new connection")
         request_parser: HttpRequestParser = self.cls_http_request_parser(stream)
         application = await request_parser.parse_request()
 
         user = await self.auth_factory.get_user(request_parser.headers)
 
+        self.logger.debug(f"app: {application}")
+        self.logger.debug(f"user: {user}")
+
         if not user:
+            print(request_parser.headers)
 
             response = (
                 "HTTP/1.1 401 OK",
                 "WWW-Authenticate: Basic realm=\"Protected\"",
-                "Content-type: text/html"
-                "\r\n"
-                "not authenticated"
+                "Content-type: text/html",
+                "\r\n",
+                "not authenticated",
             )
-            await stream.send_all(
-                ("\r\n".join(response)).encode()
-            )
-            await stream.send_eof()
+            response = ("\r\n".join(response)).encode()
+            self.logger.debug(response)
+            await stream.send_all(response)
+            self.logger.debug("response was sent!")
+            await self.send_eof(stream)
             return
 
         if not application:
@@ -873,7 +1024,9 @@ class AServer(object):
                 self.cls_app.create(
                     cookie,
                     stream,
-                    headers=request_parser.headers)
+                    headers=request_parser.headers,
+                    server=self
+                )
 
             ClientsManager().add_client(cookie, application)
             response = (
@@ -884,7 +1037,7 @@ class AServer(object):
             await stream.send_all(
                 ("\r\n".join(response)).encode()
             )
-            await stream.send_eof()
+            await self.send_eof(stream)
 
         await application.check_started()
         await application.handle_request(
@@ -896,12 +1049,33 @@ class AServer(object):
             request_parser.headers
         )
 
-    async def run(self):
-        await trio.serve_tcp(self.connection_handler, self.port)
+    async def run(self, key_file=None, cert_file=None):
+        if not key_file and not cert_file:
+            await trio.serve_tcp(self.connection_handler, self.port)
+        else:
+
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            ssl_context.load_cert_chain(cert_file, key_file)
+
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.options |= (
+                    ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | ssl.OP_NO_COMPRESSION
+            )
+            ssl_context.set_ciphers("ECDHE+AESGCM")
+            ssl_context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+            ssl_ctx = ssl_context
+
+            await trio.serve_ssl_over_tcp(
+                self.connection_handler,
+                self.port, ssl_context=ssl_ctx,
+                https_compatible=False)
 
 
-def start(app: AServer):
-    trio.run(app.run)
+def start(app: AServer, key_file=None, cert_file=None):
+    print(app, key_file, cert_file, app.port)
+    trio_asyncio.run(app.run, key_file, cert_file)
 
 
 if __name__ == "__main__":
@@ -912,6 +1086,9 @@ if __name__ == "__main__":
             print("BUTTON WAS CLICKED!!!")
             print(self.input.get_value())
             self.button.set_text(self.input.get_text())
+
+        def on_data(self, w, data, filename):
+            print(f"FILE {filename} was uploaded with size {len(data)}")
 
         async def foreground_handler(self, nursery):
 
@@ -928,12 +1105,20 @@ if __name__ == "__main__":
             container.append(gui.Label("Label1"))
             self.input = input = gui.TextInput()
             self.button = button = gui.Button('click me!')
+            self.fileupload = gui.FileUploader(width="100%")
+            self.fileupload.ondata.do(self.on_data)
+
             button.onclick.do(lambda *args: self.on_button_click())
-            container.append([input, button])
+            container.append([input, button, self.fileupload])
             return container
 
     auth = BasicAuthFactory()
     auth.add_user(username='admin', password='password', is_admin=True)
     logging.basicConfig(level=logging.DEBUG)
     app = AServer(TestApp, HttpRequestParser, 9052, auth)
-    start(app)
+
+    print(len(sys.argv))
+    if len(sys.argv) == 3:
+        start(app, sys.argv[1], sys.argv[2])
+    else:
+        start(app)
