@@ -275,7 +275,7 @@ class WebSocketHandler(object):
         if isinstance(message, str):
             message = message.encode()
 
-        self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
+        # self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
         out.append(129)
         length = len(message)
@@ -454,7 +454,7 @@ class Application(object):
 
         if isinstance(stream, trio.SocketStream):
             sockname = stream.socket.getsockname()
-            peername = stream.socket.getpeernanme()
+            peername = stream.socket.getpeername()
         elif isinstance(stream, trio.SSLStream):
             sockname = stream.transport_stream.socket.getsockname()
             peername = stream.transport_stream.socket.getpeername()
@@ -771,7 +771,7 @@ class Application(object):
         nursery.start_soon(self._idle_loop)
         nursery.start_soon(self.foreground_handler, nursery)
         while self.active:
-            self.logger.debug(f"Application[{str(id(self))}] active...")
+            # self.logger.debug(f"Application[{str(id(self))}] active...")
             await trio.sleep(5)
 
 
@@ -1107,6 +1107,7 @@ if __name__ == "__main__":
             self.button = button = gui.Button('click me!')
             self.fileupload = gui.FileUploader(width="100%")
             self.fileupload.ondata.do(self.on_data)
+            print(self.fileupload)
 
             button.onclick.do(lambda *args: self.on_button_click())
             container.append([input, button, self.fileupload])
