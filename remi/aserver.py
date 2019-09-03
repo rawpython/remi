@@ -304,7 +304,7 @@ class WebSocketHandler(object):
 
                 # parsing messages
                 chunks = message.split('/')
-                self._log.debug('on_message: %s' % chunks[0])
+                # self._log.debug('on_message: %s' % chunks[0])
 
                 if len(chunks) > 3:  # msgtype,widget,function,params
                     # if this is a callback
@@ -319,10 +319,13 @@ class WebSocketHandler(object):
                         # print("widget", widget_id)
                         # print(function_name, param_dict)
 
-                        callback = get_method_by_name(runtimeInstances[widget_id], function_name)
-                        # print(runtimeInstances[widget_id], callback)
-                        if callback is not None:
-                            callback(**param_dict)
+                        try:
+                            callback = get_method_by_name(runtimeInstances[widget_id], function_name)
+                            # print(runtimeInstances[widget_id], callback)
+                            if callback is not None:
+                                callback(**param_dict)
+                        except Exception as e:
+                            pass
 
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
@@ -366,32 +369,36 @@ class Application(object):
         self.build_base_page()
 
     async def _idle_loop(self):
-        while not self._stop_update_flag:
+        async with trio.open_nursery() as nursery:
+            # self.logger.debug(f"ENTERED _idle_loop ")
+            while not self._stop_update_flag:
+                # self.logger.debug(f"self._stop_update_flag = {self._stop_update_flag}")
 
-            while len(self.foreground_workers) > 0:
+                while len(self.foreground_workers) > 0:
 
-                async with trio.open_nursery() as nursery:
                     worker = self.foreground_workers.pop(0)
-                    self.logger.debug("ADDING NEW WORKER!!!")
-                    self.logger.debug(str(worker))
+                    # self.logger.debug("ADDING NEW WORKER!!!")
+                    # self.logger.debug(str(worker))
                     nursery.start_soon(worker, nursery)
 
-            await trio.sleep(
-                self.update_interval)
-            # async with self.update_lock:
-            #     if self._need_update_flag:
-            #         await self.do_gui_update()
-            if self._need_update_flag:
-                # print("NEED UPDATE!!!!")
-                await self.do_gui_update()
-            elif self._root_changed:
-                self.logger.debug("ROOT CHANGED!!!")
-                self._root_changed = False
-                await self._send_spontaneous_ws_msg(
-                    "0" +
-                    self.root.identifier + ',' +
-                    to_websocket(self.page.children['body'].innerHTML({}))
-                )
+                # self.logger.debug(f"sleeping for {self.update_interval}")
+                await trio.sleep(
+                    self.update_interval)
+                # self.logger.debug("wake upping ...")
+                # async with self.update_lock:
+                #     if self._need_update_flag:
+                #         await self.do_gui_update()
+                if self._need_update_flag:
+                    # print("NEED UPDATE!!!!")
+                    await self.do_gui_update()
+                elif self._root_changed:
+                    # self.logger.debug("ROOT CHANGED!!!")
+                    self._root_changed = False
+                    await self._send_spontaneous_ws_msg(
+                        "0" +
+                        self.root.identifier + ',' +
+                        to_websocket(self.page.children['body'].innerHTML({}))
+                    )
 
     def onload(self, emitter):
         """ WebPage Event that occurs on webpage loaded
