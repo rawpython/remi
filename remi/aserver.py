@@ -938,6 +938,8 @@ class BasicAuthFactory(AuthFactory):
         self.users = dict()
 
     async def get_user(self, headers):
+        if not headers:
+            return None
         if 'Authorization' in headers:
             try:
                 encoded_auth: str = headers['Authorization'].rpartition(" ")[2]
