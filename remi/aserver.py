@@ -658,7 +658,10 @@ class Application(object):
         """
         async with self.update_lock:
             changed_widget_dict = {}
-            self.root.repr(changed_widget_dict)
+            try:
+                self.root.repr(changed_widget_dict)
+            except KeyError:
+                pass
             for widget in changed_widget_dict.keys():
                 # print("CHANGED WIDGET!", widget)
                 html = changed_widget_dict[widget]
