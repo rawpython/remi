@@ -894,16 +894,19 @@ class HttpRequestParser(object):
             self.handle_postpayload()
 
         # print("RH", self.headers)
-        # print(self.h_cookie)
+        print("H_COOKIE", self.h_cookie, self.h_Cookie)
         
         if self.h_Cookie:
             application_cookie = self.h_Cookie.split("=")[-1]
             self.logger.debug(f"cookie = {application_cookie}")
             application_cookie = self.h_Cookie.split("=")[-1]
-            self._application = ClientsManager().get(application_cookie)
+            application = ClientsManager().get(application_cookie)
+            if not application:
+                return None
+            self._application = application
             return self.application
         else:
-            return None
+            return "nocookie"
 
     def handle_postpayload(self):
 
@@ -1006,8 +1009,8 @@ class AServer(object):
 
         user = await self.auth_factory.get_user(request_parser.headers)
 
-        # self.logger.debug(f"app: {application}")
-        # self.logger.debug(f"user: {user}")
+        self.logger.debug(f"app: {application}")
+        self.logger.debug(f"user: {user}")
 
         if not user:
             # print(request_parser.headers)
@@ -1032,13 +1035,46 @@ class AServer(object):
 
             cookie = user['username']
 
-            application: Application = await \
-                self.cls_app.create(
-                    cookie,
-                    stream,
-                    headers=request_parser.headers,
-                    server=self
-                )
+            application: Application = ClientsManager().get(cookie)
+            print(f"has application ???", application)
+
+            if not application:
+                application = await \
+                    self.cls_app.create(
+                        cookie,
+                        stream,
+                        headers=request_parser.headers,
+                        server=self
+                    )
+
+            ClientsManager().add_client(cookie, application)
+            response = (
+                "HTTP/1.1 200 OK",
+                f"Set-Cookie: cookie={cookie}",
+                "\r\n"
+            )
+            await stream.send_all(
+                ("\r\n".join(response)).encode()
+            )
+            await self.send_eof(stream)
+
+            return
+        elif application == "nocookie":
+            self.logger.debug(f"user = {user}")
+
+            cookie = user['username']
+
+            application: Application = ClientsManager().get(cookie)
+            print(f"has application ???", application)
+
+            if not application:
+                application = await \
+                    self.cls_app.create(
+                        cookie,
+                        stream,
+                        headers=request_parser.headers,
+                        server=self
+                    )
 
             ClientsManager().add_client(cookie, application)
             response = (
