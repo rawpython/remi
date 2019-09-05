@@ -581,7 +581,12 @@ class Application(object):
             async with self.update_lock:
                 # render the HTML
                 self.set_page_internals(stream, headers)
-                page_content = self.page.repr()
+                try:
+                    page_content = self.page.repr()
+                except Exception as e:
+                    print("Exception occured !!!")
+                    await self.notification_message(title="error ocurred", message=str(e))
+                    return
 
             await self.send(
                 stream,
