@@ -585,7 +585,7 @@ class Application(object):
                     page_content = self.page.repr()
                 except Exception as e:
                     print("Exception occured !!!")
-                    await self.notification_message(title="error ocurred", message=str(e))
+                    await self.notification_message(title="error ocurred", content=str(e))
                     return
 
             await self.send(
