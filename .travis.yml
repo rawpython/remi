@@ -1,19 +1,19 @@
 language: python
 python:
-#   - "2.6"
   - "2.7"
-#   - "3.3"
   - "3.4"
   - "3.5"
-#   - "3.5-dev"  # 3.5 development branch
   - "3.6"
-#   - "3.6-dev"  # 3.6 development branch
-# command to install dependencies
 install:
+  # install dependencies from setup.py
   - pip install -e .
-#   - pip install selenium
-# command to run tests
+  - pip install coverage
+  # - pip install selenium
 script:
-  - python -m unittest discover -t . -s test -v
+  # command to run tests
+  # - python -m unittest discover -t . -s test -v
+  # - python test/
+  - coverage run test/
+  - coverage report
 addons:
   sauce_connect: true
