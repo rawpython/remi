@@ -55,7 +55,11 @@ class TestBODY(unittest.TestCase):
         
 class TestGridBox(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        w = gui.GridBox()
+        l = gui.Label('box_label')
+        w.append(l)
+        self.assertIn('box_label',w.repr())
+        assertValidHTML(w.repr())
         
 class TestHBox(unittest.TestCase):
     def test_init(self):
@@ -75,11 +79,12 @@ class TestVBox(unittest.TestCase):
       
 class TestTabBox(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        w = gui.TabBox()
+        l = gui.Label('testTabBox_label')
+        w.add_tab(l, name='testtabbox', tab_cb=None) 
+        self.assertIn('testTabBox_label',w.repr())
+        assertValidHTML(w.repr())
         
-class Test_MixinTextualWidget(unittest.TestCase):
-    def test_init(self):
-        raise NotImplemented
         
 class TestButton(unittest.TestCase):
     '''
@@ -95,6 +100,9 @@ class TestButton(unittest.TestCase):
         for each_type in invalid_types:
             with self.assertRaises(Exception) as error:
                 gui.Button(each_type)
+
+        assertValidHTML(gui.Button('Testing').innerHTML({}))
+
         
 class TestTextInput(unittest.TestCase):
     def test_init(self):
@@ -114,6 +122,9 @@ class TestLabel(unittest.TestCase):
         for each_type in invalid_types:
             with self.assertRaises(Exception) as error:
                 gui.Label(each_type)
+        
+        assertValidHTML(gui.Label('Testing').innerHTML({}))
+
 
 class TestProgress(unittest.TestCase):
     def test_init(self):
