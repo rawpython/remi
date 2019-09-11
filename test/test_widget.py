@@ -12,7 +12,7 @@ command.
 import unittest
 import remi.gui as gui
 try:
-    from html.parser import HTMLPARSER
+    from html.parser import HTMLParser
 except ImportError:
     from HTMLParser import HTMLParser
 
