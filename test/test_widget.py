@@ -345,37 +345,38 @@ class TestVideoPlayer(unittest.TestCase):
         
 class TestSvg(unittest.TestCase):
     def test_init(self):
-        widget = gui.Svg()
+        widget = gui.Svg(10, 10)
         assertValidHTML(widget.repr())
         
 class TestSvgShape(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgShape()
+        widget = gui.SvgShape(10, 10)
         assertValidHTML(widget.repr())
         
 class TestSvgGroup(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgGroup()
+        widget = gui.SvgGroup(10, 10)
         assertValidHTML(widget.repr())
         
 class TestSvgRectangle(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgRectangle()
+        widget = gui.SvgRectangle(10, 10, 10, 10)
         assertValidHTML(widget.repr())
         
 class TestSvgImage(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgImage()
+        widget = gui.SvgImage(filename='food.png',
+                              x=10, y=10, w=10, h=10)
         assertValidHTML(widget.repr())
         
 class TestSvgCircle(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgCircle()
+        widget = gui.SvgCircle(10, 10, 10)
         assertValidHTML(widget.repr())
         
 class TestSvgLine(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgLine()
+        widget = gui.SvgLine(10, 10, 20, 20)
         assertValidHTML(widget.repr())
         
 class TestSvgPolyline(unittest.TestCase):
@@ -390,12 +391,12 @@ class TestSvgPolygon(unittest.TestCase):
         
 class TestSvgText(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgText()
+        widget = gui.SvgText(x=10, y=10, text='hello world')
         assertValidHTML(widget.repr())
         
 class TestSvgPath(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgPath()
+        widget = gui.SvgPath(path_value='M 10 10 L 20 20 Z')
         assertValidHTML(widget.repr())
 
 
