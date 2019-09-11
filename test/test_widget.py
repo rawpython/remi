@@ -154,175 +154,218 @@ class TestGenericDialog(unittest.TestCase):
         
 class TestInputDialog(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.InputDialog()
+        assertValidHTML(widget.repr())
         
 class TestListView(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.ListView()
+        assertValidHTML(widget.repr())
         
 class TestListItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.ListItem()
+        assertValidHTML(widget.repr())
         
 class TestDropDown(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.DropDown()
+        assertValidHTML(widget.repr())
         
 class TestDropDownItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.DropDownItem()
+        assertValidHTML(widget.repr())
         
 class TestImage(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Image()
+        assertValidHTML(widget.repr())
         
 class TestTable(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Table()
+        assertValidHTML(widget.repr())
         
 class TestTableWidget(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TableWidget()
+        assertValidHTML(widget.repr())
         
 class TestTableRow(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TableRow()
+        assertValidHTML(widget.repr())
         
 class TestTableEditableItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TableEditableItem()
+        assertValidHTML(widget.repr())
         
 class TestTableItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TableItem()
+        assertValidHTML(widget.repr())
         
 class TestTableTitle(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TableTitle()
+        assertValidHTML(widget.repr())
         
 class TestInput(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Input()
+        assertValidHTML(widget.repr())
         
 class TestCheckBoxLabel(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.CheckBoxLabel()
+        assertValidHTML(widget.repr())
         
 class TestCheckBox(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.CheckBox()
+        assertValidHTML(widget.repr())
         
 class TestSpinBox(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SpinBox()
+        assertValidHTML(widget.repr())
         
 class TestSlider(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Slider()
+        assertValidHTML(widget.repr())
         
 class TestColorPicker(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.ColorPicker()
+        assertValidHTML(widget.repr())
         
 class TestDate(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Date()
+        assertValidHTML(widget.repr())
         
 class TestGenericObject(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.GenericObject()
+        assertValidHTML(widget.repr())
         
 class TestFileFolderNavigator(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.FileFolderNavigator()
+        assertValidHTML(widget.repr())
         
 class TestFileFolderItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.FileFolderItem()
+        assertValidHTML(widget.repr())
         
 class TestFileSelectionDialog(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.FileSelectionDialog()
+        assertValidHTML(widget.repr())
         
 class TestMenuBar(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.MenuBar()
+        assertValidHTML(widget.repr())
         
 class TestMenu(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Menu()
+        assertValidHTML(widget.repr())
         
 class TestMenuItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.MenuItem()
+        assertValidHTML(widget.repr())
         
 class TestTreeView(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TreeView()
+        assertValidHTML(widget.repr())
         
 class TestTreeItem(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TreeItem()
+        assertValidHTML(widget.repr())
         
 class TestFileUploader(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.FileUploader()
+        assertValidHTML(widget.repr())
         
 class TestFileDownloader(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.FileDownloader()
+        assertValidHTML(widget.repr())
         
 class TestLink(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Link()
+        assertValidHTML(widget.repr())
         
 class TestVideoPlayer(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.VideoPlayer()
+        assertValidHTML(widget.repr())
         
 class TestSvg(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Svg()
+        assertValidHTML(widget.repr())
         
 class TestSvgShape(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgShape()
+        assertValidHTML(widget.repr())
         
 class TestSvgGroup(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgGroup()
+        assertValidHTML(widget.repr())
         
 class TestSvgRectangle(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgRectangle()
+        assertValidHTML(widget.repr())
         
 class TestSvgImage(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgImage()
+        assertValidHTML(widget.repr())
         
 class TestSvgCircle(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgCircle()
+        assertValidHTML(widget.repr())
         
 class TestSvgLine(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgLine()
+        assertValidHTML(widget.repr())
         
 class TestSvgPolyline(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgPolyline()
+        assertValidHTML(widget.repr())
         
 class TestSvgPolygon(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgPolygon()
+        assertValidHTML(widget.repr())
         
 class TestSvgText(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgText()
+        assertValidHTML(widget.repr())
         
 class TestSvgPath(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.SvgPath()
+        assertValidHTML(widget.repr())
 
 
 if __name__ == '__main__':
