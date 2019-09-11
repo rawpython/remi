@@ -5,10 +5,31 @@ of the widgets
 
 NOTE: the dots above the dash line are missing for the full test
 command.
+
+
 '''
 
 import unittest
 import remi.gui as gui
+try:
+    from html.parser import HTMLPARSER
+except ImportError:
+    from HTMLParser import HTMLParser
+
+class SimpleParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.elements = []
+
+    def handle_starttag(self, tag, attrs):
+        self.elements.append((tag, dict(attrs)))
+
+
+def assertValidHTML(text):
+    h = SimpleParser()
+    h.feed(text) 
+    # throws expections if invalid.
+    return True
 
 
 class TestLabel(unittest.TestCase):
@@ -28,7 +49,8 @@ class TestLabel(unittest.TestCase):
 
 
 class TestButton(unittest.TestCase):
-    '''Unit testing for Button class. Testing for instantiation and
+    '''
+    Unit testing for Button class. Testing for instantiation and
     exceptions.
     '''
     def test_init(self):
@@ -44,7 +66,32 @@ class TestButton(unittest.TestCase):
 
 class Test_VBox(unittest.TestCase):
     def test_init(self):
-        pass
+        w = gui.VBox()
+        l = gui.Label('vbox_label')
+        w.append(l)
+        self.assertIn('vbox_label',w.repr())
+
+
+class TestGenericDialog(unittest.TestCase):
+    '''
+    Unit testing for TestGenericDialog class. Tests the functions within 
+    the GenericDialog class.
+    '''
+    def test_init(self):
+        self.assertIn('title test', gui.GenericDialog(\
+                      title='title test').innerHTML({}))
+
+
+class Test_Progress(unittest.TestCase):
+    def test_init(self):
+        progress = gui.Progress()
+
+        h = SimpleParser()
+        w = gui.Progress(_max=12,value=1)
+        h.feed(w.repr())
+        (tag, attrs) = h.elements[0]
+        self.assertEquals(int(attrs['max']),12)
+        self.assertEquals(int(attrs['value']),1)
 
 
 if __name__ == '__main__':
