@@ -15,5 +15,5 @@ script:
   # - python test/
   - coverage run test/
   - coverage report
-addons:
-  sauce_connect: true
+# addons:
+#   sauce_connect: true
