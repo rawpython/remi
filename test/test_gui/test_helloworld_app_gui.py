@@ -42,8 +42,8 @@ class TestHelloWorld(unittest.TestCase):
         }
 
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
-        self.driver = webdriver.Remote(command_executor=remote_url, desired_capabilities=desired_cap)
-        # self.driver = webdriver.Chrome()
+        # self.driver = webdriver.Remote(command_executor=remote_url, desired_capabilities=desired_cap)
+        self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(30)
 
     # Here is our actual test code. In this test we open the saucedemo app in chrome
@@ -62,7 +62,7 @@ class TestHelloWorld(unittest.TestCase):
 
         time.sleep(1.0)
         button = self.driver.find_element_by_tag_name('button')
-        button.click()
+        button.send_keys('\n')
         time.sleep(1.0)
         body = self.driver.find_elements_by_tag_name('body')[-1]
         print(body.text, "hereee")

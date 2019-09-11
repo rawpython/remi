@@ -98,21 +98,25 @@ class TestButton(unittest.TestCase):
     exceptions.
     '''
     def test_init(self):
-        self.assertEqual(gui.Button(\
-                        'Testing button').innerHTML({}),\
-                        'Testing button')
+        widget = gui.Button('test button')
+        self.assertIn('test button', widget.repr())
+        assertValidHTML(widget.repr())
 
         invalid_types = [{}, [], 123, (4, 5)]
         for each_type in invalid_types:
             with self.assertRaises(Exception) as error:
                 gui.Button(each_type)
 
-        assertValidHTML(gui.Button('Testing').innerHTML({}))
-
         
 class TestTextInput(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.TextInput(single_line=True, hint='test text input')
+        self.assertIn('test text input', widget.repr())
+        assertValidHTML(widget.repr())
+
+        widget = gui.TextInput(single_line=False, hint='test text input')
+        self.assertIn('test text input', widget.repr())
+        assertValidHTML(widget.repr())
     
 class TestLabel(unittest.TestCase):
     '''
@@ -120,41 +124,46 @@ class TestLabel(unittest.TestCase):
     the class. It also test to see if there are any exceptions too.
     '''
     def test_init(self):
-        self.assertEqual(gui.Label(\
-                        'Testing').innerHTML({}),\
-                        'Testing')
+        widget = gui.Label('testing title')
+        self.assertIn('testing title', widget.repr())
+        assertValidHTML(widget.repr())
 
         invalid_types = [{}, [], 123, (4, 5)]
         for each_type in invalid_types:
             with self.assertRaises(Exception) as error:
                 gui.Label(each_type)
-        
-        assertValidHTML(gui.Label('Testing').innerHTML({}))
 
 
 class TestProgress(unittest.TestCase):
     def test_init(self):
-        progress = gui.Progress()
+        widget = gui.Progress(_max=12,value=1)
 
         h = SimpleParser()
-        w = gui.Progress(_max=12,value=1)
-        h.feed(w.repr())
+        h.feed(widget.repr())
         (tag, attrs) = h.elements[0]
         self.assertEquals(int(attrs['max']),12)
         self.assertEquals(int(attrs['value']),1)
 
 class TestGenericDialog(unittest.TestCase):
     '''
-    Unit testing for TestGenericDialog class. Tests the functions within 
+    Unit testing for TestGenericDialog class. Tests the functions widgetithin 
     the GenericDialog class.
     '''
     def test_init(self):
-        self.assertIn('title test', gui.GenericDialog(\
-                      title='title test').innerHTML({}))
+        widget = gui.GenericDialog(title='testing title',
+                                   message='testing message')
+        
+        self.assertIn('testing title', widget.repr())
+        self.assertIn('testing message', widget.repr())
+        assertValidHTML(widget.repr())
         
 class TestInputDialog(unittest.TestCase):
     def test_init(self):
-        widget = gui.InputDialog()
+        widget = gui.InputDialog(title='testing title',
+                                 message='testing message')
+        
+        self.assertIn('testing title', widget.repr())
+        self.assertIn('testing message', widget.repr())
         assertValidHTML(widget.repr())
         
 class TestListView(unittest.TestCase):
@@ -164,22 +173,26 @@ class TestListView(unittest.TestCase):
         
 class TestListItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.ListItem()
+        widget = gui.ListItem('test list item')
+        self.assertIn('test list item',widget.repr())
         assertValidHTML(widget.repr())
         
 class TestDropDown(unittest.TestCase):
     def test_init(self):
         widget = gui.DropDown()
+        widget.append('test drop down')
+        self.assertIn('test drop down', widget.repr())
         assertValidHTML(widget.repr())
         
 class TestDropDownItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.DropDownItem()
+        widget = gui.DropDownItem('test drop down item')
+        self.assertIn('test drop down item', widget.repr())
         assertValidHTML(widget.repr())
         
 class TestImage(unittest.TestCase):
     def test_init(self):
-        widget = gui.Image()
+        widget = gui.Image('http://placekitten.com/200/200')
         assertValidHTML(widget.repr())
         
 class TestTable(unittest.TestCase):
@@ -189,7 +202,7 @@ class TestTable(unittest.TestCase):
         
 class TestTableWidget(unittest.TestCase):
     def test_init(self):
-        widget = gui.TableWidget()
+        widget = gui.TableWidget(2, 3, use_title=True, editable=False)
         assertValidHTML(widget.repr())
         
 class TestTableRow(unittest.TestCase):
@@ -249,17 +262,26 @@ class TestDate(unittest.TestCase):
         
 class TestGenericObject(unittest.TestCase):
     def test_init(self):
-        widget = gui.GenericObject()
+        widget = gui.GenericObject(filename='shockwave.swf')
         assertValidHTML(widget.repr())
+
+        h = SimpleParser()
+        h.feed(widget.repr())
+        (tag, attrs) = h.elements[0]
+        self.assertEquals(attrs['data'], 'shockwave.swf')
+
         
 class TestFileFolderNavigator(unittest.TestCase):
     def test_init(self):
-        widget = gui.FileFolderNavigator()
+        widget = gui.FileFolderNavigator(multiple_selection=True,
+                                         selection_folder='/',
+                                         allow_file_selection=True, 
+                                         allow_folder_selection=True)
         assertValidHTML(widget.repr())
         
 class TestFileFolderItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.FileFolderItem()
+        widget = gui.FileFolderItem('test file folder item')
         assertValidHTML(widget.repr())
         
 class TestFileSelectionDialog(unittest.TestCase):
@@ -279,7 +301,10 @@ class TestMenu(unittest.TestCase):
         
 class TestMenuItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.MenuItem()
+        widget = gui.MenuItem('test menu item')
+        widget.append(gui.MenuItem('2nd menu item'))
+        self.assertIn('test menu item', widget.repr())
+        self.assertIn('2nd menu item', widget.repr())
         assertValidHTML(widget.repr())
         
 class TestTreeView(unittest.TestCase):
@@ -289,7 +314,10 @@ class TestTreeView(unittest.TestCase):
         
 class TestTreeItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.TreeItem()
+        widget = gui.TreeItem('test tree item')
+        widget.append(gui.TreeItem('2nd tree item'))
+        self.assertIn('test tree item', widget.repr())
+        self.assertIn('2nd tree item', widget.repr())
         assertValidHTML(widget.repr())
         
 class TestFileUploader(unittest.TestCase):
@@ -299,17 +327,20 @@ class TestFileUploader(unittest.TestCase):
         
 class TestFileDownloader(unittest.TestCase):
     def test_init(self):
-        widget = gui.FileDownloader()
+        widget = gui.FileDownloader(text='click here',
+                                    filename='food.txt')
         assertValidHTML(widget.repr())
         
 class TestLink(unittest.TestCase):
     def test_init(self):
-        widget = gui.Link()
+        widget = gui.Link(url='http://google.com',
+                          text='google')
         assertValidHTML(widget.repr())
+        self.assertIn('google', widget.repr())
         
 class TestVideoPlayer(unittest.TestCase):
     def test_init(self):
-        widget = gui.VideoPlayer()
+        widget = gui.VideoPlayer('http://example.com/video.mp4')
         assertValidHTML(widget.repr())
         
 class TestSvg(unittest.TestCase):
