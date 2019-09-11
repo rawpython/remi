@@ -35,23 +35,29 @@ def assertValidHTML(text):
 
 class TestTag(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Tag()
+        assertValidHTML(widget.repr())
         
 class TestWidget(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.Widget()
+        assertValidHTML(widget.repr())
         
 class TestHTML(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.HTML()
+        assertValidHTML(widget.repr())
         
 class TestHEAD(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.HEAD(title="my remi app")
+        self.assertIn('my remi app', widget.repr())
+        assertValidHTML(widget.repr())
         
 class TestBODY(unittest.TestCase):
     def test_init(self):
-        raise NotImplemented
+        widget = gui.BODY()
+        assertValidHTML(widget.repr())
         
 class TestGridBox(unittest.TestCase):
     def test_init(self):
