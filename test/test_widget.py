@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-'''TODO: make the instantiation test and exception for the rest
-of the widgets
-
-NOTE: the dots above the dash line are missing for the full test
-command.
-
-
-'''
-
 import unittest
 import remi.gui as gui
 try:
@@ -32,7 +23,6 @@ def assertValidHTML(text):
 
 
 # tests start here
-
 class TestTag(unittest.TestCase):
     def test_init(self):
         widget = gui.Tag()

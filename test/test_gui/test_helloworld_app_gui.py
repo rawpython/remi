@@ -66,7 +66,8 @@ class TestHelloWorld(unittest.TestCase):
         time.sleep(1.0)
         body = self.driver.find_elements_by_tag_name('body')[-1]
         print(body.text, "hereee")
-        self.assertTrue('Hello World!' in body.text)
+        # self.assertTrue('Hello World!' in body.text)
+        self.assertIn('Hello World!', body.text)
         time.sleep(1.0)
 
 
