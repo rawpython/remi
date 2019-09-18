@@ -4,6 +4,8 @@ import unittest
 import remi.gui as gui
 import sys
 import os.path
+import time
+
 try:
     from mock_server_and_request import MockServer, MockRequest
 except ValueError:
@@ -47,10 +49,11 @@ class TestHelloWorldApp(unittest.TestCase):
 
     def tearDown(self):
         del helloworld_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = helloworld_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = helloworld_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestTemplateApp(unittest.TestCase):
@@ -59,10 +62,11 @@ class TestTemplateApp(unittest.TestCase):
 
     def tearDown(self):
         del template_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = template_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = template_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestAppendAndRemoveWidgetsApp(unittest.TestCase):
@@ -71,10 +75,11 @@ class TestAppendAndRemoveWidgetsApp(unittest.TestCase):
 
     def tearDown(self):
         del append_and_remove_widgets_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = append_and_remove_widgets_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = append_and_remove_widgets_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestCloseableApp(unittest.TestCase):
@@ -83,10 +88,11 @@ class TestCloseableApp(unittest.TestCase):
 
     def tearDown(self):
         del closeable_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = closeable_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = closeable_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestGaugeApp(unittest.TestCase):
@@ -95,10 +101,11 @@ class TestGaugeApp(unittest.TestCase):
 
     def tearDown(self):
         del gauge_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = gauge_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = gauge_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestGridLayoutApp(unittest.TestCase):
@@ -107,10 +114,11 @@ class TestGridLayoutApp(unittest.TestCase):
 
     def tearDown(self):
         del grid_layout_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = grid_layout_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = grid_layout_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestLayoutApp(unittest.TestCase):
@@ -119,10 +127,11 @@ class TestLayoutApp(unittest.TestCase):
 
     def tearDown(self):
         del layout_app.untitled.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = layout_app.untitled(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = layout_app.untitled(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestMatplotlibApp(unittest.TestCase):
@@ -131,10 +140,11 @@ class TestMatplotlibApp(unittest.TestCase):
 
     def tearDown(self):
         del matplotlib_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = matplotlib_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = matplotlib_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 @unittest.skip('This was not terminating cleanly')
@@ -144,10 +154,11 @@ class TestMinefieldApp(unittest.TestCase):
 
     def tearDown(self):
         del minefield_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = minefield_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = minefield_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestNotificationApp(unittest.TestCase):
@@ -156,10 +167,11 @@ class TestNotificationApp(unittest.TestCase):
 
     def tearDown(self):
         del notification_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = notification_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = notification_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestOncloseWindowApp(unittest.TestCase):
@@ -168,10 +180,11 @@ class TestOncloseWindowApp(unittest.TestCase):
 
     def tearDown(self):
         del onclose_window_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = onclose_window_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = onclose_window_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestPageInternalsApp(unittest.TestCase):
@@ -180,10 +193,11 @@ class TestPageInternalsApp(unittest.TestCase):
 
     def tearDown(self):
         del page_internals_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = page_internals_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = page_internals_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestPilApp(unittest.TestCase):
@@ -192,10 +206,11 @@ class TestPilApp(unittest.TestCase):
 
     def tearDown(self):
         del pil_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = pil_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = pil_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 
@@ -205,10 +220,11 @@ class TestResizablePanes(unittest.TestCase):
 
     def tearDown(self):
         del resizable_panes.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = resizable_panes.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = resizable_panes.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestResourcesApp(unittest.TestCase):
@@ -219,11 +235,12 @@ class TestResourcesApp(unittest.TestCase):
 
     def tearDown(self):
         del resources_app.MyApp.log_request
+        self.app.on_close()
         os.chdir(self.previouse_dir)
 
     def test_main(self):
-        app = resources_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = resources_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestRootWidgetChangeApp(unittest.TestCase):
@@ -232,10 +249,11 @@ class TestRootWidgetChangeApp(unittest.TestCase):
 
     def tearDown(self):
         del root_widget_change_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = root_widget_change_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = root_widget_change_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 @unittest.skip('This was not terminating cleanly')
@@ -245,10 +263,11 @@ class TestSessionApp(unittest.TestCase):
 
     def tearDown(self):
         del session_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = session_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = session_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestStandaloneApp(unittest.TestCase):
@@ -257,10 +276,11 @@ class TestStandaloneApp(unittest.TestCase):
 
     def tearDown(self):
         del standalone_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = standalone_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = standalone_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 @unittest.skip('This was not terminating cleanly')
@@ -270,10 +290,11 @@ class TestSvgplotApp(unittest.TestCase):
 
     def tearDown(self):
         del svgplot_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = svgplot_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = svgplot_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestTabboxApp(unittest.TestCase):
@@ -282,10 +303,11 @@ class TestTabboxApp(unittest.TestCase):
 
     def tearDown(self):
         del tabbox.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = tabbox.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = tabbox.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestTableWidgetApp(unittest.TestCase):
@@ -294,10 +316,11 @@ class TestTableWidgetApp(unittest.TestCase):
 
     def tearDown(self):
         del table_widget_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = table_widget_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = table_widget_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 class TestTemplateAdvancedApp(unittest.TestCase):
@@ -306,24 +329,27 @@ class TestTemplateAdvancedApp(unittest.TestCase):
 
     def tearDown(self):
         del template_advanced_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = template_advanced_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = template_advanced_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
-@unittest.skip('This was not responding to ctrl C')
 class TestThreadedApp(unittest.TestCase):
     def setUp(self):
         threaded_app.MyApp.log_request = (lambda x,y:None)
 
     def tearDown(self):
         del threaded_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = threaded_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = threaded_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
+        time.sleep(1)
+        self.app.on_button_pressed(None)
 
 class TestWebAPIApp(unittest.TestCase):
     def setUp(self):
@@ -331,10 +357,11 @@ class TestWebAPIApp(unittest.TestCase):
 
     def tearDown(self):
         del webAPI_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = webAPI_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = webAPI_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 @unittest.skip('This was not terminating cleanly')
@@ -344,10 +371,11 @@ class TestWidgetOverviewApp(unittest.TestCase):
 
     def tearDown(self):
         del widgets_overview_app.MyApp.log_request
+        self.app.on_close()
 
     def test_main(self):
-        app = widgets_overview_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
-        root_widget = app.main()
+        self.app = widgets_overview_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
+        root_widget = self.app.main()
         html = root_widget.repr()
 
 
