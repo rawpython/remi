@@ -1,4 +1,5 @@
 language: python
+cache: pip
 python:
   - "2.7"
   - "3.4"
@@ -8,7 +9,13 @@ install:
   # install dependencies from setup.py
   - pip install -e .
   - pip install coverage
+  - pip install flake8
   # - pip install selenium
+before_script:
+  # stop the build if there are Python syntax errors or undefined names
+  - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
+  # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
+  - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
   # command to run tests
   # - python -m unittest discover -t . -s test -v
