@@ -6,13 +6,16 @@ import sys
 import os.path
 import time
 
+
 try:
     from mock_server_and_request import MockServer, MockRequest
+    from html_validator import assertValidHTML
 except ValueError:
     from .mock_server_and_request import MockServer, MockRequest
+    from .html_validator import assertValidHTML
 
 examples_dir = os.path.realpath(os.path.join(os.path.abspath(\
-                                os.path.dirname(__file__)), '../../examples'))
+                                os.path.dirname(__file__)), '../examples'))
 sys.path.append(examples_dir)
 
 import helloworld_app
@@ -55,6 +58,7 @@ class TestHelloWorldApp(unittest.TestCase):
         self.app = helloworld_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestTemplateApp(unittest.TestCase):
     def setUp(self):
@@ -68,6 +72,7 @@ class TestTemplateApp(unittest.TestCase):
         self.app = template_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestAppendAndRemoveWidgetsApp(unittest.TestCase):
     def setUp(self):
@@ -81,6 +86,7 @@ class TestAppendAndRemoveWidgetsApp(unittest.TestCase):
         self.app = append_and_remove_widgets_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestCloseableApp(unittest.TestCase):
     def setUp(self):
@@ -94,6 +100,7 @@ class TestCloseableApp(unittest.TestCase):
         self.app = closeable_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestGaugeApp(unittest.TestCase):
     def setUp(self):
@@ -107,6 +114,7 @@ class TestGaugeApp(unittest.TestCase):
         self.app = gauge_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestGridLayoutApp(unittest.TestCase):
     def setUp(self):
@@ -120,6 +128,7 @@ class TestGridLayoutApp(unittest.TestCase):
         self.app = grid_layout_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestLayoutApp(unittest.TestCase):
     def setUp(self):
@@ -133,6 +142,7 @@ class TestLayoutApp(unittest.TestCase):
         self.app = layout_app.untitled(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestMatplotlibApp(unittest.TestCase):
     def setUp(self):
@@ -146,6 +156,7 @@ class TestMatplotlibApp(unittest.TestCase):
         self.app = matplotlib_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 @unittest.skip('This was not terminating cleanly')
 class TestMinefieldApp(unittest.TestCase):
@@ -160,6 +171,7 @@ class TestMinefieldApp(unittest.TestCase):
         self.app = minefield_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestNotificationApp(unittest.TestCase):
     def setUp(self):
@@ -173,6 +185,7 @@ class TestNotificationApp(unittest.TestCase):
         self.app = notification_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestOncloseWindowApp(unittest.TestCase):
     def setUp(self):
@@ -186,6 +199,7 @@ class TestOncloseWindowApp(unittest.TestCase):
         self.app = onclose_window_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestPageInternalsApp(unittest.TestCase):
     def setUp(self):
@@ -199,6 +213,7 @@ class TestPageInternalsApp(unittest.TestCase):
         self.app = page_internals_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestPilApp(unittest.TestCase):
     def setUp(self):
@@ -212,6 +227,7 @@ class TestPilApp(unittest.TestCase):
         self.app = pil_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 
 class TestResizablePanes(unittest.TestCase):
@@ -226,6 +242,7 @@ class TestResizablePanes(unittest.TestCase):
         self.app = resizable_panes.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestResourcesApp(unittest.TestCase):
     def setUp(self):
@@ -242,6 +259,7 @@ class TestResourcesApp(unittest.TestCase):
         self.app = resources_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestRootWidgetChangeApp(unittest.TestCase):
     def setUp(self):
@@ -255,6 +273,7 @@ class TestRootWidgetChangeApp(unittest.TestCase):
         self.app = root_widget_change_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 @unittest.skip('This was not terminating cleanly')
 class TestSessionApp(unittest.TestCase):
@@ -269,6 +288,7 @@ class TestSessionApp(unittest.TestCase):
         self.app = session_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestStandaloneApp(unittest.TestCase):
     def setUp(self):
@@ -282,6 +302,7 @@ class TestStandaloneApp(unittest.TestCase):
         self.app = standalone_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 @unittest.skip('This was not terminating cleanly')
 class TestSvgplotApp(unittest.TestCase):
@@ -296,6 +317,7 @@ class TestSvgplotApp(unittest.TestCase):
         self.app = svgplot_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestTabboxApp(unittest.TestCase):
     def setUp(self):
@@ -309,6 +331,7 @@ class TestTabboxApp(unittest.TestCase):
         self.app = tabbox.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestTableWidgetApp(unittest.TestCase):
     def setUp(self):
@@ -322,6 +345,7 @@ class TestTableWidgetApp(unittest.TestCase):
         self.app = table_widget_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestTemplateAdvancedApp(unittest.TestCase):
     def setUp(self):
@@ -335,6 +359,7 @@ class TestTemplateAdvancedApp(unittest.TestCase):
         self.app = template_advanced_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 class TestThreadedApp(unittest.TestCase):
     def setUp(self):
@@ -348,6 +373,7 @@ class TestThreadedApp(unittest.TestCase):
         self.app = threaded_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
         time.sleep(1)
         self.app.on_button_pressed(None)
 
@@ -363,6 +389,7 @@ class TestWebAPIApp(unittest.TestCase):
         self.app = webAPI_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 @unittest.skip('This was not terminating cleanly')
 class TestWidgetOverviewApp(unittest.TestCase):
@@ -377,6 +404,7 @@ class TestWidgetOverviewApp(unittest.TestCase):
         self.app = widgets_overview_app.MyApp(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
         html = root_widget.repr()
+        assertValidHTML(html)
 
 
 
