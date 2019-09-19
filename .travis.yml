@@ -16,6 +16,7 @@ install:
   # - pip install selenium
   # install dependencies for specific examples
   - pip install matplotlib
+  - pip install Pillow
 before_script:
   # stop the build if there are Python syntax errors or undefined names
   - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
@@ -26,6 +27,7 @@ script:
   # - python -m unittest discover -t . -s test/ -v
   # - python test/
   - coverage run test/
-  - coverage report
+  - coverage report --include="examples/*,test/*"
+  - coverage report --include="remi/*,editor/*"
 # addons:
 #   sauce_connect: true
