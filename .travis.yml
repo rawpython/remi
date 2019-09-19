@@ -1,16 +1,21 @@
 language: python
 cache: pip
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+matrix:
+  include:
+    - python: 2.7
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+      dist: xenial    # required for Python >= 3.7 (travis-ci/travis-ci#9069)
 install:
-  # install dependencies from setup.py
+  # install dependencies from setup.py (there are none for remi)
   - pip install -e .
-  - pip install coverage
+  # install optional packages (for linting, coverage, browser control)
   - pip install flake8
+  - pip install coverage
   # - pip install selenium
+  # install dependencies for specific examples
+  - pip install matplotlib
 before_script:
   # stop the build if there are Python syntax errors or undefined names
   - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
@@ -18,7 +23,7 @@ before_script:
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
   # command to run tests
-  # - python -m unittest discover -t . -s test -v
+  # - python -m unittest discover -t . -s test/ -v
   # - python test/
   - coverage run test/
   - coverage report
