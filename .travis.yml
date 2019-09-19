@@ -23,10 +23,9 @@ before_script:
   # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
-  # command to run tests
-  # - python -m unittest discover -t . -s test/ -v
-  # - python test/
+  # this "coverage" command is equivalent to running `python test/`
   - coverage run test/
+after_script:
   - coverage report --include="examples/*,test/*"
   - coverage report --include="remi/*,editor/*"
 # addons:
