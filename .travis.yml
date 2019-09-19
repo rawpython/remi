@@ -1,0 +1,24 @@
+language: python
+cache: pip
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+install:
+  # install dependencies from setup.py (there are none for remi)
+  - pip install -e .
+  # install optional packages (for linting, coverage, browser control)
+  # and dependencies of example apps being tested
+  - pip install flake8 coverage matplotlib Pillow # selenium
+before_script:
+  # stop the build if there are Python syntax errors or undefined names
+  - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
+  # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
+  - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+script:
+  # this "coverage" command is equivalent to running `python test/`
+  - coverage run test/
+after_script:
+  - coverage report --include="examples/*,test/*"
+  - coverage report --include="remi/*,editor/*"

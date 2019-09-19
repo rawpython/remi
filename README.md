@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/Bethany-1/remi.svg?branch=master)](https://travis-ci.com/Bethany-1/remi)
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png" width="430">
