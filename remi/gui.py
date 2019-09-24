@@ -1511,12 +1511,16 @@ class GridBox(Widget):
         row_count = 0
         row_defs = collections.OrderedDict()
         row_max_width = 0
+
+        row_sizes = []
         for ri in range(0,len(rows)):
             if ri > 0:
                 if rows[ri] == rows[ri-1]:
+                    row_sizes[row_count-1] = row_sizes[row_count-1] + 1 #increment identical row count
                     continue
 
             row_defs[row_count] = rows[ri].replace(" ","").split("|")
+            row_sizes.append(1)
             #placeholder . where cell is empty
             row_defs[row_count] = ['.' if elem=='' else elem for elem in row_defs[row_count]]
             row_count = row_count + 1
@@ -1529,9 +1533,8 @@ class GridBox(Widget):
 
         columns[row_max_width] = row_max_width
         
-        row_sizes = []
-        for r in row_defs.keys():
-            row_sizes.append(float(rows.count(rows[r]))/float(len(rows))*100.0)
+        for r in range(0,len(row_sizes)):
+            row_sizes[r] = float(row_sizes[r])/float(len(rows))*100.0
         
         column_sizes = []
         prev_size = 0.0
