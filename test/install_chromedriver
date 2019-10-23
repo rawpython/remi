@@ -2,7 +2,7 @@
 
 cd /tmp
 
-set +x
+set -x
 
 VERSION_1="$(google-chrome-stable --version| sed -n 's/Google Chrome \([0-9]*\).*/\1/p')"
 URL_1="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION_1"
