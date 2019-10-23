@@ -22,23 +22,32 @@ except ImportError:
 class TestAppendAndRemoveWidgetApp(unittest.TestCase):
 
     def setUp(self):
-        self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False)
+        # multiple_instance is needed if you want to run 2 remi process at the same time
+        self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False, multiple_instance=True)
+        print("MyApp is:")
+        print(MyApp)
         self.server.start()
+        print("Server is: " + str(self.server))
         # the desired_capabilities parameter tells us which browsers and OS to spin up.
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
         # self.driver = webdriver.Remote(command_executor=remote_url, desired_capabilities=desired_cap)
-        self.options = webdriver.ChromeOptions()
-        self.options.headless = True
-        self.driver = webdriver.Chrome(chrome_options=self.options)
+        # self.options = webdriver.ChromeOptions()
+        # self.options.headless = True
+        # self.driver = webdriver.Chrome(chrome_options=self.options)
+        self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(30)
+        print("Driver app2: " + str(self.driver))
+
 
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
+        print("MyApp address: " + str(self.server.address))
         body = self.driver.find_element_by_tag_name('body')
         self.assertIn('buttons', body.text)
 
     def test_button_press(self):
         self.driver.get(self.server.address)
+        print("MyApp address: " + str(self.server.address))
         add_button = self.driver.find_elements_by_tag_name('button')[0]
         remove_button = self.driver.find_elements_by_tag_name('button')[1]
         empty_button = self.driver.find_elements_by_tag_name('button')[2]
@@ -56,8 +65,10 @@ class TestAppendAndRemoveWidgetApp(unittest.TestCase):
     def tearDown(self):
         # This is where you tell Sauce Labs to stop running tests on your behalf.
         # It's important so that you aren't billed after your test finishes.
+        print("tearing down app")
         self.driver.quit()
         self.server.stop()
 
+
 if __name__ == '__main__':
-    unittest.main(buffer=True)
+    unittest.main(buffer=False)

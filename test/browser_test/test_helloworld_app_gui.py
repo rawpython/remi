@@ -23,15 +23,18 @@ except ImportError:
 class TestHelloWorld(unittest.TestCase):
 
     def setUp(self):
-        self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False)
+        self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False, multiple_instance=True)
+        print("MyApp2 is:")
         self.server.start()
-        self.options = webdriver.ChromeOptions()
-        self.options.headless = True
-        self.driver = webdriver.Chrome(chrome_options=self.options)
+        # self.options = webdriver.ChromeOptions()
+        # self.options.headless = True
+        # self.driver = webdriver.Chrome(chrome_options=self.options)
+        self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(30)
 
     def test_should_open_chrome(self):
         self.driver.get(self.server.address)
+        print("MyApp2 address: " + str(self.server.address))
         button = self.driver.find_element_by_tag_name('button')
         self.assertTrue('Press me!' in button.text)
 
