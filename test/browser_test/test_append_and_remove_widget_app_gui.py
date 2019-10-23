@@ -31,7 +31,7 @@ def define_test_suite(browser_name=None):
     class TestAppendAndRemoveWidgetApp(unittest.TestCase):
 
         def setUp(self):
-            self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False)
+            self.server = remi.Server(MyApp, start=False, address='0.0.0.0', start_browser=False, multiple_instance=True)
             self.server.start()
             self.options = webdriver.ChromeOptions()
             self.options.headless = True
@@ -71,4 +71,4 @@ TestHelloWorldChrome = define_test_suite(browser_name="Chrome")
 TestHelloWorldFirefox = define_test_suite(browser_name="Firefox")
 
 if __name__ == '__main__':
-    unittest.main(buffer=True)
+    unittest.main(buffer=False, verbosity=2)

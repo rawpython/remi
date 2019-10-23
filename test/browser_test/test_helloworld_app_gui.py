@@ -29,14 +29,8 @@ def define_test_suite(browser_name=None):
     class TestHelloWorld(unittest.TestCase):
 
         def setUp(self):
-            self.server = remi.Server(MyApp, start=False, address='0.0.0.0',start_browser=False)
+            self.server = remi.Server(MyApp, start=False, address='0.0.0.0', start_browser=False, multiple_instance=True)
             self.server.start()
-
-
-            self.options = OptionsClass()
-            self.options.headless = True
-            self.driver = DriverClass(chrome_options=self.options)
-            self.driver.implicitly_wait(30)
 
         def test_should_open_chrome(self):
             self.driver.get(self.server.address)
