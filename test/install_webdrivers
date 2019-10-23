@@ -4,9 +4,14 @@ cd /tmp
 
 set -x
 
+wget "https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
+tar xvf "geckodriver-v0.26.0-linux64.tar.gz"
+mv geckodriver /usr/local/bin/
+
 VERSION_1="$(google-chrome-stable --version| sed -n 's/Google Chrome \([0-9]*\).*/\1/p')"
 URL_1="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION_1"
 VERSION_2="$(curl -s $URL_1)"
 URL_2="https://chromedriver.storage.googleapis.com/${VERSION_2}/chromedriver_linux64.zip"
+wget "$URL2"
 unzip chromedriver_linux64.zip
 mv chromedriver /usr/local/bin/
