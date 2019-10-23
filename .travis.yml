@@ -5,6 +5,13 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+addons:
+  chrome: stable
+  firefox: latest
+env:
+  global:
+    - MOZ_HEADLESS=1
+addons:
 install:
   # install dependencies from setup.py (there are none for remi)
   - pip install -e .
