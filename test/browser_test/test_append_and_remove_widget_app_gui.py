@@ -33,9 +33,9 @@ def define_test_suite(browser_name=None):
         def setUp(self):
             self.server = remi.Server(MyApp, start=False, address='0.0.0.0', start_browser=False, multiple_instance=True)
             self.server.start()
-            self.options = webdriver.ChromeOptions()
+            self.options = OptionsClass()
             self.options.headless = True
-            self.driver = webdriver.Chrome(chrome_options=self.options)
+            self.driver = DriverClass(options=self.options)
             self.driver.implicitly_wait(30)
 
         def test_should_open_chrome(self):
