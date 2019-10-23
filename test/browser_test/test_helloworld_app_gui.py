@@ -8,67 +8,61 @@ examples_dir = os.path.realpath(os.path.join(os.path.abspath(\
 sys.path.append(examples_dir)
 from helloworld_app import MyApp
 
-def load_webdriver(browser_name):
-    try:
-        from selenium import webdriver
-    except ImportError:
-        webdriver = None
+try:
+    from selenium import webdriver
+except ImportError:
+    webdriver = None
 
-    try:
-        DriverClass = webdriver.get(browser_name)
-        OptionsClass = webdriver.get(str(browser_name)+"Options")
-        DriverClass()
-        return (webdriver, DriverClass, OptionsClass)
-    except:
-        return (webdriver, None, None)
-
-def define_test_suite(browser_name=None):
-    (webdriver, DriverClass, OptionsClass) = load_webdriver(browser_name)
-    @unittest.skipIf(webdriver is None, "Selenium is not installed.")
-    @unittest.skipIf(DriverClass is None, "{} webdriver is not installed.".format(browser_name))
-    class TestHelloWorld(unittest.TestCase):
-
-        def setUp(self):
-            self.server = remi.Server(MyApp, start=False, address='0.0.0.0', start_browser=False, multiple_instance=True)
-            self.server.start()
-            self.options = OptionsClass()
+class TestHelloWorld(unittest.TestCase):
+    def setUp(self):
+        try:
+            self.options = self.OptionsClass()
             self.options.headless = True
-            self.driver = DriverClass(options=self.options)
+            self.driver = self.DriverClass(options=self.options)
             self.driver.implicitly_wait(30)
-            
-        def test_should_open_chrome(self):
-            self.driver.get(self.server.address)
-            button = self.driver.find_element_by_tag_name('button')
-            self.assertTrue('Press me!' in button.text)
+        except:
+            self.skipTest("Selenium webdriver is not installed")
+        self.server = remi.Server(MyApp, start=False, address='0.0.0.0', start_browser=False, multiple_instance=True)
+        self.server.start()
 
-        def test_button_press(self):
-            self.driver.get(self.server.address)
-            body = self.driver.find_element_by_tag_name('body')
-            # self.assertFalse('Hello World!' in body.text)
-            self.assertNotIn('Hello World!', body.text)
-            # print(body.text, "hereee")
+    def test_should_open_browser(self):
+        self.driver.get(self.server.address)
+        button = self.driver.find_element_by_tag_name('button')
+        self.assertTrue('Press me!' in button.text)
 
-            time.sleep(1.0)
-            button = self.driver.find_element_by_tag_name('button')
-            button.send_keys('\n')
-            time.sleep(1.0)
-            body = self.driver.find_elements_by_tag_name('body')[-1]
-            # print(body.text, "hereee")
-            # self.assertTrue('Hello World!' in body.text)
-            self.assertIn('Hello World!', body.text)
-            time.sleep(1.0)
+    def test_button_press(self):
+        self.driver.get(self.server.address)
+        body = self.driver.find_element_by_tag_name('body')
+        # self.assertFalse('Hello World!' in body.text)
+        self.assertNotIn('Hello World!', body.text)
+        # print(body.text, "hereee")
 
+        time.sleep(1.0)
+        button = self.driver.find_element_by_tag_name('button')
+        # button.send_keys('\n')
+        button.click()
+        time.sleep(1.0)
+        body = self.driver.find_elements_by_tag_name('body')[-1]
+        # print(body.text, "hereee")
+        # self.assertTrue('Hello World!' in body.text)
+        self.assertIn('Hello World!', body.text)
+        time.sleep(1.0)
 
-        # Here we send the results to Sauce Labs and tear down our driver session
-        def tearDown(self):
-            # It's important so that you aren't billed after your test finishes.
-            self.driver.quit()
-            self.server.stop()
+    def tearDown(self):
+        self.driver.quit()
+        self.server.stop()
 
-    return TestHelloWorld
+class TestHelloWorldChrome(TestHelloWorld):
+    DriverClass = getattr(webdriver, "Chrome", None)
+    OptionsClass = getattr(webdriver, "ChromeOptions", None)
 
-TestHelloWorldChrome = define_test_suite(browser_name="Chrome")
-TestHelloWorldFirefox = define_test_suite(browser_name="Firefox")
+class TestHelloWorldFirefox(TestHelloWorld):
+    DriverClass = getattr(webdriver, "Firefox", None)
+    OptionsClass = getattr(webdriver, "FirefoxOptions", None)
+
+# remove the abstract base class from test discovery
+del TestHelloWorld
+
 
 if __name__ == '__main__':
     unittest.main(buffer=True, verbosity=2)
