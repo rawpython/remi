@@ -13,9 +13,8 @@ env:
     - MOZ_HEADLESS=1
 addons:
 install:
-  - google-chrome-stable --version
-  - firefox --version
   - ./test/install_webdrivers
+  - export PATH="$HOME/.local/bin:$PATH"
   # install dependencies from setup.py (there are none for remi)
   - pip install -e .
   # install optional packages (for linting, coverage, browser control)
