@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 
-cd $TMPDIR
+cd /tmp
 
 set +x
 
