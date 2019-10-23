@@ -1,0 +1,12 @@
+#!/bin/sh -eu
+
+cd $TMPDIR
+
+set +x
+
+VERSION_1="$(google-chrome-stable --version| sed -n 's/Google Chrome \([0-9]*\).*/\1/p')"
+URL_1="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION_1"
+VERSION_2="$(curl -s $URL_1)"
+URL_2="https://chromedriver.storage.googleapis.com/${VERSION_2}/chromedriver_linux64.zip"
+unzip chromedriver_linux64.zip
+mv chromedriver /usr/local/bin/
