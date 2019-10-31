@@ -209,11 +209,7 @@ class ResizeHelper(gui.Widget, DraggableItem):
         self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
-        if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
-                                gui.ListView, gui.DropDown, gui.Label, gui.Image, gui.Link,
-                                gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
-                                gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
-                                gui.Svg, gui.VideoPlayer, gui.Progress]:
+        if issubclass(refWidget.__class__, gui.Widget):
             DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
@@ -250,11 +246,7 @@ class DragHelper(gui.Widget, DraggableItem):
         self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
-        if type(refWidget) in [gui.Widget, gui.Button, gui.GridBox, gui.VBox, gui.HBox, 
-                                gui.ListView, gui.DropDown, gui.Label, gui.Image, gui.Link,
-                                gui.TableWidget, gui.TextInput, gui.CheckBox, gui.CheckBox, 
-                                gui.CheckBoxLabel, gui.Slider, gui.SpinBox, gui.ColorPicker,
-                                gui.Svg, gui.VideoPlayer, gui.Progress]:
+        if issubclass(refWidget.__class__, gui.Widget):
             DraggableItem.setup(self, refWidget, newParent)
 
     def on_drag(self, emitter, x, y):
@@ -411,12 +403,13 @@ class Project(gui.Widget):
                     listenerPrototype = setOnEventListenerFunc._event_info['prototype']
                     listener = getattr(widget, setOnEventListenerFuncname).callback_copy.__self__
 
-                    listenerFunctionName = setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
+                    listenerFunctionName = getattr(widget, setOnEventListenerFuncname).callback_copy.__name__ #setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
                                                                                 'parameters': listenerPrototype}
-                    #override, if already implemented, we use this code
-                    if hasattr(listener, listenerFunctionName):
+
+                    #override, if already implemented, we use this code, unless it is a fakeListenerFunction
+                    if hasattr(listener, listenerFunctionName) and getattr(listener, listenerFunctionName).__name__!=editor_widgets.fakeListenerFunc.__name__:
                         listenerClassFunction = inspect.getsource(getattr(listener, listenerFunctionName))
                                                                             
                     self.pending_listener_registration.append({'done':False,
