@@ -96,7 +96,8 @@ class MyApp(App):
     def display_time(self):
         self.lblTime.set_text('Play time: ' + str(self.time_count))
         self.time_count += 1
-        threading.Timer(1, self.display_time).start()
+        if not self.stop_flag:
+            threading.Timer(1, self.display_time).start()
 
     def main(self):
         # the arguments are    width - height - layoutOrientationOrizontal
@@ -153,9 +154,14 @@ class MyApp(App):
 
         self.new_game(self)
 
+        self.stop_flag = False
         self.display_time()
         # returning the root widget
         return self.main_container
+
+    def on_close(self):
+        self.stop_flag = True
+        super(MyApp, self).on_close()
 
     def coord_in_map(self, x, y, w=None, h=None):
         w = len(self.mine_matrix[0]) if w is None else w
