@@ -179,6 +179,8 @@ class MyApp(App):
 
         self.wid.append(self.svgplot)
 
+        self.stop_flag = False
+
         self.count = 0
         self.add_data()
 
@@ -188,6 +190,10 @@ class MyApp(App):
 
         # returning the root widget
         return self.wid
+
+    def on_close(self):
+        self.stop_flag = True
+        super(MyApp, self).on_close()
 
     def zoom_out(self, emitter):
         scale_factor_x = 0.5
@@ -204,7 +210,8 @@ class MyApp(App):
             self.plotData3.add_coord(self.count, math.sin(self.count / 180.0 * math.pi))
             self.svgplot.render()
             self.count += 10
-            Timer(0.1, self.add_data).start()
+            if not self.stop_flag:
+                Timer(0.1, self.add_data).start()
 
 
 if __name__ == "__main__":

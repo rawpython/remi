@@ -136,7 +136,9 @@ class LoginManager(gui.Tag, gui.EventSource):
     
     def timer_request_cookies(self):
         self.cookieInterface.request_cookies()
-        threading.Timer(self.session_timeout_seconds/10.0, self.timer_request_cookies).start()
+        self.cookie_timer = threading.Timer(self.session_timeout_seconds/10.0, self.timer_request_cookies)
+        self.cookie_timer.daemon = True
+        self.cookie_timer.start()
 
     @gui.decorate_event
     def on_session_expired(self):
@@ -158,6 +160,7 @@ class LoginManager(gui.Tag, gui.EventSource):
         if self.timeout_timer:
             self.timeout_timer.cancel()
         self.timeout_timer = threading.Timer(self.session_timeout_seconds, self.on_session_expired)
+        self.timeout_timer.daemon = True
         self.expired = False
         self.timeout_timer.start()
 

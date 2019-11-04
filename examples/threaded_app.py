@@ -57,6 +57,9 @@ class MyApp(App):
     def on_button_pressed(self, emitter):
         self.thread_alive_flag = False
 
+    def on_close(self):
+        self.thread_alive_flag = False
+        super(MyApp, self).on_close()
         
 if __name__ == "__main__":
     start(MyApp, debug=True, address='0.0.0.0', port=0, update_interval = 0.1)
