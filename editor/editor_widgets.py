@@ -116,24 +116,24 @@ class ToolBar(gui.Widget):
         self.append(icon)
 
 
-class SignalConnection(gui.Widget):
+class SignalConnection(gui.HBox):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
 
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        self.style.update({'overflow':'visible', 'height':'24px', 'display':'block', 'outline':'1px solid lightgray'})
+        self.style.update({'overflow':'visible', 'height':'24px', 'outline':'1px solid lightgray'})
         self.label = gui.Label(eventConnectionFuncName, width='32%')
         self.label.style.update({'float':'left', 'font-size':'10px', 'overflow':'hidden', 'outline':'1px solid lightgray'})
 
         self.dropdownListeners = gui.DropDown(width='32%', height='100%')
         self.dropdownListeners.onchange.do(self.on_listener_selection)
+        self.dropdownListeners.attributes['title'] = "The listener who will receive the event"
 
         self.dropdownMethods = gui.DropDown(width='32%', height='100%')
         self.dropdownMethods.onchange.do(self.on_connection)
+        self.dropdownMethods.attributes['title'] = """The listener's method who will receive the event. \
+        A custom method is selected by default. You can select another method, but you should check the method parameters."""
 
         self.append([self.label, self.dropdownListeners, self.dropdownMethods])
-        self.dropdownMethods.style['float'] = 'right'
-        self.dropdownListeners.style['float'] = 'left'
 
         self.eventConnectionFunc = eventConnectionFunc
         self.eventConnectionFuncName = eventConnectionFuncName
