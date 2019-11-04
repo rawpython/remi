@@ -209,8 +209,11 @@ class ResizeHelper(gui.Widget, DraggableItem):
         self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
-        if issubclass(refWidget.__class__, gui.Widget):
+        self.style['display'] = 'none'
+        if issubclass(refWidget.__class__, gui.Widget) and 'left' in refWidget.style and 'top' in refWidget.style and \
+            'width' in refWidget.style and 'height' in refWidget.style:
             DraggableItem.setup(self, refWidget, newParent)
+            self.style['display'] = 'block'
 
     def on_drag(self, emitter, x, y):
         if self.active:
@@ -246,8 +249,10 @@ class DragHelper(gui.Widget, DraggableItem):
         self.onmousedown.do(self.start_drag)
 
     def setup(self, refWidget, newParent):
-        if issubclass(refWidget.__class__, gui.Widget):
+        self.style['display'] = 'none'
+        if issubclass(refWidget.__class__, gui.Widget) and 'left' in refWidget.style and 'top' in refWidget.style:
             DraggableItem.setup(self, refWidget, newParent)
+            self.style['display'] = 'block'
 
     def on_drag(self, emitter, x, y):
         if self.active:
