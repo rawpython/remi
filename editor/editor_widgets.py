@@ -152,21 +152,25 @@ class SignalConnection(gui.Widget):
             self.dropdownMethods.set_value(eventConnectionFunc.callback_copy.__name__)
 
     def on_listener_selection(self, widget, dropDownValue):
+        self.dropdownMethods.empty()
         if self.dropdownListeners.get_value()=='None':
-            self.eventConnectionFunc.do(None)
+            #the listener is canceled when the user selects None
+            back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
+            getattr(self.refWidget, self.eventConnectionFuncName).do(None)
+            delattr(getattr(self.refWidget, self.eventConnectionFuncName),"callback_copy")# = getattr(self.refWidget, self.eventConnectionFuncName).callback
+            getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
         else:
             listener = self.dropdownListeners._selected_item.listenerInstance
 
-            self.dropdownMethods.empty()
-
+            l = []
             func_members = inspect.getmembers(listener, inspect.ismethod)
             for (name, value) in func_members:
                 if name not in ['__init__', 'main', 'idle', 'construct_ui']:
                     ddi = gui.DropDownItem(name)
                     ddi.listenerInstance = listener
                     ddi.listenerFunction = value
-                    self.dropdownMethods.append(ddi)
-
+                    l.append(ddi)
+            
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
             custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
@@ -176,20 +180,22 @@ class SignalConnection(gui.Widget):
             ddi.listenerInstance = listener
             ddi.listenerFunction = getattr(listener, custom_listener_name)
             ddi.style['color'] = "green"
+            ddi.style['font-weight'] = "bolder"
             ddi.attributes['title'] = "automatically generated method"
             self.dropdownMethods.append(ddi)
 
+            self.dropdownMethods.append(l)
+            #force the connection
+            self.on_connection(None, None)
+
     def on_connection(self, widget, dropDownValue):
-        if self.dropdownMethods.get_value()=='None':
-            self.eventConnectionFunc.do(None)
-        else:
-            listener = self.dropdownMethods._selected_item.listenerInstance
-            listener.attributes['editor_newclass'] = "True"
-            print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.attributes['editor_varname'])
-            back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
-            getattr(self.refWidget, self.eventConnectionFuncName).do(self.dropdownMethods._selected_item.listenerFunction)
-            getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
-            getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
+        listener = self.dropdownMethods._selected_item.listenerInstance
+        listener.attributes['editor_newclass'] = "True"
+        print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.attributes['editor_varname'])
+        back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
+        getattr(self.refWidget, self.eventConnectionFuncName).do(self.dropdownMethods._selected_item.listenerFunction)
+        getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
+        getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
 
 
 def fakeListenerFunc(self,*args):
