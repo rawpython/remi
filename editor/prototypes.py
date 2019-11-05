@@ -5,8 +5,7 @@ internally_used_attrbutes = ('id','editor_newclass','editor_constructor','class'
 proto_code_program = """
 # -*- coding: utf-8 -*-
 
-import remi.gui as gui
-from remi.gui import *
+%(imports)s
 from remi import start, App
 
 %(code_classes)s
@@ -25,9 +24,9 @@ if __name__ == "__main__":
 #typical widget class prototype
 proto_code_class = """
 class %(classname)s( %(superclassname)s ):
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         #DON'T MAKE CHANGES HERE, THIS METHOD GETS OVERWRITTEN WHEN SAVING IN THE EDITOR
-        super( %(classname)s, self ).__init__(*args)
+        super( %(classname)s, self ).__init__(*args, **kwargs)
         %(nested_code)s
 """
 

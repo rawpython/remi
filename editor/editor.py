@@ -488,8 +488,14 @@ class Project(gui.Widget):
             code_listener_setting = ''
             code_classes += code_class
         
+        modules_to_import = []
+        for w in self.known_project_children:
+            if not w.__module__ in modules_to_import and w.__module__!="__main__":
+                modules_to_import.append(w.__module__)
+
         code_classes += main_code_class
-        compiled_code = prototypes.proto_code_program%{ 'code_classes':code_classes,
+        compiled_code = prototypes.proto_code_program%{ 'imports':'\n'.join(["from " + modulename + " import *" for modulename in modules_to_import]),
+                                                        'code_classes':code_classes,
                                                         'classname':configuration.configDict[configuration.KEY_PRJ_NAME],
                                                         'configuration':configuration.configDict
                                                        }
