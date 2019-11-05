@@ -1,3 +1,4 @@
+# Selenium 3.14+ doesn't enable certificate checking
 import unittest
 import time
 import sys
@@ -6,14 +7,15 @@ import remi
 examples_dir = os.path.realpath(os.path.join(os.path.abspath(\
                                 os.path.dirname(__file__)), '../../examples'))
 sys.path.append(examples_dir)
-from helloworld_app import MyApp
+from append_and_remove_widgets_app import MyApp
 
 try:
     from selenium import webdriver
 except ImportError:
     webdriver = None
 
-class TestHelloWorld(unittest.TestCase):
+class TestAppendAndRemoveWidgetApp(unittest.TestCase):
+
     def setUp(self):
         try:
             self.options = self.OptionsClass()
@@ -27,42 +29,38 @@ class TestHelloWorld(unittest.TestCase):
 
     def test_should_open_browser(self):
         self.driver.get(self.server.address)
-        button = self.driver.find_element_by_tag_name('button')
-        self.assertTrue('Press me!' in button.text)
+        body = self.driver.find_element_by_tag_name('body')
+        self.assertIn('buttons', body.text)
 
     def test_button_press(self):
         self.driver.get(self.server.address)
-        body = self.driver.find_element_by_tag_name('body')
-        # self.assertFalse('Hello World!' in body.text)
-        self.assertNotIn('Hello World!', body.text)
-        # print(body.text, "hereee")
+        add_button = self.driver.find_elements_by_tag_name('button')[0]
+        remove_button = self.driver.find_elements_by_tag_name('button')[1]
+        empty_button = self.driver.find_elements_by_tag_name('button')[2]
 
         time.sleep(1.0)
-        button = self.driver.find_element_by_tag_name('button')
-        # button.send_keys('\n')
-        button.click()
+        for count in range(0,2):
+            add_button.send_keys('\n')
+
         time.sleep(1.0)
-        body = self.driver.find_elements_by_tag_name('body')[-1]
-        # print(body.text, "hereee")
-        # self.assertTrue('Hello World!' in body.text)
-        self.assertIn('Hello World!', body.text)
-        time.sleep(1.0)
+        remove_button.send_keys('\n')
+        # now we need to know that the right number of boxes have been
+        # generated
 
     def tearDown(self):
         self.driver.quit()
         self.server.stop()
 
-class TestHelloWorldChrome(TestHelloWorld):
+class TestAppendAndRemoveWidgetAppChrome(TestAppendAndRemoveWidgetApp):
     DriverClass = getattr(webdriver, "Chrome", None)
     OptionsClass = getattr(webdriver, "ChromeOptions", None)
 
-class TestHelloWorldFirefox(TestHelloWorld):
+class TestAppendAndRemoveWidgetAppFirefox(TestAppendAndRemoveWidgetApp):
     DriverClass = getattr(webdriver, "Firefox", None)
     OptionsClass = getattr(webdriver, "FirefoxOptions", None)
 
 # remove the abstract base class from test discovery
-del TestHelloWorld
-
+del TestAppendAndRemoveWidgetApp
 
 if __name__ == '__main__':
-    unittest.main(buffer=True, verbosity=2)
+    unittest.main(buffer=False, verbosity=2)

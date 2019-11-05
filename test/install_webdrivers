@@ -1,0 +1,19 @@
+#!/bin/sh -eu
+
+cd /tmp
+
+set -x
+
+mkdir -p ~/.local/bin/
+
+wget -q "https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
+tar xvf "geckodriver-v0.26.0-linux64.tar.gz"
+mv geckodriver ~/.local/bin/
+
+VERSION_1="$(google-chrome-stable --version| sed -n 's/Google Chrome \([0-9]*\).*/\1/p')"
+URL_1="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION_1"
+VERSION_2="$(wget -q -O - $URL_1)"
+URL_2="https://chromedriver.storage.googleapis.com/${VERSION_2}/chromedriver_linux64.zip"
+wget -q "$URL_2"
+unzip chromedriver_linux64.zip
+mv chromedriver ~/.local/bin/

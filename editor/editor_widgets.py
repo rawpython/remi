@@ -16,6 +16,7 @@ import remi.gui as gui
 import html_helper
 import inspect
 import re
+import logging
 
 
 class InstancesTree(gui.TreeView, gui.EventSource):
@@ -115,45 +116,86 @@ class ToolBar(gui.Widget):
         self.append(icon)
 
 
-class SignalConnection(gui.Widget):
+class SignalConnection(gui.HBox):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
 
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
-        self.style.update({'overflow':'visible', 'height':'24px', 'display':'block', 'outline':'1px solid lightgray'})
-        self.label = gui.Label(eventConnectionFuncName, width='49%')
+        self.style.update({'overflow':'visible', 'height':'24px', 'outline':'1px solid lightgray'})
+        self.label = gui.Label(eventConnectionFuncName, width='32%')
         self.label.style.update({'float':'left', 'font-size':'10px', 'overflow':'hidden', 'outline':'1px solid lightgray'})
 
-        self.dropdown = gui.DropDown(width='49%', height='100%')
-        self.dropdown.onchange.do(self.on_connection)
-        self.append([self.label, self.dropdown])
-        self.dropdown.style['float'] = 'right'
+        self.dropdownListeners = gui.DropDown(width='32%', height='100%')
+        self.dropdownListeners.onchange.do(self.on_listener_selection)
+        self.dropdownListeners.attributes['title'] = "The listener who will receive the event"
+
+        self.dropdownMethods = gui.DropDown(width='32%', height='100%')
+        self.dropdownMethods.onchange.do(self.on_connection)
+        self.dropdownMethods.attributes['title'] = """The listener's method who will receive the event. \
+        A custom method is selected by default. You can select another method, but you should check the method parameters."""
+
+        self.append([self.label, self.dropdownListeners, self.dropdownMethods])
 
         self.eventConnectionFunc = eventConnectionFunc
         self.eventConnectionFuncName = eventConnectionFuncName
         self.refWidget = widget
         self.listenersList = listenersList
-        self.dropdown.append(gui.DropDownItem("None"))
+        self.dropdownListeners.append(gui.DropDownItem("None"))
         for w in listenersList:
             ddi = gui.DropDownItem(w.attributes['editor_varname'])
             ddi.listenerInstance = w
-            self.dropdown.append(ddi)
+            self.dropdownListeners.append(ddi)
         if hasattr(self.eventConnectionFunc, 'callback_copy'): #if the callback is not None, and so there is a listener
             connectedListenerName = eventConnectionFunc.callback_copy.__self__.attributes['editor_varname']
-            self.dropdown.set_value( connectedListenerName )
+            self.dropdownListeners.set_value( connectedListenerName )
+            #this to automatically populate the listener methods dropdown
+            self.on_listener_selection(self.dropdownListeners, connectedListenerName)
+            self.dropdownMethods.set_value(eventConnectionFunc.callback_copy.__name__)
+
+    def on_listener_selection(self, widget, dropDownValue):
+        self.dropdownMethods.empty()
+        if self.dropdownListeners.get_value()=='None':
+            #the listener is canceled when the user selects None
+            back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
+            getattr(self.refWidget, self.eventConnectionFuncName).do(None)
+            delattr(getattr(self.refWidget, self.eventConnectionFuncName),"callback_copy")# = getattr(self.refWidget, self.eventConnectionFuncName).callback
+            getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
+        else:
+            listener = self.dropdownListeners._selected_item.listenerInstance
+
+            l = []
+            func_members = inspect.getmembers(listener, inspect.ismethod)
+            for (name, value) in func_members:
+                if name not in ['__init__', 'main', 'idle', 'construct_ui']:
+                    ddi = gui.DropDownItem(name)
+                    ddi.listenerInstance = listener
+                    ddi.listenerFunction = value
+                    l.append(ddi)
+            
+            #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
+            #listener.__class__.fakeListenerFunc = fakeListenerFunc
+            custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
+            setattr(listener.__class__, custom_listener_name, fakeListenerFunc)
+            getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
+            ddi = gui.DropDownItem(custom_listener_name)
+            ddi.listenerInstance = listener
+            ddi.listenerFunction = getattr(listener, custom_listener_name)
+            ddi.style['color'] = "green"
+            ddi.style['font-weight'] = "bolder"
+            ddi.attributes['title'] = "automatically generated method"
+            self.dropdownMethods.append(ddi)
+
+            self.dropdownMethods.append(l)
+            #force the connection
+            self.on_connection(None, None)
 
     def on_connection(self, widget, dropDownValue):
-        if self.dropdown.get_value()=='None':
-            self.eventConnectionFunc.do(None)
-        else:
-            listener = self.dropdown._selected_item.listenerInstance
-            listener.attributes['editor_newclass'] = "True"
-            print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "   from:" + self.refWidget.attributes['editor_varname'])
-            back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
-            listener.__class__.fakeListenerFunc = fakeListenerFunc
-            getattr(self.refWidget, self.eventConnectionFuncName).do(listener.fakeListenerFunc)
-            getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
-            getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
+        listener = self.dropdownMethods._selected_item.listenerInstance
+        listener.attributes['editor_newclass'] = "True"
+        print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.attributes['editor_varname'])
+        back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
+        getattr(self.refWidget, self.eventConnectionFuncName).do(self.dropdownMethods._selected_item.listenerFunction)
+        getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
+        getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
 
 
 def fakeListenerFunc(self,*args):
@@ -491,6 +533,18 @@ class WidgetCollection(gui.Widget):
         self.add_widget_to_collection(gui.SvgRectangle)
         self.add_widget_to_collection(gui.SvgText)
         self.add_widget_to_collection(gui.SvgPath, attributes={'stroke':'black', 'stroke-width':'1'})
+
+        self.load_additional_widgets()
+
+    def load_additional_widgets(self):
+        try:
+            import widgets
+            classes = inspect.getmembers(widgets, inspect.isclass)
+            for (classname, classvalue) in classes:
+                if issubclass(classvalue,gui.Widget):
+                    self.add_widget_to_collection(classvalue)
+        except:
+            logging.getLogger('remi.editor').error('error loading external widgets', exc_info=True)
 
     def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
         #create an helper that will be created on click

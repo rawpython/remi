@@ -172,7 +172,6 @@ class TestMatplotlibApp(unittest.TestCase):
         html = root_widget.repr()
         assertValidHTML(html)
 
-@unittest.skip('This was not terminating cleanly')
 class TestMinefieldApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -328,7 +327,6 @@ class TestRootWidgetChangeApp(unittest.TestCase):
         html = root_widget.repr()
         assertValidHTML(html)
 
-@unittest.skip('This was not terminating cleanly')
 class TestSessionApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -367,7 +365,6 @@ class TestStandaloneApp(unittest.TestCase):
         html = root_widget.repr()
         assertValidHTML(html)
 
-@unittest.skip('This was not terminating cleanly')
 class TestSvgplotApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -384,6 +381,9 @@ class TestSvgplotApp(unittest.TestCase):
     def test_main(self):
         self.app = self.AppClass(MockRequest(), ('0.0.0.0', 8888), MockServer())
         root_widget = self.app.main()
+        html = root_widget.repr()
+        assertValidHTML(html)
+        time.sleep(1.0) # wait for some data to be generated
         html = root_widget.repr()
         assertValidHTML(html)
 
@@ -463,6 +463,7 @@ class TestThreadedApp(unittest.TestCase):
         html = root_widget.repr()
         assertValidHTML(html)
         time.sleep(1)
+        # click the button, which will stop the background thread so this can finish
         self.app.on_button_pressed(None)
 
 class TestWebAPIApp(unittest.TestCase):
@@ -484,7 +485,6 @@ class TestWebAPIApp(unittest.TestCase):
         html = root_widget.repr()
         assertValidHTML(html)
 
-@unittest.skip('This was not terminating cleanly')
 class TestWidgetOverviewApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -5,12 +5,21 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+addons:
+  chrome: stable
+  firefox: latest
+env:
+  global:
+    - MOZ_HEADLESS=1
 install:
   # install dependencies from setup.py (there are none for remi)
   - pip install -e .
   # install optional packages (for linting, coverage, browser control)
   # and dependencies of example apps being tested
-  - pip install flake8 coverage matplotlib Pillow # selenium
+  - pip install flake8 coverage matplotlib Pillow selenium
+  # install specific webdrivers for selenium
+  - ./test/install_webdrivers
+  - export PATH="$HOME/.local/bin:$PATH"
 before_script:
   # stop the build if there are Python syntax errors or undefined names
   - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
