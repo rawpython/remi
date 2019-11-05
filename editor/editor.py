@@ -380,7 +380,14 @@ class Project(gui.Widget):
                     self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
 
-    def repr_widget_for_editor(self, widget): #widgetVarName is the name with which the parent calls this instance
+    def repr_widget_for_editor(self, widget, first_node=False): #widgetVarName is the name with which the parent calls this instance
+        if first_node:
+            self.code_declared_classes = {}
+            self.pending_listener_registration = list()
+            self.known_project_children = [self,] #a list containing widgets that have been parsed and that are considered valid listeners 
+            self.pending_signals_to_connect = list() #a list containing dicts {listener, emitter, register_function, listener_function}
+            self.path_to_this_widget = []
+            self.prepare_path_to_this_widget(self.children['root'])
         self.known_project_children.append(widget)
 
         widget.path_to_this_widget.append( widget.attributes['editor_varname'] )
@@ -464,16 +471,10 @@ class Project(gui.Widget):
             self.prepare_path_to_this_widget(child)
 
     def save(self, save_path_filename, configuration): 
-        self.code_declared_classes = {}
-        self.pending_listener_registration = list()
-        self.known_project_children = [self,] #a list containing widgets that have been parsed and that are considered valid listeners 
-        self.pending_signals_to_connect = list() #a list containing dicts {listener, emitter, register_function, listener_function}
         compiled_code = ''
         code_classes = ''
         
-        self.path_to_this_widget = []
-        self.prepare_path_to_this_widget(self.children['root'])
-        ret = self.repr_widget_for_editor( self.children['root'] )
+        ret = self.repr_widget_for_editor( self.children['root'], True )
         code_nested = ret + self.check_pending_listeners(self,'self',True)# + self.code_listener_registration[str(id(self))]
 
         main_code_class = prototypes.proto_code_main_class%{'classname':configuration.configDict[configuration.KEY_PRJ_NAME],
@@ -528,8 +529,9 @@ class Editor(App):
         #m12.style['visibility'] = 'hidden'
         m121 = gui.MenuItem('Save', width=100, height=30)
         m122 = gui.MenuItem('Save as', width=100, height=30)
+        m123 = gui.MenuItem('Export widget as', width=200, height=30)
         m1.append([m10, m11, m12])
-        m12.append([m121, m122])
+        m12.append([m121, m122, m123])
         
         m2 = gui.MenuItem('Edit', width=100, height='100%')
         m21 = gui.MenuItem('Cut', width=100, height=30)
@@ -560,12 +562,13 @@ class Editor(App):
         
         self.fileSaveAsDialog = editor_widgets.EditorFileSaveDialog('Project Save', 'Select the project folder and type a filename', False, '.', False, True, self)
         self.fileSaveAsDialog.add_fileinput_field('untitled.py')
-        self.fileSaveAsDialog.confirm_value.do(self.on_saveas_dialog_confirm)        
+        self.fileSaveAsDialog.confirm_value.do(self.menu_save_clicked)        
 
         m10.onclick.do(self.menu_new_clicked)
         m11.onclick.do(self.fileOpenDialog.show)
         m121.onclick.do(self.menu_save_clicked)
         m122.onclick.do(self.fileSaveAsDialog.show)
+        m123.onclick.do(self.menu_save_widget_clicked)
         m21.onclick.do(self.menu_cut_selection_clicked)
         m22.onclick.do(self.menu_paste_selection_clicked)
         
@@ -728,28 +731,42 @@ class Editor(App):
                 self.add_widget_to_editor( widgetTree )
             self.projectPathFilename = filelist[0]
         
-    def menu_save_clicked(self, widget):
+    def menu_save_clicked(self, widget, path=""):
         #the dragHelper have to be removed
         for drag_helper in self.drag_helpers:
             drag_helper.setup(None, None)
         if self.projectPathFilename == '':
+            self.fileSaveAsDialog.confirm_value.do(self.menu_save_clicked)
             self.fileSaveAsDialog.show()
+            return
+        if len(path):
+            self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
+            
+        self.remove_box_shadow_selected_widget()
+        self.project.save(self.projectPathFilename, self.projectConfiguration)
+
+    def menu_save_widget_clicked(self, widget, path=""):
+        """ This method allows to export the selected widget
+        """
+        if len(path):
+            self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
         else:
-            self.remove_box_shadow_selected_widget()
-            self.project.save(self.projectPathFilename, self.projectConfiguration)
+            self.fileSaveAsDialog.confirm_value.do(self.menu_save_widget_clicked)
+            self.fileSaveAsDialog.show()
+            return
+            
+        code = ""
+        code = code + self.project.repr_widget_for_editor(self.selectedWidget, True)
+        for key in self.project.code_declared_classes.keys():
+            code_class = self.project.code_declared_classes[key]
+            code = code + code_class
+        with open(self.projectPathFilename, "w") as f:
+            f.write(code)
     
     def remove_box_shadow_selected_widget(self):
         if 'box-shadow' in self.selectedWidget.style.keys():
             del self.selectedWidget.style['box-shadow']
         
-    def on_saveas_dialog_confirm(self, widget, path):
-        for drag_helper in self.drag_helpers:
-            drag_helper.setup(None, None)
-        if len(path):
-            self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
-            print("file:%s"%self.projectPathFilename)
-            self.remove_box_shadow_selected_widget()
-            self.project.save(self.projectPathFilename, self.projectConfiguration)
     '''
     def recursive_get_parent(self, widget, root=None):
         """ The ability to change the widget identifier at runtime causes 
