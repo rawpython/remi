@@ -373,7 +373,10 @@ class WidgetHelper(gui.HBox):
         super(WidgetHelper, self).__init__()
         self.style['display'] = 'block'
         self.style['background-color'] = 'white'
-        self.icon = gui.Image('/editor_resources:widget_%s.png'%self.widgetClass.__name__, width='auto', margin='2px')
+        icon_file = '/editor_resources:widget_%s.png'%self.widgetClass.__name__
+        if hasattr(widgetClass, "icon"):
+            icon_file = widgetClass.icon
+        self.icon = gui.Image(icon_file, width='auto', margin='2px')
         self.icon.style['max-width'] = '100%'
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'
