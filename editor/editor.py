@@ -735,13 +735,14 @@ class Editor(App):
         #the dragHelper have to be removed
         for drag_helper in self.drag_helpers:
             drag_helper.setup(None, None)
-        if self.projectPathFilename == '':
-            self.fileSaveAsDialog.confirm_value.do(self.menu_save_clicked)
-            self.fileSaveAsDialog.show()
-            return
         if len(path):
             self.projectPathFilename = path + '/' + self.fileSaveAsDialog.get_fileinput_value()
-            
+        else:
+            if not len(self.projectPathFilename):
+                self.fileSaveAsDialog.confirm_value.do(self.menu_save_clicked)
+                self.fileSaveAsDialog.show()
+                return
+                
         self.remove_box_shadow_selected_widget()
         self.project.save(self.projectPathFilename, self.projectConfiguration)
 
@@ -754,7 +755,7 @@ class Editor(App):
             self.fileSaveAsDialog.confirm_value.do(self.menu_save_widget_clicked)
             self.fileSaveAsDialog.show()
             return
-            
+
         code = ""
         code = code + self.project.repr_widget_for_editor(self.selectedWidget, True)
         for key in self.project.code_declared_classes.keys():
