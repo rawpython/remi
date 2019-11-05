@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import remi.gui
 from remi.gui import *
 import snap7
