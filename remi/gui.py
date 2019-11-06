@@ -2434,7 +2434,7 @@ class DropDownItem(Widget, _MixinTextualWidget):
 class Image(Widget):
     """image widget."""
 
-    @decorate_constructor_parameter_types([str])
+    @decorate_constructor_parameter_types(["base64"])
     def __init__(self, filename, *args, **kwargs):
         """
         Args:

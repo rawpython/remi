@@ -417,14 +417,16 @@ class WidgetHelper(gui.HBox):
         for index in range(0,len(self.widgetClass.__init__._constructor_types)):
             param = self.constructor_parameters_list[index]
             _typ = self.widgetClass.__init__._constructor_types[index]
-            note = ' (%s)'%_typ.__name__
+            note = "" if not hasattr(_typ,"__name__") else ' (%s)'%_typ.__name__
             editWidget = None
             if _typ==int:
                 editWidget = gui.SpinBox('0',-65536,65535)
             elif _typ==bool:
                 editWidget = gui.CheckBox()
-            else:
+            elif _typ==str:
                 editWidget = gui.TextInput()
+            elif _typ=="base64":
+                editWidget = Base64ImageInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
             editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
 
@@ -741,6 +743,97 @@ class UrlPathInput(gui.Widget, gui.EventSource):
 
     def set_value(self, value):
         self.txtInput.set_value(value)
+
+
+class ResPathInput(gui.Widget, gui.EventSource):
+    def __init__(self, appInstance, **kwargs):
+        super(ResPathInput, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
+        self.appInstance = appInstance
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'hidden'
+
+        self.txtInput = gui.TextInput(width='80%', height='100%')
+        self.txtInput.style['float'] = 'left'
+        self.txtInput.onchange.do(self.on_txt_changed)
+        self.append(self.txtInput)
+
+        self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
+        self.btFileFolderSelection.style.update({'background-repeat':'no-repeat',
+            'background-image':"url('/res:folder.png')",
+            'background-color':'transparent'})
+        self.append(self.btFileFolderSelection)
+        self.btFileFolderSelection.onclick.do(self.on_file_selection_bt_pressed)
+
+        self.selectionDialog = gui.FileSelectionDialog('Select a file', '', False, './', True, False)
+        self.selectionDialog.confirm_value.do(self.file_dialog_confirmed)
+
+    @gui.decorate_event
+    def onchange(self, widget, value):
+        return (value,)
+    
+    def on_txt_changed(self, widget, value):
+        return self.onchange(None, value)
+
+    def on_file_selection_bt_pressed(self, widget):
+        self.selectionDialog.show(self.appInstance)
+
+    def file_dialog_confirmed(self, widget, fileList):
+        if len(fileList)>0:
+            self.txtInput.set_value("/my_res:" + fileList[0].split('/')[-1].split('\\')[-1])
+            return self.onchange(None, self.txtInput.get_value())
+
+    def set_value(self, value):
+        self.txtInput.set_value(value)
+
+    def get_value(self):
+        return self.txtInput.get_value()
+
+class Base64ImageInput(gui.Widget, gui.EventSource):
+    def __init__(self, appInstance, **kwargs):
+        super(Base64ImageInput, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
+        self.appInstance = appInstance
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'hidden'
+
+        self.txtInput = gui.TextInput(width='80%', height='100%')
+        self.txtInput.style['float'] = 'left'
+        self.txtInput.onchange.do(self.on_txt_changed)
+        self.append(self.txtInput)
+
+        self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
+        self.btFileFolderSelection.style.update({'background-repeat':'no-repeat',
+            'background-image':"url('/res:folder.png')",
+            'background-color':'transparent'})
+        self.append(self.btFileFolderSelection)
+        self.btFileFolderSelection.onclick.do(self.on_file_selection_bt_pressed)
+
+        self.selectionDialog = gui.FileSelectionDialog('Select a file', '', False, './', True, False)
+        self.selectionDialog.confirm_value.do(self.file_dialog_confirmed)
+
+    @gui.decorate_event
+    def onchange(self, widget, value):
+        return (value,)
+    
+    def on_txt_changed(self, widget, value):
+        return self.onchange(None, value)
+
+    def on_file_selection_bt_pressed(self, widget):
+        self.selectionDialog.show(self.appInstance)
+
+    def file_dialog_confirmed(self, widget, fileList):
+        if len(fileList)>0:
+            self.txtInput.set_value(gui.load_resource(fileList[0]))
+            return self.onchange(None, self.txtInput.get_value())
+
+    def set_value(self, value):
+        self.txtInput.set_value(value)
+
+    def get_value(self):
+        return self.txtInput.get_value()
 
 
 #widget that allows to edit a specific html and css attributes
