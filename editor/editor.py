@@ -374,7 +374,9 @@ class Project(gui.Widget):
                                                 'listener_function': event['listenerfuncname']}                
                     if not event['eventlistener'].identifier in self.code_declared_classes:
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
-                    self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
+
+                    if (widget.attributes['editor_newclass'] == 'True'):
+                        self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
 
     def repr_widget_for_editor(self, widget, first_node=False): #widgetVarName is the name with which the parent calls this instance

@@ -173,16 +173,17 @@ class SignalConnection(gui.HBox):
             
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
-            custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
-            setattr(listener.__class__, custom_listener_name, fakeListenerFunc)
-            getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
-            ddi = gui.DropDownItem(custom_listener_name)
-            ddi.listenerInstance = listener
-            ddi.listenerFunction = getattr(listener, custom_listener_name)
-            ddi.style['color'] = "green"
-            ddi.style['font-weight'] = "bolder"
-            ddi.attributes['title'] = "automatically generated method"
-            self.dropdownMethods.append(ddi)
+            if listener.attributes['editor_newclass'] == "True":
+                custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
+                setattr(listener.__class__, custom_listener_name, fakeListenerFunc)
+                getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
+                ddi = gui.DropDownItem(custom_listener_name)
+                ddi.listenerInstance = listener
+                ddi.listenerFunction = getattr(listener, custom_listener_name)
+                ddi.style['color'] = "green"
+                ddi.style['font-weight'] = "bolder"
+                ddi.attributes['title'] = "automatically generated method"
+                self.dropdownMethods.append(ddi)
 
             self.dropdownMethods.append(l)
             #force the connection
@@ -190,7 +191,7 @@ class SignalConnection(gui.HBox):
 
     def on_connection(self, widget, dropDownValue):
         listener = self.dropdownMethods._selected_item.listenerInstance
-        listener.attributes['editor_newclass'] = "True"
+        #listener.attributes['editor_newclass'] = "True"
         print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.attributes['editor_varname'])
         back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
         getattr(self.refWidget, self.eventConnectionFuncName).do(self.dropdownMethods._selected_item.listenerFunction)
