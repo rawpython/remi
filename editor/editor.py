@@ -375,7 +375,7 @@ class Project(gui.Widget):
                     if not event['eventlistener'].identifier in self.code_declared_classes:
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
 
-                    if (widget.attributes['editor_newclass'] == 'True'):
+                    if (event['eventlistener'].attributes['editor_newclass'] == 'True'):
                         self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
 
