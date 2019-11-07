@@ -17,6 +17,7 @@ import html_helper
 import inspect
 import re
 import logging
+import types
 
 
 class InstancesTree(gui.TreeView, gui.EventSource):
@@ -175,7 +176,7 @@ class SignalConnection(gui.HBox):
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
             if listener.attributes['editor_newclass'] == "True":
                 custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
-                setattr(listener.__class__, custom_listener_name, fakeListenerFunc)
+                setattr(listener, custom_listener_name, types.MethodType(fakeListenerFunc, listener))
                 getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
                 ddi = gui.DropDownItem(custom_listener_name)
                 ddi.listenerInstance = listener
