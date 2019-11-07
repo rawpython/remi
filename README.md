@@ -447,6 +447,9 @@ Projects using Remi
 [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI)
 Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPython, Remi (in browser). Create custom layout GUI's simply. Python 2.7 & 3 Support. 100+ Demo programs & Cookbook for rapid start. Extensive documentation.
 
+[App Template For REMI](https://bitbucket.org/cheak/app-template-for-remi)
+A really well written template for multiview applications.
+
 [Web based dynamic reconfigure for ROS robots](https://github.com/awesomebytes/web_dyn_reconf)
 
 [razmq](https://github.com/MrYsLab/razmq)

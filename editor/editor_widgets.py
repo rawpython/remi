@@ -146,11 +146,21 @@ class SignalConnection(gui.HBox):
             ddi.listenerInstance = w
             self.dropdownListeners.append(ddi)
         if hasattr(self.eventConnectionFunc, 'callback_copy'): #if the callback is not None, and so there is a listener
-            connectedListenerName = eventConnectionFunc.callback_copy.__self__.attributes['editor_varname']
+            connectedListenerName = ""
+            if type(eventConnectionFunc.callback_copy) == gui.ClassEventConnector:
+                connectedListenerName = eventConnectionFunc.callback_copy.event_method_bound.__self__.attributes['editor_varname']
+            else: #type = types.MethodType #instancemethod
+                connectedListenerName = eventConnectionFunc.callback_copy.__self__.attributes['editor_varname']
+            connectedListenerFunction = None
+            if type(eventConnectionFunc.callback_copy) == gui.ClassEventConnector:
+                connectedListenerFunction = eventConnectionFunc.callback_copy.event_method_bound
+            else: #type = types.MethodType #instancemethod
+                connectedListenerFunction = eventConnectionFunc.callback_copy
             self.dropdownListeners.set_value( connectedListenerName )
             #this to automatically populate the listener methods dropdown
             self.on_listener_selection(self.dropdownListeners, connectedListenerName)
-            self.dropdownMethods.set_value(eventConnectionFunc.callback_copy.__name__)
+            print("connected function name:"+connectedListenerFunction.__name__)
+            self.dropdownMethods.set_value(connectedListenerFunction.__name__ )
 
     def on_listener_selection(self, widget, dropDownValue):
         self.dropdownMethods.empty()
@@ -164,9 +174,11 @@ class SignalConnection(gui.HBox):
             listener = self.dropdownListeners._selected_item.listenerInstance
 
             l = []
-            func_members = inspect.getmembers(listener, inspect.ismethod)
+            func_members = inspect.getmembers(listener)#, inspect.ismethod)
             for (name, value) in func_members:
-                if name not in ['__init__', 'main', 'idle', 'construct_ui']:
+                if type(value) == gui.ClassEventConnector:
+                    value = value.event_method_bound
+                if name not in ['__init__', 'main', 'idle', 'construct_ui'] and type(value) == types.MethodType:
                     ddi = gui.DropDownItem(name)
                     ddi.listenerInstance = listener
                     ddi.listenerFunction = value
