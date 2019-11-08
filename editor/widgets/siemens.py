@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import remi.gui
+import remi.gui as gui
 from remi.gui import *
 import snap7
 from threading import Timer
@@ -179,10 +179,10 @@ class ButtonSetResetBit(Button):
         self.plc_instance.set_bool(self.db_area_mem, self.byte_index, self.bit_index, value)
 
 
-class BitStatusWidget(Label):
+class BitStatusWidget(HBox):
     """A Status indicator widget.
     """
-    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAYAAABXuSs3AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAUFSURBVGiB7ZlbbBRVGIC/2Z3Z7Q7tsqXd0ptCWWhKA4Y0kRSCFRKIiKQPiClRYloSSDQgiQQSIMiDgooSuSiICdZoAiiND5hwEWJ9EJGAsdCIXLpAudiWxe62trPs7Fx8WHZqaSli2S1N+iWTnTnnP+d858x/TrIZQdM00zRNervWtO5jS+gQjyNiXPKwX+WT3wwuhgSrsnWMCfmx+5WZ5azMKEdDZ3nTF+xvP8GvvvdZeGMba73zmOIqtNqtaP6SyfJYKtxTea5xA01akDrfB5xQLrI+8A3HRq2zYsOmyoSGFVwct5U3mqo53FHH5uxXOR32c6ijjr35yymTx3PmTiMvXt9MkxbsEldVlXdP6jQrtl5nl2pL4Z2sBTzfuJEpciFbcyrZ336C0ZIXhyCSI6ZT0/4LRzvOAvB75AZz0kp4QspkilzIVTXAKMnLVSmAhJ08aQRzG98DQMcAYIw0krezKjjScQav3Y3bJlPhnkqqLYVnrrzF9pxFLMuYzZqWvd3FmxXpvq9FNTVUU6PSM52PWw+zo/VIn6+xzVAAqI9co9Q1jmzRQ33kWu+xumLdFziymJtWYj3/bYQpcuYxM/UpKm5sIah3WHU20zTRNK1PEdXUqLj+ESWuAk6O2ciW7MoeMVWeGezKXcKu3CVkix4ATof9lMqFTHaN5VS4wYp1CKIV+2bmXKv8w9vfsd77EgKxdN3XdpzqYC1rvfO4NG4bZXLxw4nnSSMYbpeZ0LCCsivrWegpI0sc3i1mZctX+C4tw3dpGZfVFgDOR25SIGUxTS7iVNhvxd4xolbswhvbrfLdoR/IEoczM3UiAM8OK+br9p/JvrCYz1qPsTRjthUrmqaJrut9ijsEkeq819FMA0mwo5sGqtl9ssXOfGYOiw3YoDYDYGBSH7nGaMnLLa2ta7UEwYoF+FE5B0DEiLIh8C2f5i4GoEwu5oW0EpY3V5MppqEYkS5xAMMw+hS/ot5idcsetuVUETV1ljbtJqR3cjUaQDU1mrQg892lzHeXArDp9gFu6+206QrHOs6SJ42g04jQFA0SRedmtJVduUus/if5V3E52oKBSXWolqr06bQbCvtaj/O0y8fBJ1dzQf2Typs7rDZCZ2enGQgEmHEwo4dwsKCGtvzv+5xUshEFE0EQ+hZ/HKmd8xder5feD+5BwJB4shkSTzaDVlzsX3MnR1+T8PUoN6jZqbAKqCofxro8oWfTu/jPdzCr9uFH7qd474NvWpDK/EUu/vg8TPWBTqrjFRNd1E2zce6nTl6u79+YCUmVVS0GOAXGJ6LzuyREfNNIG/7zsVRJFI8kVXxFqVwu6l7WrkhA9FF03ysJyfHYhnSwZ2K037l8PxKSKtUHNPwIeDMT0XuMQXuOJ0S8qlzEF9HZ8z/O5/9KgjanQc3OcNf5nQD6KR5h1s7Ig8Pi1IeZ9Ig261COJ5sh8WQzJJ5shsSTzZB4srEJgoAg3P/P7ONG3NcWfxgsxF0H74oLgoDdbidTUgfa6YE86bqD3W7vEhdFkcVjg+Q7lQe3HiAyxAivjG5DFMXYqquqaiqKQigUIhgMoigKkUjE+roMWL/JIp668bRwOp3Iskx6ejoejwdZlhHjFW63G4fDgaqqqKraTXygiIs7HA4cDgcpKSk4nc5YuaZppmEY6Lre7Yp/0Booeev0sNmw2+3dLpvNhqDrunlvWgxUitzLvSnz7/t/AIHaIUqnNr0FAAAAAElFTkSuQmCC"
+    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH8AAAAuCAYAAAABb8ZBAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAIXQAACF0BaJwxSwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAScSURBVHic7dt77FdzHMfxxy8/Ugnlki3FUO4bpUnDrJDbmLJokZlLbs2GEsMfGFaEiC3XsdkUotwq/7hM5jKy0qg2fi3KLEZNpH7+eJ/vvp++6+f3+31/l+/qnOf23ff9OZ9z3t/POa/zfn8u53vq0Kggl3SpdQMKakd9Yo9AQ60aspPzLE4deRJPTK5tQxrWMuK6sFPxG7CyFg3KARuhRzcO61frppQp0n6OKcTPMYX4OaYQP8cU4ueYQvwcU4ifYwrxc0whfo4pxM8xhfg5phA/xxTi55j65nf5X/rgYgzM7PVYjQ+wGAfjqhb4eQOfJuV9MCkpP4/vkvKhuLoFfufhM9yXlX/GY0n9Xrg9s1eIR68lumI0BqMv/sYafI738WcLfr9dWb2OJ+fwwI3t468t4o8RF2uPJupvxRLc1gJfDbYVf2zFcd1wU1Lu30K/a/Blsu8S24q/Z1K3SFn8I/EmBjThdyFGtuD3242GtUyewexFtRf/ELyE3US0T8Mq7I8zcB7qxMWflRw3BnuLv449nWxfVuF/fEV5rLiZNmflnyr8XoTemZ1uX9rSE0qowxwh/FY8hY/EDTgUl1Ths02cfzPzP8waV9d+fqsV/zQhPLyMB5O6mSJy9sVyTEjqThHib63YnnIUhmT2t1l5P5wjopHoAtLjhymLX+m3a3MnU8GBODqzVyCNsxcwRSdH/bzp8T1zNhOntZ/fagd86xN7At7GRAzKfC4X0VINpahvxOXK0V6ZDTqK38TNCYeLbuMunC6i/3e80klt6VCqFf89fJ/Zu4qonCEuVIOIlmoSVBeMy+zP8IUYXMG5YiDY0WzAc0l5EO4RY4JfRWbr2Qnt6HCqFX+TSOGzZP9PS+iLx3FLFX5HiLRLObpK313FzKIzuFYMBNdUbO+O6/FqJ7WjQ2nLPP8XkfJ7ixthkuijS4zb3kHNkKb2sSLarmmivqVsTezK/r9rE/ttwVT0w7FiWvluUn+mGNzu0FQr/hVC3C74Bx/jIXFRSuzaSp89cWFSHiL62WHJthNxRCv9bhbpGg5SHhjC8YldivJj8AB6iHHHUjwjurZ0VtLWNZKaU+0JHCj6wbsxX1yU3TEq2WdOK32OFhecmDouTOqG4t7MHo87Wul7rojebpnfl8Uc/4aKfWRtmCKy2uv4SnRtQ8UsBj4R080dmmrF35B9D7T9vv1FET2toZTSt+BhrEvqFouVuO64FHfaNk03xxQR5SeIFbvBFfWP4K3M3oR/0QtXbsfX1zp5rj9zNt+sZNkqGhuZcH9sn3RZ294DqFb80sU6Syzh9sEf+FFE1ldNHDddjNgr3w+sF33qApGi11XUbxSRWzrV3sqpHB4V6wpNsV50HxdguOivt4iXVOaKWUWJJThALFQdpjwA/UEs7S7Iju009uhOr56cfFx8StTv0ja/dcpCDFC8sdNRvIOzRw3ntam1bcjK1QzIRlbFU70cU4ifYwrxc0whfo4pxM8xhfg5phA/xxTi55hC/BxTiJ9jCvFzTCF+jinEzzHpI93+NWvFzk8P2PhXPFWrJQ1ry3b6SLcgZxRpP8f8B3U73Zz1aKm9AAAAAElFTkSuQmCC"
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, text, db_area_mem, byte_index, bit_index, *args, **kwargs):
         """
@@ -190,7 +190,11 @@ class BitStatusWidget(Label):
             text (str): The text that will be displayed on the label.
             kwargs: See Widget.__init__()
         """
-        super(BitStatusWidget, self).__init__(text, *args, **kwargs)
+        super(BitStatusWidget, self).__init__(*args, **kwargs)
+        self.style.update({'align-items':'stretch', 'justify-content':'flex-start'})
+        self.label = gui.Label(text, style={'border':'1px solid black'})
+        self.label_value = gui.Label("0", width='30px', style={'border':'1px solid black', 'background-color':'gray', 'text-align':'center'})
+        self.append([self.label, self.label_value])
         self.style.update({'position':'absolute','left':'10px','top':'10px','width':'100px','height':'30px'})
         self.plc_instance = None
         self.db_area_mem = db_area_mem
@@ -218,6 +222,11 @@ class BitStatusWidget(Label):
     def update(self, *args):
         if self.plc_instance==None:
             return
-        self.set_text( str(self.plc_instance.get_bool(self.db_area_mem, self.byte_index, self.bit_index) ) )
+        value = self.plc_instance.get_bool(self.db_area_mem, self.byte_index, self.bit_index)
+        self.label_value.set_text( '1' if value else '0' )
+        style={'border':'1px solid black', 'background-color':'gray'}
+        if value:
+            style={'border':'1px solid black', 'background-color':'yellow'}
+        self.label_value.style.update(style)
 
         
