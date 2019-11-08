@@ -414,12 +414,13 @@ class Project(gui.Widget):
             if hasattr(setOnEventListenerFunc, '_event_info'):
                 #if there is a callback
                 if hasattr(getattr(widget, setOnEventListenerFuncname), 'callback_copy'): 
-                    listenerPrototype = setOnEventListenerFunc._event_info['prototype']
-                    listener = getattr(widget, setOnEventListenerFuncname).callback_copy.__self__
-
                     listenerFunction = getattr(widget, setOnEventListenerFuncname).callback_copy
                     if type(listenerFunction) == gui.ClassEventConnector:
                         listenerFunction = listenerFunction.event_method_bound
+
+                    listenerPrototype = setOnEventListenerFunc._event_info['prototype']
+                    listener = listenerFunction.__self__
+
                     listenerFunctionName = listenerFunction.__name__ #setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
