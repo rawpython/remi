@@ -417,14 +417,17 @@ class Project(gui.Widget):
                     listenerPrototype = setOnEventListenerFunc._event_info['prototype']
                     listener = getattr(widget, setOnEventListenerFuncname).callback_copy.__self__
 
-                    listenerFunctionName = getattr(widget, setOnEventListenerFuncname).callback_copy.__name__ #setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
+                    listenerFunction = getattr(widget, setOnEventListenerFuncname).callback_copy
+                    if type(listenerFunction) == gui.ClassEventConnector:
+                        listenerFunction = listenerFunction.event_method_bound
+                    listenerFunctionName = listenerFunction.__name__ #setOnEventListenerFunc._event_info['name'] + "_" + widget.attributes['editor_varname']
                     
                     listenerClassFunction = prototypes.proto_code_function%{'funcname': listenerFunctionName,
                                                                                 'parameters': listenerPrototype}
 
                     #override, if already implemented, we use this code, unless it is a fakeListenerFunction
-                    if hasattr(listener, listenerFunctionName) and getattr(listener, listenerFunctionName).__name__!=editor_widgets.fakeListenerFunc.__name__:
-                        listenerClassFunction = inspect.getsource(getattr(listener, listenerFunctionName))
+                    if hasattr(listener, listenerFunctionName) and listenerFunction.__name__!=editor_widgets.fakeListenerFunc.__name__:
+                        listenerClassFunction = inspect.getsource(listenerFunction)
                                                                             
                     self.pending_listener_registration.append({'done':False,
                         'eventsource':widget, 

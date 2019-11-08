@@ -156,20 +156,18 @@ class SignalConnection(gui.HBox):
                 connectedListenerFunction = eventConnectionFunc.callback_copy.event_method_bound
             else: #type = types.MethodType #instancemethod
                 connectedListenerFunction = eventConnectionFunc.callback_copy
-            self.dropdownListeners.set_value( connectedListenerName )
+            self.dropdownListeners.select_by_value( connectedListenerName )
             #this to automatically populate the listener methods dropdown
             self.on_listener_selection(self.dropdownListeners, connectedListenerName)
             print("connected function name:"+connectedListenerFunction.__name__)
-            self.dropdownMethods.set_value(connectedListenerFunction.__name__ )
+            self.dropdownMethods.select_by_value(connectedListenerFunction.__name__ )
+            #force the connection
+            self.on_connection(None, None)
 
     def on_listener_selection(self, widget, dropDownValue):
         self.dropdownMethods.empty()
         if self.dropdownListeners.get_value()=='None':
-            #the listener is canceled when the user selects None
-            back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
-            getattr(self.refWidget, self.eventConnectionFuncName).do(None)
-            delattr(getattr(self.refWidget, self.eventConnectionFuncName),"callback_copy")# = getattr(self.refWidget, self.eventConnectionFuncName).callback
-            getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
+            self.disconnect()
         else:
             listener = self.dropdownListeners._selected_item.listenerInstance
 
@@ -184,6 +182,10 @@ class SignalConnection(gui.HBox):
                     ddi.listenerFunction = value
                     l.append(ddi)
             
+            #creating a none element
+            ddi = gui.DropDownItem('None')
+            self.dropdownMethods.append(ddi)
+
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
             if listener.attributes['editor_newclass'] == "True":
@@ -199,10 +201,19 @@ class SignalConnection(gui.HBox):
                 self.dropdownMethods.append(ddi)
 
             self.dropdownMethods.append(l)
-            #force the connection
-            self.on_connection(None, None)
+
+    def disconnect(self):
+        #the listener is canceled when the user selects None
+        back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
+        getattr(self.refWidget, self.eventConnectionFuncName).do(None)
+        delattr(getattr(self.refWidget, self.eventConnectionFuncName),"callback_copy")# = getattr(self.refWidget, self.eventConnectionFuncName).callback
+        getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
 
     def on_connection(self, widget, dropDownValue):
+        if self.dropdownMethods.get_value()=='None':
+            self.disconnect()
+            return
+
         listener = self.dropdownMethods._selected_item.listenerInstance
         #listener.attributes['editor_newclass'] = "True"
         print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.attributes['editor_varname'])
