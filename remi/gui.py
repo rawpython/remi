@@ -133,9 +133,10 @@ class ClassEventConnector(object):
         self.event_method_bound = event_method_bound
         self.callback = None
         self.userdata = None
+        self.kwuserdata = None
         self.connect = self.do #for compatibility reasons
         
-    def do(self, callback, *userdata):
+    def do(self, callback, *userdata, **kwuserdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
         """
@@ -144,6 +145,7 @@ class ClassEventConnector(object):
                 'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
         self.callback = callback
         self.userdata = userdata
+        self.kwuserdata = kwuserdata
 
     def __call__(self, *args, **kwargs):
         #here the event method gets called
@@ -156,7 +158,7 @@ class ClassEventConnector(object):
             callback_params = callback_params + self.userdata
         #here the listener gets called, passing as parameters the return values of the event method
         # plus the userdata parameters
-        return self.callback(self.event_source_instance, *callback_params)
+        return self.callback(self.event_source_instance, *callback_params, **self.kwuserdata)
 
 
 def decorate_event(method):

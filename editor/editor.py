@@ -286,6 +286,7 @@ class Project(gui.Widget):
             'overflow':'auto',
             'background-color':'rgb(250,248,240)',
             'background-image':"url('/editor_resources:background.png')"})
+        self.attributes['editor_newclass'] = 'True'
     
     def new(self):
         #remove the main widget
@@ -367,8 +368,8 @@ class Project(gui.Widget):
                     if len(listener_filtered_path)>0:
                         listenername = ("%s.children['" + "'].children['".join(listener_filtered_path) + "']")%listenername
 
-
-                    code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
+                    if (listenername!='self' and hasattr(event['eventlistener'], event['listenerfuncname'])) or (listenername=='self' and hasattr(self, event['listenerfuncname'])):
+                        code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
                                                 'register_function':  event['setoneventfuncname'],
                                                 'listenername': listenername,
                                                 'listener_function': event['listenerfuncname']}                
@@ -497,7 +498,7 @@ class Project(gui.Widget):
         
         modules_to_import = []
         for w in self.known_project_children:
-            if not w.__module__ in modules_to_import and w.__module__!="__main__":
+            if not w.__module__ in modules_to_import and w.__module__!="__main__" and w.__module__!="project":
                 modules_to_import.append(w.__module__)
 
         code_classes += main_code_class

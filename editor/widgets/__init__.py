@@ -1,3 +1,3 @@
-#from .remi_opencv import OpencvImageWidget, OpencvCropImageWidget, OpencvVideoWidget, OpencvThresholdImageWidget
-#from .remi_scheduling import TimerWidget
-#from .siemens import PLCSiemens, ButtonSetResetBit, BitStatusWidget
+#from .toolbox_opencv import OpencvImage, OpencvCrop, OpencvVideo, OpencvThreshold
+#from .toolbox_scheduling import TimerWidget
+#from .toolbox_siemens import PLCSiemens, ButtonSetResetBit, BitStatusWidget
