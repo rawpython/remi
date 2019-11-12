@@ -189,9 +189,11 @@ class SignalConnection(gui.HBox):
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
             if listener.attributes['editor_newclass'] == "True":
+                print(">>>>>>>>>>>>>1>" + fakeListenerFunc.__name__)
                 custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
-                setattr(listener, custom_listener_name, types.MethodType(fakeListenerFunc, listener))
+                setattr(listener, custom_listener_name, types.MethodType(copy_func(fakeListenerFunc), listener))
                 getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
+                print(">>>>>>>>>>>>>2>" + fakeListenerFunc.__name__)
                 ddi = gui.DropDownItem(custom_listener_name)
                 ddi.listenerInstance = listener
                 ddi.listenerFunction = getattr(listener, custom_listener_name)
@@ -222,6 +224,14 @@ class SignalConnection(gui.HBox):
         getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
         getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
 
+def copy_func(f):
+    """Based on https://stackoverflow.com/questions/13503079/how-to-create-a-copy-of-a-python-function"""
+    g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                           argdefs=f.__defaults__,
+                           closure=f.__closure__)
+    #g = functools.update_wrapper(g, f)
+    g.__kwdefaults__ = f.__kwdefaults__
+    return g
 
 def fakeListenerFunc(self,*args):
     print('event trap')

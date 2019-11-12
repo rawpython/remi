@@ -352,6 +352,12 @@ class Project(gui.Widget):
                     for v in widget.path_to_this_widget:
                         source_filtered_path.remove(v)
                         listener_filtered_path.remove(v)   
+                    
+                    if len(source_filtered_path)==0 and event['eventsource'].attributes['editor_newclass'] == 'False':
+                        sourcename = event['eventsource'].attributes['editor_varname']
+
+                    #if event['eventlistener'].attributes['editor_newclass'] == 'False':
+                    #    listenername = event['eventlistener'].attributes['editor_varname']
                     if force or (self.children['root']==widget and not (widget.attributes['editor_newclass'] == 'True')):
                         sourcename = self.children['root'].attributes['editor_varname']
                         if self.children['root'].attributes['editor_varname'] in source_filtered_path:
@@ -365,11 +371,12 @@ class Project(gui.Widget):
                     if force or (self.children['root']==widget and not (widget.attributes['editor_newclass'] == 'True')):
                         if event['eventlistener'] != self:
                             listenername = self.children['root'].attributes['editor_varname']
+                    if len(listener_filtered_path)==0 and event['eventlistener'].attributes['editor_newclass'] == 'False':
+                        listenername = event['eventlistener'].attributes['editor_varname']
                     if len(listener_filtered_path)>0:
                         listenername = ("%s.children['" + "'].children['".join(listener_filtered_path) + "']")%listenername
 
-                    if (listenername!='self' and hasattr(event['eventlistener'], event['listenerfuncname'])) or (listenername=='self' and hasattr(self, event['listenerfuncname'])):
-                        code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
+                    code_nested_listener += prototypes.proto_set_listener%{'sourcename':sourcename, 
                                                 'register_function':  event['setoneventfuncname'],
                                                 'listenername': listenername,
                                                 'listener_function': event['listenerfuncname']}                
@@ -428,7 +435,7 @@ class Project(gui.Widget):
                                                                                 'parameters': listenerPrototype}
 
                     #override, if already implemented, we use this code, unless it is a fakeListenerFunction
-                    if hasattr(listener, listenerFunctionName) and listenerFunction.__name__!=editor_widgets.fakeListenerFunc.__name__:
+                    if hasattr(listener, listenerFunctionName) and listenerFunction.__code__!=editor_widgets.fakeListenerFunc.__code__:
                         listenerClassFunction = inspect.getsource(listenerFunction)
                                                                             
                     self.pending_listener_registration.append({'done':False,

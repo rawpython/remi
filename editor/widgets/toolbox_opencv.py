@@ -142,7 +142,7 @@ class OpencvVideo(OpencvImage):
 
     def __del__(self):
         self.thread_stop_flag = True
-        super(OpencvVideoWidget, self).__del__()
+        super(OpencvVideo, self).__del__()
 
     def update(self, *args):
         while not self.thread_stop_flag:
