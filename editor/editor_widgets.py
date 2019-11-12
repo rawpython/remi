@@ -189,11 +189,9 @@ class SignalConnection(gui.HBox):
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
             if listener.attributes['editor_newclass'] == "True":
-                print(">>>>>>>>>>>>>1>" + fakeListenerFunc.__name__)
                 custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
                 setattr(listener, custom_listener_name, types.MethodType(copy_func(fakeListenerFunc), listener))
                 getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
-                print(">>>>>>>>>>>>>2>" + fakeListenerFunc.__name__)
                 ddi = gui.DropDownItem(custom_listener_name)
                 ddi.listenerInstance = listener
                 ddi.listenerFunction = getattr(listener, custom_listener_name)

@@ -206,7 +206,7 @@ class BitStatusWidget(HBox, SiemensWidget):
         i.e.:
             widget.link_to.do(plc.on_link_to)
     """
-    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH8AAAAuCAYAAAABb8ZBAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAIXQAACF0BaJwxSwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAScSURBVHic7dt77FdzHMfxxy8/Ugnlki3FUO4bpUnDrJDbmLJokZlLbs2GEsMfGFaEiC3XsdkUotwq/7hM5jKy0qg2fi3KLEZNpH7+eJ/vvp++6+f3+31/l+/qnOf23ff9OZ9z3t/POa/zfn8u53vq0Kggl3SpdQMKakd9Yo9AQ60aspPzLE4deRJPTK5tQxrWMuK6sFPxG7CyFg3KARuhRzcO61frppQp0n6OKcTPMYX4OaYQP8cU4ueYQvwcU4ifYwrxc0whfo4pxM8xhfg5phA/xxTi55j65nf5X/rgYgzM7PVYjQ+wGAfjqhb4eQOfJuV9MCkpP4/vkvKhuLoFfufhM9yXlX/GY0n9Xrg9s1eIR68lumI0BqMv/sYafI738WcLfr9dWb2OJ+fwwI3t468t4o8RF2uPJupvxRLc1gJfDbYVf2zFcd1wU1Lu30K/a/Blsu8S24q/Z1K3SFn8I/EmBjThdyFGtuD3242GtUyewexFtRf/ELyE3US0T8Mq7I8zcB7qxMWflRw3BnuLv449nWxfVuF/fEV5rLiZNmflnyr8XoTemZ1uX9rSE0qowxwh/FY8hY/EDTgUl1Ths02cfzPzP8waV9d+fqsV/zQhPLyMB5O6mSJy9sVyTEjqThHib63YnnIUhmT2t1l5P5wjopHoAtLjhymLX+m3a3MnU8GBODqzVyCNsxcwRSdH/bzp8T1zNhOntZ/fagd86xN7At7GRAzKfC4X0VINpahvxOXK0V6ZDTqK38TNCYeLbuMunC6i/3e80klt6VCqFf89fJ/Zu4qonCEuVIOIlmoSVBeMy+zP8IUYXMG5YiDY0WzAc0l5EO4RY4JfRWbr2Qnt6HCqFX+TSOGzZP9PS+iLx3FLFX5HiLRLObpK313FzKIzuFYMBNdUbO+O6/FqJ7WjQ2nLPP8XkfJ7ixthkuijS4zb3kHNkKb2sSLarmmivqVsTezK/r9rE/ttwVT0w7FiWvluUn+mGNzu0FQr/hVC3C74Bx/jIXFRSuzaSp89cWFSHiL62WHJthNxRCv9bhbpGg5SHhjC8YldivJj8AB6iHHHUjwjurZ0VtLWNZKaU+0JHCj6wbsxX1yU3TEq2WdOK32OFhecmDouTOqG4t7MHo87Wul7rojebpnfl8Uc/4aKfWRtmCKy2uv4SnRtQ8UsBj4R080dmmrF35B9D7T9vv1FET2toZTSt+BhrEvqFouVuO64FHfaNk03xxQR5SeIFbvBFfWP4K3M3oR/0QtXbsfX1zp5rj9zNt+sZNkqGhuZcH9sn3RZ294DqFb80sU6Syzh9sEf+FFE1ldNHDddjNgr3w+sF33qApGi11XUbxSRWzrV3sqpHB4V6wpNsV50HxdguOivt4iXVOaKWUWJJThALFQdpjwA/UEs7S7Iju009uhOr56cfFx8StTv0ja/dcpCDFC8sdNRvIOzRw3ntam1bcjK1QzIRlbFU70cU4ifYwrxc0whfo4pxM8xhfg5phA/xxTi55hC/BxTiJ9jCvFzTCF+jinEzzHpI93+NWvFzk8P2PhXPFWrJQ1ry3b6SLcgZxRpP8f8B3U73Zz1aKm9AAAAAElFTkSuQmCC"
+    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAAAdCAIAAABzMjbkAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJrSURBVFhH3ZQxSBtRGMffcpDlpiylEG5xOYTQrUgGN5FMEjIJIhnawVGQuJxwk0OLHUKXgtCCZMgSh3aQFjoIVlBKaCDFQggR4pBMN914vvfu/9XLJTUqr5/gj/9wd3m53/e99+6JJ0jEC0nNB8DDBUnNB8DDBUnNB8DDBUnNB8DDBUnNB8DDBUnNB8DDBUnNB8CTpu27otzEzXTuMGQSks5KIDonwl8Tji2aqZ/+EQBPmkfup7kqnILwd8Rzce9+wovG+rxtyetMbrnWCnWhhC54YsTEkGZZuH47LjlxMzj2l3MZOcay5zeOBvJJ/JdkHbelLaTmnv30agvC3T4Poig49/KWUz1TlSQn/6zqWHkvHrHt/i08OWR6P99e2fZKvR9GYb9RzlrFgyFDP8ODopUtvjv5M5Le0WXvStY9Xmxw1buUP2pa3hw9n92PnojXhz/VK/ESSCeqmZ6H9CNVnfpGYS6bUbvJP1a7YrxYvW0cvd80d+5Hrsv3vdKLZ7Yl99t640LOSfyGZB235SH93Mx+0P20Ylurn9V1oli1gE7lsJtet5n93Kx2ODqVGzW/+5uhH7UpFt50pDfs18f6Wfyg1yr+wE5lz0H362beSvaDIfra9eRJEY5+vV+y437iifgiv5/4w+PpJwpb+yU6vQpb+hRSFb59KZ/p7sJWLT6lMrlyteKKpY/D9JBo+MNTN/ogqyzSYg2Otgp0vpX21cGolP+5H1ZIaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj4AHi5Iaj5PDiGuAaoeNYuSC/YWAAAAAElFTkSuQmCC"
     @decorate_constructor_parameter_types([str, int, int, int])
     def __init__(self, text, db_area_mem, byte_index, bit_index, *args, **kwargs):
         """
@@ -238,3 +238,29 @@ class BitStatusWidget(HBox, SiemensWidget):
         self.label_value.style.update(style)
 
         
+class WordEditWidget(SpinBox, SiemensWidget):
+    """A Word (16bit) value edit.
+        Connect the event link_to to a PLCSiemens widget on the "on_link_to" method.
+        i.e.:
+            widget.link_to.do(plc.on_link_to)
+    """
+    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAAAeCAIAAADINCUsAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGjSURBVGhD7ZYxjoNADEWpt8wl0qbYHIT7pEqdg3CDvQJSirQUXIFy+x3P/MH2jBuKGSGtn1LAt4n4LyBl+HUy7oJxF4y7YNwF4y4Yd8F0dfFlgdkJ+Acu1mXZcFixLcuKQ3YxjQO4Pt7I3o8rsmEYpxjxWgYDMclJoAjRXpM22/F53S+352zo2Obn7XJ/fXCaXFBpKIj9441TD1mUHQHzKpHWIdpraN6W2LnUYYTVOyIaCqSYhNyjYz0NGCHaazBrS9HctFO5sFXULmRgXmOFaK/BrDl7f1tEQLigu99fbUWcyFgXpbNxIjvieitEew0tdyJaCFgiAuY7onrHR0AnWkW6JG/QNs2sEO01caEPR10U70MtIhBC+fhrNTizwm/UV2CjOYfeESBK5N+4QMkilBu6nqZGiPYabLSl6G/riC7kb7j3p7B6IohcViDs8GEdor0mLjTFbG6E+bmguwXp/qMKhbSFjoL9C/hhqEK016TNdhz8r9ULtNdg1o7D/8G7gPYazE6Au2C6ujg57oJxF4y7YNwF4y4Yd8EMP/PqH/rM6x+8Pwvc9mLA2gAAAABJRU5ErkJggg=="
+    @decorate_constructor_parameter_types([str, int, int])
+    def __init__(self, text, db_area_mem, byte_index, *args, **kwargs):
+        """
+        Args:
+            text (str): The text that will be displayed on the label.
+            kwargs: See Widget.__init__()
+        """
+        super(WordEditWidget, self).__init__(0, -32767, 32766, 1,*args, **kwargs)
+        SiemensWidget._setup(self)
+        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'100px','height':'30px'})
+        self.plc_instance = None
+        self.db_area_mem = db_area_mem
+        self.byte_index = byte_index
+        self.onchange.do(self.on_changed)
+
+    def on_changed(self, emitter, new_value):
+        if self.plc_instance==None:
+            return
+        self.plc_instance.set_int( self.db_area_mem, self.byte_index, int(self.get_value()))
