@@ -234,6 +234,7 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_first_component.do = self.do_first
         self.on_new_image_second_component.do = self.do_second
         self.on_new_image_third_component.do = self.do_third
+        self.backup_img = None
 
     def on_new_image_listener(self, emitter):
         if emitter.img is None:
@@ -257,13 +258,15 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_first_component.kwuserdata = kwuserdata
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
-            self.img = cv2.split(self.backup_img)[0]
+            if not self.backup_img is None:
+                self.img = cv2.split(self.backup_img)[0]
             callback(self, *userdata, **kwuserdata)
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_first_component(self, img):
-        self.img = cv2.split(self.backup_img)[0]
+        if not self.backup_img is None:
+            self.img = cv2.split(self.backup_img)[0]
         return ()
 
     def do_second(self, callback, *userdata, **kwuserdata):
@@ -276,13 +279,15 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_second_component.kwuserdata = kwuserdata
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
-            self.img = cv2.split(self.backup_img)[1]
+            if not self.backup_img is None:
+                self.img = cv2.split(self.backup_img)[1]
             callback(self, *userdata, **kwuserdata)
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_second_component(self, img):
-        self.img = cv2.split(self.backup_img)[1]
+        if not self.backup_img is None:
+            self.img = cv2.split(self.backup_img)[1]
         return ()
 
     def do_third(self, callback, *userdata, **kwuserdata):
@@ -295,13 +300,15 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_third_component.kwuserdata = kwuserdata
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
-            self.img = cv2.split(self.backup_img)[2]
+            if not self.backup_img is None:
+                self.img = cv2.split(self.backup_img)[2]
             callback(self, *userdata, **kwuserdata)
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_third_component(self, img):
-        self.img = cv2.split(self.backup_img)[2]
+        if not self.backup_img is None:
+            self.img = cv2.split(self.backup_img)[2]
         return ()
 
 
