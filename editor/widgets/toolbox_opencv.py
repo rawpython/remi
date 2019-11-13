@@ -30,6 +30,79 @@ class OpencvWidget(object):
         return ()
 
 
+class OpencvImRead(gui.Image, OpencvWidget):
+    """ OpencvImRead widget.
+        Allows to read an image from file.
+        The event on_new_image can be connected to other Opencv widgets for further processing
+    """
+    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAFnQAABZ0B24EKIgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATOSURBVGiB5ZpdbBRVFMd/d6ZlpVCKQEF48jtEQkyMiRFNjEZe9AHUxMQHg/HBQOKjJD7ogxojwcYHIKAEP7AaYpQPQb6hQqpdqgIWRIpbChWU7W63y3a7O9vdmbk+lG637LYz087druH3tLn33HPOf+fOvWfujFi+eK7kFkKb7ATKTdXQD6HpBObcMZm5KGOgJ4y0LaBAcPWseh5cu33SklLJ6TeWk+0JA7fylHbDNHqYJ/9AExbdLCLJ/+8WcCW4GoPHWM8jcjMCG26s6+08w0HxHga3q8zRV1wIljwvV3IXzUU9C9lHnfyHRvEdNrqC9PzH8R5exO6SYoeYTxsP8aWvSanEUfBYYvM20tmmUnAUPFN2OTqZxWU/cikLjoJj3OvoJMr9viRTDhwFh8RSRych8bQvyTjRYfxES2IrphwYtw/HVbqDpzjHMhbxfcn+Tp7gLC+MOwE35KTBt92raU83kZMZ2vr38OqCrQTENM++XFVae0UDx8VqckzNt5kECLKK7eITQHgO7JaEFebTf1/mbGofOZkB4O/MKXZF3x6XP1eFh41OkFW0iteYQwgNkwgLsb0Vap7pTJ9gT+wdwtkLRX3t6aNcTLdwT80STz49ZWyjE2GhpwDjIScNjvau42RyB/1WtKRNxkrSFF/P3TWPIjzMMLWXyCWmzBLLdRHJdtBpBOnMBIlkLzqO6xo4STCxlSV1r7iO5UmwQQJDJAjI6UylDm2C5eSp5E5+T+4ikguRNHuwMT2Nt6RJa982Hq59kSlajasxjoLDop1mfQtXtTOkiGOKDDrV3CZrmSHnMVveyX3ycRZbz7r+A+LmVXZF36LTaJ3QFgMQyYbYH1vDsvp3XdmPKbhJ30Cr/hV9IlLUlxbX6RVXuMxvnGYnx/RNPGAv5UnzdaqYMqrP86kj7I+tJZrrcJWgG86lDrJk5grqq+9xtB11WzpY9SHHqjaWFHszNhZhcYEmfQMbpzxHi/5FSbtfEtvYHn3TV7EASSvK/tgaV7YlBbfpuzmhfU2OjOfg18R59la9z2fVK0gTz7cHE40cijeQsno9+3TDxXQLZ1P7HO2KBA+IFEf19WRE37iD21iEtGY2V7/EJa2V4/GPORxvIGXFnQePk6w0aI5vwZJjL3xFgg/oa4kK5y3BDd3aXzTqKzlirsOwkr74HIur2TMcv75pTJsRgrOkCWn+PtsaWgJzfgbqfHVbEiltTiV30D/GbTNC8M/658TEZf8z0YF5QK3/rm8mluviQOyDUftHCO7UTqjLpAqYT1lEn0//yJVMW8m+vGCJTVgUF+m+MiR6qpPhxEhbvRyKN5TsywvOYdAvetRmAoOiF4DqQ85LRiu/9n1T1J4XbIqs2gwKCYDqM3xLmgQTjUWla16w18J9wtQC09WGuJb9k8O9H41oKxBsqY1+MxowR32Ytv4fsAuKkRGLVtmpAWarDZEwr2HYw1VjgeBJ+hBgJsoXMFMOPxNM/uvSADBXbYjCizn5ggFmMCi8DFSGYB3lV3mIyhAMg1uU4m0KKkmwQPmKDQWCvZztKqOGwVVbIQWCK+ANvgBmqQ2hDf+okNkdQGkFJvKfHmqCVH2Z6+nRkIAJftVCNQkdcaOQHD6XtiXTuitgWiumQuZx+fgPED6yi1RbbEEAAAAASUVORK5CYII="
+    @gui.decorate_constructor_parameter_types(["file"])
+    def __init__(self, filename, **kwargs):
+        self.app_instance = None
+        super(OpencvImRead, self).__init__(self.icon, **kwargs)
+        OpencvWidget._setup(self)
+        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'200px','height':'180px'})
+        self.frame_index = 0
+        self.set_image(filename)
+
+    def _need_update(self, emitter=None):
+        #overriding this method allows to correct the image url that gets updated by the editor
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': id(self), 'frame_index':0})
+        super(OpencvImRead, self)._need_update(emitter)
+
+    def on_new_image_listener(self, emitter):
+        if emitter.img is None:
+            return
+        self.set_image_data(emitter.img)
+
+    def set_image(self, filename):
+        self.set_image_data(cv2.imread(filename, cv2.IMREAD_COLOR)) #cv2.IMREAD_GRAYSCALE)#cv2.IMREAD_COLOR)
+
+    def set_image_data(self, image_data_as_numpy_array):
+        self.img = image_data_as_numpy_array
+        self.update()
+        self.on_new_image()
+
+    def search_app_instance(self, node):
+        if issubclass(node.__class__, remi.server.App):
+            return node
+        if not hasattr(node, "get_parent"):
+            return None
+        return self.search_app_instance(node.get_parent()) 
+
+    def update(self, *args):
+        if self.app_instance==None:
+            self.app_instance = self.search_app_instance(self)
+            if self.app_instance==None:
+                return
+        self.frame_index = self.frame_index + 1
+        self.app_instance.execute_javascript("""
+            url = '/%(id)s/get_image_data?index=%(frame_index)s';
+            
+            xhr = null;
+            xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'blob'
+            xhr.onload = function(e){
+                urlCreator = window.URL || window.webkitURL;
+                urlCreator.revokeObjectURL(document.getElementById('%(id)s').src);
+                imageUrl = urlCreator.createObjectURL(this.response);
+                document.getElementById('%(id)s').src = imageUrl;
+            }
+            xhr.send();
+            """ % {'id': id(self), 'frame_index':self.frame_index})
+
+    def get_image_data(self, index=0):
+        try:
+            ret, png = cv2.imencode('.png', self.img)
+            if ret:
+                headers = {'Content-type': 'image/png'}
+                return [png.tostring(), headers]
+        except:
+            print(traceback.format_exc())
+        return None, None
+
+
 class OpencvVideo(OpencvImRead):
     """ OpencvVideo widget.
         Opens a video source and dispatches the image frame by generating on_new_image event.
@@ -99,79 +172,6 @@ class OpencvVideo(OpencvImRead):
                     headers = {'Content-type': 'image/png'}
                     # tostring is an alias to tobytes, which wasn't added till numpy 1.9
                     return [png.tostring(), headers]
-        except:
-            print(traceback.format_exc())
-        return None, None
-
-
-class OpencvImRead(gui.Image, OpencvWidget):
-    """ OpencvImRead widget.
-        Allows to read an image from file.
-        The event on_new_image can be connected to other Opencv widgets for further processing
-    """
-    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAFnQAABZ0B24EKIgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATOSURBVGiB5ZpdbBRVFMd/d6ZlpVCKQEF48jtEQkyMiRFNjEZe9AHUxMQHg/HBQOKjJD7ogxojwcYHIKAEP7AaYpQPQb6hQqpdqgIWRIpbChWU7W63y3a7O9vdmbk+lG637LYz087druH3tLn33HPOf+fOvWfujFi+eK7kFkKb7ATKTdXQD6HpBObcMZm5KGOgJ4y0LaBAcPWseh5cu33SklLJ6TeWk+0JA7fylHbDNHqYJ/9AExbdLCLJ/+8WcCW4GoPHWM8jcjMCG26s6+08w0HxHga3q8zRV1wIljwvV3IXzUU9C9lHnfyHRvEdNrqC9PzH8R5exO6SYoeYTxsP8aWvSanEUfBYYvM20tmmUnAUPFN2OTqZxWU/cikLjoJj3OvoJMr9viRTDhwFh8RSRych8bQvyTjRYfxES2IrphwYtw/HVbqDpzjHMhbxfcn+Tp7gLC+MOwE35KTBt92raU83kZMZ2vr38OqCrQTENM++XFVae0UDx8VqckzNt5kECLKK7eITQHgO7JaEFebTf1/mbGofOZkB4O/MKXZF3x6XP1eFh41OkFW0iteYQwgNkwgLsb0Vap7pTJ9gT+wdwtkLRX3t6aNcTLdwT80STz49ZWyjE2GhpwDjIScNjvau42RyB/1WtKRNxkrSFF/P3TWPIjzMMLWXyCWmzBLLdRHJdtBpBOnMBIlkLzqO6xo4STCxlSV1r7iO5UmwQQJDJAjI6UylDm2C5eSp5E5+T+4ikguRNHuwMT2Nt6RJa982Hq59kSlajasxjoLDop1mfQtXtTOkiGOKDDrV3CZrmSHnMVveyX3ycRZbz7r+A+LmVXZF36LTaJ3QFgMQyYbYH1vDsvp3XdmPKbhJ30Cr/hV9IlLUlxbX6RVXuMxvnGYnx/RNPGAv5UnzdaqYMqrP86kj7I+tJZrrcJWgG86lDrJk5grqq+9xtB11WzpY9SHHqjaWFHszNhZhcYEmfQMbpzxHi/5FSbtfEtvYHn3TV7EASSvK/tgaV7YlBbfpuzmhfU2OjOfg18R59la9z2fVK0gTz7cHE40cijeQsno9+3TDxXQLZ1P7HO2KBA+IFEf19WRE37iD21iEtGY2V7/EJa2V4/GPORxvIGXFnQePk6w0aI5vwZJjL3xFgg/oa4kK5y3BDd3aXzTqKzlirsOwkr74HIur2TMcv75pTJsRgrOkCWn+PtsaWgJzfgbqfHVbEiltTiV30D/GbTNC8M/658TEZf8z0YF5QK3/rm8mluviQOyDUftHCO7UTqjLpAqYT1lEn0//yJVMW8m+vGCJTVgUF+m+MiR6qpPhxEhbvRyKN5TsywvOYdAvetRmAoOiF4DqQ85LRiu/9n1T1J4XbIqs2gwKCYDqM3xLmgQTjUWla16w18J9wtQC09WGuJb9k8O9H41oKxBsqY1+MxowR32Ytv4fsAuKkRGLVtmpAWarDZEwr2HYw1VjgeBJ+hBgJsoXMFMOPxNM/uvSADBXbYjCizn5ggFmMCi8DFSGYB3lV3mIyhAMg1uU4m0KKkmwQPmKDQWCvZztKqOGwVVbIQWCK+ANvgBmqQ2hDf+okNkdQGkFJvKfHmqCVH2Z6+nRkIAJftVCNQkdcaOQHD6XtiXTuitgWiumQuZx+fgPED6yi1RbbEEAAAAASUVORK5CYII="
-    @gui.decorate_constructor_parameter_types(["file"])
-    def __init__(self, filename, **kwargs):
-        self.app_instance = None
-        super(OpencvImRead, self).__init__(self.icon, **kwargs)
-        OpencvWidget._setup(self)
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'200px','height':'180px'})
-        self.frame_index = 0
-        self.set_image(filename)
-
-    def _need_update(self, emitter=None):
-        #overriding this method allows to correct the image url that gets updated by the editor
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': id(self), 'frame_index':0})
-        super(OpencvImRead, self)._need_update(emitter)
-
-    def on_new_image_listener(self, emitter):
-        if emitter.img is None:
-            return
-        self.set_image_data(emitter.img)
-
-    def set_image(self, filename):
-        self.set_image_data(cv2.imread(filename, cv2.IMREAD_COLOR)) #cv2.IMREAD_GRAYSCALE)#cv2.IMREAD_COLOR)
-
-    def set_image_data(self, image_data_as_numpy_array):
-        self.img = image_data_as_numpy_array
-        self.update()
-        self.on_new_image()
-
-    def search_app_instance(self, node):
-        if issubclass(node.__class__, remi.server.App):
-            return node
-        if not hasattr(node, "get_parent"):
-            return None
-        return self.search_app_instance(node.get_parent()) 
-
-    def update(self, *args):
-        if self.app_instance==None:
-            self.app_instance = self.search_app_instance(self)
-            if self.app_instance==None:
-                return
-        self.frame_index = self.frame_index + 1
-        self.app_instance.execute_javascript("""
-            url = '/%(id)s/get_image_data?index=%(frame_index)s';
-            
-            xhr = null;
-            xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.responseType = 'blob'
-            xhr.onload = function(e){
-                urlCreator = window.URL || window.webkitURL;
-                urlCreator.revokeObjectURL(document.getElementById('%(id)s').src);
-                imageUrl = urlCreator.createObjectURL(this.response);
-                document.getElementById('%(id)s').src = imageUrl;
-            }
-            xhr.send();
-            """ % {'id': id(self), 'frame_index':self.frame_index})
-
-    def get_image_data(self, index=0):
-        try:
-            ret, png = cv2.imencode('.png', self.img)
-            if ret:
-                headers = {'Content-type': 'image/png'}
-                return [png.tostring(), headers]
         except:
             print(traceback.format_exc())
         return None, None
