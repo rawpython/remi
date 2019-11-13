@@ -148,6 +148,7 @@ class SiemensWidget(object):
                 'emitter_identifier':self.link_to.event_source_instance.identifier, 'event_name':self.link_to.event_name}
         self.link_to.callback = callback
         self.link_to.userdata = userdata
+        self.link_to.kwuserdata = {}
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
             callback(self, *userdata)
