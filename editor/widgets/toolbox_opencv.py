@@ -24,7 +24,7 @@ class OpencvWidget(object):
         if callback is not None: #protection against the callback replacements in the editor
             callback(self, *userdata, **kwuserdata)
 
-    @gui.decorate_set_on_listener("(self, emitter, image_data_as_numpy_array)")
+    @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image(self):
         return ()
@@ -58,8 +58,8 @@ class OpencvImRead(gui.Image, OpencvWidget):
     def set_image(self, filename):
         self.set_image_data(cv2.imread(filename, cv2.IMREAD_COLOR)) #cv2.IMREAD_GRAYSCALE)#cv2.IMREAD_COLOR)
 
-    def set_image_data(self, image_data_as_numpy_array):
-        self.img = image_data_as_numpy_array
+    def set_image_data(self, img):
+        self.img = img
         self.update()
         self.on_new_image()
 
@@ -212,15 +212,14 @@ class OpencvThreshold(OpencvImRead):
         super(OpencvThreshold, self).__init__("", **kwargs)
 
     def on_new_image_listener(self, emitter): #THRESHOLD
-        try:
-            img = emitter.img
-            if len(img.shape)>2:
-                img = cv2.cvtColor(emitter.img, cv2.COLOR_BGR2GRAY)
-            res, self.img = cv2.threshold(img,self.threshold_value,255,cv2.THRESH_BINARY)
-            self.set_image_data(self.img)
-        except:
-            print(traceback.format_exc())
-
+        if emitter.img is None:
+            return
+        img = emitter.img
+        if len(img.shape)>2:
+            img = cv2.cvtColor(emitter.img, cv2.COLOR_BGR2GRAY)
+        res, self.img = cv2.threshold(img,self.threshold_value,255,cv2.THRESH_BINARY)
+        self.set_image_data(self.img)
+        
 
 class OpencvSplit(OpencvImRead):
     """ OpencvSplit widget.
@@ -232,10 +231,14 @@ class OpencvSplit(OpencvImRead):
     @gui.decorate_constructor_parameter_types([])
     def __init__(self, **kwargs):
         super(OpencvSplit, self).__init__("", **kwargs)
+        self.on_new_image_first_component.do = self.do_first
+        self.on_new_image_second_component.do = self.do_second
+        self.on_new_image_third_component.do = self.do_third
 
     def on_new_image_listener(self, emitter):
         if emitter.img is None:
             return
+        self.backup_img = emitter.img
         self.set_image_data(emitter.img)
         if not self.on_new_image_first_component.callback is None:
             self.on_new_image_first_component(emitter.img)
@@ -244,19 +247,61 @@ class OpencvSplit(OpencvImRead):
         if not self.on_new_image_third_component.callback is None:
             self.on_new_image_third_component(emitter.img)
 
+    def do_first(self, callback, *userdata, **kwuserdata):
+        #this method gets called when an event is connected, making it possible to execute the process chain directly, before the event triggers
+        if hasattr(self.on_new_image_first_component.event_method_bound, '_js_code'):
+            self.on_new_image_first_component.event_source_instance.attributes[self.on_new_image_first_component.event_name] = self.on_new_image_first_component.event_method_bound._js_code%{
+                'emitter_identifier':self.on_new_image_first_component.event_source_instance.identifier, 'event_name':self.on_new_image_first_component.event_name}
+        self.on_new_image_first_component.callback = callback
+        self.on_new_image_first_component.userdata = userdata
+        self.on_new_image_first_component.kwuserdata = kwuserdata
+        #here the callback is called immediately to make it possible link to the plc
+        if callback is not None: #protection against the callback replacements in the editor
+            self.img = cv2.split(self.backup_img)[0]
+            callback(self, *userdata, **kwuserdata)
+
+    @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_first_component(self, img):
-        self.img = cv2.split(img)[0]
+        self.img = cv2.split(self.backup_img)[0]
         return ()
 
+    def do_second(self, callback, *userdata, **kwuserdata):
+        #this method gets called when an event is connected, making it possible to execute the process chain directly, before the event triggers
+        if hasattr(self.on_new_image_second_component.event_method_bound, '_js_code'):
+            self.on_new_image_second_component.event_source_instance.attributes[self.on_new_image_second_component.event_name] = self.on_new_image_second_component.event_method_bound._js_code%{
+                'emitter_identifier':self.on_new_image_second_component.event_source_instance.identifier, 'event_name':self.on_new_image_second_component.event_name}
+        self.on_new_image_second_component.callback = callback
+        self.on_new_image_second_component.userdata = userdata
+        self.on_new_image_second_component.kwuserdata = kwuserdata
+        #here the callback is called immediately to make it possible link to the plc
+        if callback is not None: #protection against the callback replacements in the editor
+            self.img = cv2.split(self.backup_img)[1]
+            callback(self, *userdata, **kwuserdata)
+
+    @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_second_component(self, img):
-        self.img = cv2.split(img)[1]
+        self.img = cv2.split(self.backup_img)[1]
         return ()
 
+    def do_third(self, callback, *userdata, **kwuserdata):
+        #this method gets called when an event is connected, making it possible to execute the process chain directly, before the event triggers
+        if hasattr(self.on_new_image_third_component.event_method_bound, '_js_code'):
+            self.on_new_image_third_component.event_source_instance.attributes[self.on_new_image_third_component.event_name] = self.on_new_image_third_component.event_method_bound._js_code%{
+                'emitter_identifier':self.on_new_image_third_component.event_source_instance.identifier, 'event_name':self.on_new_image_third_component.event_name}
+        self.on_new_image_third_component.callback = callback
+        self.on_new_image_third_component.userdata = userdata
+        self.on_new_image_third_component.kwuserdata = kwuserdata
+        #here the callback is called immediately to make it possible link to the plc
+        if callback is not None: #protection against the callback replacements in the editor
+            self.img = cv2.split(self.backup_img)[2]
+            callback(self, *userdata, **kwuserdata)
+
+    @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_third_component(self, img):
-        self.img = cv2.split(img)[2]
+        self.img = cv2.split(self.backup_img)[2]
         return ()
 
 
