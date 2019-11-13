@@ -460,6 +460,8 @@ class WidgetHelper(gui.HBox):
                 editWidget = gui.TextInput()
             elif _typ=="base64":
                 editWidget = Base64ImageInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
+            elif _typ=="file":
+                editWidget = FileInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
             editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
 
@@ -860,6 +862,52 @@ class Base64ImageInput(gui.Widget, gui.EventSource):
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
             self.txtInput.set_value(gui.load_resource(fileList[0]))
+            return self.onchange(None, self.txtInput.get_value())
+
+    def set_value(self, value):
+        self.txtInput.set_value(value)
+
+    def get_value(self):
+        return self.txtInput.get_value()
+
+
+class FileInput(gui.Widget, gui.EventSource):
+    def __init__(self, appInstance, **kwargs):
+        super(FileInput, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
+        self.appInstance = appInstance
+        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.style['display'] = 'block'
+        self.style['overflow'] = 'hidden'
+
+        self.txtInput = gui.TextInput(width='80%', height='100%')
+        self.txtInput.style['float'] = 'left'
+        self.txtInput.onchange.do(self.on_txt_changed)
+        self.append(self.txtInput)
+
+        self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
+        self.btFileFolderSelection.style.update({'background-repeat':'no-repeat',
+            'background-image':"url('/res:folder.png')",
+            'background-color':'transparent'})
+        self.append(self.btFileFolderSelection)
+        self.btFileFolderSelection.onclick.do(self.on_file_selection_bt_pressed)
+
+        self.selectionDialog = gui.FileSelectionDialog('Select a file', '', False, './', True, False)
+        self.selectionDialog.confirm_value.do(self.file_dialog_confirmed)
+
+    @gui.decorate_event
+    def onchange(self, widget, value):
+        return (value,)
+    
+    def on_txt_changed(self, widget, value):
+        return self.onchange(None, value)
+
+    def on_file_selection_bt_pressed(self, widget):
+        self.selectionDialog.show(self.appInstance)
+
+    def file_dialog_confirmed(self, widget, fileList):
+        if len(fileList)>0:
+            self.txtInput.set_value(fileList[0].replace("\\","/"))
             return self.onchange(None, self.txtInput.get_value())
 
     def set_value(self, value):
