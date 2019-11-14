@@ -453,7 +453,9 @@ class WidgetHelper(gui.HBox):
             note = "" if not hasattr(_typ,"__name__") else ' (%s)'%_typ.__name__
             editWidget = None
             if _typ==int:
-                editWidget = gui.SpinBox('0',-65536,65535)
+                editWidget = gui.SpinBox('0', -65536, 65535)
+            if _typ==float:
+                editWidget = gui.SpinBox('0.0', -65536, 65535, step=0.0001)
             elif _typ==bool:
                 editWidget = gui.CheckBox()
             elif _typ==str:
@@ -462,6 +464,9 @@ class WidgetHelper(gui.HBox):
                 editWidget = Base64ImageInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
             elif _typ=="file":
                 editWidget = FileInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
+            elif type(_typ) == list:
+                editWidget = gui.DropDown(children=[gui.DropDownItem(x) for x in _typ], width="100%", height="20px", style={'overflow':'visible'})
+                editWidget.select_by_value(_typ[0])
             editWidget.attributes['tabindex'] = str(index+2)
             self.dialog.add_field_with_label(param, param + note, editWidget)
 
@@ -497,6 +502,9 @@ class WidgetHelper(gui.HBox):
             if _typ==int:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
                 param_values.append(int(self.dialog.get_field(param).get_value()))
+            if _typ==float:
+                param_for_constructor.append(self.dialog.get_field(param).get_value())
+                param_values.append(float(self.dialog.get_field(param).get_value()))
             elif _typ==bool:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
                 param_values.append(bool(self.dialog.get_field(param).get_value()))

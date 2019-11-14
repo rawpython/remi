@@ -317,21 +317,23 @@ class OpencvSplit(OpencvImRead):
         return ()
 
 
-class OpencvBGRtoHSV(OpencvImRead):
-    """ OpencvBGRtoHSV widget.
-        Convert image colorspace from BGR to HSV.
+class OpencvCvtColor(OpencvImRead):
+    """ OpencvCvtColor widget.
+        Convert image colorspace.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
+    cvt_types = {'COLOR_BGR2HSV':cv2.COLOR_BGR2HSV,'COLOR_HSV2BGR':cv2.COLOR_HSV2BGR, 'COLOR_RGB2BGR':cv2.COLOR_RGB2BGR, 'COLOR_RGB2GRAY':cv2.COLOR_RGB2GRAY, 'COLOR_BGR2GRAY':cv2.COLOR_BGR2GRAY, 'COLOR_RGB2HSV':cv2.COLOR_RGB2HSV}
     icon = "data:image/png;base64,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"
-    @gui.decorate_constructor_parameter_types([])
-    def __init__(self, **kwargs):
-        super(OpencvBGRtoHSV, self).__init__("", **kwargs)
+    @gui.decorate_constructor_parameter_types([[*cvt_types.keys()]])
+    def __init__(self, conversion_code, **kwargs):
+        self.conversion_code = self.cvt_types[conversion_code]
+        super(OpencvCvtColor, self).__init__("", **kwargs)
 
     def on_new_image_listener(self, emitter):
         if emitter.img is None:
             return
-        self.set_image_data(cv2.cvtColor(emitter.img,cv2.COLOR_BGR2HSV))
+        self.set_image_data(cv2.cvtColor(emitter.img, self.conversion_code))
 
 
 class OpencvBitwiseNot(OpencvImRead):
