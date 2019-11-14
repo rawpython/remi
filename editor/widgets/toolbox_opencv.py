@@ -247,11 +247,11 @@ class OpencvSplit(OpencvImRead):
         self.backup_img = emitter.img
         self.set_image_data(emitter.img)
         if not self.on_new_image_first_component.callback is None:
-            self.on_new_image_first_component(emitter.img)
+            self.on_new_image_first_component()
         if not self.on_new_image_second_component.callback is None:
-            self.on_new_image_second_component(emitter.img)
+            self.on_new_image_second_component()
         if not self.on_new_image_third_component.callback is None:
-            self.on_new_image_third_component(emitter.img)
+            self.on_new_image_third_component()
 
     def do_first(self, callback, *userdata, **kwuserdata):
         #this method gets called when an event is connected, making it possible to execute the process chain directly, before the event triggers
@@ -269,7 +269,7 @@ class OpencvSplit(OpencvImRead):
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
-    def on_new_image_first_component(self, img):
+    def on_new_image_first_component(self):
         if not self.backup_img is None:
             self.img = cv2.split(self.backup_img)[0]
         return ()
@@ -290,7 +290,7 @@ class OpencvSplit(OpencvImRead):
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
-    def on_new_image_second_component(self, img):
+    def on_new_image_second_component(self):
         if not self.backup_img is None:
             self.img = cv2.split(self.backup_img)[1]
         return ()
@@ -311,7 +311,7 @@ class OpencvSplit(OpencvImRead):
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
-    def on_new_image_third_component(self, img):
+    def on_new_image_third_component(self):
         if not self.backup_img is None:
             self.img = cv2.split(self.backup_img)[2]
         return ()
