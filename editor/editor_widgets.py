@@ -11,7 +11,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
+import remi
 import remi.gui as gui
 import html_helper
 import inspect
@@ -464,7 +464,9 @@ class WidgetHelper(gui.HBox):
                 editWidget = Base64ImageInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
             elif _typ=="file":
                 editWidget = FileInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
-            elif type(_typ) == list:
+            elif type(_typ) in (list, type({}.keys())):
+                if not remi.server.pyLessThan3:
+                    _typ = list(_typ)
                 editWidget = gui.DropDown(children=[gui.DropDownItem(x) for x in _typ], width="100%", height="20px", style={'overflow':'visible'})
                 editWidget.select_by_value(_typ[0])
             editWidget.attributes['tabindex'] = str(index+2)
