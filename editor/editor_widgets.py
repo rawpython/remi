@@ -539,6 +539,7 @@ class WidgetCollection(gui.Widget):
         self.widgetsContainer = gui.HBox(width='100%', height='85%')
         self.widgetsContainer.style.update({'overflow-y':'scroll',
             'overflow-x':'hidden',
+            'align-items':'flex-start',
             'flex-wrap':'wrap',
             'background-color':'white'})
 
@@ -582,29 +583,37 @@ class WidgetCollection(gui.Widget):
             classes = inspect.getmembers(widgets, inspect.isclass)
             for (classname, classvalue) in classes:
                 if issubclass(classvalue,gui.Widget):
-                    self.add_widget_to_collection(classvalue)
+                    self.add_widget_to_collection(classvalue, classvalue.__module__)
         except:
             logging.getLogger('remi.editor').error('error loading external widgets', exc_info=True)
 
-    def add_widget_to_collection(self, widgetClass, **kwargs_to_widget):
+    def add_widget_to_collection(self, widgetClass, group='standard_tools', **kwargs_to_widget):
         #create an helper that will be created on click
         #the helper have to search for function that have 'return' annotation 'event_listener_setter'
+        if group not in self.widgetsContainer.children.keys():
+            self.widgetsContainer.append(EditorAttributesGroup(group), group)
+            self.widgetsContainer.children[group].style['width'] = "100%"
+
         helper = WidgetHelper(self.appInstance, widgetClass, **kwargs_to_widget)
         helper.attributes['title'] = widgetClass.__doc__
-        self.widgetsContainer.append( helper )
+        #self.widgetsContainer.append( helper )
+        self.widgetsContainer.children[group].append( helper )
 
 
-class EditorAttributesGroup(gui.Widget):
+class EditorAttributesGroup(gui.HBox):
     """ Contains a title and widgets. When the title is clicked, the contained widgets are hidden.
         Its scope is to provide a foldable group
     """
     def __init__(self, title, **kwargs):
         super(EditorAttributesGroup, self).__init__(**kwargs)
         self.add_class('.RaisedFrame')
-        self.style['display'] = 'block'
+        #self.style['display'] = 'block'
         self.style['overflow'] = 'visible'
+        self.style['justify-content'] = 'flex-start'
+        self.style['align-items'] = 'flex-start'
+        self.style['flex-wrap'] = 'wrap'
         self.opened = True
-        self.title = gui.Label(title)
+        self.title = gui.Label(title, width='100%')
         self.title.add_class("Title")
         self.title.style.update({'padding-left':'32px',
             'background-image':"url('/editor_resources:minus.png')",
@@ -612,7 +621,7 @@ class EditorAttributesGroup(gui.Widget):
             'background-position':'5px',
             'border-top':'3px solid lightgray'})
         self.title.onclick.do(self.openClose)
-        self.append(self.title, '0')
+        self.append(self.title)
 
     def openClose(self, widget):
         self.opened = not self.opened
@@ -652,7 +661,7 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         for attribute in html_helper.editorAttributeList:
             attributeName = attribute[0]
             attributeValue = attribute[1]
-            attributeEditor = EditorAttributeInput(attributeName, attributeValue, appInstance)
+            attributeEditor = EditorAttributeInput(attributeName, attributeValue, appInstance, width="100%")
             attributeEditor.on_attribute_changed.do(self.onattribute_changed)
             attributeEditor.on_attribute_remove.do(self.onattribute_remove)
             #attributeEditor.style['display'] = 'none'
@@ -825,6 +834,7 @@ class ResPathInput(gui.Widget, gui.EventSource):
     def get_value(self):
         return self.txtInput.get_value()
 
+
 class Base64ImageInput(gui.Widget, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(Base64ImageInput, self).__init__(**kwargs)
@@ -920,8 +930,8 @@ class FileInput(gui.Widget, gui.EventSource):
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
 class EditorAttributeInput(gui.Widget, gui.EventSource):
-    def __init__(self, attributeName, attributeDict, appInstance=None):
-        super(EditorAttributeInput, self).__init__()
+    def __init__(self, attributeName, attributeDict, appInstance=None, *args, **kwargs):
+        super(EditorAttributeInput, self).__init__(*args, **kwargs)
         gui.EventSource.__init__(self)
         self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
         self.style.update({'display':'block',
