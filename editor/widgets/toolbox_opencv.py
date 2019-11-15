@@ -240,12 +240,9 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_first_component.do = self.do_first
         self.on_new_image_second_component.do = self.do_second
         self.on_new_image_third_component.do = self.do_third
-        self.backup_img = None
 
     def on_new_image_listener(self, emitter):
-        if emitter.img is None:
-            return
-        self.backup_img = emitter.img
+        self.image_source = emitter
         self.set_image_data(emitter.img)
         if not self.on_new_image_first_component.callback is None:
             self.on_new_image_first_component()
@@ -264,15 +261,17 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_first_component.kwuserdata = kwuserdata
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
-            if not self.backup_img is None:
-                self.img = cv2.split(self.backup_img)[0]
+            if hasattr(self, "image_source"):
+                if not self.image_source.img is None:
+                    self.img = cv2.split(self.image_source.img)[0]
             callback(self, *userdata, **kwuserdata)
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_first_component(self):
-        if not self.backup_img is None:
-            self.img = cv2.split(self.backup_img)[0]
+        if hasattr(self, "image_source"):
+            if not self.image_source.img is None:
+                self.img = cv2.split(self.image_source.img)[0]
         return ()
 
     def do_second(self, callback, *userdata, **kwuserdata):
@@ -285,15 +284,17 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_second_component.kwuserdata = kwuserdata
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
-            if not self.backup_img is None:
-                self.img = cv2.split(self.backup_img)[1]
+            if hasattr(self, "image_source"):
+                if not self.image_source.img is None:
+                    self.img = cv2.split(self.image_source.img)[1]
             callback(self, *userdata, **kwuserdata)
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_second_component(self):
-        if not self.backup_img is None:
-            self.img = cv2.split(self.backup_img)[1]
+        if hasattr(self, "image_source"):
+            if not self.image_source.img is None:
+                self.img = cv2.split(self.image_source.img)[1]
         return ()
 
     def do_third(self, callback, *userdata, **kwuserdata):
@@ -306,15 +307,17 @@ class OpencvSplit(OpencvImRead):
         self.on_new_image_third_component.kwuserdata = kwuserdata
         #here the callback is called immediately to make it possible link to the plc
         if callback is not None: #protection against the callback replacements in the editor
-            if not self.backup_img is None:
-                self.img = cv2.split(self.backup_img)[2]
+            if hasattr(self, "image_source"):
+                if not self.image_source.img is None:
+                    self.img = cv2.split(self.image_source.img)[2]
             callback(self, *userdata, **kwuserdata)
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
     def on_new_image_third_component(self):
-        if not self.backup_img is None:
-            self.img = cv2.split(self.backup_img)[2]
+        if hasattr(self, "image_source"):
+            if not self.image_source.img is None:
+                self.img = cv2.split(self.image_source.img)[2]
         return ()
 
 
@@ -562,22 +565,87 @@ class OpencvLaplacianFilter(OpencvImRead):
             print(traceback.format_exc())
             
 
-class OpencvWatershed(OpencvImRead):
-    """ OpencvWatershed segmentation widget.
+class OpencvCanny(OpencvImRead):
+    """ OpencvCanny segmentation widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
-        The event on_watershed_done can be connected to orher widgets for further processing
     """
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAAuCAYAAABwF6rfAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAGpgAABqYBuiC2sAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAW+SURBVGiB7dpdSFN/HMfx93GtMRIRL1LCiVuZrouw+VCQNWfhNpNCC4SuelDCpEF0E3QRXdRN0VpB4CC6CMGr6EnsQiGKWZsltQYaaJYxvCgWnZpytnnO/0Jc9bf5uK3/H/3c7fx+v/P7vtjZefjtCJIkKazArAFQFIVoNPq3a0lL1Go1giBMw2OxGN+/f1/UDsbGxigoKEhJcamsISsrC7VaTcZSJ5UkiZs3by51+LLjdrsJh8NLHr9keFFREbW1tX8F73a72bVrF0ajccn7WDIcYNOmTWnHt7e3LxsNy4TD73hFSe0For29nd27dy8bDUmAwzTearXidDpTglcUhevXr2M2m5OChiTBATZu3MiBAweSjlcUhRs3blBbW0tJSUnS9ps0OCQfP/NNW63WpKIhyXD4ib969eqy8DNom81GcXFxEiucTtLhMI1vaGhYMj7VaEgRHMBgMMTxsiwveJyiKLhcLux2e8rQkEI4/MQ7nc4F4WfQdXV1bN68OZWlpRYO0/jGxsZ58elEQxrgAHq9noaGBlwu1x9/84qicO3aNfbv358WNKQJDtPffHZ2NpOTk7PaJicnyc7OxmAwpKuc9MEBMjISTzdXWyqS3tn+Q1mFr7SswldaVuErLYIkSUo0GkUUxZRPFolE4uvav2ZmXX/t2rUpr2FmeXlNymf6JYlggiCkBf1rVuyhvgr/U4aGhnA4HAnbu7q6GBoaAqC7uxun07mgSUVRJBaLLaLMxcXhcMTrSpQ54aIo0t/fn7D96dOnfPjwAYBgMDjvZDOprq4mEAgsqO9S0t/fP+/JekEnt0gkwsDAAFNTU1RWVqJWqwE4ceIEOTk5s/orisLHjx95//49sixTUlJCfn4+AJ8+fSIWizE8PExGRga5ubnk5uYCMDIywvDwMAUFBfH1c0VRePv2LVu2bGFqaopgMEhhYSFjY2OMjo4Si8UoLi5e9J+H88K/fv2K3W4nKyuLYDCIXq+ns7MTQRA4e/YsTU1NHDx48LcxkiSxb98+TCYTGo0Gr9eLw+GgpaWFBw8eIIoit2/fJjMzk6amJhobGzl37hw+n4/y8nJevHhBdXU158+fJxqNYrPZaG1t5c6dO8iyzMDAAHV1dZhMJrRaLT6fj+bmZk6dOpU8uFqtpqOjg7y8PMLhMFVVVTx58gSLxZJwjEajwe/3o1KpAPB4PJw5c4aWlhba2tq4desWFy9epLS0FICenh78fj+PHz9GpVIxMTFBRUUFx48fZ/369QDk5OTw5s0btFotAH6/nzVrpssfGBjg2LFjyYVnZmaSl5cHwLp166isrGRwcHBOuCAI3L17l+7ubt69e8fExMScf+l6PB6+ffvGyZMn49tkWWZkZCQOP3z4cBwN8PDhw/jJNRwOEwqF5tf+kkXfwAiCMOvO69/p7OzE5XJx+fJlysrKGB8fx2azJewfiUQoLS2lubk5vq2trY3CwsI/9r937x6XLl3iypUrlJeXI4oi27dvX5RjUfBIJMLLly85cuTInP0CgQB79uyhqqoKYNbbFlqtlh8/fsQ/b926FbfbjdFojJ84JUlKuCobCAQwm82YzWZg+oqy2MwLHx8f5/Tp0+h0Onp6ejCZTOzYsWPOMTU1NbS2tqJSqRBFEa/X+1v7zp07uXDhAjU1NZhMJg4dOsT9+/ex2+1YrVa+fPlCb28vHR0d6PX6Wfu3WCwcPXoUrVZLOBye85KbKHM+pIRCIV6/fo0sywQCAQwGA/X19fGFwefPn6PT6cjPz2d0dJRQKERZWRkAXq+Xvr4+dDodFosFn8+H3W4HIBqN8ujRIz5//ozFYqGoqAhFUfB4PAwODqLRaKioqMBoNCLLMl1dXdhstvjRAPDq1SuePXvGhg0b2Lt3L319fdTX1wPQ29vLtm3b/nipnXlISevT2X8hy3755/+eVfhKy4qFC5IkKSv2lc6/sfTzt/MPlclxbZFsdksAAAAASUVORK5CYII="
-    @gui.decorate_constructor_parameter_types([OpencvBilateralFilter.border_type.keys()])
-    def __init__(self, border, *args, **kwargs):
-        self.border = OpencvBilateralFilter.border_type[border]
-        super(OpencvLaplacianFilter, self).__init__("", *args, **kwargs)
+    @gui.decorate_constructor_parameter_types([int, int])
+    def __init__(self, threshold1, threshold2, *args, **kwargs):
+        self.threshold1 = threshold1
+        self.threshold2 = threshold2
+        super(OpencvCanny, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
         try:
             self.image_source = emitter
-            self.set_image_data(cv2.Laplacian(emitter.img, -1, borderType=self.border))
+            self.set_image_data(cv2.Canny(emitter.img, self.threshold1, self.threshold2))
         except:
             print(traceback.format_exc())
+
+    def on_threshold1_listener(self, emitter, value=None):
+        v = emitter.get_value() if value is None else value
+        v = int(v)
+        self.threshold1 = v
+        if hasattr(self, "image_source"):
+            self.on_new_image_listener(self.image_source)
             
+    def on_threshold2_listener(self, emitter, value=None):
+        v = emitter.get_value() if value is None else value
+        v = int(v)
+        self.threshold2 = v
+        if hasattr(self, "image_source"):
+            self.on_new_image_listener(self.image_source)
+
+
+#https://docs.opencv.org/3.4/d3/dc0/group__imgproc__shape.html
+class OpencvFindContours(OpencvImRead):
+    """ OpencvFindContours segmentation widget.
+        Receives an image on on_new_image_listener.
+        The event on_new_image can be connected to other Opencv widgets for further processing
+    """
+    contour_retrieval_mode = {"RETR_LIST": cv2.RETR_LIST, "RETR_EXTERNAL": cv2.RETR_EXTERNAL, "RETR_CCOMP ": cv2.RETR_CCOMP, "RETR_TREE": cv2.RETR_TREE, "RETR_FLOODFILL": cv2.RETR_FLOODFILL}
+    contour_approximation_method = {"CHAIN_APPROX_NONE":cv2.CHAIN_APPROX_NONE, "CHAIN_APPROX_SIMPLE": cv2.CHAIN_APPROX_SIMPLE, "CHAIN_APPROX_TC89_L1": cv2.CHAIN_APPROX_TC89_L1, "CHAIN_APPROX_TC89_KCOS": cv2.CHAIN_APPROX_TC89_KCOS}
+    icon = "data:image/png;base64,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"
+    @gui.decorate_constructor_parameter_types([contour_retrieval_mode.keys(), contour_approximation_method.keys()])
+    def __init__(self, retrieval_mode, approximation_method, *args, **kwargs):
+        self.retrieval_mode = self.contour_retrieval_mode[retrieval_mode]
+        self.approximation_method = self.contour_approximation_method[approximation_method]
+        super(OpencvFindContours, self).__init__("", *args, **kwargs)
+        self.on_new_contours_result.do = self.do_contours_result
+
+    def on_new_image_listener(self, emitter):
+        try:
+            self.image_source = emitter
+            if emitter.img is None:
+                return
+            major = cv2.__version__.split('.')[0]
+            img = emitter.img.copy()
+            if major == '3':
+                img, self.contours, self.hierarchy= cv2.findContours(emitter.img.copy(), self.retrieval_mode, self.approximation_method)
+            else:
+                self.contours, self.hierarchy= cv2.findContours(img, self.retrieval_mode, self.approximation_method)
+            img = cv2.drawContours(img, self.contours, -1, 255)
+            self.set_image_data(img)
+            self.on_new_contours_result()
+        except:
+            print(traceback.format_exc())
+
+    def do_contours_result(self, callback, *userdata, **kwuserdata):
+        #this method gets called when an event is connected, making it possible to execute the process chain directly, before the event triggers
+        if hasattr(self.on_new_contours_result.event_method_bound, '_js_code'):
+            self.on_new_contours_result.event_source_instance.attributes[self.on_new_contours_result.event_name] = self.on_new_contours_result.event_method_bound._js_code%{
+                'emitter_identifier':self.on_new_contours_result.event_source_instance.identifier, 'event_name':self.on_new_contours_result.event_name}
+        self.on_new_contours_result.callback = callback
+        self.on_new_contours_result.userdata = userdata
+        self.on_new_contours_result.kwuserdata = kwuserdata
+        #here the callback is called immediately to make it possible link to the plc
+        if callback is not None: #protection against the callback replacements in the editor
+            callback(self, self.contours, self.hierarchy, *userdata, **kwuserdata)
+
+    @gui.decorate_set_on_listener("(self, emitter, contours, hierarchy)")
+    @gui.decorate_event
+    def on_new_contours_result(self):
+        return (self.contours, self.hierarchy)
+
