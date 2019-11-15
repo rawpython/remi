@@ -158,11 +158,14 @@ class SignalConnection(gui.HBox):
                 connectedListenerFunction = eventConnectionFunc.callback_copy
             self.dropdownListeners.select_by_value( connectedListenerName )
             #this to automatically populate the listener methods dropdown
-            self.on_listener_selection(self.dropdownListeners, connectedListenerName)
-            print("connected function name:"+connectedListenerFunction.__name__)
-            self.dropdownMethods.select_by_value(connectedListenerFunction.__name__ )
-            #force the connection
-            self.on_connection(None, None)
+            try:
+                self.on_listener_selection(self.dropdownListeners, connectedListenerName)
+                print("connected function name:"+connectedListenerFunction.__name__)
+                self.dropdownMethods.select_by_value(connectedListenerFunction.__name__ )
+                #force the connection
+                self.on_connection(None, None)
+            except:
+                self.disconnect()
 
     def on_listener_selection(self, widget, dropDownValue):
         self.dropdownMethods.empty()
@@ -454,7 +457,7 @@ class WidgetHelper(gui.HBox):
             editWidget = None
             if _typ==int:
                 editWidget = gui.SpinBox('0', -65536, 65535)
-            if _typ==float:
+            elif _typ==float:
                 editWidget = gui.SpinBox('0.0', -65536, 65535, step=0.0001)
             elif _typ==bool:
                 editWidget = gui.CheckBox()
@@ -504,7 +507,7 @@ class WidgetHelper(gui.HBox):
             if _typ==int:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
                 param_values.append(int(self.dialog.get_field(param).get_value()))
-            if _typ==float:
+            elif _typ==float:
                 param_for_constructor.append(self.dialog.get_field(param).get_value())
                 param_values.append(float(self.dialog.get_field(param).get_value()))
             elif _typ==bool:
