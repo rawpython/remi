@@ -148,6 +148,7 @@ editorAttributeList = [
     ('border-color',{'type':gui.ColorPicker, 'description':'Border color', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}}),
     ('border-width',{'type':'css_size', 'description':'Border thickness', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}}),
     ('border-style',{'type':gui.DropDown, 'description':'Border thickness', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{'possible_values':('none','solid','dotted','dashed')}}),
+    ('border-radius',{'type':'css_size', 'description':'Border rounding radius', 'affected_widget_attribute':'style', 'group':'Border', 'additional_data':{}}),
     ('color',{'type':gui.ColorPicker, 'description':'Text color', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}}),
     ('font-family',{'type':str, 'description':'Font family name', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}}),
     ('font-size',{'type':'css_size', 'description':'Font size', 'affected_widget_attribute':'style', 'group':'Font', 'additional_data':{}}),

@@ -47,7 +47,7 @@ class DraggableItem(gui.EventSource):
         self.active = False
         self.origin_x = -1
         self.origin_y = -1
-        self.snap_grid_size = 1
+        self.snap_grid_size = 15
 
     def setup(self, refWidget, newParent):
         #refWidget is the target widget that will be resized
