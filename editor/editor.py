@@ -454,6 +454,8 @@ class Project(gui.Widget):
             if type(child)==str:
                 #children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
                 continue
+            if not issubclass(child.__class__, gui.Widget):
+                continue
             if 'editor_varname' not in child.attributes.keys():
                 continue
             child.path_to_this_widget = widget.path_to_this_widget[:]
@@ -477,6 +479,8 @@ class Project(gui.Widget):
         node.path_to_this_widget = []
         for child in node.children.values():
             if type(child)==str:
+                continue
+            if not issubclass(child.__class__, gui.Widget):
                 continue
             if 'editor_varname' not in child.attributes.keys():
                 continue
@@ -678,7 +682,6 @@ class Editor(App):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
             to the editor
         """
-        
         if not 'editor_varname' in widget.attributes:
             return
         widget.onclick.do(self.on_widget_selection)
@@ -688,7 +691,7 @@ class Editor(App):
 
         #drag properties
         #widget.style['resize'] = 'both'
-        widget.style['overflow'] = 'auto'
+        #widget.style['overflow'] = 'auto'
         widget.attributes['draggable'] = 'true'
                 
         widget.attributes['tabindex']=str(self.tabindex)

@@ -151,6 +151,7 @@ class EPICSPlotPV(gui.Svg, EPICSWidget):
         self.values = gui.SvgPolyline(max_values_count)
         self.pv_name = epics_pv_name
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
+        self.set_size(100, 100)
 
     def set_size(self, width, height):
         gui.Svg.set_size(self, width, height)
