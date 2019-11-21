@@ -39,9 +39,9 @@ else:
 
 
 class DraggableItem(gui.EventSource):
-    def __init__(self, project, **kwargs):
+    def __init__(self, app_instance, **kwargs):
         gui.EventSource.__init__(self)
-        self.project = project
+        self.app_instance = app_instance
         self.refWidget = None
         self.parent = None
         self.active = False
@@ -70,9 +70,9 @@ class DraggableItem(gui.EventSource):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.do(self.on_drag)
-        self.project.onmouseup.do(self.stop_drag)
-        self.project.onmouseleave.do(self.stop_drag, 0, 0)
+        self.app_instance.project.onmousemove.do(self.on_drag)
+        self.app_instance.project.onmouseup.do(self.stop_drag)
+        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -96,11 +96,11 @@ class DraggableItem(gui.EventSource):
 
 
 class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
-    def __init__(self, project, name_coord_x, name_coord_y, compatibility_iterable, **kwargs):
+    def __init__(self, app_instance, name_coord_x, name_coord_y, compatibility_iterable, **kwargs):
         self.w = 15
         self.h = 15
         super(SvgDraggablePoint, self).__init__(0, 0, self.w, self.h, **kwargs)
-        DraggableItem.__init__(self, project, **kwargs)
+        DraggableItem.__init__(self, app_instance, **kwargs)
         self.attributes['stroke-dasharray'] = "2,2"
         self.name_coord_x = name_coord_x
         self.name_coord_y = name_coord_y
@@ -131,11 +131,11 @@ class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
 
 
 class SvgDraggableRectangleResizePoint(gui.SvgRectangle, DraggableItem):
-    def __init__(self, project, compatibility_iterable, **kwargs):
+    def __init__(self, app_instance, compatibility_iterable, **kwargs):
         self.w = 15
         self.h = 15
         super(SvgDraggableRectangleResizePoint, self).__init__(0, 0, self.w, self.h, **kwargs)
-        DraggableItem.__init__(self, project, **kwargs)
+        DraggableItem.__init__(self, app_instance, **kwargs)
         self.attributes['stroke-dasharray'] = "2,2"
         self.set_stroke(1, 'black')
         self.set_fill('#ffcc00')
@@ -164,11 +164,11 @@ class SvgDraggableRectangleResizePoint(gui.SvgRectangle, DraggableItem):
 
 
 class SvgDraggableCircleResizeRadius(gui.SvgRectangle, DraggableItem):
-    def __init__(self, project, compatibility_iterable, **kwargs):
+    def __init__(self, app_instance, compatibility_iterable, **kwargs):
         self.w = 15
         self.h = 15
         super(SvgDraggableCircleResizeRadius, self).__init__(0, 0, self.w, self.h, **kwargs)
-        DraggableItem.__init__(self, project, **kwargs)
+        DraggableItem.__init__(self, app_instance, **kwargs)
         self.attributes['stroke-dasharray'] = "2,2"
         self.set_stroke(1, 'black')
         self.set_fill('#ffcc00')
@@ -197,9 +197,9 @@ class SvgDraggableCircleResizeRadius(gui.SvgRectangle, DraggableItem):
 
 class ResizeHelper(gui.Widget, DraggableItem):
 
-    def __init__(self, project, **kwargs):
+    def __init__(self, app_instance, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
-        DraggableItem.__init__(self, project, **kwargs)
+        DraggableItem.__init__(self, app_instance, **kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/editor_resources:resize.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
@@ -237,9 +237,9 @@ class ResizeHelper(gui.Widget, DraggableItem):
 
 class DragHelper(gui.Widget, DraggableItem):
 
-    def __init__(self, project, **kwargs):
+    def __init__(self, app_instance, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
-        DraggableItem.__init__(self, project, **kwargs)
+        DraggableItem.__init__(self, app_instance, **kwargs)
         self.style['float'] = 'none'
         self.style['background-image'] = "url('/editor_resources:drag.png')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
@@ -287,10 +287,6 @@ class Project(gui.Widget):
             'background-color':'rgb(250,248,240)',
             'background-image':"url('/editor_resources:background.png')"})
         self.attributes['editor_newclass'] = 'True'
-    
-    def new(self):
-        #remove the main widget
-        pass
             
     def load(self, ifile, configuration):
         self.ifile = ifile
@@ -528,6 +524,8 @@ class Project(gui.Widget):
         
         
 class Editor(App):
+    EVENT_ONDROPPPED = "on_dropped"
+
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(Editor, self).__init__(*args, static_file_path={'editor_resources':editor_res_path})
@@ -574,8 +572,9 @@ class Editor(App):
 
         
         lbl = gui.Label("Snap grid", width = 100)
-        spin_grid_size = gui.SpinBox('1','1','100', width = 50)
+        spin_grid_size = gui.SpinBox('15','1','100', width = 50)
         spin_grid_size.set_on_change_listener(self.on_snap_grid_size_change)
+
         grid_size = gui.HBox(children=[lbl, spin_grid_size], style={'outline':'1px solid gray', 'margin':'2px', 'margin-left':'10px'})
         self.toolbar.append(grid_size)
         
@@ -604,24 +603,6 @@ class Editor(App):
         #here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(self, width='100%', height='50%')
         
-        self.project = Project(width='100%', height='100%')
-        self.project.style['min-height'] = '400px'
-        
-        self.project.attributes['ondragover'] = "event.preventDefault();"
-        self.EVENT_ONDROPPPED = "on_dropped"
-        self.project.attributes['ondrop'] = """event.preventDefault();
-                var data = JSON.parse(event.dataTransfer.getData('application/json'));
-                var params={};
-                if( data[0] == 'add'){
-                    params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
-                    params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
-                }
-                sendCallbackParam(data[1],'%(evt)s',params);
-                
-                return false;""" % {'evt':self.EVENT_ONDROPPPED}
-        self.project.attributes['editor_varname'] = 'App'
-        self.project.onkeydown.do(self.onkeydown)
-        
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog('Project Configuration', 'Write here the configuration for your project.')
         
         self.attributeEditor = editor_widgets.EditorAttributes(self, width='100%')
@@ -637,7 +618,7 @@ class Editor(App):
         self.subContainerLeft.add_class('RaisedFrame')
         
         self.centralContainer = gui.VBox(width='56%', height='100%')
-        self.centralContainer.append([self.toolbar, self.project])
+        self.centralContainer.append(self.toolbar)
         
         self.subContainerRight = gui.Widget(width='24%', height='100%')
         self.subContainerRight.style.update({'position':'absolute', 'right':'0px', 'overflow':'scroll'})
@@ -649,21 +630,21 @@ class Editor(App):
         self.subContainerRight.append([self.instancesWidget, self.attributeEditor])
         
         self.subContainer.append([self.subContainerLeft, self.centralContainer, self.subContainerRight])
-        self.project.style['position'] = 'relative'
         
-        self.drag_helpers = [ResizeHelper(self.project, width=16, height=16), 
-                            DragHelper(self.project, width=15, height=15), 
-                            SvgDraggablePoint(self.project, 'cx', 'cy', [gui.SvgCircle]),
-                            SvgDraggableCircleResizeRadius(self.project, [gui.SvgCircle]),
-                            SvgDraggablePoint(self.project, 'x1', 'y1', [gui.SvgLine]),
-                            SvgDraggablePoint(self.project, 'x2', 'y2', [gui.SvgLine]),
-                            SvgDraggablePoint(self.project, 'x', 'y', [gui.SvgRectangle, gui.SvgText]),
-                            SvgDraggableRectangleResizePoint(self.project, [gui.SvgRectangle])]
+        self.drag_helpers = [ResizeHelper(self, width=16, height=16), 
+                            DragHelper(self, width=15, height=15), 
+                            SvgDraggablePoint(self, 'cx', 'cy', [gui.SvgCircle]),
+                            SvgDraggableCircleResizeRadius(self, [gui.SvgCircle]),
+                            SvgDraggablePoint(self, 'x1', 'y1', [gui.SvgLine]),
+                            SvgDraggablePoint(self, 'x2', 'y2', [gui.SvgLine]),
+                            SvgDraggablePoint(self, 'x', 'y', [gui.SvgRectangle, gui.SvgText]),
+                            SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle])]
         for drag_helper in self.drag_helpers:
             drag_helper.stop_drag.do(self.on_drag_resize_end)
 
         self.menu_new_clicked(None)
-        
+        self.on_snap_grid_size_change(spin_grid_size, spin_grid_size.get_value())
+
         self.projectPathFilename = ''
         self.editCuttedWidget = None #cut operation, contains the cutted tag
 
@@ -682,6 +663,8 @@ class Editor(App):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
             to the editor
         """
+        if not issubclass(widget.__class__, gui.Widget):
+            return
         if not 'editor_varname' in widget.attributes:
             return
         widget.onclick.do(self.on_widget_selection)
@@ -737,9 +720,29 @@ class Editor(App):
         
     def menu_new_clicked(self, widget):
         print('new project')
-        self.project.new()
+        #self.project.new()
+        self.project = Project(width='100%', height='100%')
+        self.project.style['min-height'] = '400px'
+        self.project.attributes['ondragover'] = "event.preventDefault();"
+        self.project.attributes['ondrop'] = """event.preventDefault();
+                var data = JSON.parse(event.dataTransfer.getData('application/json'));
+                var params={};
+                if( data[0] == 'add'){
+                    params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
+                    params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
+                }
+                sendCallbackParam(data[1],'%(evt)s',params);
+                
+                return false;""" % {'evt':self.EVENT_ONDROPPPED}
+        self.project.attributes['editor_varname'] = 'App'
+        self.project.onkeydown.do(self.onkeydown)
+        self.centralContainer.append(self.project, 'project')
+        self.project.style['position'] = 'relative'
+
         self.tabindex = 0 #incremental number to allow widgets selection
         self.selectedWidget = self.project
+        self.instancesWidget.update(self.project, self.selectedWidget)
+        self.on_widget_selection(self.selectedWidget)
         for drag_helper in self.drag_helpers:
             drag_helper.setup(None, None)
         if 'root' in self.project.children.keys():
@@ -747,6 +750,7 @@ class Editor(App):
 
     def on_open_dialog_confirm(self, widget, filelist):
         if len(filelist):
+            self.menu_new_clicked(None)
             widgetTree = self.project.load(filelist[0], self.projectConfiguration)
             if widgetTree!=None:
                 self.add_widget_to_editor( widgetTree )
