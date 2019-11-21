@@ -24,8 +24,8 @@ import collections
 class SvgComposedPoly(gui.SvgGroup):
     """ A group of polyline and circles
     """
-    def __init__(self, x, y, maxlen, stroke, color, **kwargs):
-        super(SvgComposedPoly, self).__init__(x, y, **kwargs)
+    def __init__(self, x, y, maxlen, stroke, color, *args, **kwargs):
+        super(SvgComposedPoly, self).__init__(x, y, *args, **kwargs)
         self.maxlen = maxlen
         self.plotData = gui.SvgPolyline(self.maxlen)
         self.append(self.plotData)

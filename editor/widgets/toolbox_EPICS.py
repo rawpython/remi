@@ -11,19 +11,6 @@ import epics
 
 
 # noinspection PyUnresolvedReferences
-class NonAppend(object):
-    def setup(self):
-        self.append = NonAppend.append
-        self.add_child = NonAppend.add_child
-        
-    def add_child(self, *args, **kwargs):
-        self.get_parent().add_child(*args, **kwargs)
-
-    def append(self, *args, **kwargs):
-        self.get_parent().append(*args, **kwargs)
-
-
-# noinspection PyUnresolvedReferences
 class EPICSWidget(object):
     epics_pv = None #here will be stored the PV instance
 
@@ -50,7 +37,7 @@ class EPICSWidget(object):
         return (pvname, value, kwargs)
 
 
-class EPICSBooleanButton(gui.Widget, EPICSWidget, NonAppend):
+class EPICSBooleanButton(gui.Container, EPICSWidget):
     """ A Button widget that sets the bit when clicked.
     """
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAYAAABXuSs3AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAKMSURBVGiB7ZqxaxNRGMB/9+7uXZK2aaMVEUWEKNSh4CQIrhWnujiIQqGig7gXF/+B7tLNbp2KQyfBwcVdsdhWJa5WHZKKvZqXe3cO57VNmraJyd0ZuB88LnkvfO/H43sfB18Mz/OCIAhoN4DdZ9IYhrH7bDesSPJlRfHsrc+nmpGK6HGcGQp4clVwsywBMJRSgVKKqWXNpitS1juaS6M+L26ZSCnDE1dKsenaAHy/MUNjtNJ10JG1WYofHvTbtYnPWwKlFLZth+Ke5wGheKP0EXVireugemizz5rt8TyPIAgQe+KDQZO41jptn47RWofiAL7vp+3TMZGrtb9mAxTfP0bnf3QdMPf1Wt/kjiLytVoXRtZnEhHolf+7cB9BJp40mXjSDKz4gXLYHQ6vHtmUD8z7LC+4zAGz00M8PXv4q3Jl4xdTr7vfuUfx9pvP3xnm9v086893WFzZZjFamMzz7rpg7c02d1d72zOWVJn75oNjcDmO4H+JRXz+tKCyEaZKXPQlVcoTw3yZaJ776dpAox/h2xJLjocXUrI02eg5lw8jllRZXPGoYHBqPI7oIQNbx2MRn522KNc1S/9Qnzslpsvps7yws1e/Y6BH8TpTC/XOf766w5U+XdYsx5MmE0+aTDxpMvGkycSTRkTNoEEh8hXRl0Ehch3cEzcMA9M0GbdV2k7Hcj7/G9M098Qty+LhxSrnHDdtt0M5adW5d2ELy7LCU1dKBa7rUqvVqFaruK5LvV5Ptbvc2lV2HIdCoUCpVGJsbIxCoYAVLRSLRaSUKKVQStHaYkmDSFxKiZSSXC6H4zjhvOd5ge/7aK2bRtQkSruXL4TANM2mIYTA0FoHrWmR9h8QIlpTZv/nP6KyI2uh/zMtAAAAAElFTkSuQmCC"
@@ -103,7 +90,7 @@ class EPICSBooleanButton(gui.Widget, EPICSWidget, NonAppend):
         self.led.style.update({'background-color':self.color_active if self.led_status else self.color_inactive})
 
 
-class EPICSLed(HBox, EPICSWidget, NonAppend):
+class EPICSLed(HBox, EPICSWidget):
     """A Status indicator widget.
     """
     icon = "data:image/png;base64,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"
@@ -132,7 +119,7 @@ class EPICSLed(HBox, EPICSWidget, NonAppend):
         self.style.update({'background-color':self.color_active if _value>0.0 else self.color_inactive})
 
         
-class EPICSValueMeterWidget(Progress, EPICSWidget, NonAppend):
+class EPICSValueMeterWidget(Progress, EPICSWidget):
     """A simple progress bar indicating a value.
     """
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAYAAACoYAD2AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlwSFlzAAAOwgAADsIBFShKgAAAAG1JREFUWEft1qENgEAMQNEec6AwDMG4jIbC3QZAQuXhvijJf6aVP+mJa9cjiptylmYkxUiKkRQjKUZSjKQYSTGSMvyZt/3M7dux9dx487Lm9vLclP++yWo8N8VIipEUIylGUoykGEkxkmIkI+IGyZcQRHB9PC8AAAAASUVORK5CYII="
@@ -151,7 +138,7 @@ try:
 except:
     print("It is required to install pygal to use EPICSPlotPV widget")
 
-class EPICSPlotPV(gui.Svg, EPICSWidget, NonAppend):
+class EPICSPlotPV(gui.Svg, EPICSWidget):
     """A simple plot bar indicating a value.
         REQUIRES library pygal to be installed
     """

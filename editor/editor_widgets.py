@@ -103,10 +103,10 @@ class InstancesWidget(gui.VBox):
         self.treeView.select_instance(self.treeView, selectedNode)
 
 
-class ToolBar(gui.Widget):
+class ToolBar(gui.Container):
     def __init__(self, **kwargs):
         super(ToolBar, self).__init__(**kwargs)
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style['background-color'] = 'white'
 
     def add_command(self, imagePath, callback, title):
@@ -237,7 +237,7 @@ def copy_func(f):
 def fakeListenerFunc(self,*args):
     print('event trap')
 
-class SignalConnectionManager(gui.Widget):
+class SignalConnectionManager(gui.Container):
     """ This class allows to interconnect event signals """
     def __init__(self, **kwargs):
         super(SignalConnectionManager, self).__init__(**kwargs)
@@ -543,7 +543,7 @@ class WidgetHelper(gui.HBox):
         self.appInstance.add_widget_to_editor(widget)
 
 
-class WidgetCollection(gui.Widget):
+class WidgetCollection(gui.Container):
     def __init__(self, appInstance, **kwargs):
         self.appInstance = appInstance
         super(WidgetCollection, self).__init__(**kwargs)
@@ -561,7 +561,7 @@ class WidgetCollection(gui.Widget):
         #load all widgets
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.VBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.Widget, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Container, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         #self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Button, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
@@ -716,12 +716,12 @@ class EditorAttributes(gui.VBox, gui.EventSource):
             w.set_from_dict(getattr(widget, w.attributeDict['affected_widget_attribute']))
 
 
-class CssSizeInput(gui.Widget, gui.EventSource):
+class CssSizeInput(gui.Container, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(CssSizeInput, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
         self.appInstance = appInstance
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
 
@@ -759,12 +759,12 @@ class CssSizeInput(gui.Widget, gui.EventSource):
         self.dropMeasureUnit.set_value(measure_unit)
 
 
-class UrlPathInput(gui.Widget, gui.EventSource):
+class UrlPathInput(gui.Container, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(UrlPathInput, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
         self.appInstance = appInstance
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
 
@@ -802,12 +802,12 @@ class UrlPathInput(gui.Widget, gui.EventSource):
         self.txtInput.set_value(value)
 
 
-class ResPathInput(gui.Widget, gui.EventSource):
+class ResPathInput(gui.Container, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(ResPathInput, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
         self.appInstance = appInstance
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
 
@@ -848,12 +848,12 @@ class ResPathInput(gui.Widget, gui.EventSource):
         return self.txtInput.get_value()
 
 
-class Base64ImageInput(gui.Widget, gui.EventSource):
+class Base64ImageInput(gui.Container, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(Base64ImageInput, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
         self.appInstance = appInstance
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
 
@@ -894,12 +894,12 @@ class Base64ImageInput(gui.Widget, gui.EventSource):
         return self.txtInput.get_value()
 
 
-class FileInput(gui.Widget, gui.EventSource):
+class FileInput(gui.Container, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(FileInput, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
         self.appInstance = appInstance
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style['display'] = 'block'
         self.style['overflow'] = 'hidden'
 
@@ -942,11 +942,11 @@ class FileInput(gui.Widget, gui.EventSource):
 
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
-class EditorAttributeInput(gui.Widget, gui.EventSource):
+class EditorAttributeInput(gui.Container, gui.EventSource):
     def __init__(self, attributeName, attributeDict, appInstance=None, *args, **kwargs):
         super(EditorAttributeInput, self).__init__(*args, **kwargs)
         gui.EventSource.__init__(self)
-        self.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style.update({'display':'block',
             'overflow':'auto',
             'margin':'2px',

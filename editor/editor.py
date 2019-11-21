@@ -274,7 +274,7 @@ class DragHelper(gui.Widget, DraggableItem):
                 self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top'])-gui.from_pix(self.style['width']))
 
 
-class Project(gui.Widget):
+class Project(gui.Container):
     """ The editor project is pure html with specific tag attributes
         This class loads and save the project file, 
         and also compiles a project in python code.
@@ -535,7 +535,7 @@ class Editor(App):
             drag_helper.update_position()
 
     def main(self):
-        self.mainContainer = gui.Widget(width='100%', height='100%', layout_orientation=gui.Widget.LAYOUT_VERTICAL)
+        self.mainContainer = gui.Container(width='100%', height='100%', layout_orientation=gui.Container.LAYOUT_VERTICAL)
         self.mainContainer.style['background-color'] = 'white'
         self.mainContainer.style['border'] = 'none'
         
@@ -595,7 +595,7 @@ class Editor(App):
         
         m3.onclick.do(self.menu_project_config_clicked)
         
-        self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL)
+        self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
         self.subContainer.style.update({'position':'relative',
             'overflow':'auto',
             'align-items':'stretch'})
@@ -611,7 +611,7 @@ class Editor(App):
         
         self.mainContainer.append([menubar, self.subContainer])
         
-        self.subContainerLeft = gui.Widget(width='20%', height='100%')
+        self.subContainerLeft = gui.Container(width='20%', height='100%')
         self.subContainerLeft.style['position'] = 'relative'
         self.subContainerLeft.style['left'] = '0px'
         self.subContainerLeft.append([self.widgetsCollection, self.signalConnectionManager])
@@ -620,7 +620,7 @@ class Editor(App):
         self.centralContainer = gui.VBox(width='56%', height='100%')
         self.centralContainer.append(self.toolbar)
         
-        self.subContainerRight = gui.Widget(width='24%', height='100%')
+        self.subContainerRight = gui.Container(width='24%', height='100%')
         self.subContainerRight.style.update({'position':'absolute', 'right':'0px', 'overflow':'scroll'})
         self.subContainerRight.add_class('RaisedFrame')
         

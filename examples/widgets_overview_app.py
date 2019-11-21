@@ -27,11 +27,11 @@ class MyApp(App):
 
     def main(self):
         # the margin 0px auto centers the main container
-        verticalContainer = gui.Widget(width=540, margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
+        verticalContainer = gui.Container(width=540, margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
 
-        horizontalContainer = gui.Widget(width='100%', layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, margin='0px', style={'display': 'block', 'overflow': 'auto'})
+        horizontalContainer = gui.Container(width='100%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL, margin='0px', style={'display': 'block', 'overflow': 'auto'})
         
-        subContainerLeft = gui.Widget(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
+        subContainerLeft = gui.Container(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.img = gui.Image('/res:logo.png', height=100, margin='10px')
         self.img.onclick.do(self.on_img_clicked)
 
@@ -44,7 +44,7 @@ class MyApp(App):
         self.table.on_table_row_click.do(self.on_table_row_click)
 
         # the arguments are	width - height - layoutOrientationOrizontal
-        subContainerRight = gui.Widget(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
+        subContainerRight = gui.Container(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.count = 0
         self.counter = gui.Label('', width=200, height=30, margin='10px')
 
