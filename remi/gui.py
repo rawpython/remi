@@ -1648,19 +1648,21 @@ class TabBox(VBox):
         self.style.update({'justify-content':'flex-start'})
         self.container_tab_titles = ListView( width="100%", style = {'order':'0'}, layout_orientation=Container.LAYOUT_HORIZONTAL, _class = 'tabs clearfix' )
         self.container_tab_titles.onselection.do(self.on_tab_selection)
-        #self.container_tab_titles.style.update({'justify-content':'flex-start', 'align-items':'center'})
         super(TabBox, self).append(self.container_tab_titles, "_container_tab_titles")
         self.selected_widget_key = None
         self.tab_keys_ordered_list = []
 
     def append(self, widget, key=''):
+        """ Adds a new tab. 
+            The *widget* is the content of the tab.
+            The *key* is the tab title.
+        """
         key = super(TabBox, self).append(widget, key)
         self.tab_keys_ordered_list.append(key)
         self.container_tab_titles.append(ListItem(key), key)
         tab_w = 100.0 / len(self.container_tab_titles.children.values())
         for l in self.container_tab_titles.children.values():
             l.set_size("%.1f%%" % tab_w, "100%")
-        #tab_title_selection_button.onclick.do(self.on_tab_selection, widget)
         widget.style['order'] = '1'
         #if first tab, select
         if self.selected_widget_key is None:
