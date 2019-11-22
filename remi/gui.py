@@ -1642,8 +1642,10 @@ class TabBox(VBox):
         Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
         The widget can be a container with other child widgets. 
     """
+    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         super(TabBox, self).__init__(*args, **kwargs)
+        self.style.update({'justify-content':'flex-start'})
         self.container_tab_titles = ListView( width="100%", style = {'order':'0'}, layout_orientation=Container.LAYOUT_HORIZONTAL, _class = 'tabs clearfix' )
         self.container_tab_titles.onselection.do(self.on_tab_selection)
         #self.container_tab_titles.style.update({'justify-content':'flex-start', 'align-items':'center'})
