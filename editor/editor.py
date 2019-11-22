@@ -611,10 +611,12 @@ class Editor(App):
         
         self.mainContainer.append([menubar, self.subContainer])
         
-        self.subContainerLeft = gui.Container(width='20%', height='100%')
+        self.subContainerLeft = gui.VBox(width='20%', height='100%')
         self.subContainerLeft.style['position'] = 'relative'
         self.subContainerLeft.style['left'] = '0px'
-        self.subContainerLeft.append([self.widgetsCollection, self.signalConnectionManager])
+        self.widgetsCollection.style['order'] = '0'
+        self.signalConnectionManager.style['order'] = '1'
+        self.subContainerLeft.append({'widgets_collection':self.widgetsCollection, 'signal_manager':self.signalConnectionManager})
         self.subContainerLeft.add_class('RaisedFrame')
         
         self.centralContainer = gui.VBox(width='56%', height='100%')
@@ -716,7 +718,14 @@ class Editor(App):
         for drag_helper in self.drag_helpers:
             drag_helper.setup(widget, parent)
         self.instancesWidget.select(self.selectedWidget)
+        self.instancesWidget.update(self.project, self.selectedWidget)
         print("selected widget: " + widget.identifier)
+        print("selected widget class: " + widget.__class__.__name__)
+        print("is widget Container: " + str(issubclass(self.selectedWidget.__class__, gui.Container)))
+        if issubclass(self.selectedWidget.__class__, gui.Container) or self.selectedWidget==None:
+            self.subContainerLeft.append(self.widgetsCollection, 'widgets_collection')
+        else:
+            self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container"%self.selectedWidget.__class__.__name__), 'widgets_collection')
         
     def menu_new_clicked(self, widget):
         print('new project')
@@ -814,9 +823,8 @@ class Editor(App):
         parent = self.selectedWidget.get_parent()
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
-        self.selectedWidget = parent
-        self.instancesWidget.update(self.project, self.selectedWidget)
         print("tag cutted:" + self.editCuttedWidget.identifier)
+        self.on_widget_selection(parent)
 
     def menu_paste_selection_clicked(self, widget):
         if self.editCuttedWidget != None:
@@ -835,8 +843,7 @@ class Editor(App):
             drag_helper.setup(None, None)
         parent = self.selectedWidget.get_parent()
         parent.remove_child(self.selectedWidget)
-        self.instancesWidget.update(self.project, self.selectedWidget)
-        self.selectedWidget = parent
+        self.on_widget_selection(parent)
         print("tag deleted")
         
     def onkeydown(self, emitter, key, keycode, ctrl, shift, alt):
