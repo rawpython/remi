@@ -27,11 +27,11 @@ from remi import start, App
 #files like "screen1.py" and be imported into the main app. If the App is very
 #sophisticated this could clean up the code a little
 
-#class definition for content "screen1" (inherits from remi.gui.Widget)
+#class definition for content "screen1" (inherits from remi.gui.Container)
 #these definitions are made with the remI Editor
 #we just pick the definitions from the constructUI Method and put it into an __init__ method
 
-class screen1Widget(Widget):
+class screen1Widget(Container):
     def __init__(self,**kwargs):
         super(screen1Widget,self).__init__(**kwargs)
         self.style['position'] = "absolute"
@@ -48,9 +48,9 @@ class screen1Widget(Widget):
         self.append(testlabel,'testlabel')
         self.append(mytextbox,'mytextbox')
 
-#class definition for content "screen2" (inherits from remi.gui.Widget)
+#class definition for content "screen2" (inherits from remi.gui.Container)
 
-class screen2Widget(Widget):
+class screen2Widget(Container):
     def __init__(self,**kwargs):
         super(screen2Widget,self).__init__(**kwargs)
         self.style['position'] = "absolute"
@@ -84,9 +84,9 @@ class multiscreen(App):
     def main(self):
         
         #The root Container
-        baseContainer = Widget()
-        baseContainer.attributes['class'] = "Widget"
-        baseContainer.attributes['editor_baseclass'] = "Widget"
+        baseContainer = Container()
+        baseContainer.attributes['class'] = "Container  "
+        baseContainer.attributes['editor_baseclass'] = "Container"
         baseContainer.attributes['editor_varname'] = "baseContainer"
         baseContainer.attributes['editor_tag_type'] = "widget"
         baseContainer.attributes['editor_newclass'] = "False"
@@ -103,9 +103,9 @@ class multiscreen(App):
         baseContainer.style['height'] = "550px"
         
         #The menuContainer on the left side
-        menuContainer = Widget()
-        menuContainer.attributes['class'] = "Widget"
-        menuContainer.attributes['editor_baseclass'] = "Widget"
+        menuContainer = Container()
+        menuContainer.attributes['class'] = "Container"
+        menuContainer.attributes['editor_baseclass'] = "Container"
         menuContainer.attributes['editor_varname'] = "menuContainer"
         menuContainer.attributes['editor_tag_type'] = "widget"
         menuContainer.attributes['editor_newclass'] = "False"
@@ -159,9 +159,9 @@ class multiscreen(App):
         baseContainer.children['menuContainer'].children['btnScreen1'].set_on_click_listener(self.onclick_btnScreen1)
         
         #The contentContainer 
-        contentContainer = Widget()
-        contentContainer.attributes['class'] = "Widget"
-        contentContainer.attributes['editor_baseclass'] = "Widget"
+        contentContainer = Container()
+        contentContainer.attributes['class'] = "Container"
+        contentContainer.attributes['editor_baseclass'] = "Container"
         contentContainer.attributes['editor_varname'] = "contentContainer"
         contentContainer.attributes['editor_tag_type'] = "widget"
         contentContainer.attributes['editor_newclass'] = "False"
@@ -204,14 +204,14 @@ class multiscreen(App):
     #Define the callbacks for the listeners
 
     def onclick_btnScreen2(self,emitter):
-        #Remove Screen 1 Widget from the contentWidget, screen1 will still exist in memory
+        #Remove Screen 1 Container from the contentWidget, screen1 will still exist in memory
         if 'screen1' in self.baseContainer.children['contentContainer'].children.keys():
             self.baseContainer.children['contentContainer'].remove_child(self.baseContainer.children['contentContainer'].children['screen1'])
         #Add Screen2 to the contentWidget
         self.baseContainer.children['contentContainer'].append(self.screen2,'screen2')      
         
     def onclick_btnScreen1(self,emitter):
-        #Remove Screen 2 Widget from the contentWidget, screen1 will still exist in memory
+        #Remove Screen 2 Container from the contentWidget, screen1 will still exist in memory
         if 'screen2' in self.baseContainer.children['contentContainer'].children.keys():
             self.baseContainer.children['contentContainer'].remove_child(self.baseContainer.children['contentContainer'].children['screen2'])
         #Add Screen1 to the contentWidget

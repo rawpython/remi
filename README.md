@@ -26,6 +26,13 @@ There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/
 
 Changelog
 ===
+*2019 November 21*
+
+Widget class has no more **append** method. This means it cannot be used as a Container.
+Use instead the new class Container as a generic container.
+This allows to get higher code consistency.
+
+
 *2019 April 1*
 
 Event listener registration can now be done by the **do** instruction instead of **connect** (that stays available for compatibility reasons).

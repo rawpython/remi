@@ -55,7 +55,7 @@ class MyApp(App):
         
         
         # Main container configuration page
-        widMenu = gui.Widget(width=480, height=610, layout_orientation=gui.Widget.LAYOUT_VERTICAL, style={'margin':'0px auto', 'background':'black'})
+        widMenu = gui.Container(width=480, height=610, layout_orientation=gui.Container.LAYOUT_VERTICAL, style={'margin':'0px auto', 'background':'black'})
         # Configuration menu
         self.lblMenu = gui.Label('SCOREBOARD', width='100%', height='45px', style={'margin':'0px 0px 0px', 'padding-top':'10px', 'font-size':'40px', 'font-weight':'bold', 'color':'green', 'line-height':'45px', 'text-align':'center'})
         self.lblMenu2 = gui.Label('Setup players name:', width='100%', height='45px', style={'margin':'0px 0px 0px', 'padding-top':'10px', 'font-size':'30px', 'font-weight':'bold', 'line-height':'45px', 'text-align':'left'})
@@ -77,16 +77,16 @@ class MyApp(App):
         
         
         # Main container scoreboard page
-        wid = gui.Widget(width=480, height=610, style={'margin':'0px auto', 'background':'black'})
+        wid = gui.Container(width=480, height=610, style={'margin':'0px auto', 'background':'black'})
         # Title
         self.lbl = gui.Label('SCOREBOARD', width='100%', height='35px', style={'margin':'0px 0px 0px', 'padding-top':'10px', 'font-size':'30px', 'line-height':'35px', 'text-align':'center'})
         # Containers for games counters
         # Horizontal container
-        wid1 = gui.Widget(width='100%', height=600, layout_orientation=gui.Widget.LAYOUT_HORIZONTAL, style={'background':'black'})
+        wid1 = gui.Container(width='100%', height=600, layout_orientation=gui.Container.LAYOUT_HORIZONTAL, style={'background':'black'})
         # Container for left side
-        self.wid2 = gui.Widget(width=230, height=350, margin='5px', style={'background':'green'})
+        self.wid2 = gui.Container(width=230, height=350, margin='5px', style={'background':'green'})
         # Container for right side
-        self.wid3 = gui.Widget(width=230, height=350, margin='5px', style={'background':'green'})
+        self.wid3 = gui.Container(width=230, height=350, margin='5px', style={'background':'green'})
         # Left side interface
         self.lblLeftName = gui.Label(self.Name1, width='95%', height='60px', style={'margin':'20px 2px 0px', 'font-size':'40px', 'line-height':'60px', 'text-align':'center', 'overflow':'hidden'})
         self.lblLeftNum = gui.Label(str(self.LeftNum), width='100%', height='130px', style={'margin':'0px 0px 10px', 'font-size':'140px', 'line-height':'130px', 'text-align':'center'})

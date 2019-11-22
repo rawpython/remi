@@ -101,9 +101,9 @@ class MyApp(App):
 
     def main(self):
         # the arguments are    width - height - layoutOrientationOrizontal
-        self.main_container = gui.Widget(margin='0px auto')
+        self.main_container = gui.Container(margin='0px auto')
         self.main_container.set_size(1020, 600)
-        self.main_container.set_layout_orientation(gui.Widget.LAYOUT_VERTICAL)
+        self.main_container.set_layout_orientation(gui.Container.LAYOUT_VERTICAL)
         
         self.title = gui.Label('Mine Field GAME')
         self.title.set_size(1000, 30)
@@ -129,10 +129,10 @@ class MyApp(App):
         self.btReset.set_size(100, 30)
         self.btReset.onclick.do(self.new_game)
 
-        self.horizontal_container = gui.Widget()
+        self.horizontal_container = gui.Container()
         self.horizontal_container.style['display'] = 'block'
         self.horizontal_container.style['overflow'] = 'auto'
-        self.horizontal_container.set_layout_orientation(gui.Widget.LAYOUT_HORIZONTAL)
+        self.horizontal_container.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.horizontal_container.style['margin'] = '10px'
         self.horizontal_container.append(self.info)
         imgMine = gui.Image('/my_resources:mine.png')

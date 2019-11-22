@@ -50,7 +50,7 @@ class MyApp(App):
 
     def main(self, name='world'):
         # the arguments are	width - height - layoutOrientationOrizontal
-        self.mainContainer = gui.Widget(width=640, height=270, margin='0px auto')
+        self.mainContainer = gui.Container(width=640, height=270, margin='0px auto')
         self.mainContainer.style['text-align'] = 'center'
         self.image_widget = PILImageViewverWidget(width=200, height=200)
 

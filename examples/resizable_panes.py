@@ -168,7 +168,7 @@ class DragHelper(gui.Widget, gui.EventSource):
         self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) - gui.from_pix(self.style['height'])/2)
 
 
-class FloatingPanesContainer(gui.Widget):
+class FloatingPanesContainer(gui.Container):
 
     def __init__(self, **kwargs):
         super(FloatingPanesContainer, self).__init__(**kwargs)
@@ -214,7 +214,7 @@ class MyApp(App):
         self.floatingPaneContainer = FloatingPanesContainer(width=800, height=600, margin='0px auto')
         self.floatingPaneContainer.append(gui.Label("Click a panel to select, than drag and stretch"))
 
-        pane1 = gui.Widget(width=100, height=200)
+        pane1 = gui.Container(width=100, height=200)
         pane1.style['background-color'] = 'yellow'
         self.floatingPaneContainer.add_pane(pane1, 10, 100)
         pane1.append(gui.Label("Panel1, drag and stretch"))

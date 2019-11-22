@@ -23,16 +23,8 @@ from remi import start, App
 
 
 class untitled(App):
-    def __init__(self, *args, **kwargs):
-        if not 'editing_mode' in kwargs.keys():
-            super(untitled, self).__init__(*args, static_file_path={'res':'./res'})
-
-    def idle(self):
-        #idle function called every update cycle
-        pass
-    
     def main(self):
-        mainContainer = Widget(width=706, height=445, margin='0px auto', style="position: relative")
+        mainContainer = Container(width=706, height=445, margin='0px auto', style="position: relative")
         subContainer = HBox(width=630, height=277, style='position: absolute; left: 40px; top: 150px; background-color: #b6b6b6')
         vbox = VBox(width=300, height=250)
         bt1 = Button('bt1', width=100, height=30)
