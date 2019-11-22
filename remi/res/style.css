@@ -577,13 +577,8 @@ input[type='range']:disabled::-moz-range-thumb {
     padding-left: 0;
 }
 
-.tabs li {
+.TabBox ul li {
     list-style-type: none;
-    border: none;
-}
-
-.tabs a {
-    display: block;
     text-align: center;
     text-decoration: none;
     color: #888;
@@ -591,10 +586,11 @@ input[type='range']:disabled::-moz-range-thumb {
     border-bottom: 2px solid #888;
     background: #f7f7f7;
 }
-.tabs a:hover,
-.tabs a.active {
+
+.TabBox ul li.active {
     background: #ddd;
 }
+
 .clearfix:after {
     content: "";
     display: table;

@@ -1637,125 +1637,75 @@ class VBox(HBox):
         self.style['flex-direction'] = 'column'
 
 
-class TabBox(Widget):
+class TabBox(VBox):
     """ A multipage container. 
-        Add a new tab (page) with tabbbox.add_tab( widget, "Tab Name", callback )
+        Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
         The widget can be a container with other child widgets. 
-        The callback gets called on tab selection.
-
-        You can also add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
-
-        create a structure like the following
-        
-        <div class="wrapper">
-            <ul class="tabs clearfix">
-                <li><a href="#tab1" class="active">Tab 1</a></li>
-                <li><a href="#tab2">Tab 2</a></li>
-                <li><a href="#tab3">Tab 3</a></li>
-                <li><a href="#tab4">Tab 4</a></li>
-                <li><a href="#tab5">Tab 5</a></li>
-            </ul>
-            <section id="first-tab-group">
-        <div id="tab1">
     """
     def __init__(self, *args, **kwargs):
         super(TabBox, self).__init__(*args, **kwargs)
+        self.container_tab_titles = ListView( width="100%", style = {'order':'0'}, layout_orientation=Container.LAYOUT_HORIZONTAL, _class = 'tabs clearfix' )
+        self.container_tab_titles.onselection.do(self.on_tab_selection)
+        #self.container_tab_titles.style.update({'justify-content':'flex-start', 'align-items':'center'})
+        super(TabBox, self).append(self.container_tab_titles, "_container_tab_titles")
+        self.selected_widget_key = None
+        self.tab_keys_ordered_list = []
 
-        self._section = Tag(_type='section')
+    def append(self, widget, key=''):
+        key = super(TabBox, self).append(widget, key)
+        self.tab_keys_ordered_list.append(key)
+        self.container_tab_titles.append(ListItem(key), key)
+        tab_w = 100.0 / len(self.container_tab_titles.children.values())
+        for l in self.container_tab_titles.children.values():
+            l.set_size("%.1f%%" % tab_w, "100%")
+        #tab_title_selection_button.onclick.do(self.on_tab_selection, widget)
+        widget.style['order'] = '1'
+        #if first tab, select
+        if self.selected_widget_key is None:
+            self.on_tab_selection(None, key)
+        else:
+            self.on_tab_selection(None, self.selected_widget_key)
 
-        self._tab_cbs = {}
-
-        self._ul = Tag(_type='ul', _class='tabs clearfix')
-        self.add_child('ul', self._ul)
-
-        self.add_child('section', self._section)
-
-        # maps tabs to their corresponding tab header
-        self._tabs = {}
-
-        self._tablist = list()
-
-    def _fix_tab_widths(self):
-        tab_w = 100.0 / len(self._tabs)
-        for a, li, holder in self._tabs.values():
-            li.style['float'] = "left"
-            li.style['width'] = "%.1f%%" % tab_w
-
-    def _on_tab_pressed(self, _a, _li, _holder):
-        # remove active on all tabs, and hide their contents
-        for a, li, holder in self._tabs.values():
-            a.remove_class('active')
-            holder.style['display'] = 'none'
-
-        _a.add_class('active')
-        _holder.style['display'] = 'block'
-
-        # call other callbacks
-        cb = self._tab_cbs[_holder.identifier]
-        if cb is not None:
-            cb()
+    @decorate_set_on_listener("(self, emitter, key)")
+    @decorate_event
+    def on_tab_selection(self, emitter, key):
+        print(str(key))
+        for k in self.children.keys():
+            w = self.children[k]
+            if w is self.container_tab_titles:
+                continue
+            w.style['display'] = 'none'
+            self.container_tab_titles.children[k].remove_class('active')
+            if k==key:
+                self.selected_widget_key = k
+        self.children[self.selected_widget_key].style['display'] = 'block'
+        self.container_tab_titles.children[self.selected_widget_key].add_class('active')
+        return (self.selected_widget_key)
 
     def select_by_widget(self, widget):
-        """ shows a tab identified by the contained widget """
-        for a, li, holder in self._tabs.values():
-            if holder.children['content'] == widget:
-                self._on_tab_pressed(a, li, holder)
+        for k in self.children.keys():
+            if self.children[k] is widget:
+                self.on_tab_selection(None, k)
                 return
 
-    def select_by_name(self, name):
-        """ shows a tab identified by the name """
-        for a, li, holder in self._tabs.values():
-            if a.children['text'] == name:
-                self._on_tab_pressed(a, li, holder)
-                return
+    def select_by_key(self, key):
+        self.on_tab_selection(None, key)
+
+    def select_by_name(self, key):
+        """ This function is deprecated. Is here for compatibility reasons.
+            Use *select_by_key* instead.
+        """
+        self.select_by_key(key)
+
+    def add_tab(self, widget, key, callback=None):
+        """ This function is deprecated. Is here for compatibility reasons.
+            The callback is ignored.
+            Use *append* instead.
+        """
+        self.append(widget, key)
 
     def select_by_index(self, index):
-        """ shows a tab identified by its index """
-        self._on_tab_pressed(*self._tablist[index])
-
-    def add_tab(self, widget, name, tab_cb):
-        """
-        Appends a new tab.
-
-        Args:
-            widget (Widget): The central widget of the tab. Can be a container with other children.
-            name (str): The title of the tab
-            tab_cb (callback): a callback that gets called when the tab is selected.
-        """
-        holder = Tag(_type='div', _class='')
-        holder.add_child('content', widget)
-
-        li = Tag(_type='li', _class='')
-
-        a = Widget(_type='a', _class='')
-        if len(self._tabs) == 0:
-            a.add_class('active')
-            holder.style['display'] = 'block'
-        else:
-            holder.style['display'] = 'none'
-
-        # we need a href attribute for hover effects to work, and while empty
-        # href attributes are valid html5, this didn't seem reliable in testing.
-        # finally, '#' moves to the top of the page, and '#abcd' leaves browser history.
-        # so no-op JS is the least of all evils
-        a.attributes['href'] = 'javascript:void(0);'
-
-        self._tab_cbs[holder.identifier] = tab_cb
-        a.onclick.connect(self._on_tab_pressed, li, holder)
-
-        a.add_child('text', name)
-        li.add_child('a', a)
-        self._ul.add_child(li.identifier, li)
-
-        self._section.add_child(holder.identifier, holder)
-
-        self._tabs[holder.identifier] = (a, li, holder)
-        self._fix_tab_widths()
-        self._tablist.append((a, li, holder))
-        return holder.identifier
-
-    def append(self, value, key=''):
-        self.add_tab(value, key, None)
+        self.on_tab_selection(None, self.tab_keys_ordered_list[index])
 
 
 # noinspection PyUnresolvedReferences
