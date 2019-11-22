@@ -25,7 +25,7 @@ class MyApp(App):
         b1 = gui.Button('Show second tab', width=200, height=30)
         
         tb = gui.TabBox(width='80%')
-        tb.add_tab(b1, 'First', None)
+        tb.append(b1, 'First')
 
         b2 = gui.Button('Show third tab', width=200, height=30)
         tb.add_tab(b2, 'Second', None)

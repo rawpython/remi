@@ -283,7 +283,6 @@ class Tag(object):
     """
     Tag is the base class of the framework. It represents an element that can be added to the GUI,
     but it is not necessarily graphically representable.
-    You can use this class for sending javascript code to the clients.
     """
     def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
@@ -488,7 +487,7 @@ class Tag(object):
 
 
 class Widget(Tag, EventSource):
-    """ Base class for gui widgets.
+    """ Base class for graphical gui widgets.
         A widget has a graphical css style and receives events from the webpage 
     """
     # some constants for the events
@@ -525,8 +524,6 @@ class Widget(Tag, EventSource):
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
             height (int, str): An optional height for the widget (es. height=10 or height='10px' or height='10%').
             margin (str): CSS margin specifier
-            layout_orientation (Widget.LAYOUT_VERTICAL, Widget.LAYOUT_HORIZONTAL): Widget layout, only honoured for
-                some widget types
         """
         if style is None:
             style={}
@@ -944,12 +941,7 @@ class Container(Widget):
         Args:
             children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
                 each item's key is used as 'key' param for the single append.
-            style (dict, or json str): The style properties to be applied. 
-            width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
-            height (int, str): An optional height for the widget (es. height=10 or height='10px' or height='10%').
-            margin (str): CSS margin specifier
-            layout_orientation (Container.LAYOUT_VERTICAL, Container.LAYOUT_HORIZONTAL): Container layout, only honoured for
-                some widget types
+            layout_orientation (Container.LAYOUT_VERTICAL, Container.LAYOUT_HORIZONTAL): Container layout
         """
         super(Container, self).__init__(*args, **kwargs)
         
@@ -960,7 +952,7 @@ class Container(Widget):
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
 
-        In order to access to the specific child in this way widget.children[key].
+        In order to access to the specific child in this way container.children[key].
 
         Args:
             value (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
@@ -1425,7 +1417,7 @@ class GridBox(Container):
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
 
-        In order to access to the specific child in this way widget.children[key].
+        In order to access to the specific child in this way container.children[key].
 
         Args:
             value (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
@@ -1589,7 +1581,7 @@ class HBox(Container):
 
     def append(self, value, key=''):
         """It allows to add child widgets to this.
-        The key allows to access the specific child in this way widget.children[key].
+        The key allows to access the specific child in this way container.children[key].
         The key have to be numeric and determines the children order in the layout.
 
         Args:
@@ -1646,20 +1638,26 @@ class VBox(HBox):
 
 
 class TabBox(Widget):
+    """ A multipage container. 
+        Add a new tab (page) with tabbbox.add_tab( widget, "Tab Name", callback )
+        The widget can be a container with other child widgets. 
+        The callback gets called on tab selection.
 
-    # create a structure like the following
-    #
-    # <div class="wrapper">
-    # <ul class="tabs clearfix">
-    #   <li><a href="#tab1" class="active">Tab 1</a></li>
-    #   <li><a href="#tab2">Tab 2</a></li>
-    #   <li><a href="#tab3">Tab 3</a></li>
-    #   <li><a href="#tab4">Tab 4</a></li>
-    #   <li><a href="#tab5">Tab 5</a></li>
-    # </ul>
-    # <section id="first-tab-group">
-    #   <div id="tab1">
+        You can also add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
 
+        create a structure like the following
+        
+        <div class="wrapper">
+            <ul class="tabs clearfix">
+                <li><a href="#tab1" class="active">Tab 1</a></li>
+                <li><a href="#tab2">Tab 2</a></li>
+                <li><a href="#tab3">Tab 3</a></li>
+                <li><a href="#tab4">Tab 4</a></li>
+                <li><a href="#tab5">Tab 5</a></li>
+            </ul>
+            <section id="first-tab-group">
+        <div id="tab1">
+    """
     def __init__(self, *args, **kwargs):
         super(TabBox, self).__init__(*args, **kwargs)
 
@@ -1716,7 +1714,14 @@ class TabBox(Widget):
         self._on_tab_pressed(*self._tablist[index])
 
     def add_tab(self, widget, name, tab_cb):
+        """
+        Appends a new tab.
 
+        Args:
+            widget (Widget): The central widget of the tab. Can be a container with other children.
+            name (str): The title of the tab
+            tab_cb (callback): a callback that gets called when the tab is selected.
+        """
         holder = Tag(_type='div', _class='')
         holder.add_child('content', widget)
 
@@ -1748,6 +1753,9 @@ class TabBox(Widget):
         self._fix_tab_widths()
         self._tablist.append((a, li, holder))
         return holder.identifier
+
+    def append(self, value, key=''):
+        self.add_tab(value, key, None)
 
 
 # noinspection PyUnresolvedReferences
