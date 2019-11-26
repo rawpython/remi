@@ -553,7 +553,7 @@ class App(BaseHTTPRequestHandler, object):
         # check here request header to identify the type of req, if http or ws
         # if this is a ws req, instance a ws handler, add it to App's ws list, return
         if "Upgrade" in self.headers:
-            if self.headers['Upgrade'] == 'websocket':
+            if self.headers['Upgrade'].lower() == 'websocket':
                 #passing arguments to websocket handler, otherwise it will lost the last message, 
                 # and will be unable to handshake
                 ws = WebSocketsHandler(self.headers, self.request, self.client_address, self.server)
