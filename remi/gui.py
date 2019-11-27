@@ -3118,6 +3118,7 @@ class FileFolderNavigator(Container):
     def on_folder_item_selected(self, folderitem):
         if folderitem.isFolder and (not self.allow_folder_selection):
             folderitem.set_selected(False)
+            self.on_folder_item_click(folderitem)
             return
 
         if not self.multiple_selection:
@@ -3158,6 +3159,8 @@ class FileFolderItem(Container):
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
             self.icon.onclick.connect(self.onclick)
+        else:
+            self.icon.onclick.connect(self.onselection)
         icon_file = '/res:folder.png' if is_folder else '/res:file.png'
         self.icon.style['background-image'] = "url('%s')" % icon_file
         self.label = Label(text)
