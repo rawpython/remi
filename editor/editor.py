@@ -22,6 +22,7 @@ import prototypes
 import editor_widgets
 import html_helper
 import threading
+import traceback
 
 if remi.server.pyLessThan3:
     import imp
@@ -291,7 +292,7 @@ class Project(gui.Container):
     def load(self, ifile, configuration):
         self.ifile = ifile
         
-        _module = load_source(self.ifile)
+        _module = load_source(self.ifile)    
         
         configuration.configDict = _module.configuration
         
@@ -760,10 +761,13 @@ class Editor(App):
     def on_open_dialog_confirm(self, widget, filelist):
         if len(filelist):
             self.menu_new_clicked(None)
-            widgetTree = self.project.load(filelist[0], self.projectConfiguration)
-            if widgetTree!=None:
-                self.add_widget_to_editor( widgetTree )
-            self.projectPathFilename = filelist[0]
+            try:
+                widgetTree = self.project.load(filelist[0], self.projectConfiguration)
+                if widgetTree!=None:
+                    self.add_widget_to_editor( widgetTree )
+                self.projectPathFilename = filelist[0]
+            except:
+                self.show_error_dialog("ERROR: Unable to load the project", "There were an error during project load: %s"%traceback.format_exc())
         
     def menu_save_clicked(self, widget, path=""):
         #the dragHelper have to be removed
@@ -850,6 +854,13 @@ class Editor(App):
         if str(keycode)=='46': #46 the delete keycode
             self.toolbar_delete_clicked(None)
         print("Key pressed: " + str(keycode))
+
+    def show_error_dialog(self, title, message):
+        error_dialog = gui.GenericDialog(title, message)
+        error_dialog.children["title"].style['background-color'] = 'red'
+        error_dialog.children["message"].style['white-space'] = 'pre'
+        error_dialog.cancel.style['display'] = 'none'
+        error_dialog.show(self)
 
         
 def on_dropped(self, left, top):
