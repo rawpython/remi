@@ -560,8 +560,10 @@ class Editor(App):
         m2.append([m21, m22])
         
         m3 = gui.MenuItem('Project Config', width=200, height='100%')
+
+        m4 = gui.MenuItem('Became a Patron', width=200, height='100%', style={'font-weight':'bold'})
         
-        menu.append([m1, m2, m3])
+        menu.append([m1, m2, m3, m4])
         
         menubar.append(menu)
         
@@ -595,6 +597,7 @@ class Editor(App):
         m22.onclick.do(self.menu_paste_selection_clicked)
         
         m3.onclick.do(self.menu_project_config_clicked)
+        m4.onclick.do(self.menu_became_a_patron)
         
         self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
         self.subContainer.style.update({'position':'relative',
@@ -836,6 +839,14 @@ class Editor(App):
             self.selectedWidget.append(self.editCuttedWidget, key)
             self.editCuttedWidget = None
             self.instancesWidget.update(self.project, self.selectedWidget)
+
+    def menu_became_a_patron(self, widget):
+        dialog = gui.GenericDialog("Became a Patron", "This editor is made for you with passion. \nIt would be fantastic if you give a contribution, also a little one. ;-)", width="50%")
+        dialog.add_field("link", gui.Link("https://www.patreon.com/remigui", "Click this link to Donate", True, style={'font-weight':'bolder'}))
+        dialog.children["message"].style['white-space'] = 'pre'
+        dialog.cancel.style['display'] = 'none'
+        dialog.conf.set_text("Back")
+        dialog.show(self)
 
     def menu_project_config_clicked(self, widget):
         self.projectConfiguration.show(self)
