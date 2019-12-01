@@ -1476,8 +1476,8 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
-        value = str(value) + 'px'
-        value = value.replace('pxpx', 'px')
+        if type(value) == int:
+            value = str(value) + 'px'
         self.style['grid-column-gap'] = value
 
     def set_row_gap(self, value):
@@ -1486,11 +1486,11 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
-        value = str(value) + 'px'
-        value = value.replace('pxpx', 'px')
+        if type(value) == int:
+            value = str(value) + 'px'
         self.style['grid-row-gap'] = value
 
-    def set_from_asciiart(self, asciipattern):
+    def set_from_asciiart(self, asciipattern, column_gap=0, row_gap=0):
         """Defines the GridBox layout from a simple and intuitive ascii art table
 
             Pipe "|" is the column separator.
@@ -1499,6 +1499,7 @@ class GridBox(Container):
             Single table cells must contain the 'key' string value of the contained widgets.
             Column sizes are proportionally applied to the defined grid.
             Columns must be alligned between rows.
+            The gap values eventually defined by set_column_gap and set_row_gap are overwritten.
 
             es.
                 \"\"\"
@@ -1508,6 +1509,9 @@ class GridBox(Container):
 
             Args:
                 value (str): The ascii defined grid
+                column_gap (int): Percentage value of the total width to be used as gap between columns
+                row_gap (int): Percentage value of the total height to be used as gap between rows
+
         """
         rows = asciipattern.split("\n")
         #remove empty rows
@@ -1545,18 +1549,20 @@ class GridBox(Container):
         columns[row_max_width] = row_max_width
         
         for r in range(0,len(row_sizes)):
-            row_sizes[r] = float(row_sizes[r])/float(len(rows))*100.0
+            row_sizes[r] = float(row_sizes[r])/float(len(rows))*(100.0-row_gap*(len(row_sizes)-1))
         
         column_sizes = []
         prev_size = 0.0
         for c in columns.values():
-            value = float(c)/float(row_max_width)*100.0
+            value = float(c)/float(row_max_width)*(100.0-column_gap*(len(columns)-1))
             column_sizes.append(value-prev_size)
             prev_size = value
 
         self.define_grid(row_defs.values())
         self.set_column_sizes(column_sizes)
         self.set_row_sizes(row_sizes)
+        self.set_column_gap("%s%%"%column_gap)
+        self.set_row_gap("%s%%"%row_gap)
 
 
 class HBox(Container):
