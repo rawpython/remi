@@ -5,7 +5,7 @@ from remi.gui import *
 from threading import Timer
 import traceback
 import time
-
+import math
 import epics
 #from epics import caget, caput, cainfo
 
@@ -177,3 +177,97 @@ class EPICSPlotPV(gui.Svg, EPICSWidget):
         except:
             self.style['overflow'] = "visible"
             self.add_child("chart", gui.SvgText(10,10, "Install pygal to use this widget"))
+
+
+class EPICSValueGaugeWidget(Svg, EPICSWidget):
+    """A gauge indicator for an EPICS PV value
+    """
+    icon = "data:image/png;base64,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"
+    @decorate_constructor_parameter_types([str, float, float])
+    def __init__(self, epics_pv_name, min_value, max_value, *args, **kwargs):
+        if not 'width' in kwargs:
+            kwargs['width'] = 100
+        if not 'height' in kwargs:
+            kwargs['height'] = 100
+        self.min_value = min_value
+        self.max_value = max_value
+        super(EPICSValueGaugeWidget, self).__init__(*args, **kwargs)
+        self.style.update({'position':'absolute','left':'10px','top':'10px'})
+        self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
+
+        #the indicator
+        self.indicator = gui.SvgPolygon(_maxlen=4)
+        self.indicator.set_stroke(width=0.001, color='red')
+        self.indicator.set_fill('red')
+
+        indicator_pin_radius = 0.05
+        self.indicator_pin = gui.SvgCircle(0,0.5,indicator_pin_radius)
+        self.indicator_pin.set_fill('black') 
+
+        #the value signs
+        scale = max_value-min_value
+        radius_min = 0.4
+        radius_max = 0.5
+        for i in range(0,10):
+            angle = math.pi/9*i
+            #sign = gui.SvgLine(math.cos(angle)*radius_min, radius_max-math.sin(angle)*radius_min, math.cos(angle)*radius_max, radius_max-math.sin(angle)*radius_max)
+            sign = gui.SvgLine(math.cos(angle)*(radius_min - 0.01 + 0.1*(i+1)/10), radius_max-math.sin(angle)*(radius_min - 0.01 + 0.1*(i+1)/10), math.cos(angle)*radius_max, radius_max-math.sin(angle)*radius_max)
+            sign.set_stroke(0.01, 'black')
+            self.append(sign)
+
+        #subindicators value signs
+        scale = max_value-min_value
+        radius_min = 0.4
+        radius_max = 0.5
+        for i in range(0,100):
+            angle = math.pi/99*i
+            #sign = gui.SvgLine(math.cos(angle)*radius_min, radius_max-math.sin(angle)*radius_min, math.cos(angle)*radius_max, radius_max-math.sin(angle)*radius_max)
+            sign = gui.SvgLine(math.cos(angle)*(radius_min - 0.01 + 0.1*(i+10)/100), radius_max-math.sin(angle)*(radius_min - 0.01 + 0.1*(i+10)/100), math.cos(angle)*radius_max, radius_max-math.sin(angle)*radius_max)
+            sign.set_stroke(0.002, 'black')
+            self.append(sign)
+
+        font_size = 0.1
+        value = gui.SvgText(-radius_max, 0.5 + font_size + 0.01, str(min_value))
+        value.style['font-size'] = gui.to_pix(font_size)
+        value.style['text-anchor'] = "start"
+        self.append(value)
+
+        value = gui.SvgText(radius_max, 0.5 + font_size + 0.01, str(max_value))
+        value.style['font-size'] = gui.to_pix(font_size)
+        value.style['text-anchor'] = "end"
+        self.append(value)
+
+        self.actual_value = gui.SvgText(0, 0.5 + indicator_pin_radius + font_size + 0.01, str(max_value))
+        self.actual_value.style['font-size'] = gui.to_pix(font_size)
+        self.actual_value.style['text-anchor'] = "middle"
+        self.actual_value.style['font-weight'] = 'bold'
+        self.append(self.actual_value)
+
+        self.append([self.indicator, self.indicator_pin])
+
+        self.set_viewbox(-0.5, 0, 1, 0.70)
+        self.set_value(self.min_value)
+
+    def _need_update(self, emitter=None):
+        super(EPICSValueGaugeWidget, self)._need_update(emitter)
+
+    def set_value(self, value):
+        #min value at left
+        #max value at right
+        
+        #value to radians
+        scale = self.max_value-self.min_value
+        if scale==0.0:
+            return
+        relative_value = value - self.min_value
+        angle = relative_value*math.pi/scale
+        #inversion min at left
+        angle = math.pi - angle
+
+        radius = 0.5
+        self.indicator.add_coord(math.cos(angle)*radius, radius-math.sin(angle)*radius)
+        self.indicator.add_coord(math.cos(angle+0.5)*0.04, radius-math.sin(angle+0.5)*0.04) #self.indicator.add_coord(0.02,0.4)
+        self.indicator.add_coord(0,radius)
+        self.indicator.add_coord(math.cos(angle-0.5)*0.04, radius-math.sin(angle-0.5)*0.04) 
+
+        self.actual_value.set_text(str(value))

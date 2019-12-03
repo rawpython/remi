@@ -1,5 +1,5 @@
 try:
-    from .toolbox_EPICS import EPICSBooleanButton, EPICSLed, EPICSValueMeterWidget, EPICSPlotPV
+    from .toolbox_EPICS import EPICSBooleanButton, EPICSLed, EPICSValueMeterWidget, EPICSPlotPV, EPICSValueGaugeWidget
 except:
     print("In order to use EPICS widgets install pyepics")
 

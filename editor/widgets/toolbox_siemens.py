@@ -240,7 +240,7 @@ class BitStatusWidget(HBox, SiemensWidget):
 
         
 class WordEditWidget(SpinBox, SiemensWidget):
-    """A Word (16bit) value edit.
+    """ A Word (16bit) value edit.
         Connect the event link_to to a PLCSiemens widget on the "on_link_to" method.
         i.e.:
             widget.link_to.do(plc.on_link_to)
@@ -265,3 +265,4 @@ class WordEditWidget(SpinBox, SiemensWidget):
         if self.plc_instance==None:
             return
         self.plc_instance.set_int( self.db_area_mem, self.byte_index, int(self.get_value()))
+
