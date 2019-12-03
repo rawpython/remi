@@ -252,6 +252,7 @@ class EPICSValueGaugeWidget(Svg, EPICSWidget):
         super(EPICSValueGaugeWidget, self)._need_update(emitter)
 
     def set_value(self, value):
+        value = float(value)
         #min value at left
         #max value at right
         
@@ -270,4 +271,5 @@ class EPICSValueGaugeWidget(Svg, EPICSWidget):
         self.indicator.add_coord(0,radius)
         self.indicator.add_coord(math.cos(angle-0.5)*0.04, radius-math.sin(angle-0.5)*0.04) 
 
-        self.actual_value.set_text(str(value))
+        if hasattr(self, "actual_value"):
+            self.actual_value.set_text(str(value))
