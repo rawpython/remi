@@ -706,7 +706,7 @@ class App(BaseHTTPRequestHandler, object):
         """
         self._log.debug('App.onpagehide event occurred')
 
-    def onpageshow(self, emitter):
+    def onpageshow(self, emitter, width, height):
         """ WebPage Event that occurs on webpage gets shown
         """
         self._log.debug('App.onpageshow event occurred')

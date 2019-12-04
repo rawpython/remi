@@ -1373,11 +1373,15 @@ class BODY(Container):
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
+    @decorate_event_js("""
+            var params={};
+            params['width']=window.innerWidth;
+            params['height']=window.innerHeight;
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();
             return false;""")
-    def onpageshow(self):
-        return ()
+    def onpageshow(self, width, height):
+        return (width, height)
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("""
