@@ -85,9 +85,9 @@ class MyApp(App):
         """ WebPage Event that occurs on webpage when the user navigates away """
         super(MyApp, self).onpagehide(emitter)
 
-    def onpageshow(self, emitter):
+    def onpageshow(self, emitter, width, height):
         """ WebPage Event that occurs on webpage gets shown """
-        super(MyApp, self).onpageshow(emitter)
+        super(MyApp, self).onpageshow(emitter, width, height)
 
     def onresize(self, emitter, width, height):
         """ WebPage Event that occurs on webpage gets resized """
