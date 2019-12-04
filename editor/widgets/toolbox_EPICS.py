@@ -56,7 +56,9 @@ class EPICSBooleanButton(gui.Container, EPICSWidget):
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','100px'))
         super(EPICSBooleanButton, self).__init__(*args, **kwargs)
-        self.append(gui.Container(children=[self.button, self.led], width="100%", height="100%", style={'position':'relative', **style_inheritance_dict}))
+        _style = {'position':'relative'}
+        _style.update(style_inheritance_dict)
+        self.append(gui.Container(children=[self.button, self.led], width="100%", height="100%", style=_style))
         self.toggle = toggle
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
         self.button.onmousedown.do(self.set_bit)
@@ -103,7 +105,9 @@ class EPICSLed(HBox, EPICSWidget):
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','50px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','50px'))
         super(EPICSLed, self).__init__(*args, **kwargs)
-        self.label_value = gui.Label("0", style={'text-align':'center', **style_inheritance_text_dict})
+        _style = {'text-align':'center'}
+        _style.update(style_inheritance_text_dict)
+        self.label_value = gui.Label("0", style=_style)
         self.append(self.label_value)
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
 
