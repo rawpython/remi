@@ -225,6 +225,42 @@ class OpencvThreshold(OpencvImRead):
         res, self.img = cv2.threshold(img,self.threshold_value,255,cv2.THRESH_BINARY)
         self.set_image_data(self.img)
         
+'''
+class OpencvSimpleBlobDetector(OpencvImRead):
+    """ OpencvSimpleBlobDetector widget.
+        Allows to get blobs in an image.
+        Receives an image on on_new_image_listener.
+        The event on_blobs_detected can be connected to a listener further processing
+    """
+    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAETSURBVGhD7ZYBDsMgCEV197+zG+m60EwBHXaCvKRZslnhlT/TnFIqr2sbHu/PbdhO+BLpUnymO2fQPIhIe0ccaRwLjIW/QXekW7IA9duKqETakjQrbG2CHHFKe4cVlpzCll5YzEwYzhJ8jSISpiZ4x3RrgqPScNen4xWjSYlJ+8V7LBtpaJKb4siUlxOWiP4C7PzXSGvIcX3jGiJhrqmRB6U9RaoHXIuMNCyUNHauk6wFpOtm0BQebYq7b5asdN8phxYUrzUwS7aHqrBWY+c+rQegjaTGl7B2Y3eIYrh6UyK9Mhfhu6cxC8pj7wl7ojXlmLAnalOGb/pfhA0TkfZOCHsnhL0Twt4JYe+EsHdC2DcpPQHUiTG7/qs9SwAAAABJRU5ErkJggg=="
+    @gui.decorate_constructor_parameter_types([int])
+    def __init__(self, *args, **kwargs):
+        super(OpencvSimpleBlobDetector, self).__init__("", *args, **kwargs)
+
+    def on_new_image_listener(self, emitter): #THRESHOLD
+        if emitter.img is None:
+            return
+        img = emitter.img
+        self.set_image_data(self.img)
+
+        params = cv2.SimpleBlobDetector_Params()
+        params.filterByCircularity = False
+        params.filterByConvexity = False
+        params.filterByInertia = False
+        # I loghi appaiono di colore bianco
+        params.minThreshold = 100    # the graylevel of images
+        params.maxThreshold = 255
+        params.filterByColor = False
+        #params.blobColor = 255
+        # Filter by Area
+        params.filterByArea = True
+        params.minArea = 20
+        detector = cv2.SimpleBlobDetector_create(params) #SimpleBlobDetector()
+        # Detect blobs.
+        keypoints = detector.detect(diff_images.astype(np.uint8))
+        for k in keypoints:
+            cv2.circle(img, (int(k.pt[0]), int(k.pt[1])), 20, (255,0,0), 5)
+'''
 
 class OpencvSplit(OpencvImRead):
     """ OpencvSplit widget.

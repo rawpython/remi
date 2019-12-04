@@ -9,6 +9,8 @@ import math
 import epics
 #from epics import caget, caput, cainfo
 
+style_inheritance_dict = {'opacity':'inherit', 'overflow':'inherit', 'background-color':'inherit', 'background-image':'inherit', 'background-position':'inherit', 'background-repeat':'inherit', 'border-color':'inherit', 'border-width':'inherit', 'border-style':'inherit', 'border-radius':'inherit', 'color':'inherit', 'font-family':'inherit', 'font-size':'inherit', 'font-style':'inherit', 'font-weight':'inherit', 'white-space':'inherit', 'letter-spacing':'inherit'}
+style_inheritance_text_dict = {'opacity':'inherit', 'overflow':'inherit', 'color':'inherit', 'font-family':'inherit', 'font-size':'inherit', 'font-style':'inherit', 'font-weight':'inherit', 'white-space':'inherit', 'letter-spacing':'inherit'}
 
 # noinspection PyUnresolvedReferences
 class EPICSWidget(object):
@@ -45,16 +47,16 @@ class EPICSBooleanButton(gui.Container, EPICSWidget):
     def __init__(self, button_label, epics_pv_name, toggle=False, *args, **kwargs):
         self.color_inactive = 'darkgray'
         self.color_active = 'rgb(0,255,0)'
-        self.button = gui.Button(button_label, width="100%", height="100%")
+        self.button = gui.Button(button_label, width="100%", height="100%", style=style_inheritance_dict)
         self.led = gui.Widget(width=15, height=5, style={'position':'absolute', 'left':'2px', 'top':'2px', 'background-color':self.color_inactive})
         self.led_status = False
-        default_style = {'position':'absolute','left':'10px','top':'10px'}
+        default_style = {'position':'absolute','left':'10px','top':'10px', 'background-color':'rgb(4, 90, 188)', 'color':'white'}
         default_style.update(kwargs.get('style',{}))
         kwargs['style'] = default_style
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','100px'))
         super(EPICSBooleanButton, self).__init__(*args, **kwargs)
-        self.append(gui.Container(children=[self.button, self.led], width="100%", height="100%", style={'position':'relative'}))
+        self.append(gui.Container(children=[self.button, self.led], width="100%", height="100%", style={'position':'relative', **style_inheritance_dict}))
         self.toggle = toggle
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
         self.button.onmousedown.do(self.set_bit)
@@ -95,13 +97,13 @@ class EPICSLed(HBox, EPICSWidget):
     def __init__(self, epics_pv_name, *args, **kwargs):
         self.color_inactive = 'darkgray'
         self.color_active = 'rgb(0,180,0)'
-        default_style = {'position':'absolute','left':'10px','top':'10px', 'background-color':self.color_inactive, 'align-items':'center', 'justify-content':'center'}
+        default_style = {'position':'absolute','left':'10px','top':'10px', 'color':'white','background-color':self.color_inactive, 'align-items':'center', 'justify-content':'center'}
         default_style.update(kwargs.get('style',{}))
         kwargs['style'] = default_style
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','50px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','50px'))
         super(EPICSLed, self).__init__(*args, **kwargs)
-        self.label_value = gui.Label("0", style={'text-align':'center', 'color':'white'})
+        self.label_value = gui.Label("0", style={'text-align':'center', **style_inheritance_text_dict})
         self.append(self.label_value)
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
 
