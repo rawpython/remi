@@ -39,9 +39,13 @@ class OpencvImRead(gui.Image, OpencvWidget):
     @gui.decorate_constructor_parameter_types(["file"])
     def __init__(self, filename, *args, **kwargs):
         self.app_instance = None
+        if not 'width' in kwargs:
+            kwargs['width'] = 200
+        if not 'height' in kwargs:
+            kwargs['height'] = 180
         super(OpencvImRead, self).__init__("", *args, **kwargs)
         OpencvWidget._setup(self)
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'200px','height':'180px'})
+        self.style.update({'position':'absolute','left':'10px','top':'10px'})
         self.frame_index = 0
         self.set_image(filename)
 
