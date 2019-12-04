@@ -19,13 +19,13 @@ class PLCSiemens(Image):
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAvCAYAAAAIA1FgAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAADmwAAA5sBPN8HMQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANGSURBVFiF7ZbNbxtFGIefmR2vP+PUjkntxHGapmmpKpIoECggjpyQEBKqeoIjXDhw5cD/wZ0LEgiJEzck1EIrlUYBl7RJ1bQlbUpCHNux15+7MxycWnLzoX6sJZDyk1bzzsc+s/q9s7uv+PTzL40dCBCLRShsl/A8j1K5AoARnet5JAyoWDSC1hpjIDuS5sH6390Fi+9WyL49zungCPdam+TsFAMyjKObLNRXmbTTTIdyXKrdIiJsitohq4YoeBUWf19C3fvr4b47G2MAmLTTnLLTDMgQuUCKpeYDzgZHOR+eYt0tMmmn+cm5wRfDF/mm/AspK85qe4NFQBKuQ7gOyu2BFzYfAeChSVhRbKGomxbbXpU7rQ1iMoRGs+mWcY3mu52rvBaepKirnLYzHWsu3MAAmF/nMZfe6MK3NtZpvpOkOOYSt6N4xiNk2QQtm1KzihAgkcSDEZx2g4bXRglJW7sIIVGPXNRhSRldCTG68rinAA00SPbc1iABQGC3b+22AZT+/r1dH44dts9zSXF7wndoFy4++BEAs3wKbk75DD9zpxMVkp3M+gk3q7lOtN0Hz8237/sO7cLFiTUATGkQSnGf4Rd/6ERPvER+SPpKe0LKfPUxAKYR7AO87K/PPXD5ydcAmIVpzG8z/sJJlDtRuOErGECZq3OdaG2kZ0JaL55rZX5+a9+JZCr9wvC+HsX+nvP7q7do1mv+gwM2avzky76DH6u/tuw3eH5+FsepUW80GRtNc/nKdeZmzlGuVKlWHWZfOcv9tYfUG01i0QiBgOLaQv7p4JZloZRiKBkmffwl5mbOIaXg5IksrVabfwrb5JdWeHN+FtfTLOZv7vvke2yxLInahTtOjT/+XCYSCaGNYfXuGuWdCrVaHYBK1UFKweuvTiPE3qJSfPjRZ37/Ors6sCjKZTMMxgeoVB3GshkuX7nOYHyA1FCCUnmHWDRKq9VCStlTvD4VfDRzHBVQ5JdWyKSHMcbgeR5npibYKhS764QQzw53PY/EsUFGMsNsbG4xMZ4lFArSarURQhAOh2i32wgOLuAPhF9byKOUhet6PePLt++itUZK2S2znxkO7AEDaK172sP0//0qHsGP4Efw/zL8X7xWNIa0/NaYAAAAAElFTkSuQmCC"
     @decorate_constructor_parameter_types([str, int, int])
     def __init__(self, ip_address, rack=0, slot=3, update_interval_millisec=1.0, *args, **kwargs):
-        if not 'width' in kwargs:
-            kwargs['width'] = 23
-        if not 'height' in kwargs:
-            kwargs['height'] = 47
+        default_style = {'position':'absolute','left':'10px','top':'10px'}
+        default_style.update(kwargs.get('style',{}))
+        kwargs['style'] = default_style
+        kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','23px'))
+        kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','47px'))
         super(PLCSiemens, self).__init__(self.icon, *args, **kwargs)
         self.linked_widgets = []
-        self.style.update({'position':'absolute','left':'10px','top':'10px'})
         self.snap7_client = snap7.client.Client()
         self._set_params()
         self.ip_address = ip_address
@@ -181,10 +181,13 @@ class ButtonSetResetBit(Button, SiemensWidget):
             kwargs: See Widget.__init__()
         """
         #SiemensWidget.__init__(self)
+        default_style = {'position':'absolute','left':'10px','top':'10px'}
+        default_style.update(kwargs.get('style',{}))
+        kwargs['style'] = default_style
+        kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
+        kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','30px'))
         super(ButtonSetResetBit, self).__init__(text, *args, **kwargs)
         SiemensWidget._setup(self)
-
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'100px','height':'30px'})
         self.toggle = toggle
         self.plc_instance = None
         self.db_area_mem = db_area_mem
@@ -220,17 +223,16 @@ class BitStatusWidget(HBox, SiemensWidget):
             kwargs: See Widget.__init__()
         """
         #SiemensWidget.__init__(self)
-        if not 'width' in kwargs:
-            kwargs['width'] = 100
-        if not 'height' in kwargs:
-            kwargs['height'] = 30
+        default_style = {'position':'absolute','left':'10px','top':'10px', 'align-items':'stretch', 'justify-content':'flex-start'}
+        default_style.update(kwargs.get('style',{}))
+        kwargs['style'] = default_style
+        kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
+        kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','30px'))
         super(BitStatusWidget, self).__init__(*args, **kwargs)
         SiemensWidget._setup(self)
-        self.style.update({'align-items':'stretch', 'justify-content':'flex-start'})
         self.label = gui.Label(text, style={'border':'1px solid black'})
         self.label_value = gui.Label("0", width='30px', style={'border':'1px solid black', 'background-color':'gray', 'text-align':'center'})
         self.append([self.label, self.label_value])
-        self.style.update({'position':'absolute','left':'10px','top':'10px'})
         self.plc_instance = None
         self.db_area_mem = db_area_mem
         self.byte_index = byte_index
@@ -261,13 +263,13 @@ class WordEditWidget(SpinBox, SiemensWidget):
             text (str): The text that will be displayed on the label.
             kwargs: See Widget.__init__()
         """
-        if not 'width' in kwargs:
-            kwargs['width'] = 100
-        if not 'height' in kwargs:
-            kwargs['height'] = 30
+        default_style = {'position':'absolute','left':'10px','top':'10px'}
+        default_style.update(kwargs.get('style',{}))
+        kwargs['style'] = default_style
+        kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
+        kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','30px'))
         super(WordEditWidget, self).__init__(0, -32767, 32766, 1,*args, **kwargs)
         SiemensWidget._setup(self)
-        self.style.update({'position':'absolute','left':'10px','top':'10px'})
         self.plc_instance = None
         self.db_area_mem = db_area_mem
         self.byte_index = byte_index
