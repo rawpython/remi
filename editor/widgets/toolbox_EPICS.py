@@ -45,24 +45,21 @@ class EPICSBooleanButton(gui.Container, EPICSWidget):
     def __init__(self, button_label, epics_pv_name, toggle=False, *args, **kwargs):
         self.color_inactive = 'darkgray'
         self.color_active = 'rgb(0,255,0)'
-        self.button = gui.Button(button_label)
+        self.button = gui.Button(button_label, width="100%", height="100%")
         self.led = gui.Widget(width=15, height=5, style={'position':'absolute', 'left':'2px', 'top':'2px', 'background-color':self.color_inactive})
         self.led_status = False
+        if not 'width' in kwargs:
+            kwargs['width'] = 100
+        if not 'height' in kwargs:
+            kwargs['height'] = 100
         super(EPICSBooleanButton, self).__init__(*args, **kwargs)
         self.append([self.button, self.led])
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'100px','height':'30px'})
+        self.style.update({'position':'absolute','left':'10px','top':'10px'})
         self.toggle = toggle
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
         self.button.onmousedown.do(self.set_bit)
         if not self.toggle:
             self.button.onmouseup.do(self.reset_bit)
-
-    #this method gets called when a change occurs on style or attributes dictionaries of the widget
-    def _need_update(self, emitter=None):
-        width = gui.from_pix(self.style.get('width', "100").replace("%",""))
-        height = gui.from_pix(self.style.get('height', "100").replace("%",""))
-        self.button.set_size(width, height)
-        gui.Widget._need_update(self, emitter)
 
     def set_bit(self, emitter, *args, **kwargs):
         self.pressed = True
@@ -98,11 +95,15 @@ class EPICSLed(HBox, EPICSWidget):
     def __init__(self, epics_pv_name, *args, **kwargs):
         self.color_inactive = 'darkgray'
         self.color_active = 'rgb(0,180,0)'
+        if not 'width' in kwargs:
+            kwargs['width'] = 30
+        if not 'height' in kwargs:
+            kwargs['height'] = 30
         super(EPICSLed, self).__init__(*args, **kwargs)
         self.style.update({'align-items':'center', 'justify-content':'center'})
         self.label_value = gui.Label("0", style={'text-align':'center', 'color':'white'})
         self.append(self.label_value)
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'50px','height':'50px', 'background-color':self.color_inactive})
+        self.style.update({'position':'absolute','left':'10px','top':'10px', 'background-color':self.color_inactive})
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
 
     #this method gets called when a change occurs on style or attributes dictionaries of the widget
@@ -125,8 +126,12 @@ class EPICSValueMeterWidget(Progress, EPICSWidget):
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAYAAACoYAD2AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlwSFlzAAAOwgAADsIBFShKgAAAAG1JREFUWEft1qENgEAMQNEec6AwDMG4jIbC3QZAQuXhvijJf6aVP+mJa9cjiptylmYkxUiKkRQjKUZSjKQYSTGSMvyZt/3M7dux9dx487Lm9vLclP++yWo8N8VIipEUIylGUoykGEkxkmIkI+IGyZcQRHB9PC8AAAAASUVORK5CYII="
     @decorate_constructor_parameter_types([str, int])
     def __init__(self, epics_pv_name, max_value, *args, **kwargs):
+        if not 'width' in kwargs:
+            kwargs['width'] = 100
+        if not 'height' in kwargs:
+            kwargs['height'] = 30
         super(EPICSValueMeterWidget, self).__init__(0, max_value,*args, **kwargs)
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'100px','height':'30px'})
+        self.style.update({'position':'absolute','left':'10px','top':'10px'})
         self.epics_pv = epics.PV(epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
 
     def set_value(self, value):
@@ -145,8 +150,14 @@ class EPICSPlotPV(gui.Svg, EPICSWidget):
     icon = "data:image/png;base64,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"
     @decorate_constructor_parameter_types([str, int])
     def __init__(self, epics_pv_name, max_values_count, *args, **kwargs):
-        super(EPICSPlotPV, self).__init__(100, 100, *args, **kwargs)
-        self.style.update({'position':'absolute','left':'10px','top':'10px','width':'100px','height':'30px', 'overflow':'hidden', 'background-color':'lightgray'})
+        w = kwargs.get("width", 100)
+        h = kwargs.get("height", 100)
+        if 'width' in kwargs.keys():
+            del kwargs["width"]
+        if 'height' in kwargs.keys():
+            del kwargs["height"]
+        super(EPICSPlotPV, self).__init__(w, h, *args, **kwargs)
+        self.style.update({'position':'absolute','left':'10px','top':'10px','width':gui.to_pix(w),'height':gui.to_pix(h), 'overflow':'hidden', 'background-color':'lightgray'})
         self.style['margin'] = '10px'
         self.values = gui.SvgPolyline(max_values_count)
         self.pv_name = epics_pv_name
