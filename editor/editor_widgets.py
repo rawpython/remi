@@ -659,6 +659,7 @@ class EditorAttributes(gui.VBox, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(EditorAttributes, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
+        self.appInstance = appInstance
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
         #self.style['overflow-y'] = 'scroll'
         self.style['justify-content'] = 'flex-start'
@@ -721,6 +722,16 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                 if not type(widget) in w.attributeDict['additional_data'].get('applies_to', None):
                     w.style['display'] = 'none'
             w.set_from_dict(getattr(widget, w.attributeDict['affected_widget_attribute']))
+
+        for x, y in inspect.getmembers(self.targetWidget.__class__):
+            if type(y)==property:
+                if hasattr(y,"fget"):
+                    if hasattr(y.fget, "editor_attributes"):
+                        attributeEditor = EditorAttributeInput(x, y.fget.editor_attributes, self.appInstance, width="100%")
+                        attributeEditor.on_attribute_changed.do(self.onattribute_changed)
+                        attributeEditor.on_attribute_remove.do(self.onattribute_remove)
+                        self.attributeGroups[y.fget.editor_attributes['group']].append(attributeEditor)
+                        self.attributesInputs.append(attributeEditor)
 
 
 class CssSizeInput(gui.Container, gui.EventSource):

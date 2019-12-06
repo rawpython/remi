@@ -219,6 +219,10 @@ class OpencvCrop(OpencvImRead):
         self.set_image_data(self.img)
 
 
+def editor_attribute(prop, affected_widget_attribute, group, description, _type, additional_data):
+    setattr(prop.fget, "editor_attributes", {'affected_widget_attribute':affected_widget_attribute, 'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
+    return prop
+
 class OpencvThreshold(OpencvImRead):
     """ OpencvThreshold widget.
         Allows to threashold an image.
@@ -226,18 +230,30 @@ class OpencvThreshold(OpencvImRead):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAETSURBVGhD7ZYBDsMgCEV197+zG+m60EwBHXaCvKRZslnhlT/TnFIqr2sbHu/PbdhO+BLpUnymO2fQPIhIe0ccaRwLjIW/QXekW7IA9duKqETakjQrbG2CHHFKe4cVlpzCll5YzEwYzhJ8jSISpiZ4x3RrgqPScNen4xWjSYlJ+8V7LBtpaJKb4siUlxOWiP4C7PzXSGvIcX3jGiJhrqmRB6U9RaoHXIuMNCyUNHauk6wFpOtm0BQebYq7b5asdN8phxYUrzUwS7aHqrBWY+c+rQegjaTGl7B2Y3eIYrh6UyK9Mhfhu6cxC8pj7wl7ojXlmLAnalOGb/pfhA0TkfZOCHsnhL0Twt4JYe+EsHdC2DcpPQHUiTG7/qs9SwAAAABJRU5ErkJggg=="
-    @gui.decorate_constructor_parameter_types([int])
-    def __init__(self, threshold_value, *args, **kwargs):
-        self.threshold_value = threshold_value
+
+    threshold = editor_attribute( property( fget=(lambda self: self.__dict__.get('threshold',0)), fset=(lambda self,v: self.__dict__.update({'threshold':int(float(v))}))) , 
+                                    '__dict__', 'WidgetSpecific','The threshold value to binarize image', int, {'default':125, 'min':0, 'max':255, 'step':1})
+
+    @gui.decorate_constructor_parameter_types([])
+    def __init__(self, *args, **kwargs):
+        self.image_source = None
         super(OpencvThreshold, self).__init__("", *args, **kwargs)
+        self.threshold = 120
+
+    def _need_update(self, emitter=None):
+        if emitter is not None:
+            if self.image_source is not None:
+                self.on_new_image_listener(self.image_source)
+        super(OpencvThreshold, self)._need_update(emitter)
 
     def on_new_image_listener(self, emitter): #THRESHOLD
         if emitter.img is None:
             return
+        self.image_source = emitter
         img = emitter.img
         if len(img.shape)>2:
             img = cv2.cvtColor(emitter.img, cv2.COLOR_BGR2GRAY)
-        res, self.img = cv2.threshold(img,self.threshold_value,255,cv2.THRESH_BINARY)
+        res, self.img = cv2.threshold(img,self.threshold,255,cv2.THRESH_BINARY)
         self.set_image_data(self.img)
         
 '''
