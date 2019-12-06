@@ -409,10 +409,16 @@ class WidgetHelper(gui.HBox):
         super(WidgetHelper, self).__init__()
         self.style['display'] = 'block'
         self.style['background-color'] = 'white'
-        icon_file = '/editor_resources:widget_%s.png'%self.widgetClass.__name__
+        
         if hasattr(widgetClass, "icon"):
-            icon_file = widgetClass.icon
-        self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            if type(widgetClass.icon)==gui.Svg:
+                self.icon = widgetClass.icon
+            else:
+                icon_file = widgetClass.icon
+                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+        else:
+            icon_file = '/editor_resources:widget_%s.png'%self.widgetClass.__name__
+            self.icon = gui.Image(icon_file, width='auto', margin='2px')
         self.icon.style['max-width'] = '100%'
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'

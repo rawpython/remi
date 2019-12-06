@@ -1,3 +1,4 @@
+import traceback
 try:
     from .toolbox_EPICS import EPICSBooleanButton, EPICSLed, EPICSValueMeterWidget, EPICSPlotPV, EPICSValueGaugeWidget
 except:
@@ -8,6 +9,7 @@ try:
                             OpencvBilateralFilter, OpencvBlurFilter, OpencvDilateFilter, OpencvErodeFilter, OpencvLaplacianFilter, OpencvCanny, OpencvFindContours
 except:
     print("In order to use OpenCv widgets install python-opencv")
+    print(traceback.format_exc())
 
 from .toolbox_scheduling import TimerWidget
 
