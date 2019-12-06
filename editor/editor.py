@@ -407,19 +407,20 @@ class Project(gui.Container):
         newClass = widget.attributes['editor_newclass'] == 'True'
         classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
         
-        #code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':widget.identifier}
+        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':widget.identifier}
         
         #code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attr_dict': ','.join('"%s":"%s"'%(key,widget.attributes[key]) for key in widget.attributes.keys() if key not in html_helper.htmlInternallyUsedTags)}
+        #code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
 
         for x, y in inspect.getmembers(widget.__class__):
             if type(y)==property:
+                _value = getattr(widget, x)
+                if type(_value)==str:
+                    _value = '"%s"'%_value
                 code_nested += prototypes.proto_property_setup%{'varname': widgetVarName, 'property':x, 'value': getattr(widget, x)}
                 #if hasattr(y,"fget"):
                     #if hasattr(y.fget, "editor_attributes"):
 
-
-
-        code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
         
         #for all the methods of this widget
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
