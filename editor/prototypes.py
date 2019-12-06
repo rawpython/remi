@@ -62,6 +62,8 @@ proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n  
 
 proto_attribute_setup = """%(varname)s.attributes.update({%(attr_dict)s})\n        """
 
+proto_property_setup = """%(varname)s.%(property)s = %(value)s\n        """
+
 proto_style_setup = """%(varname)s.style.update({%(style_dict)s})\n        """
 
 proto_layout_append = "%(parentname)s.append(%(varname)s)\n        "

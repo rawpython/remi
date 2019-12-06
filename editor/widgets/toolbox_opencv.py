@@ -240,7 +240,7 @@ class OpencvCrop(OpencvImRead):
     @gui.decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         self.image_source = None
-        #self.crop_x = 0
+        self.crop_x = 0
         self.crop_y = 0
         self.crop_w = 0
         self.crop_h = 0
