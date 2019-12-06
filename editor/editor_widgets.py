@@ -684,7 +684,6 @@ class EditorAttributes(gui.VBox, gui.EventSource):
             attributeValue = attribute[1]
             attributeEditor = EditorAttributeInput(attributeName, attributeValue, appInstance, width="100%")
             attributeEditor.on_attribute_changed.do(self.onattribute_changed)
-            attributeEditor.on_attribute_remove.do(self.onattribute_remove)
             #attributeEditor.style['display'] = 'none'
             if not attributeValue['group'] in self.attributeGroups.keys():
                 groupContainer = EditorAttributesGroup(attributeValue['group'], width='100%')
@@ -698,18 +697,11 @@ class EditorAttributes(gui.VBox, gui.EventSource):
 
     #this function is called by an EditorAttributeInput change event and propagates to the listeners
     #adding as first parameter the tag to which it refers
-    #widgetAttributeMember can be 'style' or 'attributes'
     @gui.decorate_event
-    def onattribute_changed(self, widget, widgetAttributeMember, attributeName, newValue):
-        print("setting attribute name: %s    value: %s    attributeMember: %s"%(attributeName, newValue, widgetAttributeMember))
-        getattr(self.targetWidget, widgetAttributeMember)[attributeName] = str(newValue)
-        return (widgetAttributeMember, attributeName, newValue)
-
-    @gui.decorate_event
-    def onattribute_remove(self, widget, widgetAttributeMember, attributeName):
-        if attributeName in getattr(self.targetWidget, widgetAttributeMember):
-            del getattr(self.targetWidget, widgetAttributeMember)[attributeName]
-        return (widgetAttributeMember, attributeName)
+    def onattribute_changed(self, widget, attributeName, newValue):
+        print("setting attribute name: %s    value: %s"%(attributeName, newValue))
+        setattr(self.targetWidget, attributeName, str(newValue))
+        return (attributeName, newValue)
 
     def set_widget(self, widget):
         self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
@@ -721,7 +713,7 @@ class EditorAttributes(gui.VBox, gui.EventSource):
             if w.attributeDict['additional_data'].get('applies_to', None):
                 if not type(widget) in w.attributeDict['additional_data'].get('applies_to', None):
                     w.style['display'] = 'none'
-            w.set_from_dict(getattr(widget, w.attributeDict['affected_widget_attribute']))
+            w.set_from_dict(widget)
 
         for x, y in inspect.getmembers(self.targetWidget.__class__):
             if type(y)==property:
@@ -729,7 +721,6 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                     if hasattr(y.fget, "editor_attributes"):
                         attributeEditor = EditorAttributeInput(x, y.fget.editor_attributes, self.appInstance, width="100%")
                         attributeEditor.on_attribute_changed.do(self.onattribute_changed)
-                        attributeEditor.on_attribute_remove.do(self.onattribute_remove)
                         self.attributeGroups[y.fget.editor_attributes['group']].append(attributeEditor)
                         self.attributesInputs.append(attributeEditor)
 
@@ -973,12 +964,6 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
 
-        self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
-        self.removeAttribute = gui.Image('/editor_resources:delete.png', width='5%')
-        self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
-        self.removeAttribute.onclick.do(self.on_attribute_remove)
-        self.append(self.removeAttribute)
-
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
@@ -986,7 +971,7 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.append(self.label)
         self.inputWidget = None
 
-        #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'affected_widget_attribute':'style', 'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
+        #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
         if attributeDict['type'] in (bool,int,float,gui.ColorPicker,gui.DropDown,'url_editor','css_size'):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked')
@@ -1018,23 +1003,13 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
 
     def set_valid(self, valid=True):
         self.label.style['opacity'] = '1.0'
-        if 'display' in self.removeAttribute.style:
-            del self.removeAttribute.style['display']
-        if not valid:
-            self.label.style['opacity'] = '0.5'
-            self.removeAttribute.style['display'] = 'none'
 
-    @gui.decorate_event
-    def on_attribute_remove(self, widget):
-        self.set_valid(False)
-        return (self.attributeDict['affected_widget_attribute'], self.attributeName)
-
-    def set_from_dict(self, dictionary):
+    def set_from_dict(self, widget):
         self.inputWidget.set_value('')
         self.set_valid(False)
-        if self.attributeName in dictionary:
+        if hasattr(widget, self.attributeName):
             self.set_valid()
-            self.inputWidget.set_value(dictionary[self.attributeName])
+            self.inputWidget.set_value(getattr(widget,self.attributeName))
 
     def set_value(self, value):
         self.set_valid()
@@ -1043,5 +1018,5 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
     @gui.decorate_event
     def on_attribute_changed(self, widget, value):
         self.set_valid()
-        return (self.attributeDict['affected_widget_attribute'], self.attributeName, value)
+        return (self.attributeName, value)
 

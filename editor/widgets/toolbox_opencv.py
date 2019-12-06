@@ -20,6 +20,9 @@ def default_icon(name, view_w=1, view_h=0.6):
     icon.append([rect, text])
     return icon
 
+def editor_attribute(prop, group, description, _type, additional_data):
+    setattr(prop.fget, "editor_attributes", {'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
+    return prop
 
 # noinspection PyUnresolvedReferences
 class OpencvWidget(object):
@@ -203,14 +206,28 @@ class OpencvCrop(OpencvImRead):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
+    crop_x = editor_attribute( property( fget=(lambda self: self.__dict__.get('crop_x',0)), fset=(lambda self,v: self.__dict__.update({'crop_x':int(float(v))}))) , 
+                                    'WidgetSpecific','The x crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    crop_y = editor_attribute( property( fget=(lambda self: self.__dict__.get('crop_y',0)), fset=(lambda self,v: self.__dict__.update({'crop_y':int(float(v))}))) , 
+                                    'WidgetSpecific','The y crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    crop_w = editor_attribute( property( fget=(lambda self: self.__dict__.get('crop_w',0)), fset=(lambda self,v: self.__dict__.update({'crop_w':int(float(v))}))) , 
+                                    'WidgetSpecific','The crop width', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    crop_h = editor_attribute( property( fget=(lambda self: self.__dict__.get('crop_h',0)), fset=(lambda self,v: self.__dict__.update({'crop_h':int(float(v))}))) , 
+                                    'WidgetSpecific','The crop height', int, {'default':0, 'min':0, 'max':65535, 'step':1})
     icon = "data:image/png;base64,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"
     @gui.decorate_constructor_parameter_types([int, int, int, int])
-    def __init__(self, x, y, w, h, *args, **kwargs):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+    def __init__(self, *args, **kwargs):
+        self.crop_x = 0
+        self.crop_y = 0
+        self.crop_w = 0
+        self.crop_h = 0
         super(OpencvCrop, self).__init__("", *args, **kwargs)
+
+    def _need_update(self, emitter=None):
+        if emitter is not None:
+            if self.image_source is not None:
+                self.on_new_image_listener(self.image_source)
+        super(OpencvCrop, self)._need_update(emitter)
 
     def on_new_image_listener(self, emitter): #CROP
         if emitter.img is None:
@@ -219,9 +236,7 @@ class OpencvCrop(OpencvImRead):
         self.set_image_data(self.img)
 
 
-def editor_attribute(prop, affected_widget_attribute, group, description, _type, additional_data):
-    setattr(prop.fget, "editor_attributes", {'affected_widget_attribute':affected_widget_attribute, 'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
-    return prop
+
 
 class OpencvThreshold(OpencvImRead):
     """ OpencvThreshold widget.
@@ -232,7 +247,7 @@ class OpencvThreshold(OpencvImRead):
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAETSURBVGhD7ZYBDsMgCEV197+zG+m60EwBHXaCvKRZslnhlT/TnFIqr2sbHu/PbdhO+BLpUnymO2fQPIhIe0ccaRwLjIW/QXekW7IA9duKqETakjQrbG2CHHFKe4cVlpzCll5YzEwYzhJ8jSISpiZ4x3RrgqPScNen4xWjSYlJ+8V7LBtpaJKb4siUlxOWiP4C7PzXSGvIcX3jGiJhrqmRB6U9RaoHXIuMNCyUNHauk6wFpOtm0BQebYq7b5asdN8phxYUrzUwS7aHqrBWY+c+rQegjaTGl7B2Y3eIYrh6UyK9Mhfhu6cxC8pj7wl7ojXlmLAnalOGb/pfhA0TkfZOCHsnhL0Twt4JYe+EsHdC2DcpPQHUiTG7/qs9SwAAAABJRU5ErkJggg=="
 
     threshold = editor_attribute( property( fget=(lambda self: self.__dict__.get('threshold',0)), fset=(lambda self,v: self.__dict__.update({'threshold':int(float(v))}))) , 
-                                    '__dict__', 'WidgetSpecific','The threshold value to binarize image', int, {'default':125, 'min':0, 'max':255, 'step':1})
+                                    'WidgetSpecific','The threshold value to binarize image', int, {'default':125, 'min':0, 'max':255, 'step':1})
 
     @gui.decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
