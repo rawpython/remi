@@ -679,41 +679,24 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         #load editable attributes
         self.append(self.titleLabel)
         self.attributeGroups = {}
-        for attribute in html_helper.editorAttributeList:
-            attributeName = attribute[0]
-            attributeValue = attribute[1]
-            attributeEditor = EditorAttributeInput(attributeName, attributeValue, appInstance, width="100%")
-            attributeEditor.on_attribute_changed.do(self.onattribute_changed)
-            #attributeEditor.style['display'] = 'none'
-            if not attributeValue['group'] in self.attributeGroups.keys():
-                groupContainer = EditorAttributesGroup(attributeValue['group'], width='100%')
-                self.attributeGroups[attributeValue['group']] = groupContainer
-                self.append(groupContainer)
-                groupContainer.style['order'] = str(html_helper.editorAttributesGroupOrdering[attributeValue['group']])
-                groupContainer.style['-webkit-order'] = str(html_helper.editorAttributesGroupOrdering[attributeValue['group']])
-
-            self.attributeGroups[attributeValue['group']].append(attributeEditor)
-            self.attributesInputs.append(attributeEditor)
 
     #this function is called by an EditorAttributeInput change event and propagates to the listeners
     #adding as first parameter the tag to which it refers
     @gui.decorate_event
     def onattribute_changed(self, widget, attributeName, newValue):
         print("setting attribute name: %s    value: %s"%(attributeName, newValue))
-        setattr(self.targetWidget, attributeName, str(newValue))
+        setattr(self.targetWidget, attributeName, newValue)
         return (attributeName, newValue)
 
     def set_widget(self, widget):
         self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
         self.attributes['selected_widget_id'] = widget.identifier
-        self.targetWidget = widget
+
         for w in self.attributesInputs:
-            w.style['display'] = 'block'
-            #w.style['visibility'] = 'visible'
-            if w.attributeDict['additional_data'].get('applies_to', None):
-                if not type(widget) in w.attributeDict['additional_data'].get('applies_to', None):
-                    w.style['display'] = 'none'
-            w.set_from_dict(widget)
+            if w.attributeDict['group'] in self.attributeGroups:
+                self.attributeGroups[w.attributeDict['group']].remove_child(w)
+
+        self.targetWidget = widget
 
         for x, y in inspect.getmembers(self.targetWidget.__class__):
             if type(y)==property:
@@ -721,8 +704,13 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                     if hasattr(y.fget, "editor_attributes"):
                         attributeEditor = EditorAttributeInput(x, y.fget.editor_attributes, self.appInstance, width="100%")
                         attributeEditor.on_attribute_changed.do(self.onattribute_changed)
+                        if not y.fget.editor_attributes['group'] in self.attributeGroups.keys():
+                            groupContainer = EditorAttributesGroup(y.fget.editor_attributes['group'], width='100%')
+                            self.attributeGroups[y.fget.editor_attributes['group']] = groupContainer
+                            self.append(groupContainer)
                         self.attributeGroups[y.fget.editor_attributes['group']].append(attributeEditor)
                         self.attributesInputs.append(attributeEditor)
+                        attributeEditor.set_value(getattr(self.targetWidget, x))
 
 
 class CssSizeInput(gui.Container, gui.EventSource):
@@ -949,6 +937,30 @@ class FileInput(gui.Container, gui.EventSource):
         return self.txtInput.get_value()
 
 
+class FloatSpinBox(gui.SpinBox):
+    @gui.decorate_set_on_listener("(self, emitter, value)")
+    @gui.decorate_event
+    def onchange(self, value):
+        self.attributes['value'] = value
+        return (float(value), )
+
+    def get_value(self):
+        """returns the new text value."""
+        return float(self.attributes['value'])
+
+
+class IntSpinBox(gui.SpinBox):
+    @gui.decorate_set_on_listener("(self, emitter, value)")
+    @gui.decorate_event
+    def onchange(self, value):
+        self.attributes['value'] = value
+        return (int(float(value)), )
+
+    def get_value(self):
+        """returns the new text value."""
+        return int(float(self.attributes['value']))
+
+
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
 class EditorAttributeInput(gui.Container, gui.EventSource):
@@ -975,8 +987,10 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         if attributeDict['type'] in (bool,int,float,gui.ColorPicker,gui.DropDown,'url_editor','css_size'):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked')
-            if attributeDict['type'] == int or attributeDict['type'] == float:
-                self.inputWidget = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
+            if attributeDict['type'] == int:
+                self.inputWidget = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
+            if attributeDict['type'] == float:
+                self.inputWidget = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
             if attributeDict['type'] == gui.ColorPicker:
                 self.inputWidget = gui.ColorPicker()
             if attributeDict['type'] == gui.DropDown:
