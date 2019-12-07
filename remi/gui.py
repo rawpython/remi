@@ -3009,6 +3009,7 @@ class FileFolderNavigator(Container):
         self.allow_file_selection = allow_file_selection
         self.allow_folder_selection = allow_folder_selection
         self.selectionlist = []
+        self.currDir = ''
         self.controlsContainer = Container()
         self.controlsContainer.set_size('100%', '30px')
         self.controlsContainer.style['display'] = 'flex'
@@ -3039,6 +3040,8 @@ class FileFolderNavigator(Container):
         self._last_valid_path = selection_folder
 
     def get_selection_list(self):
+        if self.allow_folder_selection and not self.selectionlist:
+            self.selectionlist.append(self.currDir)
         return self.selectionlist
 
     def populate_folder_items(self, directory):
@@ -3123,6 +3126,7 @@ class FileFolderNavigator(Container):
         self.populate_folder_items(directory)
         self.enable_refresh()
         self.pathEditor.set_text(directory)
+        self.currDir = directory
         os.chdir(curpath)  # restore the path
 
     def on_folder_item_selected(self, folderitem):
