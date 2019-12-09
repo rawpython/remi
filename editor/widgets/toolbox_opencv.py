@@ -24,11 +24,6 @@ def editor_attribute(prop, group, description, _type, additional_data):
     setattr(prop.fget, "editor_attributes", {'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
     return prop
 
-def editor_attribute_decorator(group, description, _type, additional_data):
-    def add_annotation(prop): 
-        setattr(prop, "editor_attributes", {'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
-        return prop
-    return add_annotation
 
 # noinspection PyUnresolvedReferences
 class OpencvWidget(object):
@@ -213,25 +208,25 @@ class OpencvCrop(OpencvImRead):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """    
     @property
-    @editor_attribute_decorator('WidgetSpecific','The x crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    @gui.editor_attribute_decorator('WidgetSpecific','The x crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
     def crop_x(self): return self.__crop_x
     @crop_x.setter
     def crop_x(self, v): self.__crop_x = v; self.on_new_image_listener(self.image_source)
 
     @property
-    @editor_attribute_decorator('WidgetSpecific','The y crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    @gui.editor_attribute_decorator('WidgetSpecific','The y crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
     def crop_y(self): return self.__crop_y
     @crop_y.setter
     def crop_y(self, v): self.__crop_y = v; self.on_new_image_listener(self.image_source)
 
     @property
-    @editor_attribute_decorator('WidgetSpecific','The width crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    @gui.editor_attribute_decorator('WidgetSpecific','The width crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
     def crop_w(self): return self.__crop_w
     @crop_w.setter
     def crop_w(self, v): self.__crop_w = v; self.on_new_image_listener(self.image_source)
 
     @property
-    @editor_attribute_decorator('WidgetSpecific','The height crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    @gui.editor_attribute_decorator('WidgetSpecific','The height crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
     def crop_h(self): return self.__crop_h
     @crop_h.setter
     def crop_h(self, v): self.__crop_h = v; self.on_new_image_listener(self.image_source)

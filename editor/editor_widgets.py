@@ -26,7 +26,7 @@ class InstancesTree(gui.TreeView, gui.EventSource):
         gui.EventSource.__init__(self)
 
     def append_instance(self, instance, parent):
-        item = gui.TreeItem(instance.attributes['editor_varname'])
+        item = gui.TreeItem(instance.identifier)
         if parent==None:
             parent = self
         item.instance = instance
@@ -71,7 +71,7 @@ class InstancesTree(gui.TreeView, gui.EventSource):
     def append_instances_from_tree(self, node, parent=None):
         if not hasattr(node, 'attributes'):
             return
-        if not 'editor_varname' in node.attributes.keys():
+        if not 'editor_tag_type' in node.attributes.keys():
             return
         nodeTreeItem = self.append_instance(node, parent)
         for child in node.children.values():
@@ -142,15 +142,15 @@ class SignalConnection(gui.HBox):
         self.listenersList = listenersList
         self.dropdownListeners.append(gui.DropDownItem("None"))
         for w in listenersList:
-            ddi = gui.DropDownItem(w.attributes['editor_varname'])
+            ddi = gui.DropDownItem(w.identifier)
             ddi.listenerInstance = w
             self.dropdownListeners.append(ddi)
         if hasattr(self.eventConnectionFunc, 'callback_copy'): #if the callback is not None, and so there is a listener
             connectedListenerName = ""
             if type(eventConnectionFunc.callback_copy) == gui.ClassEventConnector:
-                connectedListenerName = eventConnectionFunc.callback_copy.event_method_bound.__self__.attributes['editor_varname']
+                connectedListenerName = eventConnectionFunc.callback_copy.event_method_bound.__self__.identifier
             else: #type = types.MethodType #instancemethod
-                connectedListenerName = eventConnectionFunc.callback_copy.__self__.attributes['editor_varname']
+                connectedListenerName = eventConnectionFunc.callback_copy.__self__.identifier
             connectedListenerFunction = None
             if type(eventConnectionFunc.callback_copy) == gui.ClassEventConnector:
                 connectedListenerFunction = eventConnectionFunc.callback_copy.event_method_bound
@@ -192,7 +192,7 @@ class SignalConnection(gui.HBox):
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             #listener.__class__.fakeListenerFunc = fakeListenerFunc
             if listener.attributes['editor_newclass'] == "True":
-                custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.attributes['editor_varname']
+                custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.identifier
                 setattr(listener, custom_listener_name, types.MethodType(copy_func(fakeListenerFunc), listener))
                 getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
                 ddi = gui.DropDownItem(custom_listener_name)
@@ -219,7 +219,7 @@ class SignalConnection(gui.HBox):
 
         listener = self.dropdownMethods._selected_item.listenerInstance
         #listener.attributes['editor_newclass'] = "True"
-        print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.attributes['editor_varname'] + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.attributes['editor_varname'])
+        print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.identifier + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.identifier)
         back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
         getattr(self.refWidget, self.eventConnectionFuncName).do(self.dropdownMethods._selected_item.listenerFunction)
         getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
@@ -252,7 +252,7 @@ class SignalConnectionManager(gui.Container):
     def build_widget_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
-        if not 'editor_varname' in node.attributes.keys():
+        if not 'editor_tag_type' in node.attributes.keys():
             return
         self.listeners_list.append(node)
         for child in node.children.values():
@@ -266,7 +266,7 @@ class SignalConnectionManager(gui.Container):
         self.listeners_list = []
         self.build_widget_list_from_tree(widget_tree)
 
-        self.label.set_text('Signal connections: ' + widget.attributes['editor_varname'])
+        self.label.set_text('Signal connections: ' + widget.identifier)
         #del self.container
         self.container = gui.VBox(width='100%', height='90%')
         self.container.style['justify-content'] = 'flex-start'
@@ -437,9 +437,9 @@ class WidgetHelper(gui.HBox):
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
-        if not 'editor_varname' in node.attributes.keys():
+        if not 'editor_tag_type' in node.attributes.keys():
             return
-        self.varname_list.append(node.attributes['editor_varname'])
+        self.varname_list.append(node.identifier)
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
 
@@ -532,10 +532,10 @@ class WidgetHelper(gui.HBox):
         #here we create and decorate the widget
         widget = self.widgetClass(*param_values, **self.kwargs_to_widget)
         widget.attributes.update({'editor_constructor':constructor,
-            'editor_varname':variableName,
             'editor_tag_type':'widget',
             'editor_newclass':'True' if self.dialog.get_field("editor_newclass").get_value() else 'False',
             'editor_baseclass':widget.__class__.__name__}) #__class__.__bases__[0].__name__
+        widget.identifier = variableName
         #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"
         #if not 'position' in widget.style:
         #    widget.style['position'] = 'absolute'
@@ -689,7 +689,7 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         return (attributeName, newValue)
 
     def set_widget(self, widget):
-        self.infoLabel.set_text("Selected widget: %s"%widget.attributes['editor_varname'])
+        self.infoLabel.set_text("Selected widget: %s"%widget.identifier)
         self.attributes['selected_widget_id'] = widget.identifier
 
         for w in self.attributesInputs:
@@ -710,7 +710,10 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                             self.append(groupContainer)
                         self.attributeGroups[y.fget.editor_attributes['group']].append(attributeEditor)
                         self.attributesInputs.append(attributeEditor)
-                        attributeEditor.set_value(getattr(self.targetWidget, x))
+                        if getattr(self.targetWidget, x) is None:
+                            attributeEditor.set_valid(False)
+                        else:
+                            attributeEditor.set_value(getattr(self.targetWidget, x))
 
 
 class CssSizeInput(gui.Container, gui.EventSource):
@@ -976,6 +979,12 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.attributeDict = attributeDict
         self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
 
+        self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
+        self.removeAttribute = gui.Image('/editor_resources:delete.png', width='5%')
+        self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
+        self.removeAttribute.onclick.do(self.on_attribute_remove)
+        self.append(self.removeAttribute)
+
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
@@ -984,16 +993,16 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.inputWidget = None
 
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-        if attributeDict['type'] in (bool,int,float,gui.ColorPicker,gui.DropDown,'url_editor','css_size'):
+        if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size'):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked')
             if attributeDict['type'] == int:
                 self.inputWidget = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
             if attributeDict['type'] == float:
                 self.inputWidget = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
-            if attributeDict['type'] == gui.ColorPicker:
+            if attributeDict['type'] == gui.ColorPicker.__name__:
                 self.inputWidget = gui.ColorPicker()
-            if attributeDict['type'] == gui.DropDown:
+            if attributeDict['type'] == gui.DropDown.__name__:
                 self.inputWidget = gui.DropDown()
                 for value in attributeDict['additional_data']['possible_values']:
                     self.inputWidget.append(gui.DropDownItem(value),value)
@@ -1015,18 +1024,30 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.style['display'] = 'block'
         self.set_valid(False)
 
+
     def set_valid(self, valid=True):
         self.label.style['opacity'] = '1.0'
+        if 'display' in self.removeAttribute.style:
+            del self.removeAttribute.style['display']
+        if not valid:
+            self.label.style['opacity'] = '0.5'
+            self.removeAttribute.style['display'] = 'none'
+
+    @gui.decorate_event
+    def on_attribute_remove(self, widget):
+        self.set_valid(False)
+        setattr(widget, self.attributeName, None)
+        return (widget, self.attributeName)
 
     def set_from_dict(self, widget):
         self.inputWidget.set_value('')
         self.set_valid(False)
-        if hasattr(widget, self.attributeName):
+        if hasattr(widget, self.attributeName) and not getattr(widget, self.attributeName) is None:
             self.set_valid()
             self.inputWidget.set_value(getattr(widget,self.attributeName))
 
     def set_value(self, value):
-        self.set_valid()
+        self.set_valid(not value is None)
         self.inputWidget.set_value(value)
 
     @gui.decorate_event
