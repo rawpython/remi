@@ -702,7 +702,7 @@ class EditorAttributes(gui.VBox, gui.EventSource):
             if type(y)==property:
                 if hasattr(y,"fget"):
                     if hasattr(y.fget, "editor_attributes"):
-                        attributeEditor = EditorAttributeInput(x, y.fget.editor_attributes, self.appInstance, width="100%")
+                        attributeEditor = EditorAttributeInput(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance, width="100%")
                         attributeEditor.on_attribute_changed.do(self.onattribute_changed)
                         if not y.fget.editor_attributes['group'] in self.attributeGroups.keys():
                             groupContainer = EditorAttributesGroup(y.fget.editor_attributes['group'], width='100%')
@@ -967,9 +967,13 @@ class IntSpinBox(gui.SpinBox):
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
 class EditorAttributeInput(gui.Container, gui.EventSource):
-    def __init__(self, attributeName, attributeDict, appInstance=None, *args, **kwargs):
+    """ propertyDef is the property of the class
+    """
+    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance=None, *args, **kwargs):
         super(EditorAttributeInput, self).__init__(*args, **kwargs)
         gui.EventSource.__init__(self)
+        self.targetWidget = widget
+        self.propertyDef = propertyDef
         self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
         self.style.update({'display':'block',
             'overflow':'auto',
@@ -1036,8 +1040,8 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
     @gui.decorate_event
     def on_attribute_remove(self, widget):
         self.set_valid(False)
-        setattr(widget, self.attributeName, None)
-        return (widget, self.attributeName)
+        self.propertyDef.fset(self.targetWidget, None)
+        return (self.targetWidget, self.attributeName)
 
     def set_from_dict(self, widget):
         self.inputWidget.set_value('')
