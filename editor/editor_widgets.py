@@ -675,6 +675,8 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         self.infoLabel.style['order'] = '0'
         self.infoLabel.style['-webkit-order'] = '0'
 
+        self.group_orders = {'Generic':'2', 'Geometry':'3', 'WidgetSpecific':'4', 'Background':'5' }
+
         self.attributesInputs = list()
         #load editable attributes
         self.append(self.titleLabel)
@@ -700,12 +702,15 @@ class EditorAttributes(gui.VBox, gui.EventSource):
 
         for x, y in inspect.getmembers(self.targetWidget.__class__):
             if type(y)==property:
+                index = 100
                 if hasattr(y,"fget"):
                     if hasattr(y.fget, "editor_attributes"):
                         attributeEditor = EditorAttributeInput(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance, width="100%")
                         attributeEditor.on_attribute_changed.do(self.onattribute_changed)
                         if not y.fget.editor_attributes['group'] in self.attributeGroups.keys():
                             groupContainer = EditorAttributesGroup(y.fget.editor_attributes['group'], width='100%')
+                            groupContainer.css_order = self.group_orders.get(y.fget.editor_attributes['group'], str(index))
+                            index = index + 1
                             self.attributeGroups[y.fget.editor_attributes['group']] = groupContainer
                             self.append(groupContainer)
                         self.attributeGroups[y.fget.editor_attributes['group']].append(attributeEditor)
@@ -981,38 +986,34 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
             'outline':'1px solid lightgray'})
         self.attributeName = attributeName
         self.attributeDict = attributeDict
-        self.EVENT_ATTRIB_ONCHANGE = 'on_attribute_changed'
 
-        self.EVENT_ATTRIB_ONREMOVE = 'onremove_attribute'
         self.removeAttribute = gui.Image('/editor_resources:delete.png', width='5%')
         self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
         self.removeAttribute.onclick.do(self.on_attribute_remove)
-        self.append(self.removeAttribute)
 
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
         self.label.style['outline'] = '1px solid lightgray'
-        self.append(self.label)
-        self.inputWidget = None
 
+        self.inputWidget = None
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
         if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size'):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked')
-            if attributeDict['type'] == int:
+            elif attributeDict['type'] == int:
                 self.inputWidget = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
-            if attributeDict['type'] == float:
+            elif attributeDict['type'] == float:
                 self.inputWidget = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
-            if attributeDict['type'] == gui.ColorPicker.__name__:
+            elif attributeDict['type'] == gui.ColorPicker.__name__:
                 self.inputWidget = gui.ColorPicker()
-            if attributeDict['type'] == gui.DropDown.__name__:
+            elif attributeDict['type'] == gui.DropDown.__name__:
                 self.inputWidget = gui.DropDown()
                 for value in attributeDict['additional_data']['possible_values']:
                     self.inputWidget.append(gui.DropDownItem(value),value)
-            if attributeDict['type'] == 'url_editor':
+            elif attributeDict['type'] == 'url_editor':
                 self.inputWidget = UrlPathInput(appInstance)
-            if attributeDict['type'] == 'css_size':
+            elif attributeDict['type'] == 'css_size':
                 self.inputWidget = CssSizeInput(appInstance)
 
         else: #default editor is string
@@ -1021,13 +1022,12 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.inputWidget.onchange.do(self.on_attribute_changed)
         self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
-        self.label.attributes['title'] = attributeDict['description']
-        self.append(self.inputWidget)
         self.inputWidget.style['float'] = 'right'
 
-        self.style['display'] = 'block'
-        self.set_valid(False)
+        self.label.attributes['title'] = attributeDict['description']
+        self.append([self.removeAttribute, self.label, self.inputWidget])
 
+        self.set_valid(False)
 
     def set_valid(self, valid=True):
         self.label.style['opacity'] = '1.0'

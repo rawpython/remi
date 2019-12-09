@@ -724,6 +724,7 @@ class Editor(App):
     def on_widget_selection(self, widget):
         self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
+        
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         self.attributeEditor.set_widget( self.selectedWidget )
@@ -739,7 +740,7 @@ class Editor(App):
             self.subContainerLeft.append(self.widgetsCollection, 'widgets_collection')
         else:
             self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container"%self.selectedWidget.__class__.__name__), 'widgets_collection')
-        
+
     def menu_new_clicked(self, widget):
         print('new project')
         #self.project.new()
