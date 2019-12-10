@@ -531,7 +531,7 @@ class Widget(Tag, EventSource):
     def css_float(self, value): self.style['float'] = str(value)
 
     @property
-    @editor_attribute_decorator("Generic",'''Margins allows to define spacing aroung element''', str, {})
+    @editor_attribute_decorator("Geometry",'''Margins allows to define spacing aroung element''', str, {})
     def css_margin(self): return self.style.get('margin', None)
     @css_margin.setter
     def css_margin(self, value): self.style['margin'] = str(value)
@@ -3756,13 +3756,24 @@ class VideoPlayer(Widget):
 
 class Svg(Container):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
+    def attr_preserveAspectRatio(self): return self.attributes.get('preserveAspectRatio', None)
+    @attr_preserveAspectRatio.setter
+    def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''viewBox of the svg drawing. es='x, y, width, height' ''', 'str', {})
+    def attr_viewBox(self): return self.attributes.get('viewBox', None)
+    @attr_viewBox.setter
+    def attr_viewBox(self, value): self.attributes['viewBox'] = str(value)
 
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, width, height, *args, **kwargs):
         """
         Args:
-            width (int): the viewport width in pixel
-            height (int): the viewport height in pixel
+            width (int): the viewBox width in pixel
+            height (int): the viewBox height in pixel
             kwargs: See Widget.__init__()
         """
         super(Svg, self).__init__(*args, **kwargs)
@@ -3777,15 +3788,14 @@ class Svg(Container):
         Args:
             x (int): x coordinate of the viewbox origin
             y (int): y coordinate of the viewbox origin
-            w (int): width of the viewbox
-            h (int): height of the viewbox
+            w (int): width of the viewBox
+            h (int): height of the viewBox
         """
-        self.attributes['viewBox'] = "%s %s %s %s" % (x, y, w, h)
-        self.attributes['preserveAspectRatio'] = 'none'
+        self.attr_viewBox = "%s %s %s %s" % (x, y, w, h)
+        self.attr_preserveAspectRatio = 'none'
 
 
-class SvgShape(Container):
-    """svg shape generic widget. Consists of a position, a fill color and a stroke."""
+class Mixin_SvgStroke():
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
     def attr_stroke(self): return self.attributes.get('stroke', None)
@@ -3798,6 +3808,18 @@ class SvgShape(Container):
     @attr_stroke_width.setter
     def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
 
+    def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
+        self.attr_stroke = color
+        self.attr_stroke_width = str(width)
+
+
+class Mixin_SvgFill():
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Fill color for svg elements.''', 'ColorPicker', {})
     def attr_fill(self): return self.attributes.get('fill', None)
@@ -3805,11 +3827,22 @@ class SvgShape(Container):
     def attr_fill(self, value): self.attributes['fill'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Fill opacity for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Fill opacity for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
     def attr_fill_opacity(self): return self.attributes.get('fill-opacity', None)
     @attr_fill_opacity.setter
     def attr_fill_opacity(self, value): self.attributes['fill-opacity'] = str(value)
 
+    def set_fill(self, color='black'):
+        """Sets the fill color.
+
+        Args:
+            color (str): stroke color
+        """
+        self.attr_fill = color
+
+
+class SvgShape(Container, Mixin_SvgStroke, Mixin_SvgFill):
+    """svg shape generic widget. Consists of a position, a fill color and a stroke."""
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, x, y, *args, **kwargs):
         """
@@ -3830,24 +3863,6 @@ class SvgShape(Container):
         """
         self.attributes['x'] = str(x)
         self.attributes['y'] = str(y)
-
-    def set_stroke(self, width=1, color='black'):
-        """Sets the stroke properties.
-
-        Args:
-            width (int): stroke width
-            color (str): stroke color
-        """
-        self.attributes['stroke'] = color
-        self.attributes['stroke-width'] = str(width)
-
-    def set_fill(self, color='black'):
-        """Sets the fill color.
-
-        Args:
-            color (str): stroke color
-        """
-        self.attributes['fill'] = color
 
 
 class SvgGroup(SvgShape):
@@ -3972,7 +3987,7 @@ class SvgCircle(SvgShape):
         Args:
             radius (int): the circle radius
         """
-        self.attributes['r'] = radius
+        self.attr_r = radius
 
     def set_position(self, x, y):
         """Sets the circle position.
@@ -3981,23 +3996,11 @@ class SvgCircle(SvgShape):
             x (int): the x coordinate
             y (int): the y coordinate
         """
-        self.attributes['cx'] = str(x)
-        self.attributes['cy'] = str(y)
+        self.attr_cx = str(x)
+        self.attr_cy = str(y)
 
 
-class SvgLine(Widget):
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
-    def attr_stroke(self): return self.attributes.get('stroke', None)
-    @attr_stroke.setter
-    def attr_stroke(self, value): self.attributes['stroke'] = str(value)
-
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
-    def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
-    @attr_stroke_width.setter
-    def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
-
+class SvgLine(Widget, Mixin_SvgStroke):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
@@ -4040,36 +4043,8 @@ class SvgLine(Widget):
         self.attr_x2 = x2
         self.attr_y2 = y2
 
-    def set_stroke(self, width=1, color='black'):
-        self.attr_stroke = color
-        self.attr_stroke_width = str(width)
 
-
-class SvgPolyline(Widget):
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Fill color for svg elements.''', 'ColorPicker', {})
-    def attr_fill(self): return self.attributes.get('fill', None)
-    @attr_fill.setter
-    def attr_fill(self, value): self.attributes['fill'] = str(value)
-
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Fill opacity for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
-    def attr_fill_opacity(self): return self.attributes.get('fill-opacity', None)
-    @attr_fill_opacity.setter
-    def attr_fill_opacity(self, value): self.attributes['fill-opacity'] = str(value)
-
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
-    def attr_stroke(self): return self.attributes.get('stroke', None)
-    @attr_stroke.setter
-    def attr_stroke(self, value): self.attributes['stroke'] = str(value)
-
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
-    def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
-    @attr_stroke_width.setter
-    def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
-
+class SvgPolyline(Widget, Mixin_SvgStroke, Mixin_SvgFill):
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, *args, **kwargs):
         super(SvgPolyline, self).__init__(*args, **kwargs)
@@ -4090,33 +4065,11 @@ class SvgPolyline(Widget):
         self.coordsY.append(y)
         self.attributes['points'] += "%s,%s " % (x, y)
 
-    def set_stroke(self, width=1, color='black'):
-        self.attr_stroke = color
-        self.attr_stroke_width = str(width)
-
 
 class SvgPolygon(SvgPolyline):
     def __init__(self, _maxlen=None, *args, **kwargs):
         super(SvgPolygon, self).__init__(_maxlen, *args, **kwargs)
         self.type = 'polygon'
-
-    def set_stroke(self, width=1, color='black'):
-        """Sets the stroke properties.
-
-        Args:
-            width (int): stroke width
-            color (str): stroke color
-        """
-        self.attr_stroke = color
-        self.attr_stroke_width = str(width)
-
-    def set_fill(self, color='black'):
-        """Sets the fill color.
-
-        Args:
-            color (str): stroke color
-        """
-        self.attr_fill = color
 
 
 class SvgText(SvgShape, _MixinTextualWidget):
@@ -4163,21 +4116,3 @@ class SvgPath(Widget):
         self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x, 
             'y':y, 'rx':rx, 'ry':ry, 'x-axis-rotation':x_axis_rotation, 'large-arc-flag':large_arc_flag, 'sweep-flag':sweep_flag}
 
-    def set_stroke(self, width=1, color='black'):
-        """Sets the stroke properties.
-
-        Args:
-            width (int): stroke width
-            color (str): stroke color
-        """
-        self.attr_stroke = color
-        self.attributes['stroke-width'] = str(width)
-
-    def set_fill(self, color='black'):
-        """Sets the fill color.
-
-        Args:
-            color (str): stroke color
-        """
-        self.attributes['fill'] = color
-        
