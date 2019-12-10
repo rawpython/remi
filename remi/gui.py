@@ -1569,10 +1569,10 @@ class BODY(Container):
     def __init__(self, *args, **kwargs):
         super(BODY, self).__init__(*args, _type='body', **kwargs)
         loading_anim = Widget()
-        del loading_anim.css_margin
+        loading_anim.css_margin = None
         loading_anim.identifier = "loading-animation"
         loading_container = Container(children=[loading_anim], style={'display':'none'})
-        del loading_container.css_margin
+        loading_container.css_margin = None
         loading_container.identifier = "loading"
 
         self.append(loading_container)
