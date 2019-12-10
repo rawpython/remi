@@ -525,6 +525,18 @@ class Widget(Tag, EventSource):
     EVENT_ONUPDATE = 'onupdate'
 
     @property
+    @editor_attribute_decorator("Layout",'''CSS float.''', 'DropDown', {'possible_values': ('none', 'inherit ', 'left', 'right')})
+    def css_float(self): return self.style.get('float', None)
+    @css_float.setter
+    def css_float(self, value): self.style['float'] = str(value)
+
+    @property
+    @editor_attribute_decorator("Generic",'''Margins allows to define spacing aroung element''', str, {})
+    def css_margin(self): return self.style.get('margin', None)
+    @css_margin.setter
+    def css_margin(self, value): self.style['margin'] = str(value)
+
+    @property
     @editor_attribute_decorator("Generic",'''Advisory information for the element''', str, {})
     def attr_title(self): return self.attributes.get('title', None)
     @attr_title.setter
@@ -762,7 +774,7 @@ class Widget(Tag, EventSource):
 
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.style['margin'] = kwargs.get('margin', '0px')
+        self.css_margin = kwargs.get('margin', '0px')
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(style)
 
@@ -801,7 +813,7 @@ class Widget(Tag, EventSource):
             except ValueError:
                 # now we know w has 'px or % in it'
                 pass
-            self.style['width'] = width
+            self.css_width = width
 
         if height is not None:
             try:
@@ -809,7 +821,7 @@ class Widget(Tag, EventSource):
             except ValueError:
                 # now we know w has 'px or % in it'
                 pass
-            self.style['height'] = height
+            self.css_height = height
 
     def redraw(self):
         """Forces a graphic update of the widget"""
@@ -1208,11 +1220,11 @@ class Container(Widget):
         self.add_child(key, value)
 
         if self.layout_orientation == Container.LAYOUT_HORIZONTAL:
-            if 'float' in self.children[key].style.keys():
-                if not (self.children[key].style['float'] == 'none'):
-                    self.children[key].style['float'] = 'left'
+            if not self.children[key].css_float is None:
+                if not (self.children[key].css_float == 'none'):
+                    self.children[key].css_float = 'left'
             else:
-                self.children[key].style['float'] = 'left'
+                self.children[key].css_float = 'left'
 
         return key
 
@@ -1557,10 +1569,10 @@ class BODY(Container):
     def __init__(self, *args, **kwargs):
         super(BODY, self).__init__(*args, _type='body', **kwargs)
         loading_anim = Widget()
-        del loading_anim.style['margin']
+        del loading_anim.css_margin
         loading_anim.identifier = "loading-animation"
         loading_container = Container(children=[loading_anim], style={'display':'none'})
-        del loading_container.style['margin']
+        del loading_container.css_margin
         loading_container.identifier = "loading"
 
         self.append(loading_container)
@@ -1668,7 +1680,7 @@ class GridBox(Container):
             matrix (list): list of iterables of strings (lists or something else). 
                 Items in the matrix have to correspond to a key for the children.
         """
-        self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
+        self.css_grid_template_areas = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
@@ -1701,7 +1713,7 @@ class GridBox(Container):
         key = value.identifier if key == '' else key
         self.add_child(key, value)
         value.style['grid-area'] = key
-        value.style['position'] = 'static'
+        value.css_position = 'static'
 
         return key
     
@@ -1716,7 +1728,7 @@ class GridBox(Container):
         Args:
             values (iterable of int or str): values are treated as percentage.
         """
-        self.style['grid-template-columns'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
+        self.css_grid_template_columns = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
 
     def set_row_sizes(self, values):
         """Sets the size value for each row
@@ -1724,7 +1736,7 @@ class GridBox(Container):
         Args:
             values (iterable of int or str): values are treated as percentage.
         """
-        self.style['grid-template-rows'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
+        self.css_grid_template_rows = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
     
     def set_column_gap(self, value):
         """Sets the gap value between columns
@@ -1865,16 +1877,15 @@ class HBox(Container):
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
-        if 'left' in value.style.keys():
-            del value.style['left']
-        if 'right' in value.style.keys():
-            del value.style['right']
+        value.css_left = None
+        value.css_right = None
 
-        if not 'order' in value.style.keys():
-            value.style.update({'position':'static', 'order':'-1'})
+        if value.css_order == None:
+            value.css_position = 'static'
+            value.css_order = '-1'
 
         if key.isdigit():
-            value.style['order'] = key
+            value.css_order = key
 
         key = value.identifier if key == '' else key
         self.add_child(key, value)
@@ -1896,7 +1907,7 @@ class VBox(HBox):
     @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         super(VBox, self).__init__(*args, **kwargs)
-        self.style['flex-direction'] = 'column'
+        self.css_flex_direction = 'column'
 
 
 class TabBox(VBox):
@@ -1925,7 +1936,7 @@ class TabBox(VBox):
         tab_w = 100.0 / len(self.container_tab_titles.children.values())
         for l in self.container_tab_titles.children.values():
             l.set_size("%.1f%%" % tab_w, "100%")
-        widget.style['order'] = '1'
+        widget.css_order = '1'
         #if first tab, select
         if self.selected_widget_key is None:
             self.on_tab_selection(None, key)
@@ -1940,11 +1951,11 @@ class TabBox(VBox):
             w = self.children[k]
             if w is self.container_tab_titles:
                 continue
-            w.style['display'] = 'none'
+            w.css_display = 'none'
             self.container_tab_titles.children[k].remove_class('active')
             if k==key:
                 self.selected_widget_key = k
-        self.children[self.selected_widget_key].style['display'] = 'block'
+        self.children[self.selected_widget_key].css_display = 'block'
         self.container_tab_titles.children[self.selected_widget_key].add_class('active')
         return (self.selected_widget_key)
 
@@ -2224,7 +2235,7 @@ class GenericDialog(Container):
 
         if len(message) > 0:
             m = Label(message)
-            m.style['margin'] = '5px'
+            m.css_margin = '5px'
             self.append(m, "message")
 
         self.container = Container()
@@ -2232,12 +2243,12 @@ class GenericDialog(Container):
         self.container.set_layout_orientation(Container.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
-        self.conf.style['margin'] = '3px'
+        self.conf.css_margin = '3px'
         self.cancel = Button('Cancel')
         self.cancel.set_size(100, 30)
-        self.cancel.style['margin'] = '3px'
+        self.cancel.css_margin = '3px'
         hlay = Container(height=35)
-        hlay.style['display'] = 'block'
+        hlay.css_display = 'block'
         hlay.style['overflow'] = 'visible'
         hlay.append(self.conf, "confirm_button")
         hlay.append(self.cancel, "cancel_button")
@@ -2269,7 +2280,7 @@ class GenericDialog(Container):
         """
         self.inputs[key] = field
         label = Label(label_description)
-        label.style['margin'] = '0px 5px'
+        label.css_margin = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
         container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
@@ -2804,7 +2815,7 @@ class TableWidget(Table):
         self._column_count = 0
         self.set_column_count(n_columns)
         self.set_row_count(n_rows)
-        self.style['display'] = 'table'
+        self.css_display = 'table'
 
     def set_use_title(self, use_title):
         """Returns the TableItem instance at row, column cordinates
@@ -3276,7 +3287,7 @@ class FileFolderNavigator(Container):
         self.selectionlist = []
         self.controlsContainer = Container()
         self.controlsContainer.set_size('100%', '30px')
-        self.controlsContainer.style['display'] = 'flex'
+        self.controlsContainer.css_display = 'flex'
         self.controlsContainer.set_layout_orientation(Container.LAYOUT_HORIZONTAL)
         self.controlBack = Button('Up')
         self.controlBack.set_size('10%', '100%')
@@ -3346,7 +3357,7 @@ class FileFolderNavigator(Container):
             if (not is_folder) and (not self.allow_file_selection):
                 continue
             fi = FileFolderItem(i, is_folder)
-            fi.style['display'] = 'block'
+            fi.css_display = 'block'
             fi.onclick.connect(self.on_folder_item_click)  # navigation purpose
             fi.onselection.connect(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
@@ -3427,7 +3438,7 @@ class FileFolderItem(Container):
     def __init__(self, text, is_folder=False, **kwargs):
         super(FileFolderItem, self).__init__(**kwargs)
         super(FileFolderItem, self).set_layout_orientation(Container.LAYOUT_HORIZONTAL)
-        self.style['margin'] = '3px'
+        self.css_margin = '3px'
         self.isFolder = is_folder
         self.icon = Widget(_class='FileFolderItemIcon')
         self.icon.set_size(30, 30)
@@ -3437,7 +3448,7 @@ class FileFolderItem(Container):
         else:
             self.icon.onclick.connect(self.onselection)
         icon_file = '/res:folder.png' if is_folder else '/res:file.png'
-        self.icon.style['background-image'] = "url('%s')" % icon_file
+        self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.set_size(400, 30)
         self.label.onclick.connect(self.onselection)
@@ -3447,7 +3458,7 @@ class FileFolderItem(Container):
 
     def set_selected(self, selected):
         self.selected = selected
-        self.label.style['font-weight'] = 'bold' if self.selected else 'normal'
+        self.label.css_font_weight = 'bold' if self.selected else 'normal'
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event
@@ -3485,7 +3496,7 @@ class FileSelectionDialog(GenericDialog):
                  allow_file_selection=True, allow_folder_selection=True, **kwargs):
         super(FileSelectionDialog, self).__init__(title, message, **kwargs)
 
-        self.style['width'] = '475px'
+        self.css_width = '475px'
         self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
                                                        allow_file_selection,
                                                        allow_folder_selection)
@@ -3840,19 +3851,6 @@ class SvgShape(Container):
 
 
 class SvgGroup(SvgShape):
-    """svg group widget."""
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
-    def attr_stroke(self): return self.attributes.get('stroke', None)
-    @attr_stroke.setter
-    def attr_stroke(self, value): self.attributes['stroke'] = str(value)
-
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
-    def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
-    @attr_stroke_width.setter
-    def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
-
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, x, y, *args, **kwargs):
         super(SvgGroup, self).__init__(x, y, *args, **kwargs)
@@ -3989,6 +3987,18 @@ class SvgCircle(SvgShape):
 
 class SvgLine(Widget):
     @property
+    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
+    def attr_stroke(self): return self.attributes.get('stroke', None)
+    @attr_stroke.setter
+    def attr_stroke(self, value): self.attributes['stroke'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
+    @attr_stroke_width.setter
+    def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
+
+    @property
     @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
@@ -4023,24 +4033,47 @@ class SvgLine(Widget):
         self.set_p2(x2, y2)
 
     def set_p1(self, x1, y1):
-        self.attributes['x1'] = x1
-        self.attributes['y1'] = y1
+        self.attr_x1 = x1
+        self.attr_y1 = y1
 
     def set_p2(self, x2, y2):
-        self.attributes['x2'] = x2
-        self.attributes['y2'] = y2
+        self.attr_x2 = x2
+        self.attr_y2 = y2
 
     def set_stroke(self, width=1, color='black'):
-        self.style['stroke'] = color
-        self.style['stroke-width'] = str(width)
+        self.attr_stroke = color
+        self.attr_stroke_width = str(width)
 
 
 class SvgPolyline(Widget):
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Fill color for svg elements.''', 'ColorPicker', {})
+    def attr_fill(self): return self.attributes.get('fill', None)
+    @attr_fill.setter
+    def attr_fill(self, value): self.attributes['fill'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Fill opacity for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    def attr_fill_opacity(self): return self.attributes.get('fill-opacity', None)
+    @attr_fill_opacity.setter
+    def attr_fill_opacity(self, value): self.attributes['fill-opacity'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
+    def attr_stroke(self): return self.attributes.get('stroke', None)
+    @attr_stroke.setter
+    def attr_stroke(self, value): self.attributes['stroke'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
+    @attr_stroke_width.setter
+    def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
 
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, *args, **kwargs):
         super(SvgPolyline, self).__init__(*args, **kwargs)
-        self.style['fill'] = 'none'
+        self.attr_fill = 'none'
         self.type = 'polyline'
         self.coordsX = collections.deque(maxlen=_maxlen)
         self.coordsY = collections.deque(maxlen=_maxlen)
@@ -4058,8 +4091,8 @@ class SvgPolyline(Widget):
         self.attributes['points'] += "%s,%s " % (x, y)
 
     def set_stroke(self, width=1, color='black'):
-        self.style['stroke'] = color
-        self.style['stroke-width'] = str(width)
+        self.attr_stroke = color
+        self.attr_stroke_width = str(width)
 
 
 class SvgPolygon(SvgPolyline):
@@ -4074,8 +4107,8 @@ class SvgPolygon(SvgPolyline):
             width (int): stroke width
             color (str): stroke color
         """
-        self.attributes['stroke'] = color
-        self.attributes['stroke-width'] = str(width)
+        self.attr_stroke = color
+        self.attr_stroke_width = str(width)
 
     def set_fill(self, color='black'):
         """Sets the fill color.
@@ -4083,8 +4116,7 @@ class SvgPolygon(SvgPolyline):
         Args:
             color (str): stroke color
         """
-        self.style['fill'] = color
-        self.attributes['fill'] = color
+        self.attr_fill = color
 
 
 class SvgText(SvgShape, _MixinTextualWidget):
@@ -4138,7 +4170,7 @@ class SvgPath(Widget):
             width (int): stroke width
             color (str): stroke color
         """
-        self.attributes['stroke'] = color
+        self.attr_stroke = color
         self.attributes['stroke-width'] = str(width)
 
     def set_fill(self, color='black'):
