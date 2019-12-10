@@ -705,15 +705,16 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                 index = 100
                 if hasattr(y,"fget"):
                     if hasattr(y.fget, "editor_attributes"):
+                        group = y.fget.editor_attributes['group']
                         attributeEditor = EditorAttributeInput(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance, width="100%")
                         attributeEditor.on_attribute_changed.do(self.onattribute_changed)
-                        if not y.fget.editor_attributes['group'] in self.attributeGroups.keys():
-                            groupContainer = EditorAttributesGroup(y.fget.editor_attributes['group'], width='100%')
-                            groupContainer.css_order = self.group_orders.get(y.fget.editor_attributes['group'], str(index))
+                        if not group in self.attributeGroups.keys():
+                            groupContainer = EditorAttributesGroup(group, width='100%')
+                            groupContainer.css_order = self.group_orders.get(group, str(index))
                             index = index + 1
-                            self.attributeGroups[y.fget.editor_attributes['group']] = groupContainer
+                            self.attributeGroups[group] = groupContainer
                             self.append(groupContainer)
-                        self.attributeGroups[y.fget.editor_attributes['group']].append(attributeEditor)
+                        self.attributeGroups[group].append(attributeEditor)
                         self.attributesInputs.append(attributeEditor)
                         if getattr(self.targetWidget, x) is None:
                             attributeEditor.set_valid(False)
@@ -991,9 +992,8 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
         self.removeAttribute.onclick.do(self.on_attribute_remove)
 
-        self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
-        self.label.style['overflow'] = 'hidden'
-        self.label.style['font-size'] = '13px'
+        self.label = gui.Label(attributeName, width='45%', height=22)
+        self.label.style.update({'overflow':'hidden', 'font-size':'13px', 'margin':'0px'})
         #self.label.style['outline'] = '1px solid lightgray'
 
         self.inputWidget = None
