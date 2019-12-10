@@ -994,7 +994,7 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.label = gui.Label(attributeName, width='45%', height=22, margin='0px')
         self.label.style['overflow'] = 'hidden'
         self.label.style['font-size'] = '13px'
-        self.label.style['outline'] = '1px solid lightgray'
+        #self.label.style['outline'] = '1px solid lightgray'
 
         self.inputWidget = None
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
@@ -1022,10 +1022,12 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         self.inputWidget.onchange.do(self.on_attribute_changed)
         self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
-        self.inputWidget.style['float'] = 'right'
-
+        #self.inputWidget.style['text-align'] = 'center'
+        
         self.label.attributes['title'] = attributeDict['description']
         self.append([self.removeAttribute, self.label, self.inputWidget])
+
+        self.inputWidget.css_float = 'right'
 
         self.set_valid(False)
 

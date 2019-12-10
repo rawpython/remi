@@ -1987,6 +1987,12 @@ class TabBox(VBox):
 
 # noinspection PyUnresolvedReferences
 class _MixinTextualWidget(object):
+    @property
+    @editor_attribute_decorator("Generic",'''Text content''', str, {})
+    def text(self): return self.get_text()
+    @text.setter
+    def text(self, value): self.set_text(value)
+
     def set_text(self, text):
         """
         Sets the text label for the Widget.
@@ -2151,7 +2157,7 @@ class Label(Container, _MixinTextualWidget):
     """
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, *args, **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str): The string content that have to be displayed in the Label.
@@ -2543,7 +2549,7 @@ class ListItem(Widget, _MixinTextualWidget):
     """
 
     @decorate_constructor_parameter_types([str])
-    def __init__(self, text, *args, **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str, unicode): The textual content of the ListItem.
@@ -3795,7 +3801,7 @@ class Svg(Container):
         self.attr_preserveAspectRatio = 'none'
 
 
-class Mixin_SvgStroke():
+class _MixinSvgStroke():
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
     def attr_stroke(self): return self.attributes.get('stroke', None)
@@ -3819,7 +3825,7 @@ class Mixin_SvgStroke():
         self.attr_stroke_width = str(width)
 
 
-class Mixin_SvgFill():
+class _MixinSvgFill():
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Fill color for svg elements.''', 'ColorPicker', {})
     def attr_fill(self): return self.attributes.get('fill', None)
@@ -3841,7 +3847,7 @@ class Mixin_SvgFill():
         self.attr_fill = color
 
 
-class SvgShape(Container, Mixin_SvgStroke, Mixin_SvgFill):
+class SvgShape(Container, _MixinSvgStroke, _MixinSvgFill):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, x, y, *args, **kwargs):
@@ -4000,7 +4006,7 @@ class SvgCircle(SvgShape):
         self.attr_cy = str(y)
 
 
-class SvgLine(Widget, Mixin_SvgStroke):
+class SvgLine(Widget, _MixinSvgStroke):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
@@ -4044,7 +4050,7 @@ class SvgLine(Widget, Mixin_SvgStroke):
         self.attr_y2 = y2
 
 
-class SvgPolyline(Widget, Mixin_SvgStroke, Mixin_SvgFill):
+class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
     @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, *args, **kwargs):
         super(SvgPolyline, self).__init__(*args, **kwargs)
