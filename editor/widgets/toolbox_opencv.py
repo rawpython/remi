@@ -74,7 +74,7 @@ class OpencvImRead(gui.Image, OpencvWidget):
 
     def _need_update(self, emitter=None):
         #overriding this method allows to correct the image url that gets updated by the editor
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': id(self), 'frame_index':0})
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':self.frame_index})
         super(OpencvImRead, self)._need_update(emitter)
 
     def on_new_image_listener(self, emitter):
@@ -117,9 +117,12 @@ class OpencvImRead(gui.Image, OpencvWidget):
                 document.getElementById('%(id)s').src = imageUrl;
             }
             xhr.send();
-            """ % {'id': id(self), 'frame_index':self.frame_index})
+            """ % {'id': self.identifier, 'frame_index':self.frame_index})
 
     def get_image_data(self, index=0):
+        self.disable_refresh()
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':index})
+        self.enable_refresh()
         try:
             ret, png = cv2.imencode('.png', self.img)
             if ret:
@@ -152,13 +155,13 @@ class OpencvVideo(OpencvImRead):
     @gui.editor_attribute_decorator('WidgetSpecific','The video source index', int, {'default':0, 'min':0, 'max':65535, 'step':1})
     def video_source(self): return self.__video_source
     @video_source.setter
-    def video_source(self, v): self.__video_source = v; self.capture = cv2.VideoCapture(__video_source)
+    def video_source(self, v): self.__video_source = v; self.capture = cv2.VideoCapture(self.__video_source)
 
     @gui.decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
-        super(OpencvVideo, self).__init__("", *args, **kwargs)
         self.framerate = 10
         self.video_source = 0
+        super(OpencvVideo, self).__init__("", *args, **kwargs)
         self.thread = Thread(target=self.update)
         self.thread.daemon = True
         self.thread.start()
@@ -200,10 +203,13 @@ class OpencvVideo(OpencvImRead):
                         document.getElementById('%(id)s').src = imageUrl;
                     }
                     xhr.send();
-                    """ % {'id': id(self), 'frame_index':self.frame_index})
+                    """ % {'id': self.identifier, 'frame_index':self.frame_index})
                 
 
     def get_image_data(self, index=0):
+        self.disable_refresh()
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':index})
+        self.enable_refresh()
         try:
             ret, frame = self.capture.read()
             if ret:

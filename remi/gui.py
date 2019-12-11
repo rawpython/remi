@@ -28,7 +28,7 @@ except ImportError:
 import mimetypes
 import base64
 try:
-    # Python 2.6-2.7 
+    # Python 2.6-2.7
     from HTMLParser import HTMLParser
     h = HTMLParser()
     unescape = h.unescape
@@ -70,7 +70,7 @@ def jsonize(d):
 
 def load_resource(filename):
     """ Convenient function. Given a local path and filename (not in standard remi resource format),
-        loads the content and returns a base64 encoded data. 
+        loads the content and returns a base64 encoded data.
         This method allows to bypass the remi resource file management, accessing directly local disk files.
 
         Args:
@@ -89,7 +89,7 @@ def load_resource(filename):
     else:
         data = str(data, 'utf-8')
     return "data:%(mime)s;base64,%(data)s"%{'mime':mimetype, 'data':data}
-    
+
 
 def to_uri(uri_data):
     """ Convenient function to encase the resource filename or data in url('') keyword
@@ -106,13 +106,13 @@ def to_uri(uri_data):
 class EventSource(object):
     def __init__(self, *args, **kwargs):
         self.setup_event_methods()
-    
+
     def setup_event_methods(self):
         for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
             _event_info = None
             if hasattr(method, "_event_info"):
                 _event_info = method._event_info
-            
+
             if hasattr(method, '__is_event'):
                 e = ClassEventConnector(self, method_name, method)
                 setattr(self, method_name, e)
@@ -135,7 +135,7 @@ class ClassEventConnector(object):
         self.userdata = None
         self.kwuserdata = None
         self.connect = self.do #for compatibility reasons
-        
+
     def do(self, callback, *userdata, **kwuserdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
@@ -172,7 +172,7 @@ def decorate_event_js(js_code):
 
     Args:
         js_code (str): javascript code to generate the event client-side.
-            js_code is added to the widget html as 
+            js_code is added to the widget html as
             widget.attributes['onclick'] = js_code%{'emitter_identifier':widget.identifier, 'event_name':'onclick'}
     """
     def add_annotation(method):
@@ -187,7 +187,7 @@ def decorate_set_on_listener(prototype):
         Allows the Editor to create listener methods.
 
         Args:
-            params (str): The list of parameters for the listener 
+            params (str): The list of parameters for the listener
                 method (es. "(self, new_value)")
     """
     # noinspection PyDictCreation,PyProtectedMember
@@ -201,11 +201,11 @@ def decorate_set_on_listener(prototype):
 
 
 def decorate_constructor_parameter_types(type_list):
-    """ Private decorator for use in the editor. 
+    """ Private decorator for use in the editor.
         Allows Editor to instantiate widgets.
 
         Args:
-            params (str): The list of types for the widget 
+            params (str): The list of types for the widget
                 constructor method (i.e. "(int, int, str)")
     """
     def add_annotation(method):
@@ -294,7 +294,7 @@ class Tag(object):
     def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
         Args:
-            attributes (dict): The attributes to be applied. 
+            attributes (dict): The attributes to be applied.
            _type (str): HTML element type or ''
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, useful for public API definition.
@@ -376,7 +376,7 @@ class Tag(object):
         _innerHTML = self.innerHTML(local_changed_widgets)
 
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
-            self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>', 
+            self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>',
                                         _innerHTML, '</', self.type, '>'))
             #faster but unsupported before python3.6
             #self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
@@ -497,7 +497,7 @@ class Tag(object):
 
 class Widget(Tag, EventSource):
     """ Base class for graphical gui widgets.
-        A widget has a graphical css style and receives events from the webpage 
+        A widget has a graphical css style and receives events from the webpage
     """
     # some constants for the events
     EVENT_ONCLICK = 'onclick'
@@ -759,7 +759,7 @@ class Widget(Tag, EventSource):
 
         """
         Args:
-            style (dict, or json str): The style properties to be applied. 
+            style (dict, or json str): The style properties to be applied.
             width (int, str): An optional width for the widget (es. width=10 or width='10px' or width='10%').
             height (int, str): An optional height for the widget (es. height=10 or height='10px' or height='10%').
             margin (str): CSS margin specifier
@@ -1052,10 +1052,10 @@ class Widget(Tag, EventSource):
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
             event.stopPropagation();event.preventDefault();return false;""")
     def onkeyup(self, key, keycode, ctrl, shift, alt):
-        """Called when user types and releases a key. 
+        """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
-        
+
         Args:
             key (str): the character value
             keycode (str): the numeric char code
@@ -1074,7 +1074,7 @@ class Widget(Tag, EventSource):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
         Assign a 'tabindex' attribute to make it focusable.
-        
+
         Args:
             key (str): the character value
             keycode (str): the numeric char code
@@ -1084,7 +1084,7 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_focus_listener(self, callback, *userdata):
         self.onfocus.connect(callback, *userdata)
-        
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_blur_listener(self, callback, *userdata):
         self.onblur.connect(callback, *userdata)
@@ -1132,7 +1132,7 @@ class Widget(Tag, EventSource):
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchend_listener(self, callback, *userdata):
         self.ontouchend.connect(callback, *userdata)
-        
+
     @decorate_explicit_alias_for_listener_registration
     def set_on_touchenter_listener(self, callback, *userdata):
         self.ontouchenter.connect(callback, *userdata)
@@ -1183,11 +1183,11 @@ class Container(Widget):
             layout_orientation (Container.LAYOUT_VERTICAL, Container.LAYOUT_HORIZONTAL): Container layout
         """
         super(Container, self).__init__(*args, **kwargs)
-        
+
         self.set_layout_orientation(kwargs.get('layout_orientation', Container.LAYOUT_VERTICAL))
         if children:
             self.append(children)
-    
+
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
 
@@ -1260,11 +1260,11 @@ class HTML(Tag):
 class HEAD(Tag):
     def __init__(self, title, *args, **kwargs):
         super(HEAD, self).__init__(*args, _type='head', **kwargs)
-        self.add_child('meta', 
+        self.add_child('meta',
                 """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
-        
+
         self._classes = []
         self.set_title(title)
 
@@ -1280,7 +1280,7 @@ class HEAD(Tag):
 
     def set_icon_data(self, base64_data, mimetype="image/png", rel="icon"):
         """ Allows to define an icon for the App
-        
+
             Args:
                 base64_data (str): base64 encoded image data  (ie. "data:image/x-icon;base64,AAABAAEAEBA....")
                 mimetype (str): mimetype of the image ("image/png" or "image/x-icon"...)
@@ -1536,8 +1536,8 @@ class HEAD(Tag):
                     fd.append('upload_file', file);
                     xhr.send(fd);
                 };
-                </script>""" % {'host':net_interface_ip, 
-                                'max_pending_messages':pending_messages_queue_length, 
+                </script>""" % {'host':net_interface_ip,
+                                'max_pending_messages':pending_messages_queue_length,
                                 'messaging_timeout':websocket_timeout_timer_ms})
 
     def set_title(self, title):
@@ -1576,7 +1576,7 @@ class BODY(Container):
         loading_container.identifier = "loading"
 
         self.append(loading_container)
-    
+
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
             event.stopPropagation();event.preventDefault();
@@ -1677,10 +1677,14 @@ class GridBox(Container):
         """Populates the Table with a list of tuples of strings.
 
         Args:
-            matrix (list): list of iterables of strings (lists or something else). 
+            matrix (list): list of iterables of strings (lists or something else).
                 Items in the matrix have to correspond to a key for the children.
         """
+<<<<<<< HEAD
         self.css_grid_template_areas = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
+=======
+        self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix)
+>>>>>>> master
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
@@ -1716,7 +1720,7 @@ class GridBox(Container):
         value.css_position = 'static'
 
         return key
-    
+
     def remove_child(self, child):
         if 'grid-area' in child.style.keys():
             del child.style['grid-area']
@@ -1736,8 +1740,13 @@ class GridBox(Container):
         Args:
             values (iterable of int or str): values are treated as percentage.
         """
+<<<<<<< HEAD
         self.css_grid_template_rows = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
     
+=======
+        self.style['grid-template-rows'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
+
+>>>>>>> master
     def set_column_gap(self, value):
         """Sets the gap value between columns
 
@@ -1815,10 +1824,10 @@ class GridBox(Container):
                 i=rows[ri].find("|",i+1)
 
         columns[row_max_width] = row_max_width
-        
+
         for r in range(0,len(row_sizes)):
             row_sizes[r] = float(row_sizes[r])/float(len(rows))*(100.0-row_gap*(len(row_sizes)-1))
-        
+
         column_sizes = []
         prev_size = 0.0
         for c in columns.values():
@@ -1834,7 +1843,7 @@ class GridBox(Container):
 
 
 class HBox(Container):
-    """The purpose of this widget is to automatically horizontally aligning 
+    """The purpose of this widget is to automatically horizontally aligning
         the widgets that are appended to it.
     Does not permit children absolute positioning.
 
@@ -1850,7 +1859,7 @@ class HBox(Container):
 
         # fixme: support old browsers
         # http://stackoverflow.com/a/19031640
-        self.style.update({'display':'flex', 'justify-content':'space-around', 
+        self.style.update({'display':'flex', 'justify-content':'space-around',
             'align-items':'center', 'flex-direction':'row'})
 
     def append(self, value, key=''):
@@ -1872,7 +1881,7 @@ class HBox(Container):
             for child in value:
                 keys.append( self.append(child) )
             return keys
-        
+
         key = str(key)
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
@@ -1894,7 +1903,7 @@ class HBox(Container):
 
 
 class VBox(HBox):
-    """The purpose of this widget is to automatically vertically aligning 
+    """The purpose of this widget is to automatically vertically aligning
         the widgets that are appended to it.
     Does not permit children absolute positioning.
 
@@ -1911,9 +1920,9 @@ class VBox(HBox):
 
 
 class TabBox(VBox):
-    """ A multipage container. 
+    """ A multipage container.
         Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
-        The widget can be a container with other child widgets. 
+        The widget can be a container with other child widgets.
     """
     @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
@@ -1926,7 +1935,7 @@ class TabBox(VBox):
         self.tab_keys_ordered_list = []
 
     def append(self, widget, key=''):
-        """ Adds a new tab. 
+        """ Adds a new tab.
             The *widget* is the content of the tab.
             The *key* is the tab title.
         """
@@ -2053,7 +2062,7 @@ class TextInput(Widget, _MixinTextualWidget):
                 var elem = document.getElementById('%(emitter_identifier)s');
                 var enter_pressed = (elem.value.indexOf('\\n') > -1);
                 if(enter_pressed){
-                    elem.value = elem.value.split('\\n').join(''); 
+                    elem.value = elem.value.split('\\n').join('');
                     var params={};params['new_value']=elem.value;
                     sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
                 }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
@@ -2114,7 +2123,7 @@ class TextInput(Widget, _MixinTextualWidget):
             sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeyup(self, new_value, keycode):
         """Called when user types and releases a key into the TextInput
-        
+
         Note: This event can't be registered together with Widget.onchange.
 
         Args:
@@ -2202,14 +2211,14 @@ class Progress(Widget):
         Args:
             value (int): The actual progress value.
         """
-        self.attributes['value'] = str(value)     
+        self.attributes['value'] = str(value)
 
     def set_max(self, _max):
         """
         Args:
             max (int): The maximum progress value.
         """
-        self.attributes['max'] = str(_max)  
+        self.attributes['max'] = str(_max)
 
 
 class GenericDialog(Container):
@@ -3291,6 +3300,7 @@ class FileFolderNavigator(Container):
         self.allow_file_selection = allow_file_selection
         self.allow_folder_selection = allow_folder_selection
         self.selectionlist = []
+        self.currDir = ''
         self.controlsContainer = Container()
         self.controlsContainer.set_size('100%', '30px')
         self.controlsContainer.css_display = 'flex'
@@ -3321,6 +3331,8 @@ class FileFolderNavigator(Container):
         self._last_valid_path = selection_folder
 
     def get_selection_list(self):
+        if self.allow_folder_selection and not self.selectionlist:
+            self.selectionlist.append(self.currDir)
         return self.selectionlist
 
     def populate_folder_items(self, directory):
@@ -3405,6 +3417,7 @@ class FileFolderNavigator(Container):
         self.populate_folder_items(directory)
         self.enable_refresh()
         self.pathEditor.set_text(directory)
+        self.currDir = directory
         os.chdir(curpath)  # restore the path
 
     def on_folder_item_selected(self, folderitem):
@@ -3567,7 +3580,7 @@ class MenuItem(Container, _MixinTextualWidget):
         self.set_text(text)
 
     def append(self, value, key=''):
-        
+
         return self.sub_container.append(value, key=key)
 
 
@@ -3875,7 +3888,7 @@ class SvgGroup(SvgShape):
     @decorate_constructor_parameter_types([int, int])
     def __init__(self, x, y, *args, **kwargs):
         super(SvgGroup, self).__init__(x, y, *args, **kwargs)
-        self.type = 'g' 
+        self.type = 'g'
 
 
 class SvgRectangle(SvgShape):
@@ -3929,7 +3942,7 @@ class SvgRectangle(SvgShape):
 
 
 class SvgImage(SvgRectangle):
-    """svg image - a raster image element for svg graphics, 
+    """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
 
     @decorate_constructor_parameter_types([str, int, int, int, int])
@@ -4119,6 +4132,27 @@ class SvgPath(Widget):
 
     def add_arc(self, x, y, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag):
         #A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-        self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x, 
+        self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x,
             'y':y, 'rx':rx, 'ry':ry, 'x-axis-rotation':x_axis_rotation, 'large-arc-flag':large_arc_flag, 'sweep-flag':sweep_flag}
 
+<<<<<<< HEAD
+=======
+    def set_stroke(self, width=1, color='black'):
+        """Sets the stroke properties.
+
+        Args:
+            width (int): stroke width
+            color (str): stroke color
+        """
+        self.attributes['stroke'] = color
+        self.attributes['stroke-width'] = str(width)
+
+    def set_fill(self, color='black'):
+        """Sets the fill color.
+
+        Args:
+            color (str): stroke color
+        """
+        self.attributes['fill'] = color
+
+>>>>>>> master
