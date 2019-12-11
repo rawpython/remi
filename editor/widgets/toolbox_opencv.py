@@ -57,7 +57,6 @@ class OpencvImRead(gui.Image, OpencvWidget):
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAFnQAABZ0B24EKIgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATOSURBVGiB5ZpdbBRVFMd/d6ZlpVCKQEF48jtEQkyMiRFNjEZe9AHUxMQHg/HBQOKjJD7ogxojwcYHIKAEP7AaYpQPQb6hQqpdqgIWRIpbChWU7W63y3a7O9vdmbk+lG637LYz087druH3tLn33HPOf+fOvWfujFi+eK7kFkKb7ATKTdXQD6HpBObcMZm5KGOgJ4y0LaBAcPWseh5cu33SklLJ6TeWk+0JA7fylHbDNHqYJ/9AExbdLCLJ/+8WcCW4GoPHWM8jcjMCG26s6+08w0HxHga3q8zRV1wIljwvV3IXzUU9C9lHnfyHRvEdNrqC9PzH8R5exO6SYoeYTxsP8aWvSanEUfBYYvM20tmmUnAUPFN2OTqZxWU/cikLjoJj3OvoJMr9viRTDhwFh8RSRych8bQvyTjRYfxES2IrphwYtw/HVbqDpzjHMhbxfcn+Tp7gLC+MOwE35KTBt92raU83kZMZ2vr38OqCrQTENM++XFVae0UDx8VqckzNt5kECLKK7eITQHgO7JaEFebTf1/mbGofOZkB4O/MKXZF3x6XP1eFh41OkFW0iteYQwgNkwgLsb0Vap7pTJ9gT+wdwtkLRX3t6aNcTLdwT80STz49ZWyjE2GhpwDjIScNjvau42RyB/1WtKRNxkrSFF/P3TWPIjzMMLWXyCWmzBLLdRHJdtBpBOnMBIlkLzqO6xo4STCxlSV1r7iO5UmwQQJDJAjI6UylDm2C5eSp5E5+T+4ikguRNHuwMT2Nt6RJa982Hq59kSlajasxjoLDop1mfQtXtTOkiGOKDDrV3CZrmSHnMVveyX3ycRZbz7r+A+LmVXZF36LTaJ3QFgMQyYbYH1vDsvp3XdmPKbhJ30Cr/hV9IlLUlxbX6RVXuMxvnGYnx/RNPGAv5UnzdaqYMqrP86kj7I+tJZrrcJWgG86lDrJk5grqq+9xtB11WzpY9SHHqjaWFHszNhZhcYEmfQMbpzxHi/5FSbtfEtvYHn3TV7EASSvK/tgaV7YlBbfpuzmhfU2OjOfg18R59la9z2fVK0gTz7cHE40cijeQsno9+3TDxXQLZ1P7HO2KBA+IFEf19WRE37iD21iEtGY2V7/EJa2V4/GPORxvIGXFnQePk6w0aI5vwZJjL3xFgg/oa4kK5y3BDd3aXzTqKzlirsOwkr74HIur2TMcv75pTJsRgrOkCWn+PtsaWgJzfgbqfHVbEiltTiV30D/GbTNC8M/658TEZf8z0YF5QK3/rm8mluviQOyDUftHCO7UTqjLpAqYT1lEn0//yJVMW8m+vGCJTVgUF+m+MiR6qpPhxEhbvRyKN5TsywvOYdAvetRmAoOiF4DqQ85LRiu/9n1T1J4XbIqs2gwKCYDqM3xLmgQTjUWla16w18J9wtQC09WGuJb9k8O9H41oKxBsqY1+MxowR32Ytv4fsAuKkRGLVtmpAWarDZEwr2HYw1VjgeBJ+hBgJsoXMFMOPxNM/uvSADBXbYjCizn5ggFmMCi8DFSGYB3lV3mIyhAMg1uU4m0KKkmwQPmKDQWCvZztKqOGwVVbIQWCK+ANvgBmqQ2hDf+okNkdQGkFJvKfHmqCVH2Z6+nRkIAJftVCNQkdcaOQHD6XtiXTuitgWiumQuZx+fgPED6yi1RbbEEAAAAASUVORK5CYII="
 
     app_instance = None #the application instance used to send updates
-    frame_index = 0     #an incremental value to force cache refresh
     img = None          #the image data as numpy array
     default_style = {'position':'absolute','left':'10px','top':'10px'}
     image_source = None   #the linked widget instance, get updated on image listener
@@ -74,7 +73,7 @@ class OpencvImRead(gui.Image, OpencvWidget):
 
     def _need_update(self, emitter=None):
         #overriding this method allows to correct the image url that gets updated by the editor
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':self.frame_index})
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
         super(OpencvImRead, self)._need_update(emitter)
 
     def on_new_image_listener(self, emitter):
@@ -102,7 +101,6 @@ class OpencvImRead(gui.Image, OpencvWidget):
             self.app_instance = self.search_app_instance(self)
             if self.app_instance==None:
                 return
-        self.frame_index = self.frame_index + 1
         self.app_instance.execute_javascript("""
             url = '/%(id)s/get_image_data?index=%(frame_index)s';
             
@@ -117,16 +115,15 @@ class OpencvImRead(gui.Image, OpencvWidget):
                 document.getElementById('%(id)s').src = imageUrl;
             }
             xhr.send();
-            """ % {'id': self.identifier, 'frame_index':self.frame_index})
+            """ % {'id': self.identifier, 'frame_index':str(time.time())})
 
     def get_image_data(self, index=0):
-        self.disable_refresh()
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':index})
-        self.enable_refresh()
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
+        self._set_updated()
         try:
             ret, png = cv2.imencode('.png', self.img)
             if ret:
-                headers = {'Content-type': 'image/png'}
+                headers = {'Content-type': 'image/png', 'Cache-Control':'no-cache'}
                 return [png.tostring(), headers]
         except:
             pass
@@ -190,7 +187,6 @@ class OpencvVideo(OpencvImRead):
                     continue
 
             with self.app_instance.update_lock:
-                self.frame_index = self.frame_index + 1
                 self.app_instance.execute_javascript("""
                     var url = '/%(id)s/get_image_data?index=%(frame_index)s';
                     var xhr = new XMLHttpRequest();
@@ -203,13 +199,12 @@ class OpencvVideo(OpencvImRead):
                         document.getElementById('%(id)s').src = imageUrl;
                     }
                     xhr.send();
-                    """ % {'id': self.identifier, 'frame_index':self.frame_index})
+                    """ % {'id': self.identifier, 'frame_index':str(time.time())})
                 
 
     def get_image_data(self, index=0):
-        self.disable_refresh()
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':index})
-        self.enable_refresh()
+        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
+        self._set_updated()
         try:
             ret, frame = self.capture.read()
             if ret:
@@ -217,7 +212,7 @@ class OpencvVideo(OpencvImRead):
                 self.on_new_image()
                 ret, png = cv2.imencode('.png', frame)
                 if ret:
-                    headers = {'Content-type': 'image/png'}
+                    headers = {'Content-type': 'image/png', 'Cache-Control':'no-cache'}
                     # tostring is an alias to tobytes, which wasn't added till numpy 1.9
                     return [png.tostring(), headers]
         except:
@@ -294,13 +289,6 @@ class OpencvThreshold(OpencvImRead):
         super(OpencvThreshold, self).__init__("", *args, **kwargs)
         self.threshold = 125
 
-    """
-    def _need_update(self, emitter=None):
-        if emitter is not None:
-            if self.image_source is not None:
-                self.on_new_image_listener(self.image_source)
-        super(OpencvThreshold, self)._need_update(emitter)
-    """
     def on_new_image_listener(self, emitter): #THRESHOLD
         if emitter is None or emitter.img is None:
             return
@@ -453,17 +441,28 @@ class OpencvCvtColor(OpencvImRead):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    cvt_types = {'COLOR_BGR2HSV':cv2.COLOR_BGR2HSV,'COLOR_HSV2BGR':cv2.COLOR_HSV2BGR, 'COLOR_RGB2BGR':cv2.COLOR_RGB2BGR, 'COLOR_RGB2GRAY':cv2.COLOR_RGB2GRAY, 'COLOR_BGR2GRAY':cv2.COLOR_BGR2GRAY, 'COLOR_RGB2HSV':cv2.COLOR_RGB2HSV}
     icon = "data:image/png;base64,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"
-    @gui.decorate_constructor_parameter_types([cvt_types.keys()])
-    def __init__(self, conversion_code, *args, **kwargs):
-        self.conversion_code = self.cvt_types[conversion_code]
+
+    cvt_types = {'COLOR_BGR2HSV':cv2.COLOR_BGR2HSV,'COLOR_HSV2BGR':cv2.COLOR_HSV2BGR, 'COLOR_RGB2BGR':cv2.COLOR_RGB2BGR, 'COLOR_RGB2GRAY':cv2.COLOR_RGB2GRAY, 'COLOR_BGR2GRAY':cv2.COLOR_BGR2GRAY, 'COLOR_RGB2HSV':cv2.COLOR_RGB2HSV}
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The conversion constant code', 'DropDown', {'possible_values': cvt_types.keys()})
+    def conversion_code(self): 
+        return self.__conversion_code
+    @conversion_code.setter
+    def conversion_code(self, v): 
+        self.__conversion_code = v
+        self.on_new_image_listener(self.image_source)
+
+    @gui.decorate_constructor_parameter_types([])
+    def __init__(self, *args, **kwargs):
+        self.conversion_code = cv2.COLOR_BGR2HSV
         super(OpencvCvtColor, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
-        if emitter.img is None:
+        if emitter is None or emitter.img is None:
             return
-        self.set_image_data(cv2.cvtColor(emitter.img, self.conversion_code))
+        code = self.cvt_types[self.conversion_code] if type(self.conversion_code) == str else self.conversion_code
+        self.set_image_data(cv2.cvtColor(emitter.img, code))
 
 
 class OpencvBitwiseNot(OpencvImRead):
@@ -485,10 +484,8 @@ class OpencvBitwiseNot(OpencvImRead):
 
 
 class BinaryOperator(object):
-    def __init__(self, **kwargs):
-        self.img1 = None
-        self.img2 = None
-
+    img1 = None
+    img2 = None
     def process(self):
         #overload this method to perform different operations
         if not self.img1 is None:
@@ -556,18 +553,37 @@ class OpencvAddWeighted(OpencvImRead, BinaryOperator):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     icon = "data:image/png;base64,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"
-    @gui.decorate_constructor_parameter_types([float, float, float])
-    def __init__(self, alpha, beta, gamma, *args, **kwargs):
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The alpha value', float, {'default':0, 'min':0, 'max':1.0, 'step':0.0001})
+    def alpha(self): return self.__alpha
+    @alpha.setter
+    def alpha(self, v): self.__alpha = v; self.process()
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The beta value', float, {'default':0, 'min':0, 'max':1.0, 'step':0.0001})
+    def beta(self): return self.__beta
+    @beta.setter
+    def beta(self, v): self.__beta = v; self.process()
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The gamma value', float, {'default':0, 'min':0, 'max':1.0, 'step':0.0001})
+    def gamma(self): return self.__gamma
+    @gamma.setter
+    def gamma(self, v): self.__gamma = v; self.process()
+
+    @gui.decorate_constructor_parameter_types([])
+    def __init__(self, *args, **kwargs):
+        self.alpha = 0.5
+        self.beta = 0.5
+        self.gamma = 0.0
         BinaryOperator.__init__(self)
         super(OpencvAddWeighted, self).__init__("", *args, **kwargs)
 
     def process(self):
         if not self.img1 is None:
             if not self.img2 is None:
-                self.set_image_data(cv2.addWeighted(self.img1, self.alpha, self.img2, self.beta, self.gamma))
+                self.set_image_data(cv2.addWeighted(self.img1, self.__alpha, self.img2, self.__beta, self.__gamma))
 
 
 class OpencvBilateralFilter(OpencvImRead):

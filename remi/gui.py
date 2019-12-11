@@ -317,7 +317,7 @@ class Tag(object):
         self.style.onchange.connect(self._need_update)
 
         self.type = _type
-        self.attributes['id'] = str(id(self))
+        self.identifier = str(id(self))
 
         #attribute['id'] can be overwritten to get a static Tag identifier
         self.attributes.update(attributes)
