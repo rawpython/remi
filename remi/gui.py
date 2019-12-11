@@ -3853,12 +3853,12 @@ class _MixinSvgFill():
 
 class SvgShape(Container, _MixinSvgStroke, _MixinSvgFill):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
-    @decorate_constructor_parameter_types([int, int])
+    @decorate_constructor_parameter_types([float, float])
     def __init__(self, x, y, *args, **kwargs):
         """
         Args:
-            x (int): the x coordinate
-            y (int): the y coordinate
+            x (float): the x coordinate
+            y (float): the y coordinate
             kwargs: See Container.__init__()
         """
         super(SvgShape, self).__init__(*args, **kwargs)
@@ -3868,8 +3868,8 @@ class SvgShape(Container, _MixinSvgStroke, _MixinSvgFill):
         """Sets the shape position.
 
         Args:
-            x (int): the x coordinate
-            y (int): the y coordinate
+            x (float): the x coordinate
+            y (float): the y coordinate
         """
         self.attributes['x'] = str(x)
         self.attributes['y'] = str(y)
@@ -3884,37 +3884,37 @@ class SvgGroup(SvgShape):
 
 class SvgRectangle(SvgShape):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for SvgShape.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for SvgShape.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x(self): return self.attributes.get('x', None)
     @attr_x.setter
     def attr_x(self, value): self.attributes['x'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for SvgShape.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for SvgShape.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y(self): return self.attributes.get('y', None)
     @attr_y.setter
     def attr_y(self, value): self.attributes['y'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Width for SvgShape.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Width for SvgShape.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_width(self): return self.attributes.get('width', None)
     @attr_width.setter
     def attr_width(self, value): self.attributes['width'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Height for SvgShape.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Height for SvgShape.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_height(self): return self.attributes.get('height', None)
     @attr_height.setter
     def attr_height(self, value): self.attributes['height'] = str(value)
 
-    @decorate_constructor_parameter_types([int, int, int, int])
+    @decorate_constructor_parameter_types([float, float, float, float])
     def __init__(self, x, y, w, h, *args, **kwargs):
         """
         Args:
-            x (int): the x coordinate of the top left corner of the rectangle
-            y (int): the y coordinate of the top left corner of the rectangle
-            w (int): width of the rectangle
-            h (int): height of the rectangle
+            x (float): the x coordinate of the top left corner of the rectangle
+            y (float): the y coordinate of the top left corner of the rectangle
+            w (float): width of the rectangle
+            h (float): height of the rectangle
             kwargs: See Widget.__init__()
         """
         super(SvgRectangle, self).__init__(x, y, *args, **kwargs)
@@ -3936,15 +3936,15 @@ class SvgImage(SvgRectangle):
     """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
 
-    @decorate_constructor_parameter_types([str, int, int, int, int])
+    @decorate_constructor_parameter_types([str, float, float, float, float])
     def __init__(self, filename, x, y, w, h, *args, **kwargs):
         """
         Args:
             filename (str): an url to an image
-            x (int): the x coordinate of the top left corner of the rectangle
-            y (int): the y coordinate of the top left corner of the rectangle
-            w (int): width of the rectangle
-            h (int): height of the rectangle
+            x (float): the x coordinate of the top left corner of the rectangle
+            y (float): the y coordinate of the top left corner of the rectangle
+            w (float): width of the rectangle
+            h (float): height of the rectangle
             kwargs: See Widget.__init__()
         """
         super(SvgImage, self).__init__( x, y, w, h, *args, **kwargs)
@@ -3961,30 +3961,30 @@ class SvgImage(SvgRectangle):
 
 class SvgCircle(SvgShape):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_r(self): return self.attributes.get('r', None)
     @attr_r.setter
     def attr_r(self, value): self.attributes['r'] = str(value)
 
-    @decorate_constructor_parameter_types([int, int, int])
+    @decorate_constructor_parameter_types([float, float, float])
     def __init__(self, x, y, radius, *args, **kwargs):
         """
         Args:
-            x (int): the x center point of the circle
-            y (int): the y center point of the circle
-            radius (int): the circle radius
+            x (float): the x center point of the circle
+            y (float): the y center point of the circle
+            radius (float): the circle radius
             kwargs: See Widget.__init__()
         """
         super(SvgCircle, self).__init__(x, y, *args, **kwargs)
@@ -4012,30 +4012,30 @@ class SvgCircle(SvgShape):
 
 class SvgLine(Widget, _MixinSvgStroke):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
     def attr_x1(self, value): self.attributes['x1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y1(self): return self.attributes.get('y1', None)
     @attr_y1.setter
     def attr_y1(self, value): self.attributes['y1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x2(self): return self.attributes.get('x2', None)
     @attr_x2.setter
     def attr_x2(self, value): self.attributes['x2'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y2(self): return self.attributes.get('y2', None)
     @attr_y2.setter
     def attr_y2(self, value): self.attributes['y2'] = str(value)
 
-    @decorate_constructor_parameter_types([int, int, int, int])
+    @decorate_constructor_parameter_types([float, float, float, float])
     def __init__(self, x1, y1, x2, y2, *args, **kwargs):
         super(SvgLine, self).__init__(*args, **kwargs)
         self.set_coords(x1, y1, x2, y2)
@@ -4091,7 +4091,7 @@ class SvgText(SvgShape, _MixinTextualWidget):
     def attr_textLength(self, value): self.attributes['textLength'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Rotation angle for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
     def attr_rotate(self): return self.attributes.get('rotate', None)
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
