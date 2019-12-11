@@ -1680,11 +1680,7 @@ class GridBox(Container):
             matrix (list): list of iterables of strings (lists or something else).
                 Items in the matrix have to correspond to a key for the children.
         """
-<<<<<<< HEAD
         self.css_grid_template_areas = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
-=======
-        self.style['grid-template-areas'] = ''.join("'%s'"%(' '.join(x)) for x in matrix)
->>>>>>> master
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
@@ -1740,13 +1736,8 @@ class GridBox(Container):
         Args:
             values (iterable of int or str): values are treated as percentage.
         """
-<<<<<<< HEAD
         self.css_grid_template_rows = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
     
-=======
-        self.style['grid-template-rows'] = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
-
->>>>>>> master
     def set_column_gap(self, value):
         """Sets the gap value between columns
 
@@ -4135,24 +4126,3 @@ class SvgPath(Widget):
         self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x,
             'y':y, 'rx':rx, 'ry':ry, 'x-axis-rotation':x_axis_rotation, 'large-arc-flag':large_arc_flag, 'sweep-flag':sweep_flag}
 
-<<<<<<< HEAD
-=======
-    def set_stroke(self, width=1, color='black'):
-        """Sets the stroke properties.
-
-        Args:
-            width (int): stroke width
-            color (str): stroke color
-        """
-        self.attributes['stroke'] = color
-        self.attributes['stroke-width'] = str(width)
-
-    def set_fill(self, color='black'):
-        """Sets the fill color.
-
-        Args:
-            color (str): stroke color
-        """
-        self.attributes['fill'] = color
-
->>>>>>> master
