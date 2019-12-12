@@ -271,7 +271,7 @@ class SignalConnectionManager(gui.Container):
         self.container = gui.VBox(width='100%', height='90%')
         self.container.style['justify-content'] = 'flex-start'
         self.container.style['overflow-y'] = 'scroll'
-        self.append(self.container, 'container')
+        
         ##for all the events of this widget
         #isclass instead of ismethod because event methods are replaced with ClassEventConnector
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
@@ -282,6 +282,8 @@ class SignalConnectionManager(gui.Container):
                     setOnEventListenerFuncname, 
                     setOnEventListenerFunc, 
                     width='100%') )
+                    
+        self.append(self.container, 'container')
 
 
 class ProjectConfigurationDialog(gui.GenericDialog, gui.EventSource):
@@ -694,6 +696,9 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         self.infoLabel.set_text("Selected widget: %s"%widget.identifier)
         self.attributes['selected_widget_id'] = widget.identifier
 
+        for w in self.attributeGroups.values():
+            self.remove_child(w)
+
         for w in self.attributesInputs:
             if w.attributeDict['group'] in self.attributeGroups:
                 self.attributeGroups[w.attributeDict['group']].remove_child(w)
@@ -713,13 +718,15 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                             groupContainer.css_order = self.group_orders.get(group, str(index))
                             index = index + 1
                             self.attributeGroups[group] = groupContainer
-                            self.append(groupContainer)
                         self.attributeGroups[group].append(attributeEditor)
                         self.attributesInputs.append(attributeEditor)
                         if getattr(self.targetWidget, x) is None:
                             attributeEditor.set_valid(False)
                         else:
                             attributeEditor.set_value(getattr(self.targetWidget, x))
+
+        for w in self.attributeGroups.values():
+            self.append(w)
 
 
 class CssSizeInput(gui.Container, gui.EventSource):

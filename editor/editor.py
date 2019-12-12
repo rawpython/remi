@@ -895,4 +895,4 @@ def on_dropped(self, left, top):
 
 
 if __name__ == "__main__":
-    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=0.1, multiple_instance=True)
+    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=0.05, multiple_instance=True)
