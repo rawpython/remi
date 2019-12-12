@@ -1988,10 +1988,28 @@ class TabBox(VBox):
 # noinspection PyUnresolvedReferences
 class _MixinTextualWidget(object):
     @property
-    @editor_attribute_decorator("Generic",'''Text content''', str, {})
+    @editor_attribute_decorator("WidgetSpecific",'''Text content''', str, {})
     def text(self): return self.get_text()
     @text.setter
     def text(self, value): self.set_text(value)
+
+    @property
+    @editor_attribute_decorator("Font",'''Specifies whether the text have to be horizontal or vertical.''', 'DropDown', {'possible_values': ('none', 'horizontal-tb', 'vertical-rl', 'vertical-lr')})
+    def css_writing_mode(self): return self.style.get('writing-mode', None)
+    @css_writing_mode.setter
+    def css_writing_mode(self, value): self.style['writing-mode'] = str(value)
+
+    @property
+    @editor_attribute_decorator("Font",'''Text alignment.''', 'DropDown', {'possible_values': ('none', 'center', 'left', 'right', 'justify')})
+    def css_text_align(self): return self.style.get('text-align', None)
+    @css_text_align.setter
+    def css_text_align(self, value): self.style['text-align'] = str(value)
+
+    @property
+    @editor_attribute_decorator("Font",'''Text direction.''', 'DropDown', {'possible_values': ('none', 'ltr', 'rtl')})
+    def css_direction(self): return self.style.get('direction', None)
+    @css_direction.setter
+    def css_direction(self, value): self.style['direction'] = str(value)
 
     def set_text(self, text):
         """
