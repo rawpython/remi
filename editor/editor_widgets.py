@@ -798,6 +798,65 @@ class CssSizeInput(gui.Container, gui.EventSource):
         self.dropMeasureUnit.set_value(measure_unit)
 
 
+class ColorInput(gui.HBox, gui.EventSource):
+    def __init__(self, **kwargs):
+        super(ColorInput, self).__init__(**kwargs)
+        gui.EventSource.__init__(self)
+        #self.style['display'] = 'block'
+        self.style['overflow'] = 'hidden'
+        
+        self.spin_red = gui.SpinBox(0, 0, 255, 1, height="50%")
+        self.spin_green = gui.SpinBox(0, 0, 255, 1, height="50%")
+        self.spin_blue = gui.SpinBox(0, 0, 255, 1, height="50%")
+        self.slide_red = gui.Slider(0, 0, 255, 1, width="100%", height="50%", style={'background-color':'pink'})
+        self.slide_green = gui.Slider(0, 0, 255, 1, width="100%", height="50%", style={'background-color':'lightgreen'})
+        self.slide_blue = gui.Slider(0, 0, 255, 1, width="100%", height="50%", style={'background-color':'lightblue'})
+        self.append([gui.VBox(children=[self.spin_red,self.slide_red], width="33%", height="100%"), 
+                    gui.VBox(children=[self.spin_green,self.slide_green], width="33%", height="100%"), 
+                    gui.VBox(children=[self.spin_blue,self.slide_blue], width="33%", height="100%")])
+
+        self.slide_red.onchange.do(self.onchange)
+        self.slide_green.onchange.do(self.onchange)
+        self.slide_blue.onchange.do(self.onchange)
+
+        self.spin_red.onchange.do(self.onchange)
+        self.spin_green.onchange.do(self.onchange)
+        self.spin_blue.onchange.do(self.onchange)
+
+    def to_str(self):
+        return "rgb(%s,%s,%s)"%(self.slide_red.get_value(), self.slide_green.get_value(), self.slide_blue.get_value())
+
+    def from_str(self, value_str):
+        print("color:", value_str)
+        components = []
+        if value_str is None or '(' not in value_str or ')' not in value_str:
+            components = [0,0,0]
+        components = value_str[value_str.index('(')+1:value_str.index(')')].split(',')
+        self.slide_red.set_value(components[0])
+        self.slide_green.set_value(components[1])
+        self.slide_blue.set_value(components[2])
+        
+        self.spin_red.set_value(self.slide_red.get_value())
+        self.spin_green.set_value(self.slide_green.get_value())
+        self.spin_blue.set_value(self.slide_blue.get_value())
+
+    @gui.decorate_event
+    def onchange(self, widget, new_value):
+        if type(widget) == gui.SpinBox:
+            self.slide_red.set_value(self.spin_red.get_value())
+            self.slide_green.set_value(self.spin_green.get_value())
+            self.slide_blue.set_value(self.spin_blue.get_value())
+        else:
+            self.spin_red.set_value(self.slide_red.get_value())
+            self.spin_green.set_value(self.slide_green.get_value())
+            self.spin_blue.set_value(self.slide_blue.get_value())
+        print("color changed")
+        return (self.to_str(),)
+
+    def set_value(self, value):
+        self.from_str(value)
+
+
 class UrlPathInput(gui.Container, gui.EventSource):
     def __init__(self, appInstance, **kwargs):
         super(UrlPathInput, self).__init__(**kwargs)
@@ -813,7 +872,7 @@ class UrlPathInput(gui.Container, gui.EventSource):
         self.append(self.txtInput)
 
         self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
-        self.btFileFolderSelection.style.update({'background-repeat':'round',
+        self.btFileFolderSelection.style.update({'background-repeat':'no-repeat',
             'background-image':"url('/res:folder.png')",
             'background-color':'transparent'})
         self.append(self.btFileFolderSelection)
@@ -1030,30 +1089,31 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         #self.label.style['outline'] = '1px solid lightgray'
 
         self.inputWidget = None
+        default_width = "50%"
+        default_height = "22px"
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
         if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size'):
             if attributeDict['type'] == bool:
-                self.inputWidget = gui.CheckBox('checked')
+                self.inputWidget = gui.CheckBox('checked', width=default_width, height=default_height)
             elif attributeDict['type'] == int:
-                self.inputWidget = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
+                self.inputWidget = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
             elif attributeDict['type'] == float:
-                self.inputWidget = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'])
+                self.inputWidget = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
             elif attributeDict['type'] == gui.ColorPicker.__name__:
-                self.inputWidget = gui.ColorPicker()
+                self.inputWidget = ColorInput(width=default_width, height="60px")
             elif attributeDict['type'] == gui.DropDown.__name__:
-                self.inputWidget = gui.DropDown()
+                self.inputWidget = gui.DropDown(width=default_width, height=default_height)
                 for value in attributeDict['additional_data']['possible_values']:
                     self.inputWidget.append(gui.DropDownItem(value),value)
             elif attributeDict['type'] == 'url_editor':
-                self.inputWidget = UrlPathInput(appInstance)
+                self.inputWidget = UrlPathInput(appInstance, width=default_width, height="60px")
             elif attributeDict['type'] == 'css_size':
-                self.inputWidget = CssSizeInput(appInstance)
+                self.inputWidget = CssSizeInput(appInstance, width=default_width, height=default_height)
 
         else: #default editor is string
-            self.inputWidget = gui.TextInput()
+            self.inputWidget = gui.TextInput(width=default_width, height=default_height)
 
         self.inputWidget.onchange.do(self.on_attribute_changed)
-        self.inputWidget.set_size('50%','22px')
         self.inputWidget.attributes['title'] = attributeDict['description']
         #self.inputWidget.style['text-align'] = 'center'
         

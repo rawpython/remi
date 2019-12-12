@@ -492,21 +492,21 @@ input[type='range']:focus:not(:active)::-moz-range-thumb {
 input[type='range']:active::-webkit-slider-thumb {
     background-image: none;
     background: rgb(2, 70, 147);
-    -webkit-transform: scale(1.5);
-    transform: scale(1.5)
+    /*-webkit-transform: scale(1.5);*/
+    /*transform: scale(1.5)*/
 }
 input[type='range']:active::-moz-range-thumb {
     background-image: none;
     background: rgb(2, 70, 147);
-    transform: scale(1.5)
+    /*transform: scale(1.5)*/
 }
 input[type='range']::-ms-thumb {
-    width: 32px;
-    height: 32px;
+    width: 15px;
+    height: 15px;
     border: none;
     border-radius: 50%;
     background: rgb(2, 70, 147);
-    transform: scale(.375);
+    /*transform: scale(.375);*/
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1);
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1), -webkit-transform .18s cubic-bezier(.4, 0, .2, 1)
 }
@@ -516,19 +516,19 @@ input[type='range']:focus:not(:active)::-ms-thumb {
 }
 input[type='range']:active::-ms-thumb {
     background: rgb(2, 70, 147);
-    transform: scale(.5625)
+    /*transform: scale(.5625)*/
 }
 input[type='range']:disabled:focus::-webkit-slider-thumb,
 input[type='range']:disabled:active::-webkit-slider-thumb,
 input[type='range']:disabled::-webkit-slider-thumb {
     -webkit-transform: scale(.667);
-    transform: scale(.667);
+    /*transform: scale(.667);*/
     background: rgba(0, 0, 0, .26)
 }
 input[type='range']:disabled:focus::-moz-range-thumb,
 input[type='range']:disabled:active::-moz-range-thumb,
 input[type='range']:disabled::-moz-range-thumb {
-    transform: scale(.667);
+    /*transform: scale(.667);*/
     background: rgba(0, 0, 0, .26)
 }
 #loading {
