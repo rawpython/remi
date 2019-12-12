@@ -117,6 +117,44 @@ class ToolBar(gui.Container):
         self.append(icon)
 
 
+class ClassEventConnectorEditor(gui.ClassEventConnector):
+    """ This class allows to manage the events. Decorating a method with *decorate_event* decorator
+        The method gets the __is_event flag. At runtime, the methods that has this flag gets replaced
+        by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
+        and after that the listener method is called too.
+    """
+    editor_listener_callback = None #this is the event listener setup by the editor that will receive the events first
+
+    def do(self, callback, *userdata, **kwuserdata):
+        """ The callback and userdata gets stored, and if there is some javascript to add
+            the js code is appended as attribute for the event source
+        """
+        if hasattr(self.event_method_bound, '_js_code'):
+            self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
+                'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
+        self.callback = callback
+        self.userdata = userdata
+        self.kwuserdata = kwuserdata
+
+    def __call__(self, *args, **kwargs):
+        #here the event method gets called
+        callback_params =  self.event_method_bound(*args, **kwargs)
+
+        if not self.editor_listener_callback is None:
+            self.editor_listener_callback(self.event_source_instance, *callback_params, **self.kwuserdata)
+
+        if not self.callback:
+            return callback_params
+        if not callback_params:
+            callback_params = self.userdata
+        else:
+            callback_params = callback_params + self.userdata
+
+        #here the listener gets called, passing as parameters the return values of the event method
+        # plus the userdata parameters
+        return self.callback(self.event_source_instance, *callback_params, **self.kwuserdata)
+
+
 class SignalConnection(gui.HBox):
     def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
         super(SignalConnection, self).__init__(**kwargs)
@@ -145,20 +183,15 @@ class SignalConnection(gui.HBox):
             ddi = gui.DropDownItem(w.identifier)
             ddi.listenerInstance = w
             self.dropdownListeners.append(ddi)
-        if hasattr(self.eventConnectionFunc, 'callback_copy'): #if the callback is not None, and so there is a listener
-            connectedListenerName = ""
-            if type(eventConnectionFunc.callback_copy) == gui.ClassEventConnector:
-                connectedListenerName = eventConnectionFunc.callback_copy.event_method_bound.__self__.identifier
-            else: #type = types.MethodType #instancemethod
-                connectedListenerName = eventConnectionFunc.callback_copy.__self__.identifier
-            connectedListenerFunction = None
-            if type(eventConnectionFunc.callback_copy) == gui.ClassEventConnector:
-                connectedListenerFunction = eventConnectionFunc.callback_copy.event_method_bound
-            else: #type = types.MethodType #instancemethod
-                connectedListenerFunction = eventConnectionFunc.callback_copy
-            self.dropdownListeners.select_by_value( connectedListenerName )
-            #this to automatically populate the listener methods dropdown
+
+        if not self.eventConnectionFunc.callback is None:
             try:
+                connectedListenerName = eventConnectionFunc.callback.__self__.identifier
+                connectedListenerFunction = eventConnectionFunc.callback
+                
+                self.dropdownListeners.select_by_value( connectedListenerName )
+                #this to automatically populate the listener methods dropdown
+                
                 self.on_listener_selection(self.dropdownListeners, connectedListenerName)
                 print("connected function name:"+connectedListenerFunction.__name__)
                 self.dropdownMethods.select_by_value(connectedListenerFunction.__name__ )
@@ -177,7 +210,7 @@ class SignalConnection(gui.HBox):
             l = []
             func_members = inspect.getmembers(listener)#, inspect.ismethod)
             for (name, value) in func_members:
-                if type(value) == gui.ClassEventConnector:
+                if issubclass(type(value), gui.ClassEventConnector):
                     value = value.event_method_bound
                 if name not in ['__init__', 'main', 'idle', 'construct_ui'] and type(value) == types.MethodType:
                     ddi = gui.DropDownItem(name)
@@ -190,7 +223,6 @@ class SignalConnection(gui.HBox):
             self.dropdownMethods.append(ddi)
 
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
-            #listener.__class__.fakeListenerFunc = fakeListenerFunc
             if listener.attributes['editor_newclass'] == "True":
                 custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.identifier
                 setattr(listener, custom_listener_name, types.MethodType(copy_func(fakeListenerFunc), listener))
@@ -207,10 +239,8 @@ class SignalConnection(gui.HBox):
 
     def disconnect(self):
         #the listener is canceled when the user selects None
-        back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
         getattr(self.refWidget, self.eventConnectionFuncName).do(None)
-        delattr(getattr(self.refWidget, self.eventConnectionFuncName),"callback_copy")# = getattr(self.refWidget, self.eventConnectionFuncName).callback
-        getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
+        #getattr(self.refWidget, self.eventConnectionFuncName).editor_listener_callback = None
 
     def on_connection(self, widget, dropDownValue):
         if self.dropdownMethods.get_value()=='None':
@@ -218,12 +248,8 @@ class SignalConnection(gui.HBox):
             return
 
         listener = self.dropdownMethods._selected_item.listenerInstance
-        #listener.attributes['editor_newclass'] = "True"
-        print("Event: " + self.eventConnectionFuncName + " signal connection to: " + listener.identifier + "." + self.dropdownMethods._selected_item.listenerFunction.__name__ + "   from:" + self.refWidget.identifier)
-        back_callback = getattr(self.refWidget, self.eventConnectionFuncName).callback
         getattr(self.refWidget, self.eventConnectionFuncName).do(self.dropdownMethods._selected_item.listenerFunction)
-        getattr(self.refWidget, self.eventConnectionFuncName).callback_copy = getattr(self.refWidget, self.eventConnectionFuncName).callback
-        getattr(self.refWidget, self.eventConnectionFuncName).callback = back_callback
+
 
 def copy_func(f):
     """Based on https://stackoverflow.com/questions/13503079/how-to-create-a-copy-of-a-python-function"""
@@ -276,13 +302,13 @@ class SignalConnectionManager(gui.Container):
         #isclass instead of ismethod because event methods are replaced with ClassEventConnector
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
             #if the member is decorated by decorate_set_on_listener and the function is referred to this event
-            if hasattr(setOnEventListenerFunc, '_event_info'):
+            if issubclass(type(setOnEventListenerFunc), gui.ClassEventConnector):
                 self.container.append( SignalConnection(widget, 
                     self.listeners_list, 
                     setOnEventListenerFuncname, 
                     setOnEventListenerFunc, 
                     width='100%') )
-                    
+
         self.append(self.container, 'container')
 
 
