@@ -49,8 +49,8 @@ class OpencvWidget(object):
         return ()
 
 
-class OpencvImRead(gui.Image, OpencvWidget):
-    """ OpencvImRead widget.
+class OpencvImage(gui.Image, OpencvWidget):
+    """ OpencvImage widget.
         Allows to read an image from file.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
@@ -61,28 +61,18 @@ class OpencvImRead(gui.Image, OpencvWidget):
     default_style = {'position':'absolute','left':'10px','top':'10px'}
     image_source = None   #the linked widget instance, get updated on image listener
 
-    @property
-    @gui.editor_attribute_decorator("WidgetSpecific",'''Image local filename''', str, {})
-    def filename(self): return self.__filename
-    @filename.setter
-    def filename(self, value): 
-        self.__filename = value
-        if len(value)>0:
-            self.set_image_data(cv2.imread(value, cv2.IMREAD_COLOR))
-
     def __init__(self, filename='', *args, **kwargs):    
         self.default_style.update(kwargs.get('style',{}))
         kwargs['style'] = self.default_style
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','200px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','180px'))
-        super(OpencvImRead, self).__init__("", *args, **kwargs)
+        super(OpencvImage, self).__init__(filename, *args, **kwargs)
         OpencvWidget._setup(self)
-        self.filename = filename
 
     def _need_update(self, emitter=None):
         #overriding this method allows to correct the image url that gets updated by the editor
         gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
-        super(OpencvImRead, self)._need_update(emitter)
+        super(OpencvImage, self)._need_update(emitter)
 
     def on_new_image_listener(self, emitter):
         if emitter.img is None:
@@ -139,7 +129,28 @@ class OpencvImRead(gui.Image, OpencvWidget):
         return None, None
 
 
-class OpencvVideo(OpencvImRead):
+class OpencvImRead(OpencvImage, OpencvWidget):
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Image local filename''', str, {})
+    def filename(self): return self.__filename
+    @filename.setter
+    def filename(self, value): 
+        self.__filename = value
+        if len(value)>0:
+            self.set_image_data(cv2.imread(value, cv2.IMREAD_COLOR))
+    
+    def __init__(self, filename='', *args, **kwargs):    
+        self.default_style.update(kwargs.get('style',{}))
+        kwargs['style'] = self.default_style
+        kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','200px'))
+        kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','180px'))
+        super(OpencvImRead, self).__init__("", *args, **kwargs)
+        OpencvWidget._setup(self)
+        self.filename = filename
+
+
+class OpencvVideo(OpencvImage):
     """ OpencvVideo widget.
         Opens a video source and dispatches the image frame by generating on_new_image event.
         The event on_new_image can be connected to other Opencv widgets for further processing
@@ -227,7 +238,7 @@ class OpencvVideo(OpencvImRead):
         return None, None
 
 
-class OpencvCrop(OpencvImRead):
+class OpencvCrop(OpencvImage):
     """ OpencvCrop widget.
         Allows to crop an image.
         Receives an image on on_new_image_listener.
@@ -273,7 +284,7 @@ class OpencvCrop(OpencvImRead):
         self.set_image_data(self.img)
 
 
-class OpencvThreshold(OpencvImRead):
+class OpencvThreshold(OpencvImage):
     """ OpencvThreshold widget.
         Allows to threashold an image.
         Receives an image on on_new_image_listener.
@@ -302,7 +313,7 @@ class OpencvThreshold(OpencvImRead):
         self.set_image_data(self.img)
         
 '''
-class OpencvSimpleBlobDetector(OpencvImRead):
+class OpencvSimpleBlobDetector(OpencvImage):
     """ OpencvSimpleBlobDetector widget.
         Allows to get blobs in an image.
         Receives an image on on_new_image_listener.
@@ -337,7 +348,7 @@ class OpencvSimpleBlobDetector(OpencvImRead):
             cv2.circle(img, (int(k.pt[0]), int(k.pt[1])), 20, (255,0,0), 5)
 '''
 
-class OpencvSplit(OpencvImRead):
+class OpencvSplit(OpencvImage):
     """ OpencvSplit widget.
         Splits the image channels and generates a signal for each one to dispatch the results.
         Receives an image on on_new_image_listener.
@@ -435,7 +446,7 @@ class OpencvSplit(OpencvImRead):
         return ()
 
 
-class OpencvCvtColor(OpencvImRead):
+class OpencvCvtColor(OpencvImage):
     """ OpencvCvtColor widget.
         Convert image colorspace.
         Receives an image on on_new_image_listener.
@@ -464,7 +475,7 @@ class OpencvCvtColor(OpencvImRead):
         self.set_image_data(cv2.cvtColor(emitter.img, code))
 
 
-class OpencvBitwiseNot(OpencvImRead):
+class OpencvBitwiseNot(OpencvImage):
     """ OpencvBitwiseNot widget.
         Allows to invert an image mask.
         Receives an image on on_new_image_listener.
@@ -505,7 +516,7 @@ class BinaryOperator(object):
             print(traceback.format_exc())
 
 
-class OpencvBitwiseAnd(OpencvImRead, BinaryOperator):
+class OpencvBitwiseAnd(OpencvImage, BinaryOperator):
     """ OpencvBitwiseAnd widget.
         Allows to do the AND of two images.
             - Receives the image on on_new_image_1_listener.
@@ -523,7 +534,7 @@ class OpencvBitwiseAnd(OpencvImRead, BinaryOperator):
                 self.set_image_data(cv2.bitwise_and(self.img1, self.img1, mask=self.img2))
 
 
-class OpencvBitwiseOr(OpencvImRead, BinaryOperator):
+class OpencvBitwiseOr(OpencvImage, BinaryOperator):
     """ OpencvBitwiseOr widget.
         Allows to do the OR of two images.
             - Receives the image on on_new_image_1_listener.
@@ -541,7 +552,7 @@ class OpencvBitwiseOr(OpencvImRead, BinaryOperator):
                 self.set_image_data(cv2.bitwise_or(self.img1, self.img1, mask=self.img2))
 
 
-class OpencvAddWeighted(OpencvImRead, BinaryOperator):
+class OpencvAddWeighted(OpencvImage, BinaryOperator):
     """ OpencvAddWeighted widget.
         Allows to do the add_weighted of two images.
             - Receives first image on on_new_image_1_listener.
@@ -581,7 +592,7 @@ class OpencvAddWeighted(OpencvImRead, BinaryOperator):
                 self.set_image_data(cv2.addWeighted(self.img1, self.__alpha, self.img2, self.__beta, self.__gamma))
 
 
-class OpencvBilateralFilter(OpencvImRead):
+class OpencvBilateralFilter(OpencvImage):
     """ OpencvBilateralFilter widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
@@ -650,7 +661,7 @@ class OpencvBilateralFilter(OpencvImRead):
             print(traceback.format_exc())
 
 
-class OpencvBlurFilter(OpencvImRead):
+class OpencvBlurFilter(OpencvImage):
     """ OpencvBlurFilter widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
@@ -696,7 +707,7 @@ class OpencvBlurFilter(OpencvImRead):
             self.on_new_image_listener(self.image_source)
 
 
-class OpencvDilateFilter(OpencvImRead):
+class OpencvDilateFilter(OpencvImage):
     """ OpencvDilateFilter widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
@@ -777,7 +788,7 @@ class OpencvErodeFilter(OpencvDilateFilter):
             print(traceback.format_exc())
 
 
-class OpencvLaplacianFilter(OpencvImRead):
+class OpencvLaplacianFilter(OpencvImage):
     """ OpencvLaplacianFilter widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
@@ -804,10 +815,9 @@ class OpencvLaplacianFilter(OpencvImRead):
             self.set_image_data(cv2.Laplacian(emitter.img, -1, borderType=border))
         except:
             print(traceback.format_exc())
-            
 
 
-class OpencvCanny(OpencvImRead):
+class OpencvCanny(OpencvImage):
     """ OpencvCanny segmentation widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
@@ -858,19 +868,42 @@ class OpencvCanny(OpencvImRead):
         if hasattr(self, "image_source"):
             self.on_new_image_listener(self.image_source)
 
-'''
+
 #https://docs.opencv.org/3.4/d3/dc0/group__imgproc__shape.html
-class OpencvFindContours(OpencvImRead):
+class OpencvFindContours(OpencvImage):
     """ OpencvFindContours segmentation widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
+    icon = default_icon("FindContours",1.2)
+
+    contours = None     #the contours result of processing
+    hierarchy = None    #the hierarchy result of processing
+
     contour_retrieval_mode = {"RETR_LIST": cv2.RETR_LIST, "RETR_EXTERNAL": cv2.RETR_EXTERNAL, "RETR_CCOMP ": cv2.RETR_CCOMP, "RETR_TREE": cv2.RETR_TREE, "RETR_FLOODFILL": cv2.RETR_FLOODFILL}
     contour_approximation_method = {"CHAIN_APPROX_NONE":cv2.CHAIN_APPROX_NONE, "CHAIN_APPROX_SIMPLE": cv2.CHAIN_APPROX_SIMPLE, "CHAIN_APPROX_TC89_L1": cv2.CHAIN_APPROX_TC89_L1, "CHAIN_APPROX_TC89_KCOS": cv2.CHAIN_APPROX_TC89_KCOS}
-    icon = default_icon("FindContours",1.2)
-    def __init__(self, retrieval_mode, approximation_method, *args, **kwargs):
-        self.retrieval_mode = self.contour_retrieval_mode[retrieval_mode]
-        self.approximation_method = self.contour_approximation_method[approximation_method]
+    
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The contour retrieval mode parameter', 'DropDown', {'possible_values': contour_retrieval_mode.keys()})
+    def retrieval_mode(self): 
+        return self.__retrieval_mode
+    @retrieval_mode.setter
+    def retrieval_mode(self, v): 
+        self.__retrieval_mode = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The contour approximation method parameter', 'DropDown', {'possible_values': contour_approximation_method.keys()})
+    def approximation_method(self): 
+        return self.__approximation_method
+    @approximation_method.setter
+    def approximation_method(self, v): 
+        self.__approximation_method = v
+        self.on_new_image_listener(self.image_source)
+
+    def __init__(self, retrieval_mode=cv2.RETR_LIST, approximation_method=cv2.CHAIN_APPROX_SIMPLE, *args, **kwargs):
+        self.__retrieval_mode = retrieval_mode
+        self.__approximation_method = approximation_method
         super(OpencvFindContours, self).__init__("", *args, **kwargs)
         self.on_new_contours_result.do = self.do_contours_result
 
@@ -879,12 +912,14 @@ class OpencvFindContours(OpencvImRead):
             self.image_source = emitter
             if emitter.img is None:
                 return
+            _retrieval_mode = self.contour_retrieval_mode[self.retrieval_mode] if type(self.retrieval_mode) == str else self.retrieval_mode
+            _approximation_method = self.contour_approximation_method[self.approximation_method] if type(self.approximation_method) == str else self.approximation_method
             major = cv2.__version__.split('.')[0]
             img = emitter.img.copy()
             if major == '3':
-                img, self.contours, self.hierarchy= cv2.findContours(emitter.img.copy(), self.retrieval_mode, self.approximation_method)
+                img, self.contours, self.hierarchy= cv2.findContours(emitter.img.copy(), _retrieval_mode, _approximation_method)
             else:
-                self.contours, self.hierarchy= cv2.findContours(img, self.retrieval_mode, self.approximation_method)
+                self.contours, self.hierarchy= cv2.findContours(img, _retrieval_mode, _approximation_method)
             img = cv2.drawContours(img, self.contours, -1, 255)
             self.set_image_data(img)
             self.on_new_contours_result()
@@ -908,4 +943,3 @@ class OpencvFindContours(OpencvImRead):
     def on_new_contours_result(self):
         return (self.contours, self.hierarchy)
 
-'''
