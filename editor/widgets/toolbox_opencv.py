@@ -61,15 +61,23 @@ class OpencvImRead(gui.Image, OpencvWidget):
     default_style = {'position':'absolute','left':'10px','top':'10px'}
     image_source = None   #the linked widget instance, get updated on image listener
 
-    @gui.decorate_constructor_parameter_types(["file"])
-    def __init__(self, filename, *args, **kwargs):    
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Image local filename''', str, {})
+    def filename(self): return self.__filename
+    @filename.setter
+    def filename(self, value): 
+        self.__filename = value
+        if len(value)>0:
+            self.set_image_data(cv2.imread(value, cv2.IMREAD_COLOR))
+
+    def __init__(self, filename='', *args, **kwargs):    
         self.default_style.update(kwargs.get('style',{}))
         kwargs['style'] = self.default_style
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','200px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','180px'))
         super(OpencvImRead, self).__init__("", *args, **kwargs)
         OpencvWidget._setup(self)
-        self.set_image(filename)
+        self.filename = filename
 
     def _need_update(self, emitter=None):
         #overriding this method allows to correct the image url that gets updated by the editor
@@ -82,7 +90,7 @@ class OpencvImRead(gui.Image, OpencvWidget):
         self.set_image_data(emitter.img)
 
     def set_image(self, filename):
-        self.set_image_data(cv2.imread(filename, cv2.IMREAD_COLOR)) #cv2.IMREAD_GRAYSCALE)#cv2.IMREAD_COLOR)
+        self.filename = filename
 
     def set_image_data(self, img):
         self.img = img
@@ -154,7 +162,6 @@ class OpencvVideo(OpencvImRead):
     @video_source.setter
     def video_source(self, v): self.__video_source = v; self.capture = cv2.VideoCapture(self.__video_source)
 
-    @gui.decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         self.framerate = 10
         self.video_source = 0
@@ -688,7 +695,7 @@ class OpencvBlurFilter(OpencvImRead):
         if hasattr(self, "image_source"):
             self.on_new_image_listener(self.image_source)
 
-''' to be fixed
+
 class OpencvDilateFilter(OpencvImRead):
     """ OpencvDilateFilter widget.
         Receives an image on on_new_image_listener.
@@ -696,37 +703,76 @@ class OpencvDilateFilter(OpencvImRead):
     """
     morph_shape = {"MORPH_RECT": cv2.MORPH_RECT, "MORPH_CROSS": cv2.MORPH_CROSS, "MORPH_ELLIPSE": cv2.MORPH_ELLIPSE}
     icon = default_icon("Dilate")
-    def __init__(self, kernel_morph_shape, kernel_size, iterations, border, *args, **kwargs):
-        self.kernel = cv2.getStructuringElement(self.morph_shape[kernel_morph_shape], (kernel_size, kernel_size))
-        self.iterations = iterations
-        self.border = OpencvBilateralFilter.border_type[border]
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The kernel morph shape', 'DropDown', {'possible_values': morph_shape.keys()})
+    def kernel_morph_shape(self): 
+        return self.__kernel_morph_shape
+    @kernel_morph_shape.setter
+    def kernel_morph_shape(self, v): 
+        self.__kernel_morph_shape = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter kernel_size', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
+    def kernel_size(self): 
+        return self.__kernel_size
+    @kernel_size.setter
+    def kernel_size(self, v): 
+        self.__kernel_size = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter iterations', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
+    def iterations(self): 
+        return self.__iterations
+    @iterations.setter
+    def iterations(self, v): 
+        self.__iterations = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter border parameter', 'DropDown', {'possible_values': OpencvBilateralFilter.border_type.keys()})
+    def border(self): 
+        return self.__border
+    @border.setter
+    def border(self, v): 
+        self.__border = v
+        self.on_new_image_listener(self.image_source)
+
+    def __init__(self, kernel_morph_shape=cv2.MORPH_RECT, kernel_size=2, iterations=1, border=cv2.BORDER_CONSTANT, *args, **kwargs):
+        self.__kernel_morph_shape = kernel_morph_shape
+        self.__kernel_size = kernel_size
+        self.__iterations = iterations
+        self.__border = border
         super(OpencvDilateFilter, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
         try:
             self.image_source = emitter
-            self.set_image_data(cv2.dilate(emitter.img, self.kernel, iterations=self.iterations, borderType=self.border))
+
+            _kernel_morph_shape = self.morph_shape[self.kernel_morph_shape] if type(self.kernel_morph_shape) == str else self.kernel_morph_shape
+            kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
+            border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
+            self.set_image_data(cv2.dilate(emitter.img, kernel, iterations=self.iterations, borderType=border))
         except:
             print(traceback.format_exc())
 
 
-class OpencvErodeFilter(OpencvImRead):
+class OpencvErodeFilter(OpencvDilateFilter):
     """ OpencvErodeFilter widget.
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    morph_shape = {"MORPH_RECT": cv2.MORPH_RECT, "MORPH_CROSS": cv2.MORPH_CROSS, "MORPH_ELLIPSE": cv2.MORPH_ELLIPSE}
     icon = default_icon("Erode")
-    def __init__(self, kernel_morph_shape, kernel_size, iterations, border, *args, **kwargs):
-        self.kernel = cv2.getStructuringElement(self.morph_shape[kernel_morph_shape], (kernel_size, kernel_size))
-        self.iterations = iterations
-        self.border = OpencvBilateralFilter.border_type[border]
-        super(OpencvErodeFilter, self).__init__("", *args, **kwargs)
-
     def on_new_image_listener(self, emitter):
         try:
             self.image_source = emitter
-            self.set_image_data(cv2.erode(emitter.img, self.kernel, iterations=self.iterations, borderType=self.border))
+
+            _kernel_morph_shape = self.morph_shape[self.kernel_morph_shape] if type(self.kernel_morph_shape) == str else self.kernel_morph_shape
+            kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
+            border = OpencvBilateralFilter.border_type[self.border]
+            self.set_image_data(cv2.erode(emitter.img, kernel, iterations=self.iterations, borderType=self.border))
         except:
             print(traceback.format_exc())
 
@@ -737,17 +783,29 @@ class OpencvLaplacianFilter(OpencvImRead):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     icon = default_icon("Laplacian")
-    def __init__(self, border, *args, **kwargs):
-        self.border = OpencvBilateralFilter.border_type[border]
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter border parameter', 'DropDown', {'possible_values': OpencvBilateralFilter.border_type.keys()})
+    def border(self): 
+        return self.__border
+    @border.setter
+    def border(self, v): 
+        self.__border = v
+        self.on_new_image_listener(self.image_source)
+
+    def __init__(self, border=cv2.BORDER_CONSTANT, *args, **kwargs):
+        self.__border = border
         super(OpencvLaplacianFilter, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
         try:
             self.image_source = emitter
-            self.set_image_data(cv2.Laplacian(emitter.img, -1, borderType=self.border))
+            border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
+            self.set_image_data(cv2.Laplacian(emitter.img, -1, borderType=border))
         except:
             print(traceback.format_exc())
             
+
 
 class OpencvCanny(OpencvImRead):
     """ OpencvCanny segmentation widget.
@@ -755,9 +813,28 @@ class OpencvCanny(OpencvImRead):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     icon = default_icon("Canny")
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold1', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
+    def threshold1(self): 
+        return self.__threshold1
+    @threshold1.setter
+    def threshold1(self, v): 
+        self.__threshold1 = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold2', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
+    def threshold2(self): 
+        return self.__threshold2
+    @threshold2.setter
+    def threshold2(self, v): 
+        self.__threshold2 = v
+        self.on_new_image_listener(self.image_source)
+
     def __init__(self, threshold1=80, threshold2=160, *args, **kwargs):
-        self.threshold1 = threshold1
-        self.threshold2 = threshold2
+        self.__threshold1 = threshold1
+        self.__threshold2 = threshold2
         super(OpencvCanny, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
@@ -781,7 +858,7 @@ class OpencvCanny(OpencvImRead):
         if hasattr(self, "image_source"):
             self.on_new_image_listener(self.image_source)
 
-
+'''
 #https://docs.opencv.org/3.4/d3/dc0/group__imgproc__shape.html
 class OpencvFindContours(OpencvImRead):
     """ OpencvFindContours segmentation widget.
@@ -791,7 +868,6 @@ class OpencvFindContours(OpencvImRead):
     contour_retrieval_mode = {"RETR_LIST": cv2.RETR_LIST, "RETR_EXTERNAL": cv2.RETR_EXTERNAL, "RETR_CCOMP ": cv2.RETR_CCOMP, "RETR_TREE": cv2.RETR_TREE, "RETR_FLOODFILL": cv2.RETR_FLOODFILL}
     contour_approximation_method = {"CHAIN_APPROX_NONE":cv2.CHAIN_APPROX_NONE, "CHAIN_APPROX_SIMPLE": cv2.CHAIN_APPROX_SIMPLE, "CHAIN_APPROX_TC89_L1": cv2.CHAIN_APPROX_TC89_L1, "CHAIN_APPROX_TC89_KCOS": cv2.CHAIN_APPROX_TC89_KCOS}
     icon = default_icon("FindContours",1.2)
-    @gui.decorate_constructor_parameter_types([contour_retrieval_mode.keys(), contour_approximation_method.keys()])
     def __init__(self, retrieval_mode, approximation_method, *args, **kwargs):
         self.retrieval_mode = self.contour_retrieval_mode[retrieval_mode]
         self.approximation_method = self.contour_approximation_method[approximation_method]
