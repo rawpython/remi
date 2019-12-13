@@ -479,7 +479,7 @@ class WidgetHelper(gui.HBox):
     def create_instance(self, widget):
         """ Here the widget is allocated
         """
-        self.appInstance.__editor_unique_var_index = 0 if not hasattr(self.appInstance, '__editor_unique_var_index') else self.appInstance__editor_unique_var_index
+        self.appInstance.__editor_unique_var_index = 0 if not hasattr(self.appInstance, '__editor_unique_var_index') else (self.appInstance.__editor_unique_var_index + 1)
         variableName = self.widgetClass.__name__.lower() + str(self.appInstance.__editor_unique_var_index)
         """
         if re.match('(^[a-zA-Z][a-zA-Z0-9_]*)|(^[_][a-zA-Z0-9_]+)', variableName) == None:
@@ -529,18 +529,18 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Label, text="label", width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.ListView, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute', 'border':'1px solid lightgray'})
-        self.add_widget_to_collection(gui.ListItem)
+        self.add_widget_to_collection(gui.ListItem, text='list item')
         self.add_widget_to_collection(gui.DropDown, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.DropDownItem)
+        self.add_widget_to_collection(gui.DropDownItem, text='drop down item')
         self.add_widget_to_collection(gui.Image, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.CheckBoxLabel, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.CheckBoxLabel, text='check box label', width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.CheckBox, width='30px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.SpinBox, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Slider, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.ColorPicker, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Date, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.Link, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.Progress, width='130px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Link, text='link', url='', width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Progress, value=0, _max=100, width='130px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.TabBox, width='200px', height='200px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
@@ -1035,6 +1035,8 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
                     self.inputWidget.append(gui.DropDownItem(value),value)
             elif attributeDict['type'] == 'url_editor':
                 self.inputWidget = UrlPathInput(appInstance, width=default_width, height="60px")
+            elif attributeDict['type'] == 'base64_image':
+                self.inputWidget = Base64ImageInput(appInstance, width=default_width, height="60px")
             elif attributeDict['type'] == 'css_size':
                 self.inputWidget = CssSizeInput(appInstance, width=default_width, height=default_height)
 

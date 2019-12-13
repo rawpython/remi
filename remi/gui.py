@@ -200,21 +200,6 @@ def decorate_set_on_listener(prototype):
     return add_annotation
 
 
-def decorate_constructor_parameter_types(type_list):
-    """ Private decorator for use in the editor.
-        Allows Editor to instantiate widgets.
-
-        Args:
-            params (str): The list of types for the widget
-                constructor method (i.e. "(int, int, str)")
-    """
-    def add_annotation(method):
-        method._constructor_types = type_list
-        return method
-
-    return add_annotation
-
-
 def decorate_explicit_alias_for_listener_registration(method):
     method.__doc__ = """ Registers the listener
                          For backward compatibility
@@ -766,7 +751,6 @@ class Widget(Tag, EventSource):
     @css_position.setter
     def css_position(self, value): self.style['position'] = str(value)
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, style = None, *args, **kwargs):
 
         """
@@ -1186,7 +1170,6 @@ class Container(Widget):
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, children = None, *args, **kwargs):
         """
         Args:
@@ -1680,7 +1663,6 @@ class GridBox(Container):
     @css_grid_gap.setter
     def css_grid_gap(self, value): self.style['grid-gap'] = str(value)
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         super(GridBox, self).__init__(*args, **kwargs)
         self.style.update({'display':'grid'})
@@ -1856,7 +1838,6 @@ class HBox(Container):
     Note: If you would absolute positioning, use the Container instead.
     """
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         super(HBox, self).__init__(*args, **kwargs)
 
@@ -1916,7 +1897,6 @@ class VBox(HBox):
     Note: If you would absolute positioning, use the Container instead.
     """
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         super(VBox, self).__init__(*args, **kwargs)
         self.css_flex_direction = 'column'
@@ -1927,7 +1907,6 @@ class TabBox(VBox):
         Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
         The widget can be a container with other child widgets.
     """
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         super(TabBox, self).__init__(*args, **kwargs)
         self.style.update({'justify-content':'flex-start'})
@@ -2046,7 +2025,6 @@ class Button(Widget, _MixinTextualWidget):
     """The Button widget. Have to be used in conjunction with its event onclick.
         Use Widget.onclick.connect in order to register the listener.
     """
-    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -2063,7 +2041,6 @@ class TextInput(Widget, _MixinTextualWidget):
      retrieve its content with get_text.
     """
 
-    @decorate_constructor_parameter_types([bool, str])
     def __init__(self, single_line=True, hint='', *args, **kwargs):
         """
         Args:
@@ -2186,7 +2163,6 @@ class Label(Container, _MixinTextualWidget):
         function get_text.
     """
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -2214,7 +2190,6 @@ class Progress(Widget):
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
 
-    @decorate_constructor_parameter_types([int, int])
     def __init__(self, value=0, _max=100, *args, **kwargs):
         """
         Args:
@@ -2252,7 +2227,6 @@ class GenericDialog(Container):
         The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
     """
 
-    @decorate_constructor_parameter_types([str, str])
     def __init__(self, title='', message='', *args, **kwargs):
         """
         Args:
@@ -2391,7 +2365,6 @@ class InputDialog(GenericDialog):
     The Cancel button emits the 'cancel_dialog' event. Register the listener to it with set_on_cancel_dialog_listener.
     """
 
-    @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, title='Title', message='Message', initial_value='', *args, **kwargs):
         """
         Args:
@@ -2436,7 +2409,6 @@ class ListView(Container):
     its onselection event. Register a listener with ListView.onselection.connect.
     """
 
-    @decorate_constructor_parameter_types([bool])
     def __init__(self, selectable = True, *args, **kwargs):
         """
         Args:
@@ -2578,7 +2550,6 @@ class ListItem(Widget, _MixinTextualWidget):
     the ListView.
     """
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -2602,7 +2573,6 @@ class DropDown(Container):
     by means of the function DropDown.onchange.connect.
     """
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -2717,8 +2687,7 @@ class DropDown(Container):
 class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
 
-    @decorate_constructor_parameter_types([str])
-    def __init__(self, text, *args, **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             kwargs: See Widget.__init__()
@@ -2736,24 +2705,28 @@ class DropDownItem(Widget, _MixinTextualWidget):
 
 class Image(Widget):
     """image widget."""
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Image data or url''', 'base64_image', {})
+    def attr_src(self): return self.attributes.get('src', '')
+    @attr_src.setter
+    def attr_src(self, value): self.attributes['src'] = str(value)
 
-    @decorate_constructor_parameter_types(["base64"])
-    def __init__(self, filename, *args, **kwargs):
+    def __init__(self, image='', *args, **kwargs):
         """
         Args:
-            filename (str): an url to an image or a base64 data string
+            image (str): an url to an image or a base64 data string
             kwargs: See Widget.__init__()
         """
         super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
-        self.attributes['src'] = filename
+        self.attributes['src'] = image
 
-    def set_image(self, filename):
+    def set_image(self, image):
         """
         Args:
-            filename (str): an url to an image or a base64 data string
+            image (str): an url to an image or a base64 data string
         """
-        self.attributes['src'] = filename
+        self.attributes['src'] = image
 
 
 class Table(Container):
@@ -2761,7 +2734,6 @@ class Table(Container):
     table widget - it will contains TableRow
     """
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -2834,9 +2806,25 @@ class TableWidget(Table):
     Basic table model widget.
     Each item is addressed by stringified integer key in the children dictionary.
     """
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Table colum count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    def column_count(self): return self.__column_count
+    @column_count.setter
+    def column_count(self, value): self.set_column_count(value)
 
-    @decorate_constructor_parameter_types([int, int, bool, bool])
-    def __init__(self, n_rows, n_columns, use_title=True, editable=False, *args, **kwargs):
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Table row count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    def row_count(self): return len(self.children)
+    @row_count.setter
+    def row_count(self, value): self.set_row_count(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Table use title.''', bool, {})
+    def use_title(self): return self.__use_title
+    @use_title.setter
+    def use_title(self, value): self.set_use_title(value)
+
+    def __init__(self, n_rows=2, n_columns=2, use_title=True, editable=False, *args, **kwargs):
         """
         Args:
             use_title (bool): enable title bar. Note that the title bar is
@@ -2848,7 +2836,6 @@ class TableWidget(Table):
         super(TableWidget, self).__init__(*args, **kwargs)
         self._editable = editable
         self.set_use_title(use_title)
-        self._column_count = 0
         self.set_column_count(n_columns)
         self.set_row_count(n_rows)
         self.css_display = 'table'
@@ -2859,12 +2846,12 @@ class TableWidget(Table):
         Args:
             use_title (bool): enable title bar.
         """
-        self._use_title = use_title
+        self.__use_title = use_title
         self._update_first_row()
 
     def _update_first_row(self):
         cl = TableEditableItem if self._editable else TableItem
-        if self._use_title:
+        if self.__use_title:
             cl = TableTitle
 
         if len(self.children) > 0:
@@ -2897,11 +2884,6 @@ class TableWidget(Table):
                 if self.children[row_key].children[item_key] == table_item:
                     return (int(row_key), int(item_key))
         return None
-
-    def column_count(self):
-        """Returns table's columns count.
-        """
-        return self._column_count
 
     def row_count(self):
         """Returns table's rows count (the title is considered as a row).
@@ -2953,7 +2935,7 @@ class TableWidget(Table):
             for row in self.children.values():
                 for i in range(count, current_column_count):
                     row.remove_child(row.children[str(i)])
-        self._column_count = count
+        self.__column_count = count
 
     @decorate_set_on_listener("(self, emitter, item, new_value, row, column)")
     @decorate_event
@@ -2979,7 +2961,6 @@ class TableRow(Container):
     row widget for the Table - it will contains TableItem
     """
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -3022,7 +3003,6 @@ class TableRow(Container):
 class TableEditableItem(Container, _MixinTextualWidget):
     """item widget for the TableRow."""
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -3051,7 +3031,6 @@ class TableEditableItem(Container, _MixinTextualWidget):
 class TableItem(Container, _MixinTextualWidget):
     """item widget for the TableRow."""
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -3066,7 +3045,6 @@ class TableItem(Container, _MixinTextualWidget):
 class TableTitle(TableItem, _MixinTextualWidget):
     """title widget for the table."""
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -3079,7 +3057,6 @@ class TableTitle(TableItem, _MixinTextualWidget):
 
 class Input(Widget):
 
-    @decorate_constructor_parameter_types([str, str])
     def __init__(self, input_type='', default_value='', *args, **kwargs):
         """
         Args:
@@ -3128,7 +3105,6 @@ class Input(Widget):
 
 class CheckBoxLabel(Container):
 
-    @decorate_constructor_parameter_types([str, bool, str])
     def __init__(self, label='', checked=False, user_data='', **kwargs):
         """
         Args:
@@ -3162,7 +3138,6 @@ class CheckBoxLabel(Container):
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
 
-    @decorate_constructor_parameter_types([bool, str])
     def __init__(self, checked=False, user_data='', **kwargs):
         """
         Args:
@@ -3204,8 +3179,7 @@ class SpinBox(Input):
     """
 
     # noinspection PyShadowingBuiltins
-    @decorate_constructor_parameter_types([int, int, int, int])
-    def __init__(self, default_value=100, min_value=100, max_value=5000, step=1, allow_editing=True, **kwargs):
+    def __init__(self, default_value=0, min_value=0, max_value=65535, step=1, allow_editing=True, **kwargs):
         """
         Args:
             default_value (int, float, str):
@@ -3238,8 +3212,7 @@ class SpinBox(Input):
 class Slider(Input):
 
     # noinspection PyShadowingBuiltins
-    @decorate_constructor_parameter_types([str, int, int, int])
-    def __init__(self, default_value='', min=0, max=10000, step=1, **kwargs):
+    def __init__(self, default_value='', min=0, max=65535, step=1, **kwargs):
         """
         Args:
             default_value (str):
@@ -3269,7 +3242,6 @@ class Slider(Input):
 
 class ColorPicker(Input):
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='#995500', **kwargs):
         """
         Args:
@@ -3281,7 +3253,6 @@ class ColorPicker(Input):
 
 class Date(Input):
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, default_value='2015-04-13', **kwargs):
         """
         Args:
@@ -3296,7 +3267,6 @@ class GenericObject(Widget):
     GenericObject widget - allows to show embedded object like pdf,swf..
     """
 
-    @decorate_constructor_parameter_types([str])
     def __init__(self, filename, **kwargs):
         """
         Args:
@@ -3311,7 +3281,6 @@ class GenericObject(Widget):
 class FileFolderNavigator(Container):
     """FileFolderNavigator widget."""
 
-    @decorate_constructor_parameter_types([bool, str, bool, bool])
     def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
         self.set_layout_orientation(Container.LAYOUT_VERTICAL)
@@ -3474,7 +3443,6 @@ class FileFolderNavigator(Container):
 class FileFolderItem(Container):
     """FileFolderItem widget for the FileFolderNavigator"""
 
-    @decorate_constructor_parameter_types([str, bool])
     def __init__(self, text, is_folder=False, **kwargs):
         super(FileFolderItem, self).__init__(**kwargs)
         super(FileFolderItem, self).set_layout_orientation(Container.LAYOUT_HORIZONTAL)
@@ -3530,7 +3498,6 @@ class FileSelectionDialog(GenericDialog):
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
     implementing the "confirm_value" and "cancel_dialog" events."""
 
-    @decorate_constructor_parameter_types([str, str, bool, str, bool, bool])
     def __init__(self, title='File dialog', message='Select files and folders',
                  multiple_selection=True, selection_folder='.',
                  allow_file_selection=True, allow_folder_selection=True, **kwargs):
@@ -3560,7 +3527,6 @@ class FileSelectionDialog(GenericDialog):
 
 class MenuBar(Container):
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -3574,7 +3540,6 @@ class MenuBar(Container):
 class Menu(Container):
     """Menu widget can contain MenuItem."""
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -3587,8 +3552,7 @@ class Menu(Container):
 class MenuItem(Container, _MixinTextualWidget):
     """MenuItem widget can contain other MenuItem."""
 
-    @decorate_constructor_parameter_types([str])
-    def __init__(self, text, *args, **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str):
@@ -3608,7 +3572,6 @@ class MenuItem(Container, _MixinTextualWidget):
 class TreeView(Container):
     """TreeView widget can contain TreeItem."""
 
-    @decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -3621,8 +3584,7 @@ class TreeView(Container):
 class TreeItem(Container, _MixinTextualWidget):
     """TreeItem widget can contain other TreeItem."""
 
-    @decorate_constructor_parameter_types([str])
-    def __init__(self, text, *args, **kwargs):
+    def __init__(self, text='', *args, **kwargs):
         """
         Args:
             text (str):
@@ -3665,7 +3627,6 @@ class FileUploader(Container):
         implements the onsuccess and onfailed events.
     """
 
-    @decorate_constructor_parameter_types([str, bool])
     def __init__(self, savepath='./', multiple_selection_allowed=False, *args, **kwargs):
         super(FileUploader, self).__init__(*args, **kwargs)
         self._savepath = savepath
@@ -3719,7 +3680,6 @@ class FileUploader(Container):
 class FileDownloader(Container, _MixinTextualWidget):
     """FileDownloader widget. Allows to start a file download."""
 
-    @decorate_constructor_parameter_types([str, str, str])
     def __init__(self, text, filename, path_separator='/', *args, **kwargs):
         super(FileDownloader, self).__init__(*args, **kwargs)
         self.type = 'a'
@@ -3738,9 +3698,13 @@ class FileDownloader(Container, _MixinTextualWidget):
 
 
 class Link(Container, _MixinTextualWidget):
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Link url''', str, {})
+    def attr_href(self): return self.attributes.get('href', '')
+    @attr_href.setter
+    def attr_href(self, value): self.attributes['href'] = str(value)
 
-    @decorate_constructor_parameter_types([str, str, bool])
-    def __init__(self, url, text, open_new_window=True, *args, **kwargs):
+    def __init__(self, url='', text='', open_new_window=True, *args, **kwargs):
         super(Link, self).__init__(*args, **kwargs)
         self.type = 'a'
         self.attributes['href'] = url
@@ -3754,8 +3718,30 @@ class Link(Container, _MixinTextualWidget):
 
 class VideoPlayer(Widget):
     # some constants for the events
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Video url''', str, {})
+    def attr_src(self): return self.attributes.get('src', '')
+    @attr_src.setter
+    def attr_src(self, value): self.attributes['src'] = str(value)
 
-    @decorate_constructor_parameter_types([str, str, bool, bool])
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Video poster img''', 'base64_image', {})
+    def attr_poster(self): return self.attributes.get('poster', '')
+    @attr_poster.setter
+    def attr_poster(self, value): self.attributes['poster'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Video autoplay''', bool, {})
+    def attr_autoplay(self): return self.attributes.get('autoplay', '')
+    @attr_autoplay.setter
+    def attr_autoplay(self, value): self.attributes['autoplay'] = str(value).lower()
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Video loop''', bool, {})
+    def attr_loop(self): return self.attributes.get('loop', '')
+    @attr_loop.setter
+    def attr_loop(self, value): self.attributes['loop'] = str(value).lower()
+
     def __init__(self, video, poster=None, autoplay=False, loop=False, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
         self.type = 'video'
@@ -3808,8 +3794,7 @@ class Svg(Container):
     @attr_viewBox.setter
     def attr_viewBox(self, value): self.attributes['viewBox'] = str(value)
 
-    @decorate_constructor_parameter_types([int, int])
-    def __init__(self, width, height, *args, **kwargs):
+    def __init__(self, width=100, height=100, *args, **kwargs):
         """
         Args:
             width (int): the viewBox width in pixel
@@ -3843,7 +3828,7 @@ class _MixinSvgStroke():
     def attr_stroke(self, value): self.attributes['stroke'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
     @attr_stroke_width.setter
     def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
@@ -3852,7 +3837,7 @@ class _MixinSvgStroke():
         """Sets the stroke properties.
 
         Args:
-            width (int): stroke width
+            width (float): stroke width
             color (str): stroke color
         """
         self.attr_stroke = color
@@ -3883,8 +3868,7 @@ class _MixinSvgFill():
 
 class SvgShape(Container, _MixinSvgStroke, _MixinSvgFill):
     """svg shape generic widget. Consists of a position, a fill color and a stroke."""
-    @decorate_constructor_parameter_types([float, float])
-    def __init__(self, x, y, *args, **kwargs):
+    def __init__(self, x=0, y=0, *args, **kwargs):
         """
         Args:
             x (float): the x coordinate
@@ -3906,8 +3890,7 @@ class SvgShape(Container, _MixinSvgStroke, _MixinSvgFill):
 
 
 class SvgGroup(SvgShape):
-    @decorate_constructor_parameter_types([int, int])
-    def __init__(self, x, y, *args, **kwargs):
+    def __init__(self, x=0, y=0, *args, **kwargs):
         super(SvgGroup, self).__init__(x, y, *args, **kwargs)
         self.type = 'g'
 
@@ -3937,8 +3920,7 @@ class SvgRectangle(SvgShape):
     @attr_height.setter
     def attr_height(self, value): self.attributes['height'] = str(value)
 
-    @decorate_constructor_parameter_types([float, float, float, float])
-    def __init__(self, x, y, w, h, *args, **kwargs):
+    def __init__(self, x=0, y=0, w=100, h=100, *args, **kwargs):
         """
         Args:
             x (float): the x coordinate of the top left corner of the rectangle
@@ -3965,9 +3947,14 @@ class SvgRectangle(SvgShape):
 class SvgImage(SvgRectangle):
     """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
+    
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
+    def image_data(self): return self.attributes.get('xlink:href', '')
+    @image_data.setter
+    def image_data(self, value): self.attributes['xlink:href'] = str(value)
 
-    @decorate_constructor_parameter_types([str, float, float, float, float])
-    def __init__(self, filename, x, y, w, h, *args, **kwargs):
+    def __init__(self, filename, x=0, y=0, w=100, h=100, *args, **kwargs):
         """
         Args:
             filename (str): an url to an image
@@ -3980,13 +3967,6 @@ class SvgImage(SvgRectangle):
         super(SvgImage, self).__init__( x, y, w, h, *args, **kwargs)
         self.type = 'image'
         self.set_image(filename)
-
-    def set_image(self, filename):
-        """
-        Args:
-            filename (str): an url to an image or a base64 data string
-        """
-        self.attributes["xlink:href"] = filename
 
 
 class SvgCircle(SvgShape):
@@ -4008,8 +3988,7 @@ class SvgCircle(SvgShape):
     @attr_r.setter
     def attr_r(self, value): self.attributes['r'] = str(value)
 
-    @decorate_constructor_parameter_types([float, float, float])
-    def __init__(self, x, y, radius, *args, **kwargs):
+    def __init__(self, x=0, y=0, radius=50, *args, **kwargs):
         """
         Args:
             x (float): the x center point of the circle
@@ -4065,8 +4044,7 @@ class SvgLine(Widget, _MixinSvgStroke):
     @attr_y2.setter
     def attr_y2(self, value): self.attributes['y2'] = str(value)
 
-    @decorate_constructor_parameter_types([float, float, float, float])
-    def __init__(self, x1, y1, x2, y2, *args, **kwargs):
+    def __init__(self, x1=0, y1=0, x2=50, y2=50, *args, **kwargs):
         super(SvgLine, self).__init__(*args, **kwargs)
         self.set_coords(x1, y1, x2, y2)
         self.type = 'line'
@@ -4085,7 +4063,6 @@ class SvgLine(Widget, _MixinSvgStroke):
 
 
 class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
-    @decorate_constructor_parameter_types([int])
     def __init__(self, _maxlen=None, *args, **kwargs):
         super(SvgPolyline, self).__init__(*args, **kwargs)
         self.attr_fill = 'none'
@@ -4126,8 +4103,7 @@ class SvgText(SvgShape, _MixinTextualWidget):
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
 
-    @decorate_constructor_parameter_types([int, int, str])
-    def __init__(self, x, y, text, *args, **kwargs):
+    def __init__(self, x=10, y=10, text='', *args, **kwargs):
         super(SvgText, self).__init__(x, y, *args, **kwargs)
         self.type = 'text'
         self.set_fill()
@@ -4141,8 +4117,7 @@ class SvgPath(Widget):
     @attr_d.setter
     def attr_d(self, value): self.attributes['d'] = str(value)
 
-    @decorate_constructor_parameter_types([str])
-    def __init__(self, path_value, *args, **kwargs):
+    def __init__(self, path_value='', *args, **kwargs):
         super(SvgPath, self).__init__(*args, **kwargs)
         self.type = 'path'
         self.set_fill()
