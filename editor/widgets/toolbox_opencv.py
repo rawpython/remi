@@ -8,6 +8,10 @@ import time
 
 
 def default_icon(name, view_w=1, view_h=0.6):
+    """
+    A simple function to make a default svg icon for the widgets
+      such icons can be replaced later with a good one
+    """
     icon = gui.Svg(50,30)
     icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
     text = gui.SvgText(0,0,name)
@@ -19,10 +23,6 @@ def default_icon(name, view_w=1, view_h=0.6):
     rect.set_stroke(0.01,'black')
     icon.append([rect, text])
     return icon
-
-def editor_attribute(prop, group, description, _type, additional_data):
-    setattr(prop.fget, "editor_attributes", {'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
-    return prop
 
 
 # noinspection PyUnresolvedReferences
@@ -275,14 +275,11 @@ class OpencvThreshold(OpencvImRead):
     """
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAETSURBVGhD7ZYBDsMgCEV197+zG+m60EwBHXaCvKRZslnhlT/TnFIqr2sbHu/PbdhO+BLpUnymO2fQPIhIe0ccaRwLjIW/QXekW7IA9duKqETakjQrbG2CHHFKe4cVlpzCll5YzEwYzhJ8jSISpiZ4x3RrgqPScNen4xWjSYlJ+8V7LBtpaJKb4siUlxOWiP4C7PzXSGvIcX3jGiJhrqmRB6U9RaoHXIuMNCyUNHauk6wFpOtm0BQebYq7b5asdN8phxYUrzUwS7aHqrBWY+c+rQegjaTGl7B2Y3eIYrh6UyK9Mhfhu6cxC8pj7wl7ojXlmLAnalOGb/pfhA0TkfZOCHsnhL0Twt4JYe+EsHdC2DcpPQHUiTG7/qs9SwAAAABJRU5ErkJggg=="
 
-    threshold = editor_attribute( property( fget=(lambda self: self.__dict__.get('threshold',0)), fset=(lambda self,v: self.__dict__.update({'threshold':int(float(v))}))) , 
-                                    'WidgetSpecific','The threshold value to binarize image', int, {'default':125, 'min':0, 'max':255, 'step':1})
-
     @property
-    @gui.editor_attribute_decorator('WidgetSpecific','The x crop coordinate', int, {'default':0, 'min':0, 'max':65535, 'step':1})
+    @gui.editor_attribute_decorator('WidgetSpecific','The threshold value to binarize image', int, {'default':125, 'min':0, 'max':255, 'step':1})
     def threshold(self): return self.__threshold
     @threshold.setter
-    def threshold(self, v): self.__threshold = v; self.on_new_image_listener(self.image_source)
+    def threshold(self, v): self.__threshold = int(float(v)); self.on_new_image_listener(self.image_source)
 
     @gui.decorate_constructor_parameter_types([])
     def __init__(self, *args, **kwargs):

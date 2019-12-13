@@ -287,7 +287,8 @@ class Project(gui.Container):
             'overflow':'auto',
             'background-color':'rgb(250,248,240)',
             'background-image':"url('/editor_resources:background.png')"})
-        self.attributes['editor_newclass'] = 'True'
+        self.attr_editor = True
+        self.attr_editor_newclass = True
             
     def load(self, ifile, configuration):
         self.ifile = ifile
@@ -352,12 +353,11 @@ class Project(gui.Container):
                         source_filtered_path.remove(v)
                         listener_filtered_path.remove(v)   
                     
-                    if len(source_filtered_path)==0 and event['eventsource'].attributes['editor_newclass'] == 'False':
+                    if len(source_filtered_path)==0 and event['eventsource'].attr_editor_newclass == False:
                         sourcename = event['eventsource'].identifier
 
-                    #if event['eventlistener'].attributes['editor_newclass'] == 'False':
                     #    listenername = event['eventlistener'].identifier
-                    if force or (self.children['root']==widget and not (widget.attributes['editor_newclass'] == 'True')):
+                    if force or (self.children['root']==widget and not (widget.attr_editor_newclass == True)):
                         sourcename = self.children['root'].identifier
                         if self.children['root'].identifier in source_filtered_path:
                             source_filtered_path.remove(self.children['root'].identifier)
@@ -367,10 +367,10 @@ class Project(gui.Container):
 
                     #listener chain
                     listenername = "self"
-                    if force or (self.children['root']==widget and not (widget.attributes['editor_newclass'] == 'True')):
+                    if force or (self.children['root']==widget and not (widget.attr_editor_newclass == True)):
                         if event['eventlistener'] != self:
                             listenername = self.children['root'].identifier
-                    if len(listener_filtered_path)==0 and event['eventlistener'].attributes['editor_newclass'] == 'False':
+                    if len(listener_filtered_path)==0 and event['eventlistener'].attr_editor_newclass == False:
                         listenername = event['eventlistener'].identifier
                     if len(listener_filtered_path)>0:
                         listenername = ("%s.children['" + "'].children['".join(listener_filtered_path) + "']")%listenername
@@ -382,7 +382,7 @@ class Project(gui.Container):
                     if not event['eventlistener'].identifier in self.code_declared_classes:
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
 
-                    if (event['eventlistener'].attributes['editor_newclass'] == 'True'):
+                    if (event['eventlistener'].attr_editor_newclass == True):
                         self.code_declared_classes[event['eventlistener'].identifier] += event['listenerClassFunction']
         return code_nested_listener
 
@@ -406,12 +406,11 @@ class Project(gui.Container):
             return '' #no nested code
             
         widgetVarName = widget.identifier
-        newClass = widget.attributes['editor_newclass'] == 'True'
-        classname =  'CLASS' + widgetVarName if newClass else widget.__class__.__name__
+        classname =  'CLASS' + widgetVarName if widget.attr_editor_newclass else widget.__class__.__name__
         
-        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname, 'editor_constructor': widget.attributes['editor_constructor'], 'editor_instance_id':widget.identifier}
+        code_nested = prototypes.proto_widget_allocation%{'varname': widgetVarName, 'classname': classname}
         
-        code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attr_dict': ','.join('"%s":"%s"'%(key,widget.attributes[key]) for key in widget.attributes.keys() if key not in html_helper.htmlInternallyUsedTags)}
+        #code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attr_dict': ','.join('"%s":"%s"'%(key,widget.attributes[key]) for key in widget.attributes.keys() if key not in html_helper.htmlInternallyUsedTags)}
         #code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
 
         for x, y in inspect.getmembers(widget.__class__):
@@ -420,9 +419,6 @@ class Project(gui.Container):
                 if type(_value)==str:
                     _value = '"%s"'%_value
                 code_nested += prototypes.proto_property_setup%{'varname': widgetVarName, 'property':x, 'value': _value}
-                #if hasattr(y,"fget"):
-                    #if hasattr(y.fget, "editor_attributes"):
-
         
         #for all the methods of this widget
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
@@ -464,7 +460,7 @@ class Project(gui.Container):
                         'listenerfuncname': listenerFunctionName,
                         'listenerClassFunction':listenerClassFunction})
                     
-        if newClass:
+        if widget.attr_editor_newclass:
             widgetVarName = 'self'
                 
         children_code_nested = ''
@@ -475,7 +471,7 @@ class Project(gui.Container):
                 continue
             if not issubclass(child.__class__, gui.Widget):
                 continue
-            if 'editor_tag_type' not in child.attributes.keys():
+            if not child.attr_editor:
                 continue
             child.path_to_this_widget = widget.path_to_this_widget[:]
             children_code_nested += self.repr_widget_for_editor(child)
@@ -483,10 +479,10 @@ class Project(gui.Container):
         
         children_code_nested += self.check_pending_listeners(widget, widgetVarName)        
 
-        if newClass:# and not (classname in self.code_declared_classes.keys()):
+        if widget.attr_editor_newclass:# and not (classname in self.code_declared_classes.keys()):
             if not widget.identifier in self.code_declared_classes:
                 self.code_declared_classes[widget.identifier] = ''
-            self.code_declared_classes[widget.identifier] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.attributes['editor_baseclass'],
+            self.code_declared_classes[widget.identifier] = prototypes.proto_code_class%{'classname': classname, 'superclassname': widget.__class__.__name__,
                                                         'nested_code': children_code_nested } + self.code_declared_classes[widget.identifier]
         else:
             code_nested = code_nested + children_code_nested
@@ -501,7 +497,7 @@ class Project(gui.Container):
                 continue
             if not issubclass(child.__class__, gui.Widget):
                 continue
-            if 'editor_tag_type' not in child.attributes.keys():
+            if not child.attr_editor:
                 continue
             self.prepare_path_to_this_widget(child)
 
@@ -693,7 +689,7 @@ class Editor(App):
         """
         if not issubclass(widget.__class__, gui.Widget):
             return
-        if not 'editor_tag_type' in widget.attributes:
+        if not widget.attr_editor:
             return
 
         #for all the methods of this widget
@@ -781,7 +777,6 @@ class Editor(App):
                 
                 return false;""" % {'evt':self.EVENT_ONDROPPPED}
         self.project.identifier = 'App'
-        self.project.attributes['editor_tag_type'] = 'Project'
         self.project.onkeydown.do(self.onkeydown)
         self.centralContainer.append(self.project, 'project')
         self.project.style['position'] = 'relative'

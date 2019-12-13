@@ -71,7 +71,7 @@ class InstancesTree(gui.TreeView, gui.EventSource):
     def append_instances_from_tree(self, node, parent=None):
         if not hasattr(node, 'attributes'):
             return
-        if not 'editor_tag_type' in node.attributes.keys():
+        if not (hasattr(node, 'attr_editor') and node.attr_editor):
             return
         nodeTreeItem = self.append_instance(node, parent)
         for child in node.children.values():
@@ -223,7 +223,7 @@ class SignalConnection(gui.HBox):
             self.dropdownMethods.append(ddi)
 
             #here I create a custom listener for the specific event and widgets, the user can select this or an existing method
-            if listener.attributes['editor_newclass'] == "True":
+            if listener.attr_editor_newclass:
                 custom_listener_name = self.eventConnectionFuncName + "_" + self.refWidget.identifier
                 setattr(listener, custom_listener_name, types.MethodType(copy_func(fakeListenerFunc), listener))
                 getattr(listener, custom_listener_name).__func__.__name__ = custom_listener_name
@@ -278,7 +278,7 @@ class SignalConnectionManager(gui.Container):
     def build_widget_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
-        if not 'editor_tag_type' in node.attributes.keys():
+        if not (hasattr(node, 'attr_editor') and node.attr_editor):
             return
         self.listeners_list.append(node)
         for child in node.children.values():
@@ -460,68 +460,28 @@ class WidgetHelper(gui.HBox):
 
         self.optional_style_dict = {} #this dictionary will contain optional style attributes that have to be added to the widget once created
 
-        self.onclick.do(self.prompt_new_widget)
+        self.onclick.do(self.create_instance)
 
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
-        if not 'editor_tag_type' in node.attributes.keys():
+        if not (hasattr(node, 'attr_editor') and node.attr_editor):
             return
         self.varname_list.append(node.identifier)
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
 
-    def prompt_new_widget(self, widget):
-        self.varname_list = list()
-
-        self.build_widget_name_list_from_tree(self.appInstance.project)
-
-        self.constructor_parameters_list = self.widgetClass.__init__.__code__.co_varnames[1:] #[1:] removes the self
-        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
-        self.dialog = gui.GenericDialog(title=self.widgetClass.__name__, message='Fill the following parameters list', width='40%')
-        varNameTextInput = gui.TextInput()
-        varNameTextInput.attributes['tabindex'] = '1'
-        varNameTextInput.attributes['autofocus'] = 'autofocus'
-        self.dialog.add_field_with_label('name', 'Variable name', varNameTextInput)
-        #for param in self.constructor_parameters_list:
-        for index in range(0,len(self.widgetClass.__init__._constructor_types)):
-            param = self.constructor_parameters_list[index]
-            _typ = self.widgetClass.__init__._constructor_types[index]
-            note = "" if not hasattr(_typ,"__name__") else ' (%s)'%_typ.__name__
-            editWidget = None
-            if _typ==int:
-                editWidget = gui.SpinBox('0', -65536, 65535)
-            elif _typ==float:
-                editWidget = gui.SpinBox('0.0', -65536, 65535, step=0.0001)
-            elif _typ==bool:
-                editWidget = gui.CheckBox()
-            elif _typ==str:
-                editWidget = gui.TextInput()
-            elif _typ=="base64":
-                editWidget = Base64ImageInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
-            elif _typ=="file":
-                editWidget = FileInput(self.appInstance, width="100%", height="20px", style={'overflow':'visible'})
-            elif type(_typ) in (list, type({}.keys())):
-                if not remi.server.pyLessThan3:
-                    _typ = list(_typ)
-                editWidget = gui.DropDown(children=[gui.DropDownItem(x) for x in _typ], width="100%", height="20px", style={'overflow':'visible'})
-                editWidget.select_by_value(_typ[0])
-            editWidget.attributes['tabindex'] = str(index+2)
-            self.dialog.add_field_with_label(param, param + note, editWidget)
-
-        self.dialog.add_field_with_label("editor_newclass", "Overload base class", gui.CheckBox())
-        self.dialog.confirm_dialog.do(self.on_dialog_confirm)
-        self.dialog.show(self.appInstance)
-
     def on_dropped(self, left, top):
         self.optional_style_dict['left'] = gui.to_pix(left)
         self.optional_style_dict['top'] = gui.to_pix(top)
-        self.prompt_new_widget(None)
+        self.create_instance(None)
 
-    def on_dialog_confirm(self, widget):
+    def create_instance(self, widget):
         """ Here the widget is allocated
         """
-        variableName = str(self.dialog.get_field("name").get_value())
+        self.appInstance.__editor_unique_var_index = 0 if not hasattr(self.appInstance, '__editor_unique_var_index') else self.appInstance__editor_unique_var_index
+        variableName = self.widgetClass.__name__.lower() + str(self.appInstance.__editor_unique_var_index)
+        """
         if re.match('(^[a-zA-Z][a-zA-Z0-9_]*)|(^[_][a-zA-Z0-9_]+)', variableName) == None:
             self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=350,height=120)
             self.errorDialog.show(self.appInstance)
@@ -531,44 +491,12 @@ class WidgetHelper(gui.HBox):
             self.errorDialog = gui.GenericDialog("Error", "The typed variable name is already used. Please specify a new name.", width=350,height=150)
             self.errorDialog.show(self.appInstance)
             return
-
-        param_annotation_dict = ''#self.widgetClass.__init__.__annotations__
-        param_values = []
-        param_for_constructor = []
-        for index in range(0,len(self.widgetClass.__init__._constructor_types)):
-            param = self.constructor_parameters_list[index]
-            _typ = self.widgetClass.__init__._constructor_types[index]
-            if _typ==int:
-                param_for_constructor.append(self.dialog.get_field(param).get_value())
-                param_values.append(int(self.dialog.get_field(param).get_value()))
-            elif _typ==float:
-                param_for_constructor.append(self.dialog.get_field(param).get_value())
-                param_values.append(float(self.dialog.get_field(param).get_value()))
-            elif _typ==bool:
-                param_for_constructor.append(self.dialog.get_field(param).get_value())
-                param_values.append(bool(self.dialog.get_field(param).get_value()))
-            else:#if _typ==str:
-                param_for_constructor.append("""\'%s\'"""%self.dialog.get_field(param).get_value())
-                param_values.append(self.dialog.get_field(param).get_value())
-            #else:
-            #    param_for_constructor.append("""%s"""%self.dialog.get_field(param).get_value())
-
-        print(self.constructor_parameters_list)
-        print(param_values)
-        #constructor = '%s(%s)'%(self.widgetClass.__name__, ','.join(map(lambda v: str(v), param_values)))
-        constructor = '(%s)'%(','.join(map(lambda v: str(v), param_for_constructor)))
+        """
         #here we create and decorate the widget
-        widget = self.widgetClass(*param_values, **self.kwargs_to_widget)
-        widget.attributes.update({'editor_constructor':constructor,
-            'editor_tag_type':'widget',
-            'editor_newclass':'True' if self.dialog.get_field("editor_newclass").get_value() else 'False',
-            'editor_baseclass':widget.__class__.__name__}) #__class__.__bases__[0].__name__
+        widget = self.widgetClass(**self.kwargs_to_widget)
+        widget.attr_editor = True
+        widget.attr_editor_newclass = False
         widget.identifier = variableName
-        #"this.style.cursor='default';this.style['left']=(event.screenX) + 'px'; this.style['top']=(event.screenY) + 'px'; event.preventDefault();return true;"
-        #if not 'position' in widget.style:
-        #    widget.style['position'] = 'absolute'
-        #if not 'display' in widget.style:
-        #    widget.style['display'] = 'block'
 
         for key in self.optional_style_dict:
             widget.style[key] = self.optional_style_dict[key]
@@ -597,9 +525,9 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.VBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Container, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         #self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.Button, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Button, text="button", width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.Label, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(gui.Label, text="label", width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.ListView, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute', 'border':'1px solid lightgray'})
         self.add_widget_to_collection(gui.ListItem)
         self.add_widget_to_collection(gui.DropDown, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})

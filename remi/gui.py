@@ -524,6 +524,18 @@ class Widget(Tag, EventSource):
     EVENT_ONCONTEXTMENU = "oncontextmenu"
     EVENT_ONUPDATE = 'onupdate'
 
+    #@editor_attribute_decorator("Generic",'''Indicates if the widget is created by the editor''', bool, {})
+    @property
+    def attr_editor(self): return self.__dict__.get('__editor', False)
+    @attr_editor.setter
+    def attr_editor(self, value): self.__dict__['__editor'] = value
+
+    @property
+    @editor_attribute_decorator("Generic",'''Defines if to overload the base class''', bool, {})
+    def attr_editor_newclass(self): return self.__dict__.get('__editor_newclass', False)
+    @attr_editor_newclass.setter
+    def attr_editor_newclass(self, value): self.__dict__['__editor_newclass'] = value
+
     @property
     @editor_attribute_decorator("Layout",'''CSS float.''', 'DropDown', {'possible_values': ('none', 'inherit ', 'left', 'right')})
     def css_float(self): return self.style.get('float', None)
@@ -3172,7 +3184,7 @@ class CheckBox(Input):
         self.set_value(value)
         return (value, )
 
-    def set_value(self, checked, update_ui=1):
+    def set_value(self, checked):
         if checked:
             self.attributes['checked'] = 'checked'
         else:

@@ -1,6 +1,3 @@
-#html attributes used internally by the editor
-internally_used_attrbutes = ('id','editor_newclass','editor_constructor','class','editor_varname','editor_tag_type','onclick','ondrop','ondragover','ondragstart')
-
 #main program code prototype
 proto_code_program = """
 # -*- coding: utf-8 -*-
@@ -58,7 +55,7 @@ class %(classname)s(App):
     
 """
 
-proto_widget_allocation = "%(varname)s = %(classname)s%(editor_constructor)s\n        "
+proto_widget_allocation = "%(varname)s = %(classname)s()\n        "
 
 proto_attribute_setup = """%(varname)s.attributes.update({%(attr_dict)s})\n        """
 

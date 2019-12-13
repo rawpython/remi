@@ -51,6 +51,13 @@ except ImportError:
 import cgi
 import weakref
 
+import zlib
+
+
+def gzip_encode(content):
+    gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
+    data = gzip_compress.compress(content) + gzip_compress.flush()
+    return data
 
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
