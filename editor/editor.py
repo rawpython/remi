@@ -736,14 +736,16 @@ class Editor(App):
             if type(child) == str:
                 continue
             self.add_widget_to_editor(child, widget, False)
-        #self.instancesWidget.update(self.project, self.selectedWidget)
-        if root_tree_node:
-            self.on_widget_selection(widget)
+        self.instancesWidget.update(self.project, self.selectedWidget)
+        #if root_tree_node:
+        #    self.on_widget_selection(widget)
     
     def on_instances_widget_selection(self, instancesWidgetItem, selectedWidget):
         self.on_widget_selection(selectedWidget)
     
     def on_widget_selection(self, widget):
+        import time
+        t=time.time()
         self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
         
@@ -753,7 +755,7 @@ class Editor(App):
         parent = self.selectedWidget.get_parent()
         for drag_helper in self.drag_helpers:
             drag_helper.setup(widget, parent)
-        self.instancesWidget.select(self.selectedWidget)
+        #self.instancesWidget.select(self.selectedWidget)
         self.instancesWidget.update(self.project, self.selectedWidget)
         print("selected widget: " + widget.identifier)
         print("selected widget class: " + widget.__class__.__name__)
@@ -762,6 +764,7 @@ class Editor(App):
             self.subContainerLeft.append(self.widgetsCollection, 'widgets_collection')
         else:
             self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container"%self.selectedWidget.__class__.__name__), 'widgets_collection')
+        print(time.time()-t)
 
     def menu_new_clicked(self, widget):
         print('new project')

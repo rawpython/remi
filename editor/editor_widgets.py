@@ -671,6 +671,36 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                 if hasattr(y,"fget"):
                     if hasattr(y.fget, "editor_attributes"):
                         group = y.fget.editor_attributes['group']
+
+
+                        default_width = "50%"
+                        default_height = "22px"
+                        #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
+                        if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size','base64_image'):
+                            if attributeDict['type'] == bool:
+                                self.inputWidget = gui.CheckBox('checked', width=default_width, height=default_height)
+                            elif attributeDict['type'] == int:
+                                self.inputWidget = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
+                            elif attributeDict['type'] == float:
+                                self.inputWidget = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
+                            elif attributeDict['type'] == gui.ColorPicker.__name__:
+                                self.inputWidget = ColorInput(width=default_width, height="60px")
+                            elif attributeDict['type'] == gui.DropDown.__name__:
+                                self.inputWidget = gui.DropDown(width=default_width, height=default_height)
+                                for value in attributeDict['additional_data']['possible_values']:
+                                    self.inputWidget.append(gui.DropDownItem(value),value)
+                            elif attributeDict['type'] == 'url_editor':
+                                self.inputWidget = UrlPathInput(appInstance, width=default_width, height="60px")
+                            elif attributeDict['type'] == 'base64_image':
+                                self.inputWidget = Base64ImageInput(appInstance, width=default_width, height="60px")
+                            elif attributeDict['type'] == 'css_size':
+                                self.inputWidget = CssSizeInput(appInstance, width=default_width, height=default_height)
+
+                        else: #default editor is string
+                            self.inputWidget = gui.TextInput(width=default_width, height=default_height)
+
+
+
                         attributeEditor = EditorAttributeInput(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance, width="100%")
                         attributeEditor.on_attribute_changed.do(self.onattribute_changed)
                         if not group in self.attributeGroups.keys():
@@ -730,6 +760,82 @@ class CssSizeInput(gui.Container, gui.EventSource):
                 pass
         self.numInput.set_value(v)
         self.dropMeasureUnit.set_value(measure_unit)
+
+
+#widget that allows to edit a specific html and css attributes
+#   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
+class BaseEditorAttributeInput(gui.GridBox):
+    """ propertyDef is the property of the class
+    """
+    targetWidget = None     #wodget
+    propertyDef = None      #property
+    attributeName = ''
+    attributeDict = {}
+    removeAttribute = None  #widget
+    label = None            #widget
+    inputWidget = None      #widget
+
+    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, inputWidget, *args, **kwargs):
+        _style = {'display':'block',
+            'overflow':'auto',
+            'margin':'2px',
+            'outline':'1px solid lightgray'}
+        if 'style' in kwargs.keys():
+            kwargs['style'].update(_style)
+        else:
+            kwargs['style'] = _style
+        
+        super(BaseEditorAttributeInput, self).__init__(*args, **kwargs)
+        
+        self.targetWidget = widget
+        self.propertyDef = propertyDef
+        self.attributeName = attributeName
+        self.attributeDict = attributeDict
+
+        self.removeAttribute = gui.Image('/editor_resources:delete.png', width='5%')
+        self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
+        self.removeAttribute.onclick.do(self.on_attribute_remove)
+
+        self.label = gui.Label(attributeName, width='45%', height=22, style={'overflow':'hidden', 'font-size':'13px', 'margin':'0px'})
+        
+        self.inputWidget.onchange.do(self.on_attribute_changed)
+        self.inputWidget.attributes['title'] = attributeDict['description']
+        
+        self.label.attributes['title'] = attributeDict['description']
+        self.append([self.removeAttribute, self.label, self.inputWidget])
+
+        self.set_valid(False)
+
+    def set_valid(self, valid=True):
+        self.label.style['opacity'] = '1.0'
+        if 'display' in self.removeAttribute.style:
+            del self.removeAttribute.style['display']
+        if not valid:
+            self.label.style['opacity'] = '0.5'
+            self.removeAttribute.style['display'] = 'none'
+
+    @gui.decorate_event
+    def on_attribute_remove(self, widget):
+        self.set_valid(False)
+        self.propertyDef.fset(self.targetWidget, None)
+        return (self.targetWidget, self.attributeName)
+
+    def set_from_dict(self, widget):
+        self.inputWidget.set_value('')
+        self.set_valid(False)
+        if hasattr(widget, self.attributeName) and not getattr(widget, self.attributeName) is None:
+            self.set_valid()
+            self.inputWidget.set_value(getattr(widget,self.attributeName))
+
+    def set_value(self, value):
+        self.set_valid(not value is None)
+        self.inputWidget.set_value(value)
+
+    @gui.decorate_event
+    def on_attribute_changed(self, widget, value):
+        self.set_valid()
+        return (self.attributeName, value)
+
 
 
 class ColorInput(gui.HBox, gui.EventSource):
@@ -1003,7 +1109,6 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
     """
     def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance=None, *args, **kwargs):
         super(EditorAttributeInput, self).__init__(*args, **kwargs)
-        gui.EventSource.__init__(self)
         self.targetWidget = widget
         self.propertyDef = propertyDef
         self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)

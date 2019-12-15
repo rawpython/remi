@@ -276,6 +276,9 @@ class Tag(object):
     Tag is the base class of the framework. It represents an element that can be added to the GUI,
     but it is not necessarily graphically representable.
     """
+
+    _already_notified_change = False #this flag is to prevent propagating the _need_update multiple times before a graphical update
+
     def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
         Args:
@@ -360,6 +363,14 @@ class Tag(object):
         local_changed_widgets = {}
         _innerHTML = self.innerHTML(local_changed_widgets)
 
+        if self._already_notified_change:
+            self._already_notified_change = False
+            tmp = dict(self.attributes)
+            if len(self.style):
+                tmp['style'] = jsonize(self.style)
+            self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
+                                                tmp.items())
+
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>',
                                         _innerHTML, '</', self.type, '>'))
@@ -377,11 +388,10 @@ class Tag(object):
     def _need_update(self, emitter=None):
         #if there is an emitter, it means self is the actual changed widget
         if emitter:
-            tmp = dict(self.attributes)
-            if len(self.style):
-                tmp['style'] = jsonize(self.style)
-            self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                                tmp.items())
+            if self._already_notified_change:
+                return
+            self._already_notified_change = True
+            
         if not self.ignore_update:
             if self.get_parent():
                 self.get_parent()._need_update()
@@ -3186,6 +3196,29 @@ class CheckBox(Input):
 class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_value(self): return self.attributes.get('value', None)
+    @attr_value.setter
+    def attr_value(self, value): self.attributes['value'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_min(self): return self.attributes.get('min', None)
+    @attr_min.setter
+    def attr_min(self, value): self.attributes['min'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_max(self): return self.attributes.get('max', None)
+    @attr_max.setter
+    def attr_max(self, value): self.attributes['max'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the spin box.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    def attr_step(self): return self.attributes.get('step', None)
+    @attr_step.setter
+    def attr_step(self, value): self.attributes['step'] = str(value)
 
     # noinspection PyShadowingBuiltins
     def __init__(self, default_value=0, min_value=0, max_value=65535, step=1, allow_editing=True, **kwargs):
