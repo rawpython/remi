@@ -723,6 +723,7 @@ class Editor(App):
     def add_widget_to_editor(self, widget, parent = None, root_tree_node = True):
         if parent == None:
             parent = self.selectedWidget
+        
         self.configure_widget_for_editing(widget)
         #widget.identifier = widget.attributes.get('editor_varname', widget.identifier)
         key = "root" if parent==self.project else widget.identifier
@@ -735,7 +736,9 @@ class Editor(App):
             if type(child) == str:
                 continue
             self.add_widget_to_editor(child, widget, False)
-        self.instancesWidget.update(self.project, self.selectedWidget)
+        #self.instancesWidget.update(self.project, self.selectedWidget)
+        if root_tree_node:
+            self.on_widget_selection(widget)
     
     def on_instances_widget_selection(self, instancesWidgetItem, selectedWidget):
         self.on_widget_selection(selectedWidget)

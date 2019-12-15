@@ -3105,6 +3105,15 @@ class Input(Widget):
 
 class CheckBoxLabel(Container):
 
+    _checkbox = None
+    _label = None
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Text content''', str, {})
+    def text(self): return self._label.get_text()
+    @text.setter
+    def text(self, value): self._label.set_text(value)
+
     def __init__(self, label='', checked=False, user_data='', **kwargs):
         """
         Args:

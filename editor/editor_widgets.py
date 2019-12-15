@@ -479,8 +479,14 @@ class WidgetHelper(gui.HBox):
     def create_instance(self, widget):
         """ Here the widget is allocated
         """
-        self.appInstance.__editor_unique_var_index = 0 if not hasattr(self.appInstance, '__editor_unique_var_index') else (self.appInstance.__editor_unique_var_index + 1)
-        variableName = self.widgetClass.__name__.lower() + str(self.appInstance.__editor_unique_var_index)
+        self.varname_list = []
+        self.build_widget_name_list_from_tree(self.appInstance.project)
+        variableName = ''
+        for i in range(0,1000): #reasonably no more than 1000 widget instances in a project
+            variableName = self.widgetClass.__name__.lower() + str(i)
+            if not variableName in self.varname_list:
+                break
+        
         """
         if re.match('(^[a-zA-Z][a-zA-Z0-9_]*)|(^[_][a-zA-Z0-9_]+)', variableName) == None:
             self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=350,height=120)
@@ -528,7 +534,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.Button, text="button", width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Label, text="label", width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.ListView, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute', 'border':'1px solid lightgray'})
+        self.add_widget_to_collection(gui.ListView, width='100px', height='100px', style={'top':'20px', 'left':'20px', 'position':'absolute', 'border':'1px solid lightgray'})
         self.add_widget_to_collection(gui.ListItem, text='list item')
         self.add_widget_to_collection(gui.DropDown, width='100px', height='30px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.DropDownItem, text='drop down item')
@@ -631,7 +637,7 @@ class EditorAttributes(gui.VBox, gui.EventSource):
         self.infoLabel.style['order'] = '0'
         self.infoLabel.style['-webkit-order'] = '0'
 
-        self.group_orders = {'Generic':'2', 'Geometry':'3', 'WidgetSpecific':'4', 'Background':'5' }
+        self.group_orders = {'Generic':'2', 'WidgetSpecific':'3', 'Geometry':'34', 'Background':'5' }
 
         self.attributesInputs = list()
         #load editable attributes
@@ -1020,7 +1026,7 @@ class EditorAttributeInput(gui.Container, gui.EventSource):
         default_width = "50%"
         default_height = "22px"
         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-        if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size'):
+        if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size','base64_image'):
             if attributeDict['type'] == bool:
                 self.inputWidget = gui.CheckBox('checked', width=default_width, height=default_height)
             elif attributeDict['type'] == int:
