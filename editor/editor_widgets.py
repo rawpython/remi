@@ -20,10 +20,9 @@ import logging
 import types
 
 
-class InstancesTree(gui.TreeView, gui.EventSource):
+class InstancesTree(gui.TreeView):
     def __init__(self, **kwargs):
         super(InstancesTree, self).__init__(**kwargs)
-        gui.EventSource.__init__(self)
 
     def append_instance(self, instance, parent):
         item = gui.TreeItem(instance.identifier)
@@ -312,7 +311,7 @@ class SignalConnectionManager(gui.Container):
         self.append(self.container, 'container')
 
 
-class ProjectConfigurationDialog(gui.GenericDialog, gui.EventSource):
+class ProjectConfigurationDialog(gui.GenericDialog):
     KEY_PRJ_NAME = 'config_project_name'
     KEY_ADDRESS = 'config_address'
     KEY_PORT = 'config_port'
@@ -323,7 +322,6 @@ class ProjectConfigurationDialog(gui.GenericDialog, gui.EventSource):
 
     def __init__(self, title='', message=''):
         super(ProjectConfigurationDialog, self).__init__('Project Configuration', 'Here are the configuration options of the project.', width=500)
-        gui.EventSource.__init__(self)
         #standard configuration
         self.configDict = {}
 
@@ -386,13 +384,12 @@ class EditorFileSelectionDialog(gui.FileSelectionDialog):
         super(EditorFileSelectionDialog, self).show(self.baseAppInstance)
 
 
-class EditorFileSaveDialog(gui.FileSelectionDialog, gui.EventSource):
+class EditorFileSaveDialog(gui.FileSelectionDialog):
     def __init__(self, title='File dialog', message='Select files and folders',
                 multiple_selection=True, selection_folder='.',
                  allow_file_selection=True, allow_folder_selection=True, baseAppInstance = None):
         super(EditorFileSaveDialog, self).__init__( title, message, multiple_selection, selection_folder,
                  allow_file_selection, allow_folder_selection)
-        gui.EventSource.__init__(self)
 
         self.baseAppInstance = baseAppInstance
 
@@ -615,12 +612,11 @@ class EditorAttributesGroup(gui.HBox):
                 widget.style['display'] = display
 
 
-class EditorAttributes(gui.VBox, gui.EventSource):
+class EditorAttributes(gui.VBox):
     """ Contains EditorAttributeInput each one of which notify a new value with an event
     """
     def __init__(self, appInstance, **kwargs):
         super(EditorAttributes, self).__init__(**kwargs)
-        gui.EventSource.__init__(self)
         self.appInstance = appInstance
         #self.style['overflow-y'] = 'scroll'
         self.style['justify-content'] = 'flex-start'
@@ -769,7 +765,7 @@ class EditorAttributeInputBase(gui.GridBox):
 
     def set_value(self, value):
         self.set_valid(not value is None)
-        #self.inputWidget.set_value(value)
+        self.inputWidget.set_value(value)
 
     def on_attribute_changed(self, widget, value):
         self.set_valid()
@@ -838,6 +834,7 @@ class EditorAttributeInputCssSize(EditorAttributeInputBase):
                 pass
         self.numInput.set_value(v)
         self.dropMeasureUnit.set_value(measure_unit)
+        self.set_valid(not value is None)
 
 
 class EditorAttributeInputColor(EditorAttributeInputBase):
@@ -900,6 +897,7 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
 
     def set_value(self, value):
         self.from_str(value)
+        self.set_valid(not value is None)
 
 
 class EditorAttributeInputUrl(EditorAttributeInputBase):
@@ -934,6 +932,7 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
 
     def set_value(self, value):
         self.inputWidget.set_value(value)
+        self.set_valid(not value is None)
 
 
 class EditorAttributeInputBase64Image(EditorAttributeInputUrl):
