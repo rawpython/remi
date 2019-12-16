@@ -663,20 +663,20 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                     if hasattr(y.fget, "editor_attributes"):
                         group = y.fget.editor_attributes['group']
 
-
-                        default_width = "50%"
+                        default_width = "100%"
                         default_height = "22px"
                         attributeEditor = None
+                        attributeDict = y.fget.editor_attributes
                         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
                         if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size','base64_image'):
                             if attributeDict['type'] == bool:
                                 chk = gui.CheckBox('checked', width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputGeneric(chk, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == int:
-                                spin = IntSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
+                                spin = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputInt(spin, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == float:
-                                spin = FloatSpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
+                                spin = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict['additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputFloat(spin, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == gui.ColorPicker.__name__:
                                 attributeEditor = EditorAttributeInputColor(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
@@ -686,18 +686,16 @@ class EditorAttributes(gui.VBox, gui.EventSource):
                                     drop.append(gui.DropDownItem(value),value)
                                 attributeEditor = EditorAttributeInputGeneric(drop, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'url_editor':
-                                attributeEditor = EditorAttributeInputColor(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                attributeEditor = EditorAttributeInputUrl(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'base64_image':
                                 attributeEditor = EditorAttributeInputBase64Image(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'css_size':
-                                self.inputWidget = CssSizeInput(appInstance, width=default_width, height=default_height)
+                                attributeEditor = EditorAttributeInputCssSize(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
 
                         else: #default editor is string
-                            self.inputWidget = gui.TextInput(width=default_width, height=default_height)
+                            txt = gui.TextInput(width=default_width, height=default_height)
+                            attributeEditor = EditorAttributeInputGeneric(txt, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
 
-
-
-                        attributeEditor = EditorAttributeInput(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance, width="100%")
                         if not group in self.attributeGroups.keys():
                             groupContainer = EditorAttributesGroup(group, width='100%')
                             groupContainer.css_order = self.group_orders.get(group, str(index))
@@ -714,49 +712,6 @@ class EditorAttributes(gui.VBox, gui.EventSource):
             self.append(w)
 
 
-class CssSizeInput(gui.Container, gui.EventSource):
-    def __init__(self, appInstance, **kwargs):
-        super(CssSizeInput, self).__init__(**kwargs)
-        gui.EventSource.__init__(self)
-        self.appInstance = appInstance
-        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
-        self.style['display'] = 'block'
-        self.style['overflow'] = 'hidden'
-
-        self.numInput = gui.SpinBox('0',-999999999, 999999999, 1, width='60%', height='100%')
-        self.numInput.onchange.do(self.onchange)
-        self.numInput.style['text-align'] = 'right'
-        self.append(self.numInput)
-
-        self.dropMeasureUnit = gui.DropDown(width='40%', height='100%')
-        self.dropMeasureUnit.append( gui.DropDownItem('px'), 'px' )
-        self.dropMeasureUnit.append( gui.DropDownItem('%'), '%' )
-        self.dropMeasureUnit.select_by_key('px')
-        self.dropMeasureUnit.onchange.do(self.onchange)
-        self.append(self.dropMeasureUnit)
-
-    @gui.decorate_event
-    def onchange(self, widget, new_value):
-        new_size = str(self.numInput.get_value()) + str(self.dropMeasureUnit.get_value())
-        return (new_size,)
-
-    def set_value(self, value):
-        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit
-        """
-        v = 0
-        measure_unit = 'px'
-        try:
-            v = int(float(value.replace('px', '')))
-        except ValueError:
-            try:
-                v = int(float(value.replace('%', '')))
-                measure_unit = '%'
-            except ValueError:
-                pass
-        self.numInput.set_value(v)
-        self.dropMeasureUnit.set_value(measure_unit)
-
-
 #widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
 class EditorAttributeInputBase(gui.GridBox):
@@ -766,14 +721,16 @@ class EditorAttributeInputBase(gui.GridBox):
     propertyDef = None      #property
     attributeName = ''
     attributeDict = {}
+    appInstance = None
     removeAttribute = None  #widget
     label = None            #widget
 
     def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
         _style = {'display':'block',
-            'overflow':'auto',
+            'overflow':'hidden',
             'margin':'2px',
-            'outline':'1px solid lightgray'}
+            'outline':'1px solid lightgray',
+            'width':'100%'}
         if 'style' in kwargs.keys():
             kwargs['style'].update(_style)
         else:
@@ -785,7 +742,7 @@ class EditorAttributeInputBase(gui.GridBox):
         self.propertyDef = propertyDef
         self.attributeName = attributeName
         self.attributeDict = attributeDict
-
+        self.appInstance = appInstance
         self.removeAttribute = gui.Image('/editor_resources:delete.png', width='10px')
         self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
         self.removeAttribute.onclick.do(self.on_attribute_remove)
@@ -823,7 +780,7 @@ class EditorAttributeInputGeneric(EditorAttributeInputBase):
     inputWidget = None
 
     def __init__(self, inputWidget, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
-        super(EditorAttributeInputText, self).__init__(widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+        super(EditorAttributeInputGeneric, self).__init__(widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
         self.inputWidget = inputWidget
         self.inputWidget.onchange.do(self.on_attribute_changed)
         self.inputWidget.attributes['title'] = attributeDict['description']
@@ -844,16 +801,55 @@ class EditorAttributeInputInt(EditorAttributeInputGeneric):
         super(EditorAttributeInputInt, self).on_attribute_changed(self, int(float(value)))
 
 
+class EditorAttributeInputCssSize(EditorAttributeInputBase):
+    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
+        super(EditorAttributeInputCssSize, self).__init__(widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+        self.numInput = gui.SpinBox('0',-999999999, 999999999, 1, width='100%', height='100%')
+        self.numInput.onchange.do(self.onchange)
+        self.numInput.style['text-align'] = 'right'
+
+        self.dropMeasureUnit = gui.DropDown(width='100%', height='100%')
+        self.dropMeasureUnit.append( gui.DropDownItem('px'), 'px' )
+        self.dropMeasureUnit.append( gui.DropDownItem('%'), '%' )
+        self.dropMeasureUnit.select_by_key('px')
+        self.dropMeasureUnit.onchange.do(self.onchange)
+        
+        self.set_from_asciiart("""
+            |del|lbl                   |input           |meas   |
+            """)
+        self.append({'del':self.removeAttribute, 'lbl':self.label, 'input':self.numInput, 'meas':self.dropMeasureUnit})
+
+    def onchange(self, widget, new_value):
+        new_size = str(self.numInput.get_value()) + str(self.dropMeasureUnit.get_value())
+        self.on_attribute_changed(self, new_size)
+
+    def set_value(self, value):
+        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit
+        """
+        v = 0
+        measure_unit = 'px'
+        try:
+            v = int(float(value.replace('px', '')))
+        except ValueError:
+            try:
+                v = int(float(value.replace('%', '')))
+                measure_unit = '%'
+            except ValueError:
+                pass
+        self.numInput.set_value(v)
+        self.dropMeasureUnit.set_value(measure_unit)
+
+
 class EditorAttributeInputColor(EditorAttributeInputBase):
     def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
         super(EditorAttributeInputColor, self).__init__(widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
 
-        self.spin_red = gui.SpinBox(0, 0, 255, 1, height="50%")
-        self.spin_green = gui.SpinBox(0, 0, 255, 1, height="50%")
-        self.spin_blue = gui.SpinBox(0, 0, 255, 1, height="50%")
-        self.slide_red = gui.Slider(0, 0, 255, 1, width="100%", height="50%", style={'background-color':'pink'})
-        self.slide_green = gui.Slider(0, 0, 255, 1, width="100%", height="50%", style={'background-color':'lightgreen'})
-        self.slide_blue = gui.Slider(0, 0, 255, 1, width="100%", height="50%", style={'background-color':'lightblue'})
+        self.spin_red = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
+        self.spin_green = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
+        self.spin_blue = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
+        self.slide_red = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={'background-color':'pink'})
+        self.slide_green = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={'background-color':'lightgreen'})
+        self.slide_blue = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={'background-color':'lightblue'})
         
         self.set_from_asciiart("""
             |del|lbl                   |spin_r  |spin_g  |spin_b  |
@@ -878,6 +874,8 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         if value_str is None or '(' not in value_str or ')' not in value_str:
             components = [0,0,0]
         components = value_str[value_str.index('(')+1:value_str.index(')')].split(',')
+        if len(components)<3:
+            components = [0,0,0]
         self.slide_red.set_value(components[0])
         self.slide_green.set_value(components[1])
         self.slide_blue.set_value(components[2])
@@ -913,7 +911,7 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
         self.inputWidget.onchange.do(self.on_attribute_changed)
         self.inputWidget.attributes['title'] = attributeDict['description']
 
-        self.btFileFolderSelection = gui.Widget(width='20%', height='100%')
+        self.btFileFolderSelection = gui.Widget(width='100%', height='100%')
         self.btFileFolderSelection.style.update({'background-repeat':'no-repeat',
             'background-image':"url('/res:folder.png')",
             'background-color':'transparent'})
@@ -931,11 +929,11 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
-            self.txtInput.set_value("url('/editor_resources:" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
-            return self.on_attribute_changed(None, self.txtInput.get_value())
+            self.inputWidget.set_value("url('/editor_resources:" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
+            return self.on_attribute_changed(None, self.inputWidget.get_value())
 
     def set_value(self, value):
-        self.txtInput.set_value(value)
+        self.inputWidget.set_value(value)
 
 
 class EditorAttributeInputBase64Image(EditorAttributeInputUrl):
