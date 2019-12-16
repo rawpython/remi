@@ -171,7 +171,6 @@ class SignalConnection(gui.HBox):
         self.dropdownMethods.attributes['title'] = """The listener's method who will receive the event. \
         A custom method is selected by default. You can select another method, but you should check the method parameters."""
 
-        self.append([self.label, self.dropdownListeners, self.dropdownMethods])
 
         self.eventConnectionFunc = eventConnectionFunc
         self.eventConnectionFuncName = eventConnectionFuncName
@@ -198,6 +197,8 @@ class SignalConnection(gui.HBox):
                 self.on_connection(None, None)
             except:
                 self.disconnect()
+
+        self.append([self.label, self.dropdownListeners, self.dropdownMethods])
 
     def on_listener_selection(self, widget, dropDownValue):
         self.dropdownMethods.empty()
@@ -587,10 +588,7 @@ class EditorAttributesGroup(gui.HBox):
         super(EditorAttributesGroup, self).__init__(**kwargs)
         self.add_class('.RaisedFrame')
         #self.style['display'] = 'block'
-        self.style['overflow'] = 'visible'
-        self.style['justify-content'] = 'flex-start'
-        self.style['align-items'] = 'flex-start'
-        self.style['flex-wrap'] = 'wrap'
+        self.style.update({'overflow':'visible','justify-content':'flex-start','align-items':'flex-start','flex-wrap':'wrap'})
         self.opened = True
         self.title = gui.Label(title, width='100%')
         self.title.add_class("Title")
@@ -840,7 +838,7 @@ class EditorAttributeInputCssSize(EditorAttributeInputBase):
 class EditorAttributeInputColor(EditorAttributeInputBase):
     def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
         super(EditorAttributeInputColor, self).__init__(widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
-
+        self.css_height = "60px"
         self.spin_red = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
         self.spin_green = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
         self.spin_blue = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
