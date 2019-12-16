@@ -788,12 +788,12 @@ class EditorAttributeInputGeneric(EditorAttributeInputBase):
 
 
 class EditorAttributeInputFloat(EditorAttributeInputGeneric):
-    def on_attribute_changed(self, value):
+    def on_attribute_changed(self, emitter, value):
         super(EditorAttributeInputFloat, self).on_attribute_changed(self, float(value))
 
 
 class EditorAttributeInputInt(EditorAttributeInputGeneric):
-    def on_attribute_changed(self, value):
+    def on_attribute_changed(self, emitter, value):
         super(EditorAttributeInputInt, self).on_attribute_changed(self, int(float(value)))
 
 
