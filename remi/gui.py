@@ -4106,7 +4106,7 @@ class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.coordsX = collections.deque(maxlen=self.__maxlen)
         self.coordsY = collections.deque(maxlen=self.__maxlen)
 
-    def __init__(self, _maxlen=None, *args, **kwargs):
+    def __init__(self, _maxlen=1000, *args, **kwargs):
         self.__maxlen = 0
         super(SvgPolyline, self).__init__(*args, **kwargs)
         self.attr_fill = 'none'
@@ -4152,7 +4152,7 @@ class SvgText(SvgShape, _MixinTextualWidget):
         self.set_text(text)
 
 
-class SvgPath(Widget):
+class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Instructions for SvgPath.''', str, {})
     def attr_d(self): return self.attributes.get('d', None)
