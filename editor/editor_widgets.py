@@ -265,24 +265,18 @@ def fakeListenerFunc(self,*args):
 
 class SignalConnectionManager(gui.Container):
     """ This class allows to interconnect event signals """
-    def __init__(self, **kwargs):
-        super(SignalConnectionManager, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(SignalConnectionManager, self).__init__(*args, **kwargs)
         self.label = gui.Label('Signal connections', width='100%')
         self.label.add_class("DialogTitle")
         self.append(self.label)
-        self.container = gui.VBox(width='100%', height='90%')
-        self.container.style['justify-content'] = 'flex-start'
-        self.container.style['overflow-y'] = 'scroll'
         self.listeners_list = []
 
     def build_widget_list_from_tree(self, node):
-        if not hasattr(node, 'attributes'):
-            return
-        if not (hasattr(node, 'attr_editor') and node.attr_editor):
-            return
         self.listeners_list.append(node)
         for child in node.children.values():
-            self.build_widget_list_from_tree(child)
+            if hasattr(child, 'attributes') and (hasattr(child, 'attr_editor') and child.attr_editor):
+                self.build_widget_list_from_tree(child)
 
     def update(self, widget, widget_tree):
         """ for the selected widget are listed the relative signals
@@ -650,15 +644,15 @@ class EditorAttributes(gui.VBox):
 
         self.targetWidget = widget
 
+        index = 100
+        default_width = "100%"
+        default_height = "22px"
         for x, y in inspect.getmembers(self.targetWidget.__class__):
             if type(y)==property:
-                index = 100
                 if hasattr(y,"fget"):
                     if hasattr(y.fget, "editor_attributes"):
                         group = y.fget.editor_attributes['group']
 
-                        default_width = "100%"
-                        default_height = "22px"
                         attributeEditor = None
                         attributeDict = y.fget.editor_attributes
                         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
@@ -695,12 +689,13 @@ class EditorAttributes(gui.VBox):
                             groupContainer.css_order = self.group_orders.get(group, str(index))
                             index = index + 1
                             self.attributeGroups[group] = groupContainer
-                        self.attributeGroups[group].append(attributeEditor)
-                        self.attributesInputs.append(attributeEditor)
+
                         if getattr(self.targetWidget, x) is None:
                             attributeEditor.set_valid(False)
                         else:
                             attributeEditor.set_value(getattr(self.targetWidget, x))
+                        self.attributeGroups[group].append(attributeEditor)
+                        self.attributesInputs.append(attributeEditor)
 
         for w in self.attributeGroups.values():
             self.append(w)
@@ -779,9 +774,12 @@ class EditorAttributeInputGeneric(EditorAttributeInputBase):
         self.inputWidget.onchange.do(self.on_attribute_changed)
         self.inputWidget.attributes['title'] = attributeDict['description']
 
+        '''
         self.set_from_asciiart("""
             |del|lbl                   |input                  |
             """)
+        '''
+        self.style.update({'grid-template-columns':"6% 46% 48%", 'grid-template-rows':"100%", 'grid-template-areas':"'del lbl input'"})
         self.append({'del':self.removeAttribute, 'lbl':self.label, 'input':self.inputWidget})
 
 
@@ -807,10 +805,12 @@ class EditorAttributeInputCssSize(EditorAttributeInputBase):
         self.dropMeasureUnit.append( gui.DropDownItem('%'), '%' )
         self.dropMeasureUnit.select_by_key('px')
         self.dropMeasureUnit.onchange.do(self.onchange)
-        
+        '''
         self.set_from_asciiart("""
             |del|lbl                   |input           |meas   |
             """)
+        '''
+        self.style.update({'grid-template-columns':"6% 46% 33% 15%", 'grid-template-rows':"100%", 'grid-template-areas':"'del lbl input meas'"})
         self.append({'del':self.removeAttribute, 'lbl':self.label, 'input':self.numInput, 'meas':self.dropMeasureUnit})
 
     def onchange(self, widget, new_value):
@@ -845,11 +845,13 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         self.slide_red = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={'background-color':'pink'})
         self.slide_green = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={'background-color':'lightgreen'})
         self.slide_blue = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={'background-color':'lightblue'})
-        
+        '''
         self.set_from_asciiart("""
             |del|lbl                   |spin_r  |spin_g  |spin_b  |
             |del|lbl                   |slide_r |slide_g |slide_b |
             """)
+        '''
+        self.style.update({'grid-template-columns':"6% 46% 16% 16% 16%", 'grid-template-rows':"50% 50%", 'grid-template-areas':"'del lbl spin_r spin_g spin_b' 'del lbl slide_r slide_g slide_b'"})
         self.append({'del':self.removeAttribute, 'lbl':self.label, 'spin_r':self.spin_red, 'spin_g':self.spin_green, 'spin_b':self.spin_blue, 'slide_r':self.slide_red, 'slide_g':self.slide_green, 'slide_b':self.slide_blue})
 
         self.slide_red.onchange.do(self.onchange)
@@ -913,10 +915,12 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
             'background-image':"url('/res:folder.png')",
             'background-color':'transparent'})
         self.btFileFolderSelection.onclick.do(self.on_file_selection_bt_pressed)
-
+        '''
         self.set_from_asciiart("""
             |del|lbl                   |input                |bt|
             """)
+        '''
+        self.style.update({'grid-template-columns':"6% 46% 33% 15%", 'grid-template-rows':"100%", 'grid-template-areas':"'del lbl input bt'"})
         self.append({'del':self.removeAttribute, 'lbl':self.label, 'input':self.inputWidget, 'bt':self.btFileFolderSelection})
 
     def on_file_selection_bt_pressed(self, widget):

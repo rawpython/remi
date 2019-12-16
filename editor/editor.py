@@ -629,7 +629,7 @@ class Editor(App):
         
         self.attributeEditor = editor_widgets.EditorAttributes(self, width='100%')
         self.attributeEditor.style['overflow'] = 'hide'
-        self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%')
+        self.signalConnectionManager = editor_widgets.SignalConnectionManager(width='100%', height='50%', style={'order':'1'})
         
         self.mainContainer.append([menubar, self.subContainer])
         
@@ -637,7 +637,6 @@ class Editor(App):
         self.subContainerLeft.style['position'] = 'relative'
         self.subContainerLeft.style['left'] = '0px'
         self.widgetsCollection.style['order'] = '0'
-        self.signalConnectionManager.style['order'] = '1'
         self.subContainerLeft.append({'widgets_collection':self.widgetsCollection, 'signal_manager':self.signalConnectionManager})
         self.subContainerLeft.add_class('RaisedFrame')
         
@@ -651,7 +650,7 @@ class Editor(App):
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
         self.instancesWidget.treeView.on_tree_item_selected.do(self.on_instances_widget_selection)
         
-        self.subContainerRight.append([self.instancesWidget, self.attributeEditor])
+        self.subContainerRight.append({'instances_widget':self.instancesWidget, 'attributes_editor':self.attributeEditor})
         
         self.subContainer.append([self.subContainerLeft, self.centralContainer, self.subContainerRight])
         
@@ -681,7 +680,7 @@ class Editor(App):
             drag_helper.set_snap_grid_size(value)
 
     def on_drag_resize_end(self, emitter):
-        self.attributeEditor.set_widget( self.selectedWidget )
+        self.selectedWidget.__dict__['attributes_editor'].set_widget( self.selectedWidget )
 
     def configure_widget_for_editing(self, widget):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
@@ -752,8 +751,15 @@ class Editor(App):
         self.selectedWidget = widget
         
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
-        self.signalConnectionManager.update(self.selectedWidget, self.project)
-        self.attributeEditor.set_widget( self.selectedWidget )
+        if self.selectedWidget.__dict__.get('signal_manager',None) is None:
+            self.selectedWidget.__dict__['signal_manager'] = editor_widgets.SignalConnectionManager(width='100%', height='50%', style={'order':'1'})
+            self.selectedWidget.__dict__['signal_manager'].update( self.selectedWidget, self.project )
+        self.subContainerLeft.append(self.selectedWidget.__dict__['signal_manager'], 'signal_manager')
+        if self.selectedWidget.__dict__.get('attributes_editor',None) is None:
+            self.selectedWidget.__dict__['attributes_editor'] = editor_widgets.EditorAttributes(self, width='100%', style={'overflow':'hide'})
+            self.selectedWidget.__dict__['attributes_editor'].set_widget( self.selectedWidget )
+        self.subContainerRight.append(self.selectedWidget.__dict__['attributes_editor'], 'attributes_editor')
+        
         parent = self.selectedWidget.get_parent()
         for drag_helper in self.drag_helpers:
             drag_helper.setup(widget, parent)
