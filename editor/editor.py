@@ -746,6 +746,8 @@ class Editor(App):
     def on_widget_selection(self, widget):
         import time
         t=time.time()
+        if self.selectedWidget==widget or widget==self.project:
+            return
         self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
         

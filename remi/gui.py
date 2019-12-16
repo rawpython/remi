@@ -277,8 +277,6 @@ class Tag(object):
     but it is not necessarily graphically representable.
     """
 
-    _already_notified_change = False #this flag is to prevent propagating the _need_update multiple times before a graphical update
-
     def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
         Args:
@@ -363,14 +361,6 @@ class Tag(object):
         local_changed_widgets = {}
         _innerHTML = self.innerHTML(local_changed_widgets)
 
-        if self._already_notified_change:
-            self._already_notified_change = False
-            tmp = dict(self.attributes)
-            if len(self.style):
-                tmp['style'] = jsonize(self.style)
-            self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                                tmp.items())
-
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>',
                                         _innerHTML, '</', self.type, '>'))
@@ -388,9 +378,11 @@ class Tag(object):
     def _need_update(self, emitter=None):
         #if there is an emitter, it means self is the actual changed widget
         if emitter:
-            if self._already_notified_change:
-                return
-            self._already_notified_change = True
+            tmp = dict(self.attributes)
+            if len(self.style):
+                tmp['style'] = jsonize(self.style)
+            self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
+                                                tmp.items())
             
         if not self.ignore_update:
             if self.get_parent():
@@ -4105,12 +4097,20 @@ class SvgLine(Widget, _MixinSvgStroke):
 
 
 class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum values count.''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def maxlen(self): return self.__maxlen
+    @maxlen.setter
+    def maxlen(self, value): 
+        self.__maxlen = int(value)
+        self.coordsX = collections.deque(maxlen=self.__maxlen)
+        self.coordsY = collections.deque(maxlen=self.__maxlen)
+
     def __init__(self, _maxlen=None, *args, **kwargs):
+        self.__maxlen = 0
         super(SvgPolyline, self).__init__(*args, **kwargs)
         self.attr_fill = 'none'
         self.type = 'polyline'
-        self.coordsX = collections.deque(maxlen=_maxlen)
-        self.coordsY = collections.deque(maxlen=_maxlen)
         self.maxlen = _maxlen  # no limit
         self.attributes['points'] = ''
         self.attributes['vector-effect'] = 'non-scaling-stroke'

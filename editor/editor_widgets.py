@@ -868,7 +868,8 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         components = []
         if value_str is None or '(' not in value_str or ')' not in value_str:
             components = [0,0,0]
-        components = value_str[value_str.index('(')+1:value_str.index(')')].split(',')
+        else:
+            components = value_str[value_str.index('(')+1:value_str.index(')')].split(',')
         if len(components)<3:
             components = [0,0,0]
         self.slide_red.set_value(components[0])
