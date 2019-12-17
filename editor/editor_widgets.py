@@ -574,7 +574,7 @@ class WidgetCollection(gui.Container):
         self.widgetsContainer.children[group].append( helper )
 
 
-class EditorAttributesGroup(gui.HBox):
+class EditorAttributesGroup(gui.VBox):
     """ Contains a title and widgets. When the title is clicked, the contained widgets are hidden.
         Its scope is to provide a foldable group
     """
@@ -582,26 +582,30 @@ class EditorAttributesGroup(gui.HBox):
         super(EditorAttributesGroup, self).__init__(**kwargs)
         self.add_class('.RaisedFrame')
         #self.style['display'] = 'block'
-        self.style.update({'overflow':'visible','justify-content':'flex-start','align-items':'flex-start','flex-wrap':'wrap'})
+        self.container = gui.HBox(width="100%", style={'overflow':'visible','justify-content':'flex-start','align-items':'flex-start','flex-wrap':'wrap'})
         self.opened = True
         self.title = gui.Label(title, width='100%')
         self.title.add_class("Title")
-        self.title.style.update({'padding-left':'32px',
+        self.title.style.update({'text-indent':'25px',
             'background-image':"url('/editor_resources:minus.png')",
             'background-repeat':'no-repeat',
             'background-position':'5px',
             'border-top':'3px solid lightgray'})
         self.title.onclick.do(self.openClose)
-        self.append(self.title)
+        super(EditorAttributesGroup, self).append(self.title)
+        super(EditorAttributesGroup, self).append(self.container)
 
     def openClose(self, widget):
         self.opened = not self.opened
         backgroundImage = "url('/editor_resources:minus.png')" if self.opened else "url('/editor_resources:plus.png')"
         self.title.style['background-image'] = backgroundImage
-        display = 'block' if self.opened else 'none'
-        for widget in self.children.values():
-            if widget!=self.title and type(widget)!=str:
-                widget.style['display'] = display
+        self.container.css_display = 'flex' if self.opened else 'none'
+        
+    def append(self, widget, key=''):
+        return self.container.append(widget, key)
+    
+    def remove_child(self, widget):
+        return self.container.remove_child(widget)
 
 
 class EditorAttributes(gui.VBox):

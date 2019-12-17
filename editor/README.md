@@ -8,7 +8,7 @@ What is Remi?
 
 [![Join the chat at https://gitter.im/dddomodossola/remi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dddomodossola/remi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-RemI is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
+RemI is a easy to use GUI library for Python. It shows in web browser and is accessible remotely. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 [More info at https://github.com/dddomodossola/remi](https://github.com/dddomodossola/remi)
 
 ![Alt text](https://raw.githubusercontent.com/dddomodossola/remi/master/editor/res/preview.png "Editor window")
