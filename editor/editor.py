@@ -556,9 +556,7 @@ class Editor(App):
             drag_helper.update_position()
 
     def main(self):
-        self.mainContainer = gui.Container(width='100%', height='100%', layout_orientation=gui.Container.LAYOUT_VERTICAL)
-        self.mainContainer.style['background-color'] = 'white'
-        self.mainContainer.style['border'] = 'none'
+        self.mainContainer = gui.Container(width='100%', height='100%', layout_orientation=gui.Container.LAYOUT_VERTICAL, style={'background-color':'white', 'border':'none', 'overflow':'hidden'})
         
         menubar = gui.MenuBar(height='4%')
         menu = gui.Menu(width='100%',height='100%')
@@ -621,7 +619,7 @@ class Editor(App):
         
         self.subContainer = gui.HBox(width='100%', height='96%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
         self.subContainer.style.update({'position':'relative',
-            'overflow':'auto',
+            'overflow':'hidden',
             'align-items':'stretch'})
                 
         #here are contained the widgets
@@ -646,7 +644,7 @@ class Editor(App):
         self.centralContainer.append(self.toolbar)
         
         self.subContainerRight = gui.Container(width='24%', height='100%')
-        self.subContainerRight.style.update({'position':'absolute', 'right':'0px', 'overflow':'scroll'})
+        self.subContainerRight.style.update({'position':'absolute', 'right':'0px', 'overflow-y':'auto', 'overflow-x':'hidden'})
         self.subContainerRight.add_class('RaisedFrame')
         
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
