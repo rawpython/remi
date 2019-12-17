@@ -14,6 +14,7 @@ except:
 from .toolbox_scheduling import TimerWidget
 
 try:
-    from .toolbox_siemens import PLCSiemens, ButtonSetResetBit, BitStatusWidget, WordEditWidget
+    from .toolbox_siemens import PLCSiemens, SiemensButton, BitStatusWidget, WordEditWidget
 except:
     print("In order to use Siemens widgets install python-snap7")
+    print(traceback.format_exc())

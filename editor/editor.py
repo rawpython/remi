@@ -545,6 +545,8 @@ class Project(gui.Container):
 class Editor(App):
     EVENT_ONDROPPPED = "on_dropped"
 
+    selectedWidget = None
+
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(Editor, self).__init__(*args, static_file_path={'editor_resources':editor_res_path})
@@ -745,7 +747,14 @@ class Editor(App):
     def on_widget_selection(self, widget):
         import time
         t=time.time()
+
+        if issubclass(widget.__class__, gui.Container) or widget==None:
+            self.subContainerLeft.append(self.widgetsCollection, 'widgets_collection')
+        else:
+            self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container"%self.selectedWidget.__class__.__name__), 'widgets_collection')
+
         if self.selectedWidget==widget or widget==self.project:
+            self.selectedWidget = widget
             return
         self.remove_box_shadow_selected_widget()
         self.selectedWidget = widget
@@ -768,10 +777,7 @@ class Editor(App):
         print("selected widget: " + widget.identifier)
         print("selected widget class: " + widget.__class__.__name__)
         print("is widget Container: " + str(issubclass(self.selectedWidget.__class__, gui.Container)))
-        if issubclass(self.selectedWidget.__class__, gui.Container) or self.selectedWidget==None:
-            self.subContainerLeft.append(self.widgetsCollection, 'widgets_collection')
-        else:
-            self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container"%self.selectedWidget.__class__.__name__), 'widgets_collection')
+        
         print(time.time()-t)
 
     def menu_new_clicked(self, widget):
@@ -794,11 +800,9 @@ class Editor(App):
         self.project.onkeydown.do(self.onkeydown)
         self.centralContainer.append(self.project, 'project')
         self.project.style['position'] = 'relative'
-
         self.tabindex = 0 #incremental number to allow widgets selection
-        self.selectedWidget = self.project
-        self.instancesWidget.update(self.project, self.selectedWidget)
-        self.on_widget_selection(self.selectedWidget)
+        self.selectedWidget = None
+        self.on_widget_selection(self.project)
         for drag_helper in self.drag_helpers:
             drag_helper.setup(None, None)
         if 'root' in self.project.children.keys():

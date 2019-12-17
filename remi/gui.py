@@ -663,6 +663,12 @@ class Widget(Tag, EventSource):
     def css_font_size(self, value): self.style['font-size'] = str(value)
 
     @property
+    @editor_attribute_decorator("Font",'''The line height in pixels''', 'css_size', {})
+    def css_line_height(self): return self.style.get('line-height', None)
+    @css_line_height.setter
+    def css_line_height(self, value): self.style['line-height'] = str(value)
+
+    @property
     @editor_attribute_decorator("Font",'''Style''', 'DropDown', {'possible_values': ('normal', 'italic', 'oblique', 'inherit')})
     def css_font_style(self): return self.style.get('font-style', None)
     @css_font_style.setter
