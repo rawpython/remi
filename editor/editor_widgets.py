@@ -427,9 +427,7 @@ class WidgetHelper(gui.HBox):
         self.appInstance = appInstance
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__()
-        self.style['display'] = 'block'
-        self.style['background-color'] = 'white'
-        
+        self.style.update({'background-color':'white', 'width':"60px", "height":"60px", "justify-content":"center", "align-items":"center"})
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon)==gui.Svg:
                 self.icon = widgetClass.icon
@@ -558,6 +556,9 @@ class WidgetCollection(gui.Container):
             for (classname, classvalue) in classes:
                 if issubclass(classvalue,gui.Widget):
                     self.add_widget_to_collection(classvalue, classvalue.__module__)
+            
+            if len(widgets.load_result)>0:
+                self.appInstance.notification_message("Remi EDITOR", widgets.load_result)
         except:
             logging.getLogger('remi.editor').error('error loading external widgets', exc_info=True)
 
@@ -583,6 +584,7 @@ class EditorAttributesGroup(gui.VBox):
         self.add_class('.RaisedFrame')
         #self.style['display'] = 'block'
         self.container = gui.HBox(width="100%", style={'overflow':'visible','justify-content':'flex-start','align-items':'flex-start','flex-wrap':'wrap'})
+        self.container.css_justify_content = 'flex-start'
         self.opened = True
         self.title = gui.Label(title, width='100%')
         self.title.add_class("Title")
