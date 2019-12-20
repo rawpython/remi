@@ -18,6 +18,7 @@ import inspect
 import re
 import logging
 import types
+import traceback
 
 
 class InstancesTree(gui.TreeView):
@@ -184,8 +185,16 @@ class SignalConnection(gui.HBox):
 
         if not self.eventConnectionFunc.callback is None:
             try:
-                connectedListenerName = eventConnectionFunc.callback.__self__.identifier
-                connectedListenerFunction = eventConnectionFunc.callback
+                connectedListenerName = ''
+                connectedListenerFunction = None
+                print(str(type(eventConnectionFunc.callback)))
+                
+                if issubclass(type(eventConnectionFunc.callback), gui.ClassEventConnector):
+                    connectedListenerName = eventConnectionFunc.callback.event_method_bound.__self__.identifier
+                    connectedListenerFunction = eventConnectionFunc.callback.event_method_bound
+                else:
+                    connectedListenerName = eventConnectionFunc.callback.__self__.identifier
+                    connectedListenerFunction = eventConnectionFunc.callback
                 
                 self.dropdownListeners.select_by_value( connectedListenerName )
                 #this to automatically populate the listener methods dropdown
@@ -196,6 +205,8 @@ class SignalConnection(gui.HBox):
                 #force the connection
                 self.on_connection(None, None)
             except:
+                print(traceback.format_exc())
+                print(dir(eventConnectionFunc.callback))
                 self.disconnect()
 
         self.append([self.label, self.dropdownListeners, self.dropdownMethods])
@@ -210,9 +221,9 @@ class SignalConnection(gui.HBox):
             l = []
             func_members = inspect.getmembers(listener)#, inspect.ismethod)
             for (name, value) in func_members:
-                if issubclass(type(value), gui.ClassEventConnector):
-                    value = value.event_method_bound
-                if name not in ['__init__', 'main', 'idle', 'construct_ui'] and type(value) == types.MethodType:
+                #if issubclass(type(value), gui.ClassEventConnector):
+                #    value = value.event_method_bound
+                if name not in ['__init__', 'main', 'idle', 'construct_ui'] and type(value) == types.MethodType or issubclass(type(value), gui.ClassEventConnector):
                     ddi = gui.DropDownItem(name)
                     ddi.listenerInstance = listener
                     ddi.listenerFunction = value

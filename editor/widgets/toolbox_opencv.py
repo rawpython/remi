@@ -45,7 +45,7 @@ class OpencvWidget(object):
 
     @gui.decorate_set_on_listener("(self, emitter)")
     @gui.decorate_event
-    def on_new_image(self):
+    def on_new_image(self, *args, **kwargs):
         return ()
 
 
