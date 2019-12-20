@@ -133,7 +133,7 @@ class ClassEventConnector(object):
         self.event_method_bound = event_method_bound
         self.callback = None
         self.userdata = None
-        self.kwuserdata = None
+        self.kwuserdata = {}
         self.connect = self.do #for compatibility reasons
 
     def do(self, callback, *userdata, **kwuserdata):
@@ -145,7 +145,8 @@ class ClassEventConnector(object):
                 'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
         self.callback = callback
         self.userdata = userdata
-        self.kwuserdata = kwuserdata
+        if kwuserdata:
+            self.kwuserdata = kwuserdata
 
     def __call__(self, *args, **kwargs):
         #here the event method gets called

@@ -125,17 +125,6 @@ class ClassEventConnectorEditor(gui.ClassEventConnector):
     """
     editor_listener_callback = None #this is the event listener setup by the editor that will receive the events first
 
-    def do(self, callback, *userdata, **kwuserdata):
-        """ The callback and userdata gets stored, and if there is some javascript to add
-            the js code is appended as attribute for the event source
-        """
-        if hasattr(self.event_method_bound, '_js_code'):
-            self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
-                'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
-        self.callback = callback
-        self.userdata = userdata
-        self.kwuserdata = kwuserdata
-
     def __call__(self, *args, **kwargs):
         #here the event method gets called
         callback_params =  self.event_method_bound(*args, **kwargs)

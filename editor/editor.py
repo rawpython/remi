@@ -315,26 +315,7 @@ class Project(gui.Container):
                 setattr(self, m.__name__, types.MethodType( m, self ))
                 print(m.__name__)
         root_widget = app_init_fnc.construct_ui(self)
-        self.override_event_connector(root_widget)
         return root_widget
-
-    def override_event_connector(self, widget):
-        """ Changes the standard event connector with the editor version
-            that allows to redirect events to the editor first
-        """
-        if not hasattr( widget, 'children' ):
-            return #no nested code
-        #for all the methods of this widget
-        for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
-            #if the member is decorated by decorate_set_on_listener
-            if issubclass(type(setOnEventListenerFunc), gui.ClassEventConnector):#hasattr(setOnEventListenerFunc,'callback') and not setOnEventListenerFunc.callback is None:
-                setattr(widget, setOnEventListenerFuncname, editor_widgets.ClassEventConnectorEditor(setOnEventListenerFunc.event_source_instance, setOnEventListenerFunc.event_name, setOnEventListenerFunc.event_method_bound))
-                #if there is a connected callback
-                if setOnEventListenerFunc.callback:
-                    getattr(widget, setOnEventListenerFuncname).do(setOnEventListenerFunc.callback)
-
-        for w in widget.children.values():
-            self.override_event_connector(w)
         
     def check_pending_listeners(self, widget, widgetVarName, force=False):
         code_nested_listener = ''
@@ -692,14 +673,17 @@ class Editor(App):
             return
 
         #for all the methods of this widget
+        
         for (setOnEventListenerFuncname,setOnEventListenerFunc) in inspect.getmembers(widget):
             #if the member is decorated by decorate_set_on_listener
             if hasattr(setOnEventListenerFunc, '_event_info'):
-                setattr(widget, setOnEventListenerFuncname, editor_widgets.ClassEventConnectorEditor(setOnEventListenerFunc.event_source_instance, setOnEventListenerFunc.event_name, setOnEventListenerFunc.event_method_bound))
+                setOnEventListenerFunc.__class__ = editor_widgets.ClassEventConnectorEditor
                 if setOnEventListenerFunc.callback:
                     getattr(widget, setOnEventListenerFuncname).do(setOnEventListenerFunc.callback)
-        if widget.onclick.callback is None:
-            widget.onclick.do(None)
+        
+        #we force a connection, also if back_callback is None, to get the widget selectable
+        back_callback = widget.onclick.callback
+        widget.onclick.do(back_callback)
         widget.onclick.editor_listener_callback = self.on_widget_selection
         
         #setup of the on_dropped function of the widget in order to manage the dragNdrop 
