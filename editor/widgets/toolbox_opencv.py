@@ -132,7 +132,7 @@ class OpencvImage(gui.Image, OpencvWidget):
 class OpencvImRead(OpencvImage, OpencvWidget):
 
     @property
-    @gui.editor_attribute_decorator("WidgetSpecific",'''Image local filename''', str, {})
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Image local filename''', 'file', {})
     def filename(self): return self.__filename
     @filename.setter
     def filename(self, value): 

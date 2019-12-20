@@ -758,10 +758,10 @@ class Editor(App):
         self.selectedWidget = widget
         
         self.selectedWidget.style['box-shadow'] = '0 0 10px rgb(33,150,243)'
-        if self.selectedWidget.__dict__.get('signal_manager',None) is None:
-            self.selectedWidget.__dict__['signal_manager'] = editor_widgets.SignalConnectionManager(width='100%', height='50%', style={'order':'1'})
-            self.selectedWidget.__dict__['signal_manager'].update( self.selectedWidget, self.project )
-        self.subContainerLeft.append(self.selectedWidget.__dict__['signal_manager'], 'signal_manager')
+        #if self.selectedWidget.__dict__.get('signal_manager',None) is None:
+        #    self.selectedWidget.__dict__['signal_manager'] = editor_widgets.SignalConnectionManager(width='100%', height='50%', style={'order':'1'})
+        self.signalConnectionManager.update( self.selectedWidget, self.project )
+        #self.subContainerLeft.append(self.selectedWidget.__dict__['signal_manager'], 'signal_manager')
         if self.selectedWidget.__dict__.get('attributes_editor',None) is None:
             self.selectedWidget.__dict__['attributes_editor'] = editor_widgets.EditorAttributes(self, width='100%', style={'overflow':'hide'})
             self.selectedWidget.__dict__['attributes_editor'].set_widget( self.selectedWidget )

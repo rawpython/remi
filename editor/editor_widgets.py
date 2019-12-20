@@ -557,8 +557,6 @@ class WidgetCollection(gui.Container):
                 if issubclass(classvalue,gui.Widget):
                     self.add_widget_to_collection(classvalue, classvalue.__module__)
             
-            if len(widgets.load_result)>0:
-                self.appInstance.notification_message("Remi EDITOR", widgets.load_result)
         except:
             logging.getLogger('remi.editor').error('error loading external widgets', exc_info=True)
 
@@ -662,7 +660,7 @@ class EditorAttributes(gui.VBox):
                         attributeEditor = None
                         attributeDict = y.fget.editor_attributes
                         #'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-                        if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size','base64_image'):
+                        if attributeDict['type'] in (bool,int,float,gui.ColorPicker.__name__,gui.DropDown.__name__,'url_editor','css_size','base64_image','file'):
                             if attributeDict['type'] == bool:
                                 chk = gui.CheckBox('checked', width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputGeneric(chk, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
@@ -685,6 +683,8 @@ class EditorAttributes(gui.VBox):
                                 attributeEditor = EditorAttributeInputBase64Image(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'css_size':
                                 attributeEditor = EditorAttributeInputCssSize(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                            elif attributeDict['type'] == 'file':
+                                attributeEditor = EditorAttributeInputFile(self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
 
                         else: #default editor is string
                             txt = gui.TextInput(width=default_width, height=default_height)
@@ -950,8 +950,8 @@ class EditorAttributeInputBase64Image(EditorAttributeInputUrl):
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
-            self.txtInput.set_value(gui.load_resource(fileList[0]))
-            return self.onchange(None, self.txtInput.get_value())
+            self.inputWidget.set_value(gui.load_resource(fileList[0]))
+            return self.on_attribute_changed(None, self.inputWidget.get_value())
 
 
 class EditorAttributeInputFile(EditorAttributeInputUrl):
@@ -960,7 +960,7 @@ class EditorAttributeInputFile(EditorAttributeInputUrl):
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList)>0:
-            self.txtInput.set_value(fileList[0].replace("\\","/"))
-            return self.onchange(None, self.txtInput.get_value())
+            self.inputWidget.set_value(fileList[0].replace("\\","/"))
+            return self.on_attribute_changed(None, self.inputWidget.get_value())
 
 
