@@ -132,7 +132,7 @@ class ClassEventConnector(object):
         self.event_name = event_name
         self.event_method_bound = event_method_bound
         self.callback = None
-        self.userdata = None
+        self.userdata = ()
         self.kwuserdata = {}
         self.connect = self.do #for compatibility reasons
 
@@ -144,7 +144,8 @@ class ClassEventConnector(object):
             self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
                 'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
         self.callback = callback
-        self.userdata = userdata
+        if userdata:
+            self.userdata = userdata
         if kwuserdata:
             self.kwuserdata = kwuserdata
 

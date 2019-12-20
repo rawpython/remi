@@ -257,7 +257,8 @@ def copy_func(f):
                            argdefs=f.__defaults__,
                            closure=f.__closure__)
     #g = functools.update_wrapper(g, f)
-    g.__kwdefaults__ = f.__kwdefaults__
+    if hasattr(f, "__kwdefaults__"):
+        g.__kwdefaults__ = f.__kwdefaults__
     return g
 
 def fakeListenerFunc(self,*args):
