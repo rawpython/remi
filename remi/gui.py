@@ -518,102 +518,136 @@ class Widget(Tag, EventSource):
     def attr_editor(self): return self.__dict__.get('__editor', False)
     @attr_editor.setter
     def attr_editor(self, value): self.__dict__['__editor'] = value
+    @attr_editor.deleter
+    def attr_editor(self): del self.__dict__['__editor']
 
     @property
     @editor_attribute_decorator("Generic",'''Defines if to overload the base class''', bool, {})
     def attr_editor_newclass(self): return self.__dict__.get('__editor_newclass', False)
     @attr_editor_newclass.setter
     def attr_editor_newclass(self, value): self.__dict__['__editor_newclass'] = value
+    @attr_editor_newclass.deleter
+    def attr_editor_newclass(self): del self.__dict__['__editor_newclass']
 
     @property
     @editor_attribute_decorator("Layout",'''CSS float.''', 'DropDown', {'possible_values': ('none', 'inherit ', 'left', 'right')})
     def css_float(self): return self.style.get('float', None)
     @css_float.setter
     def css_float(self, value): self.style['float'] = str(value)
+    @css_float.deleter
+    def css_float(self): del self.style['float']
 
     @property
     @editor_attribute_decorator("Geometry",'''Margins allows to define spacing aroung element''', str, {})
     def css_margin(self): return self.style.get('margin', None)
     @css_margin.setter
     def css_margin(self, value): self.style['margin'] = str(value)
+    @css_margin.deleter
+    def css_margin(self): del self.style['margin']
 
     @property
     @editor_attribute_decorator("Generic",'''Advisory information for the element''', str, {})
     def attr_title(self): return self.attributes.get('title', None)
     @attr_title.setter
     def attr_title(self, value): self.attributes['title'] = str(value)
+    @attr_title.deleter
+    def attr_title(self): del self.attributes['title']
 
     @property
     @editor_attribute_decorator("Generic",'''Specifies whether or not an element is visible.''', 'DropDown', {'possible_values': ('visible', 'hidden')})
     def css_visibility(self): return self.style.get('visibility', None)
     @css_visibility.setter
     def css_visibility(self, value): self.style['visibility'] = str(value)
+    @css_visibility.deleter
+    def css_visibility(self): del self.style['visibility']
 
     @property
     @editor_attribute_decorator("Geometry",'''Widget width.''', 'css_size', {})
     def css_width(self): return self.style.get('width', None)
     @css_width.setter
     def css_width(self, value): self.style['width'] = str(value)
+    @css_width.deleter
+    def css_width(self): del self.style['width']
 
     @property
     @editor_attribute_decorator("Geometry",'''Widget height.''', 'css_size', {})
     def css_height(self): return self.style.get('height', None)
     @css_height.setter
     def css_height(self, value): self.style['height'] = str(value)
+    @css_height.deleter
+    def css_height(self): del self.style['height']
 
     @property
     @editor_attribute_decorator("Geometry",'''Widget left.''', 'css_size', {})
     def css_left(self): return self.style.get('left', None)
     @css_left.setter
-    def css_left(self, value): self.style['left'] = str(value)
+    def css_left(self, value):self.style['left'] = str(value)
+    @css_left.deleter
+    def css_left(self):del self.style['left']
 
     @property
     @editor_attribute_decorator("Geometry",'''Widget top.''', 'css_size', {})
     def css_top(self): return self.style.get('top', None)
     @css_top.setter
     def css_top(self, value): self.style['top'] = str(value)
+    @css_top.deleter
+    def css_top(self):del self.style['top']
 
     @property
     @editor_attribute_decorator("Geometry",'''Widget right.''', 'css_size', {})
     def css_right(self): return self.style.get('right', None)
     @css_right.setter
     def css_right(self, value): self.style['right'] = str(value)
+    @css_right.deleter
+    def css_right(self):del self.style['right']
 
     @property
     @editor_attribute_decorator("Geometry",'''Widget bottom.''', 'css_size', {})
     def css_bottom(self): return self.style.get('bottom', None)
     @css_bottom.setter
     def css_bottom(self, value): self.style['bottom'] = str(value)
+    @css_bottom.deleter
+    def css_bottom(self, value): del self.style['bottom']
 
     @property
     @editor_attribute_decorator("Geometry",'''Visibility behavior in case of content does not fit in size.''', 'DropDown', {'possible_values': ('visible', 'hidden', 'scroll', 'auto')})
     def css_overflow(self): return self.style.get('overflow', None)
     @css_overflow.setter
     def css_overflow(self, value): self.style['overflow'] = str(value)
+    @css_overflow.deleter
+    def css_overflow(self, value): del self.style['overflow']
 
     @property
     @editor_attribute_decorator("Background",'''Background color of the widget''', 'ColorPicker', {})
     def css_background_color(self): return self.style.get('background-color', None)
     @css_background_color.setter
     def css_background_color(self, value): self.style['background-color'] = str(value)
+    @css_background_color.deleter
+    def css_background_color(self): del self.style['background-color']
 
     @property
     @editor_attribute_decorator("Background",'''An optional background image''', 'url_editor', {})
     def css_background_image(self): return self.style.get('background-image', None)
     @css_background_image.setter
     def css_background_image(self, value): self.style['background-image'] = str(value)
+    @css_background_image.deleter
+    def css_background_image(self): del self.style['background-image']
 
     @property
     @editor_attribute_decorator("Background",'''The position of an optional background in the form 0% 0%''', str, {})
     def css_background_position(self): return self.style.get('background-position', None)
     @css_background_position.setter
     def css_background_position(self, value): self.style['background-position'] = str(value)
+    @css_background_position.deleter
+    def css_background_position(self): del self.style['background-position']
 
     @property
     @editor_attribute_decorator("Background",'''The repeat behaviour of an optional background image''', 'DropDown', {'possible_values': ('repeat', 'repeat-x', 'repeat-y', 'no-repeat', 'round', 'inherit')})
     def css_background_repeat(self): return self.style.get('background-repeat', None)
     @css_background_repeat.setter
     def css_background_repeat(self, value): self.style['background-repeat'] = str(value)
+    @css_background_repeat.deleter
+    def css_background_repeat(self): del self.style['background-repeat']
 
     @property
     @editor_attribute_decorator("Layout",'''The opacity property sets the opacity level for an element.
@@ -621,108 +655,144 @@ class Widget(Tag, EventSource):
     def css_opacity(self): return self.style.get('opacity', None)
     @css_opacity.setter
     def css_opacity(self, value): self.style['opacity'] = str(value)
+    @css_opacity.deleter
+    def css_opacity(self): del self.style['opacity']
 
     @property
     @editor_attribute_decorator("Border",'''Border color''', 'ColorPicker', {})
     def css_border_color(self): return self.style.get('border-color', None)
     @css_border_color.setter
     def css_border_color(self, value): self.style['border-color'] = str(value)
+    @css_border_color.deleter
+    def css_border_color(self): del self.style['border-color']
 
     @property
     @editor_attribute_decorator("Border",'''Border thickness''', 'css_size', {})
     def css_border_width(self): return self.style.get('border-width', None)
     @css_border_width.setter
     def css_border_width(self, value): self.style['border-width'] = str(value)
+    @css_border_width.deleter
+    def css_border_width(self): del self.style['border-width']
 
     @property
     @editor_attribute_decorator("Border",'''Border thickness''', 'DropDown', {'possible_values': ('none', 'solid', 'dotted', 'dashed')})
     def css_border_style(self): return self.style.get('border-style', None)
     @css_border_style.setter
     def css_border_style(self, value): self.style['border-style'] = str(value)
+    @css_border_style.deleter
+    def css_border_style(self): del self.style['border-style']
 
     @property
     @editor_attribute_decorator("Border",'''Border rounding radius''', 'css_size', {})
     def css_border_radius(self): return self.style.get('border-radius', None)
     @css_border_radius.setter
     def css_border_radius(self, value): self.style['border-radius'] = str(value)
+    @css_border_radius.deleter
+    def css_border_radius(self): del self.style['border-radius']
 
     @property
     @editor_attribute_decorator("Font",'''Text color''', 'ColorPicker', {})
     def css_color(self): return self.style.get('color', None)
     @css_color.setter
     def css_color(self, value): self.style['color'] = str(value)
+    @css_color.deleter
+    def css_color(self): del self.style['color']
 
     @property
     @editor_attribute_decorator("Font",'''Font family name''', str, {})
     def css_font_family(self): return self.style.get('font-family', None)
     @css_font_family.setter
     def css_font_family(self, value): self.style['font-family'] = str(value)
+    @css_font_family.deleter
+    def css_font_family(self): del self.style['font-family']
 
     @property
     @editor_attribute_decorator("Font",'''Font size''', 'css_size', {})
     def css_font_size(self): return self.style.get('font-size', None)
     @css_font_size.setter
     def css_font_size(self, value): self.style['font-size'] = str(value)
+    @css_font_size.deleter
+    def css_font_size(self): del self.style['font-size']
 
     @property
     @editor_attribute_decorator("Font",'''The line height in pixels''', 'css_size', {})
     def css_line_height(self): return self.style.get('line-height', None)
     @css_line_height.setter
     def css_line_height(self, value): self.style['line-height'] = str(value)
+    @css_line_height.deleter
+    def css_line_height(self): del self.style['line-height']
 
     @property
     @editor_attribute_decorator("Font",'''Style''', 'DropDown', {'possible_values': ('normal', 'italic', 'oblique', 'inherit')})
     def css_font_style(self): return self.style.get('font-style', None)
     @css_font_style.setter
     def css_font_style(self, value): self.style['font-style'] = str(value)
+    @css_font_style.deleter
+    def css_font_style(self): del self.style['font-style']
 
     @property
     @editor_attribute_decorator("Font",'''Style''', 'DropDown', {'possible_values': ('normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900', 'inherit')})
     def css_font_weight(self): return self.style.get('font-weight', None)
     @css_font_weight.setter
     def css_font_weight(self, value): self.style['font-weight'] = str(value)
+    @css_font_weight.deleter
+    def css_font_weight(self): del self.style['font-weight']
 
     @property
     @editor_attribute_decorator("Font",'''Specifies how white-space inside an element is handled''', 'DropDown', {'possible_values': ('normal', 'nowrap', 'pre', 'pre-line', 'pre-wrap', 'initial', 'inherit')})
     def css_white_space(self): return self.style.get('white-space', None)
     @css_white_space.setter
     def css_white_space(self, value): self.style['white-space'] = str(value)
+    @css_white_space.deleter
+    def css_white_space(self): del self.style['white-space']
 
     @property
     @editor_attribute_decorator("Font",'''Increases or decreases the space between characters in a text.''', 'css_size', {})
     def css_letter_spacing(self): return self.style.get('letter-spacing', None)
     @css_letter_spacing.setter
     def css_letter_spacing(self, value): self.style['letter-spacing'] = str(value)
+    @css_letter_spacing.deleter
+    def css_letter_spacing(self): del self.style['letter-spacing']
 
     @property
     @editor_attribute_decorator("Layout",'''The flex-direction property specifies the direction of the flexible items. Note: If the element is not a flexible item, the flex-direction property has no effect.''', 'DropDown', {'possible_values': ('row', 'row-reverse', 'column', 'column-reverse', 'initial', 'inherit')})
     def css_flex_direction(self): return self.style.get('flex-direction', None)
     @css_flex_direction.setter
     def css_flex_direction(self, value): self.style['flex-direction'] = str(value)
+    @css_flex_direction.deleter
+    def css_flex_direction(self): del self.style['flex-direction']
 
     @property
     @editor_attribute_decorator("Layout",'''The display property specifies the type of box used for an HTML element''', 'DropDown', {'possible_values': ('inline', 'block', 'contents', 'flex', 'grid', 'inline-block', 'inline-flex', 'inline-grid', 'inline-table', 'list-item', 'run-in', 'table', 'none', 'inherit')})
     def css_display(self): return self.style.get('display', None)
     @css_display.setter
     def css_display(self, value): self.style['display'] = str(value)
+    @css_display.deleter
+    def css_display(self): del self.style['display']
 
     @property
     @editor_attribute_decorator("Layout",'''The justify-content property aligns the flexible container's items when the items do not use all available space on the main-axis (horizontally)''', 'DropDown', {'possible_values': ('flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'initial', 'inherit')})
     def css_justify_content(self): return self.style.get('justify-content', None)
     @css_justify_content.setter
     def css_justify_content(self, value): self.style['justify-content'] = str(value)
+    @css_justify_content.deleter
+    def css_justify_content(self): del self.style['justify-content']
 
     @property
     @editor_attribute_decorator("Layout",'''The align-items property specifies the default alignment for items inside the flexible container''', 'DropDown', {'possible_values': ('stretch', 'center', 'flex-start', 'flex-end', 'baseline', 'initial', 'inherit')})
     def css_align_items(self): return self.style.get('align-items', None)
     @css_align_items.setter
     def css_align_items(self, value): self.style['align-items'] = str(value)
+    @css_align_items.deleter
+    def css_align_items(self): del self.style['align-items']
 
     @property
     @editor_attribute_decorator("Layout",'''The flex-wrap property specifies whether the flexible items should wrap or not. Note: If the elements are not flexible items, the flex-wrap property has no effect''', 'DropDown', {'possible_values': ('nowrap', 'wrap', 'wrap-reverse', 'initial', 'inherit')})
     def css_flex_wrap(self): return self.style.get('flex-wrap', None)
     @css_flex_wrap.setter
     def css_flex_wrap(self, value): self.style['flex-wrap'] = str(value)
+    @css_flex_wrap.deleter
+    def css_flex_wrap(self): del self.style['flex-wrap']
 
     @property
     @editor_attribute_decorator("Layout",'''The align-content property modifies the behavior of the flex-wrap property.
@@ -730,36 +800,48 @@ class Widget(Tag, EventSource):
     def css_align_content(self): return self.style.get('align-content', None)
     @css_align_content.setter
     def css_align_content(self, value): self.style['align-content'] = str(value)
+    @css_align_content.deleter
+    def css_align_content(self): del self.style['align-content']
 
     @property
     @editor_attribute_decorator("Layout",'''The flex-flow property is a shorthand property for the flex-direction and the flex-wrap properties. The flex-direction property specifies the direction of the flexible items.''', 'DropDown', {'possible_values': ('flex-direction', 'flex-wrap', 'initial', 'inherit')})
     def css_flex_flow(self): return self.style.get('flex-flow', None)
     @css_flex_flow.setter
     def css_flex_flow(self, value): self.style['flex-flow'] = str(value)
+    @css_flex_flow.deleter
+    def css_flex_flow(self): del self.style['flex-flow']
 
     @property
     @editor_attribute_decorator("Layout",'''The order property specifies the order of a flexible item relative to the rest of the flexible items inside the same container. Note: If the element is not a flexible item, the order property has no effect.''', int, {'possible_values': '', 'min': -10000, 'max': 10000, 'default': 1, 'step': 1})
     def css_order(self): return self.style.get('order', None)
     @css_order.setter
     def css_order(self, value): self.style['order'] = str(value)
+    @css_order.deleter
+    def css_order(self): del self.style['order']
 
     @property
     @editor_attribute_decorator("Layout",'''The align-self property specifies the alignment for the selected item inside the flexible container. Note: The align-self property overrides the flexible container's align-items property''', 'DropDown', {'possible_values': ('auto', 'stretch', 'center', 'flex-start', 'flex-end', 'baseline', 'initial', 'inherit')})
     def css_align_self(self): return self.style.get('align-self', None)
     @css_align_self.setter
     def css_align_self(self, value): self.style['align-self'] = str(value)
+    @css_align_self.deleter
+    def css_align_self(self): del self.style['align-self']
 
     @property
     @editor_attribute_decorator("Layout",'''The flex property specifies the length of the item, relative to the rest of the flexible items inside the same container. The flex property is a shorthand for the flex-grow, flex-shrink, and the flex-basis properties. Note: If the element is not a flexible item, the flex property has no effect.''', int, {'possible_values': '', 'min': -10000, 'max': 10000, 'default': 1, 'step': 1})
     def css_flex(self): return self.style.get('flex', None)
     @css_flex.setter
     def css_flex(self, value): self.style['flex'] = str(value)
+    @css_flex.deleter
+    def css_flex(self): del self.style['flex']
 
     @property
     @editor_attribute_decorator("Layout",'''The position property specifies the type of positioning method used for an element.''', 'DropDown', {'possible_values': ('static', 'absolute', 'fixed', 'relative', 'initial', 'inherit')})
     def css_position(self): return self.style.get('position', None)
     @css_position.setter
     def css_position(self, value): self.style['position'] = str(value)
+    @css_position.deleter
+    def css_position(self): del self.style['position']
 
     def __init__(self, style = None, *args, **kwargs):
 
@@ -1654,24 +1736,32 @@ class GridBox(Container):
     def css_grid_template_columns(self): return self.style.get('grid-template-columns', None)
     @css_grid_template_columns.setter
     def css_grid_template_columns(self, value): self.style['grid-template-columns'] = str(value)
+    @css_grid_template_columns.deleter
+    def css_grid_template_columns(self): del self.style['grid-template-columns']
 
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Row sizes (i.e. 50% 30% 20%).''', str, {})
     def css_grid_template_rows(self): return self.style.get('grid-template-rows', None)
     @css_grid_template_rows.setter
     def css_grid_template_rows(self, value): self.style['grid-template-rows'] = str(value)
+    @css_grid_template_rows.deleter
+    def css_grid_template_rows(self): del self.style['grid-template-rows']
 
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').''', str, {})
     def css_grid_template_areas(self): return self.style.get('grid-template-areas', None)
     @css_grid_template_areas.setter
     def css_grid_template_areas(self, value): self.style['grid-template-areas'] = str(value)
+    @css_grid_template_areas.deleter
+    def css_grid_template_areas(self): del self.style['grid-template-areas']
 
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Defines the size of the gap between the rows and columns.''', 'css_size', {})
     def css_grid_gap(self): return self.style.get('grid-gap', None)
     @css_grid_gap.setter
     def css_grid_gap(self, value): self.style['grid-gap'] = str(value)
+    @css_grid_gap.deleter
+    def css_grid_gap(self): del self.style['grid-gap']
 
     def __init__(self, *args, **kwargs):
         super(GridBox, self).__init__(*args, **kwargs)
@@ -1999,18 +2089,24 @@ class _MixinTextualWidget(object):
     def css_writing_mode(self): return self.style.get('writing-mode', None)
     @css_writing_mode.setter
     def css_writing_mode(self, value): self.style['writing-mode'] = str(value)
+    @css_writing_mode.deleter
+    def css_writing_mode(self): del self.style['writing-mode']
 
     @property
     @editor_attribute_decorator("Font",'''Text alignment.''', 'DropDown', {'possible_values': ('none', 'center', 'left', 'right', 'justify')})
     def css_text_align(self): return self.style.get('text-align', None)
     @css_text_align.setter
     def css_text_align(self, value): self.style['text-align'] = str(value)
+    @css_text_align.deleter
+    def css_text_align(self): del self.style['text-align']
 
     @property
     @editor_attribute_decorator("Font",'''Text direction.''', 'DropDown', {'possible_values': ('none', 'ltr', 'rtl')})
     def css_direction(self): return self.style.get('direction', None)
     @css_direction.setter
     def css_direction(self, value): self.style['direction'] = str(value)
+    @css_direction.deleter
+    def css_direction(self): del self.style['direction']
 
     def set_text(self, text):
         """
@@ -2193,12 +2289,16 @@ class Progress(Widget):
     def attr_value(self): return self.attributes.get('value', None)
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
+    @attr_value.deleter
+    def attr_value(self): del self.attributes['value']
 
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the progress bar.''', int, {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', None)
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
+    @attr_max.deleter
+    def attr_max(self): del self.attributes['max']
 
     def __init__(self, value=0, _max=100, *args, **kwargs):
         """
@@ -2720,6 +2820,8 @@ class Image(Widget):
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
     def attr_src(self, value): self.attributes['src'] = str(value)
+    @attr_src.deleter
+    def attr_src(self): del self.attributes['src']
 
     def __init__(self, image='', *args, **kwargs):
         """
