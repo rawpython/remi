@@ -23,6 +23,22 @@ There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/
 
 Changelog
 ===
+*2019 December 26*
+
+Since now remi is adopting class properties to setup css style and html attributes to make it explicit the applicable properties.
+This means that for example, to change a widget background you can now do:
+
+```python
+    mywidget.css_background_color = 'green'
+```
+
+The old method to setup style and attributes is still accepted:
+
+```python
+    mywidget.style['background-color'] = 'green'
+```
+
+
 *2019 November 21*
 
 Widget class has no more **append** method. This means it cannot be used as a Container.
