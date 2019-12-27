@@ -2002,15 +2002,14 @@ class VBox(HBox):
         self.css_flex_direction = 'column'
 
 
-class TabBox(VBox):
+class TabBox(Container):
     """ A multipage container.
         Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
         The widget can be a container with other child widgets.
     """
     def __init__(self, *args, **kwargs):
-        super(TabBox, self).__init__(*args, **kwargs)
-        self.style.update({'justify-content':'flex-start'})
-        self.container_tab_titles = ListView( width="100%", style = {'order':'0'}, layout_orientation=Container.LAYOUT_HORIZONTAL, _class = 'tabs clearfix' )
+        super(TabBox, self).__init__(layout_orientation=Container.LAYOUT_VERTICAL, *args, **kwargs)
+        self.container_tab_titles = ListView( width="100%", layout_orientation=Container.LAYOUT_HORIZONTAL, _class = 'tabs clearfix' )
         self.container_tab_titles.onselection.do(self.on_tab_selection)
         super(TabBox, self).append(self.container_tab_titles, "_container_tab_titles")
         self.selected_widget_key = None
@@ -2027,7 +2026,6 @@ class TabBox(VBox):
         tab_w = 100.0 / len(self.container_tab_titles.children.values())
         for l in self.container_tab_titles.children.values():
             l.set_size("%.1f%%" % tab_w, "100%")
-        widget.css_order = '1'
         #if first tab, select
         if self.selected_widget_key is None:
             self.on_tab_selection(None, key)
