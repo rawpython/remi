@@ -491,6 +491,15 @@ class WidgetHelper(gui.HBox):
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
 
+    def build_widget_used_keys_list_from_tree(self, node):
+        if not hasattr(node, 'attributes'):
+            return
+        if not (hasattr(node, 'attr_editor') and node.attr_editor):
+            return
+        self.used_keys_list.extend(list(node.children.keys()))
+        for child in node.children.values():
+            self.build_widget_used_keys_list_from_tree(child)
+
     def on_dropped(self, left, top):
         self.optional_style_dict['left'] = gui.to_pix(left)
         self.optional_style_dict['top'] = gui.to_pix(top)
@@ -501,10 +510,13 @@ class WidgetHelper(gui.HBox):
         """
         self.varname_list = []
         self.build_widget_name_list_from_tree(self.appInstance.project)
+        self.used_keys_list = []
+        self.build_widget_used_keys_list_from_tree(self.appInstance.project)
+        print("-------------used keys:" + str(self.used_keys_list))
         variableName = ''
         for i in range(0, 1000):  # reasonably no more than 1000 widget instances in a project
             variableName = self.widgetClass.__name__.lower() + str(i)
-            if not variableName in self.varname_list:
+            if not variableName in self.varname_list and not variableName in self.used_keys_list:
                 break
 
         """
