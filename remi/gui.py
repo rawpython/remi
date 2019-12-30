@@ -2015,6 +2015,11 @@ class TabBox(Container):
         self.selected_widget_key = None
         self.tab_keys_ordered_list = []
 
+    def resize_tab_titles(self):
+        tab_w = 100.0 / len(self.container_tab_titles.children.values())
+        for l in self.container_tab_titles.children.values():
+            l.set_size("%.1f%%" % tab_w, "100%")
+
     def append(self, widget, key=''):
         """ Adds a new tab.
             The *widget* is the content of the tab.
@@ -2023,14 +2028,25 @@ class TabBox(Container):
         key = super(TabBox, self).append(widget, key)
         self.tab_keys_ordered_list.append(key)
         self.container_tab_titles.append(ListItem(key), key)
-        tab_w = 100.0 / len(self.container_tab_titles.children.values())
-        for l in self.container_tab_titles.children.values():
-            l.set_size("%.1f%%" % tab_w, "100%")
+        self.resize_tab_titles()
         #if first tab, select
         if self.selected_widget_key is None:
             self.on_tab_selection(None, key)
         else:
             self.on_tab_selection(None, self.selected_widget_key)
+
+    def remove_child(self, widget):
+        key = None
+        for k in self.children.keys():
+            if hasattr(self.children[k], "identifier"):
+                if self.children[k].identifier == widget.identifier:
+                    key = k
+                    break
+        if key:
+            self.tab_keys_ordered_list.remove(key)
+            self.container_tab_titles.remove_child(self.container_tab_titles.children[key])
+        self.resize_tab_titles()
+        super(TabBox, self).remove_child(widget)
 
     @decorate_set_on_listener("(self, emitter, key)")
     @decorate_event
