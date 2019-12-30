@@ -3226,7 +3226,7 @@ class Input(Widget):
         self.onchange.connect(callback, *userdata)
 
 
-class CheckBoxLabel(Container):
+class CheckBoxLabel(HBox):
 
     _checkbox = None
     _label = None
@@ -3237,7 +3237,7 @@ class CheckBoxLabel(Container):
     @text.setter
     def text(self, value): self._label.set_text(value)
 
-    def __init__(self, label='', checked=False, user_data='', **kwargs):
+    def __init__(self, label='checkbox', checked=False, user_data='', **kwargs):
         """
         Args:
             label (str):
@@ -3246,7 +3246,6 @@ class CheckBoxLabel(Container):
             kwargs: See Widget.__init__()
         """
         super(CheckBoxLabel, self).__init__(**kwargs)
-        self.set_layout_orientation(Container.LAYOUT_HORIZONTAL)
         self._checkbox = CheckBox(checked, user_data)
         self._label = Label(label)
         self.append(self._checkbox, key='checkbox')
@@ -4272,7 +4271,7 @@ class SvgText(SvgShape, _MixinTextualWidget):
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
 
-    def __init__(self, x=10, y=10, text='', *args, **kwargs):
+    def __init__(self, x=10, y=10, text='svg text', *args, **kwargs):
         super(SvgText, self).__init__(x, y, *args, **kwargs)
         self.type = 'text'
         self.set_fill()
