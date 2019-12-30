@@ -2959,6 +2959,8 @@ class TableWidget(Table):
             n_columns (int): number of columns to create
             kwargs: See Container.__init__()
         """
+        self.__column_count = 0
+        self.__use_title = use_title 
         super(TableWidget, self).__init__(*args, **kwargs)
         self._editable = editable
         self.set_use_title(use_title)
@@ -2983,11 +2985,11 @@ class TableWidget(Table):
         if len(self.children) > 0:
             for c_key in self.children['0'].children.keys():
                 instance = cl(self.children['0'].children[c_key].get_text())
-                self.children['0'].children[c_key] = instance
+                self.children['0'].append(instance, c_key)
                 #here the cells of the first row are overwritten and aren't appended by the standard Table.append
                 # method. We have to restore de standard on_click internal listener in order to make it working
                 # the Table.on_table_row_click functionality
-                self.children['0'].children[c_key].onclick.connect(self.children['0'].on_row_item_click)
+                instance.onclick.connect(self.children['0'].on_row_item_click)
 
     def item_at(self, row, column):
         """Returns the TableItem instance at row, column cordinates
@@ -3011,19 +3013,14 @@ class TableWidget(Table):
                     return (int(row_key), int(item_key))
         return None
 
-    def row_count(self):
-        """Returns table's rows count (the title is considered as a row).
-        """
-        return len(self.children)
-
     def set_row_count(self, count):
         """Sets the table row count.
 
         Args:
             count (int): number of rows
         """
-        current_row_count = self.row_count()
-        current_column_count = self.column_count()
+        current_row_count = self.row_count
+        current_column_count = self.column_count
         if count > current_row_count:
             cl = TableEditableItem if self._editable else TableItem
             for i in range(current_row_count, count):
@@ -3045,8 +3042,8 @@ class TableWidget(Table):
         Args:
             count (int): column of rows
         """
-        current_row_count = self.row_count()
-        current_column_count = self.column_count()
+        current_row_count = self.row_count
+        current_column_count = self.column_count
         if count > current_column_count:
             cl = TableEditableItem if self._editable else TableItem
             for r_key in self.children.keys():
@@ -3900,7 +3897,13 @@ class VideoPlayer(Widget):
     @attr_loop.setter
     def attr_loop(self, value): self.attributes['loop'] = str(value).lower()
 
-    def __init__(self, video, poster=None, autoplay=False, loop=False, *args, **kwargs):
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Video type''', str, {})
+    def attr_type(self): return self.attributes.get('type', '')
+    @attr_type.setter
+    def attr_type(self, value): self.attributes['type'] = str(value).lower()
+
+    def __init__(self, video='', poster=None, autoplay=False, loop=False, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
         self.type = 'video'
         self.attributes['src'] = video

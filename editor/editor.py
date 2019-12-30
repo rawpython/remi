@@ -20,7 +20,6 @@ import sys
 import os  # for path handling
 import prototypes
 import editor_widgets
-import html_helper
 import threading
 import traceback
 

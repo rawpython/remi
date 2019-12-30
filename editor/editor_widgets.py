@@ -13,7 +13,6 @@
 """
 import remi
 import remi.gui as gui
-import html_helper
 import inspect
 import re
 import logging
@@ -585,8 +584,8 @@ class WidgetCollection(gui.Container):
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.Progress, value=0, _max=100, width='130px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
+        #self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={
+        #                              'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.TabBox, width='200px', height='200px', style={
