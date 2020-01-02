@@ -917,10 +917,11 @@ class OpencvFindContours(OpencvImage):
             major = cv2.__version__.split('.')[0]
             img = emitter.img.copy()
             if major == '3':
-                img, self.contours, self.hierarchy= cv2.findContours(emitter.img.copy(), _retrieval_mode, _approximation_method)
+                img, self.contours, self.hierarchy= cv2.findContours(img, _retrieval_mode, _approximation_method)
             else:
                 self.contours, self.hierarchy= cv2.findContours(img, _retrieval_mode, _approximation_method)
-            img = cv2.drawContours(img, self.contours, -1, 255)
+            img.fill(255)
+            img = cv2.drawContours(img, self.contours, -1, 0, 1, cv2.LINE_AA, self.hierarchy)
             self.set_image_data(img)
             self.on_new_contours_result()
         except:
