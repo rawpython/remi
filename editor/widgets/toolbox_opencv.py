@@ -901,9 +901,29 @@ class OpencvFindContours(OpencvImage):
         self.__approximation_method = v
         self.on_new_image_listener(self.image_source)
 
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The minimum arc length of a contour', int, {'possible_values': '', 'min': 0, 'max': 9223372036854775807, 'default': 1, 'step': 1})
+    def min_arc_length(self): 
+        return self.__min_arc_length
+    @min_arc_length.setter
+    def min_arc_length(self, v): 
+        self.__min_arc_length = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The minimum arc length of a contour', int, {'possible_values': '', 'min': 0, 'max': 9223372036854775807, 'default': 1, 'step': 1})
+    def max_arc_length(self): 
+        return self.__max_arc_length
+    @max_arc_length.setter
+    def max_arc_length(self, v): 
+        self.__max_arc_length = v
+        self.on_new_image_listener(self.image_source)
+
     def __init__(self, retrieval_mode=cv2.RETR_LIST, approximation_method=cv2.CHAIN_APPROX_SIMPLE, *args, **kwargs):
         self.__retrieval_mode = retrieval_mode
         self.__approximation_method = approximation_method
+        self.__min_arc_length = 0
+        self.__max_arc_length = 9223372036854775807
         super(OpencvFindContours, self).__init__("", *args, **kwargs)
         self.on_new_contours_result.do = self.do_contours_result
 
@@ -917,11 +937,18 @@ class OpencvFindContours(OpencvImage):
             major = cv2.__version__.split('.')[0]
             img = emitter.img.copy()
             if major == '3':
-                img, self.contours, self.hierarchy= cv2.findContours(img, _retrieval_mode, _approximation_method)
+                img, self.contours, self.hierarchy = cv2.findContours(img, _retrieval_mode, _approximation_method)
             else:
-                self.contours, self.hierarchy= cv2.findContours(img, _retrieval_mode, _approximation_method)
+                self.contours, self.hierarchy = cv2.findContours(img, _retrieval_mode, _approximation_method)
+            filtered_contours_indices = []
+            for ic in range(0, len(self.contours)):
+                c = self.contours[ic]
+                l = cv2.arcLength(c, True)
+                if l>self.__min_arc_length and l<self.__max_arc_length:
+                    filtered_contours_indices.append(ic)
             img.fill(255)
-            img = cv2.drawContours(img, self.contours, -1, 0, 1, cv2.LINE_AA, self.hierarchy)
+            for i in filtered_contours_indices:
+                img = cv2.drawContours(img, self.contours, i, 0, 1, cv2.LINE_AA)
             self.set_image_data(img)
             self.on_new_contours_result()
         except:
