@@ -5,6 +5,7 @@ import cv2
 from threading import Timer, Thread
 import traceback
 import time
+import math
 
 
 def default_icon(name, view_w=1, view_h=0.6):
@@ -964,6 +965,25 @@ class OpencvFindContours(OpencvImage):
         self.__discard_non_convex = v
         self.on_new_image_listener(self.image_source)
 
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The minimum acceptable circularity', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 0.0, 'step': 0.01})
+    def min_roundness(self): 
+        return self.__min_roundness
+    @min_roundness.setter
+    def min_roundness(self, v): 
+        self.__min_roundness = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The maximum acceptable circularity', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 0.0, 'step': 0.01})
+    def max_roundness(self): 
+        return self.__max_roundness
+    @max_roundness.setter
+    def max_roundness(self, v): 
+        self.__max_roundness = v
+        self.on_new_image_listener(self.image_source)
+
+
     def __init__(self, retrieval_mode=cv2.RETR_LIST, approximation_method=cv2.CHAIN_APPROX_SIMPLE, *args, **kwargs):
         self.__retrieval_mode = retrieval_mode
         self.__approximation_method = approximation_method
@@ -972,7 +992,9 @@ class OpencvFindContours(OpencvImage):
         self.__min_contour_area = 0
         self.__max_contour_area = 9223372036854775807
         self.__discard_convex = False
-        self.discard_non_convex = False
+        self.__discard_non_convex = False
+        self.__min_roundness = 0.0
+        self.__max_roundness = 1.0
         super(OpencvFindContours, self).__init__("", *args, **kwargs)
         self.on_new_contours_result.do = self.do_contours_result
 
@@ -998,7 +1020,10 @@ class OpencvFindContours(OpencvImage):
                         if l>self.__min_arc_length and l<self.__max_arc_length:
                             area = cv2.contourArea(c)
                             if area>self.__min_contour_area and area<self.__max_contour_area:
-                                filtered_contours_indices.append(ic)
+                                #https://answers.opencv.org/question/21101/circularity-of-a-connected-component/
+                                roundness = (4.0*area) / (math.pi* (l/math.pi)**2)  #4 Area / (pi Max-diam^2)
+                                if roundness>self.__min_roundness and roundness<self.__max_roundness:
+                                    filtered_contours_indices.append(ic)
 
             #drawing selected contours
             img.fill(255)
