@@ -919,11 +919,60 @@ class OpencvFindContours(OpencvImage):
         self.__max_arc_length = v
         self.on_new_image_listener(self.image_source)
 
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The minimum contour area', int, {'possible_values': '', 'min': 0, 'max': 9223372036854775807, 'default': 1, 'step': 1})
+    def min_contour_area(self): 
+        return self.__min_contour_area
+    @min_contour_area.setter
+    def min_contour_area(self, v): 
+        self.__min_contour_area = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The maximum contour area', int, {'possible_values': '', 'min': 0, 'max': 9223372036854775807, 'default': 1, 'step': 1})
+    def max_contour_area(self): 
+        return self.__max_contour_area
+    @max_contour_area.setter
+    def max_contour_area(self, v): 
+        self.__max_contour_area = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The maximum contour area', int, {'possible_values': '', 'min': 0, 'max': 9223372036854775807, 'default': 1, 'step': 1})
+    def max_arc_length(self): 
+        return self.__max_arc_length
+    @max_arc_length.setter
+    def max_arc_length(self, v): 
+        self.__max_arc_length = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','When true, convex contours are discarded', bool, {})
+    def discard_convex(self): 
+        return self.__discard_convex
+    @discard_convex.setter
+    def discard_convex(self, v): 
+        self.__discard_convex = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','When true, non-convex contours are discarded', bool, {})
+    def discard_non_convex(self): 
+        return self.__discard_non_convex
+    @discard_non_convex.setter
+    def discard_non_convex(self, v): 
+        self.__discard_non_convex = v
+        self.on_new_image_listener(self.image_source)
+
     def __init__(self, retrieval_mode=cv2.RETR_LIST, approximation_method=cv2.CHAIN_APPROX_SIMPLE, *args, **kwargs):
         self.__retrieval_mode = retrieval_mode
         self.__approximation_method = approximation_method
         self.__min_arc_length = 0
         self.__max_arc_length = 9223372036854775807
+        self.__min_contour_area = 0
+        self.__max_contour_area = 9223372036854775807
+        self.__discard_convex = False
+        self.discard_non_convex = False
         super(OpencvFindContours, self).__init__("", *args, **kwargs)
         self.on_new_contours_result.do = self.do_contours_result
 
@@ -943,9 +992,15 @@ class OpencvFindContours(OpencvImage):
             filtered_contours_indices = []
             for ic in range(0, len(self.contours)):
                 c = self.contours[ic]
-                l = cv2.arcLength(c, True)
-                if l>self.__min_arc_length and l<self.__max_arc_length:
-                    filtered_contours_indices.append(ic)
+                if not (self.__discard_convex and cv2.isContourConvex(c)):
+                    if not (self.__discard_non_convex and not cv2.isContourConvex(c)):
+                        l = cv2.arcLength(c, True)
+                        if l>self.__min_arc_length and l<self.__max_arc_length:
+                            area = cv2.contourArea(c)
+                            if area>self.__min_contour_area and area<self.__max_contour_area:
+                                filtered_contours_indices.append(ic)
+
+            #drawing selected contours
             img.fill(255)
             for i in filtered_contours_indices:
                 img = cv2.drawContours(img, self.contours, i, 0, 1, cv2.LINE_AA)
