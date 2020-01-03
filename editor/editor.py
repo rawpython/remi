@@ -714,8 +714,8 @@ class Editor(App):
                              SvgDraggablePoint(
                                  self, 'x2', 'y2', [gui.SvgLine]),
                              SvgDraggablePoint(
-                                 self, 'x', 'y', [gui.SvgRectangle, gui.SvgText]),
-                             SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle])]
+                                 self, 'x', 'y', [gui.SvgRectangle, gui.SvgText, gui.SvgImage]),
+                             SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle, gui.SvgImage])]
         for drag_helper in self.drag_helpers:
             drag_helper.stop_drag.do(self.on_drag_resize_end)
 
@@ -1003,5 +1003,5 @@ def on_dropped(self, left, top):
 
 
 if __name__ == "__main__":
-    start(Editor, debug=False, address='0.0.0.0', port=8082,
+    start(Editor, debug=True, address='0.0.0.0', port=8082,
           update_interval=0.05, multiple_instance=True)

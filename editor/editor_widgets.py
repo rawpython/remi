@@ -603,7 +603,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.TabBox, width='200px', height='200px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(
-            gui.Svg, style={'top': '20px', 'left': '20px', 'position': 'absolute'})
+            gui.Svg, style={'top': '20px', 'left': '20px', 'position': 'absolute', 'border':'1px solid gray'})
         self.add_widget_to_collection(gui.SvgLine, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
         self.add_widget_to_collection(gui.SvgCircle)
@@ -611,6 +611,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.SvgText)
         self.add_widget_to_collection(gui.SvgPath, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
+        self.add_widget_to_collection(gui.SvgImage)
 
         self.load_additional_widgets()
 
@@ -836,7 +837,11 @@ class EditorAttributeInputBase(gui.GridBox):
         self.label = gui.Label(attributeName, width='100%', height="100%", style={
                                'overflow': 'hidden', 'font-size': '13px', 'margin': '0px'})
         self.label.attributes['title'] = attributeDict['description']
-        self.append({'del': self.removeAttribute, 'lbl': self.label})
+
+        if not self.propertyDef.fdel is None:
+            self.append({'del': self.removeAttribute, 'lbl': self.label})
+        else:
+            self.append({'lbl': self.label})
 
         self.set_valid(False)
 
@@ -880,8 +885,7 @@ class EditorAttributeInputGeneric(EditorAttributeInputBase):
         '''
         self.style.update({'grid-template-columns': "6% 46% 48%",
                            'grid-template-rows': "100%", 'grid-template-areas': "'del lbl input'"})
-        self.append({'del': self.removeAttribute,
-                     'lbl': self.label, 'input': self.inputWidget})
+        self.append({'input': self.inputWidget})
 
 
 class EditorAttributeInputFloat(EditorAttributeInputGeneric):
@@ -981,7 +985,6 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         return "rgb(%s,%s,%s)" % (self.slide_red.get_value(), self.slide_green.get_value(), self.slide_blue.get_value())
 
     def from_str(self, value_str):
-        print("color:", value_str)
         components = []
         if value_str is None or '(' not in value_str or ')' not in value_str:
             components = [0, 0, 0]
