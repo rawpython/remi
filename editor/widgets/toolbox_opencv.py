@@ -62,6 +62,14 @@ class OpencvImage(gui.Image, OpencvWidget):
     default_style = {'position':'absolute','left':'10px','top':'10px'}
     image_source = None   #the linked widget instance, get updated on image listener
 
+    #OpencvImage inherits gui.Image and so it already inherits attr_src. 
+    # I'm redefining it in order to avoid editor_attribute_decorator
+    # and so preventing it to be shown in editor.
+    @property
+    def attr_src(self): return self.attributes.get('src', '')
+    @attr_src.setter
+    def attr_src(self, value): self.attributes['src'] = str(value)
+    
     def __init__(self, filename='', *args, **kwargs):    
         self.default_style.update(kwargs.get('style',{}))
         kwargs['style'] = self.default_style

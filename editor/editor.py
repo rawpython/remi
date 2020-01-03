@@ -437,11 +437,12 @@ class Project(gui.Container):
 
         for x, y in inspect.getmembers(widget.__class__):
             if type(y) == property and not getattr(widget, x) is None:
-                _value = getattr(widget, x)
-                if type(_value) == str:
-                    _value = '"%s"' % _value
-                code_nested += prototypes.proto_property_setup % {
-                    'varname': widgetVarName, 'property': x, 'value': _value}
+                if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
+                    _value = getattr(widget, x)
+                    if type(_value) == str:
+                        _value = '"%s"' % _value
+                    code_nested += prototypes.proto_property_setup % {
+                        'varname': widgetVarName, 'property': x, 'value': _value}
 
         # for all the methods of this widget
         for (setOnEventListenerFuncname, setOnEventListenerFunc) in inspect.getmembers(widget):
