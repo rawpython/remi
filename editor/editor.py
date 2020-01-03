@@ -229,7 +229,7 @@ class ResizeHelper(gui.Widget, DraggableItem):
         if issubclass(newParent.__class__, gui.TabBox):
             return
         if issubclass(refWidget.__class__, gui.Widget) and 'left' in refWidget.style and 'top' in refWidget.style and \
-                'width' in refWidget.style and 'height' in refWidget.style:
+                'width' in refWidget.style and 'height' in refWidget.style and refWidget.css_position=='absolute':
             DraggableItem.setup(self, refWidget, newParent)
             self.style['display'] = 'block'
 
@@ -276,7 +276,7 @@ class DragHelper(gui.Widget, DraggableItem):
         self.style['display'] = 'none'
         if issubclass(newParent.__class__, gui.TabBox):
             return
-        if issubclass(refWidget.__class__, gui.Widget) and 'left' in refWidget.style and 'top' in refWidget.style:
+        if issubclass(refWidget.__class__, gui.Widget) and 'left' in refWidget.style and 'top' in refWidget.style and refWidget.css_position=='absolute':
             DraggableItem.setup(self, refWidget, newParent)
             self.style['display'] = 'block'
 

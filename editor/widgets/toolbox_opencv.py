@@ -139,7 +139,10 @@ class OpencvImage(gui.Image, OpencvWidget):
 
 
 class OpencvImRead(OpencvImage, OpencvWidget):
-
+    """ OpencvImRead widget.
+        Allows to read an image from file.
+        The event on_new_image can be connected to other Opencv widgets for further processing
+    """
     @property
     @gui.editor_attribute_decorator("WidgetSpecific",'''Image local filename''', 'file', {})
     def filename(self): return self.__filename
