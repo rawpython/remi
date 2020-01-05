@@ -772,7 +772,11 @@ class EditorAttributes(gui.VBox):
                                 attributeEditor = EditorAttributeInputFile(
                                     self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
 
-                        else:  # default editor is string
+                        else:  
+                            #None is not visible
+                            if attributeDict['type'] is None:
+                                continue
+                            # default editor is string
                             txt = gui.TextInput(
                                 width=default_width, height=default_height)
                             attributeEditor = EditorAttributeInputGeneric(

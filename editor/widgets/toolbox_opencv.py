@@ -11,7 +11,7 @@ import math
 def default_icon(name, view_w=1, view_h=0.6):
     """
     A simple function to make a default svg icon for the widgets
-      such icons can be replaced later with a good one
+      such icons can be replaced later with a good one 
     """
     icon = gui.Svg(50,30)
     icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
@@ -661,7 +661,7 @@ class OpencvBilateralFilter(OpencvImage):
         self.__sigma_color = sigma_color
         self.__sigma_space = sigma_space
         self.__diameter = diameter
-        self.__border = self.border_type[border]
+        self.__border = border
         super(OpencvBilateralFilter, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
@@ -794,8 +794,8 @@ class OpencvErodeFilter(OpencvDilateFilter):
 
             _kernel_morph_shape = self.morph_shape[self.kernel_morph_shape] if type(self.kernel_morph_shape) == str else self.kernel_morph_shape
             kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
-            border = OpencvBilateralFilter.border_type[self.border]
-            self.set_image_data(cv2.erode(emitter.img, kernel, iterations=self.iterations, borderType=self.border))
+            border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
+            self.set_image_data(cv2.erode(emitter.img, kernel, iterations=self.iterations, borderType=border))
         except:
             print(traceback.format_exc())
 
@@ -1062,3 +1062,40 @@ class OpencvFindContours(OpencvImage):
     def on_new_contours_result(self):
         return (self.contours, self.hierarchy)
 
+
+class OpencvInRangeGrayscale(OpencvImage):
+    """ OpencvInRangeGrayscale thresholding widget.
+        Receives an image on on_new_image_listener.
+        The event on_new_image can be connected to other Opencv widgets for further processing
+    """
+    icon = default_icon("InRange")
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold1', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
+    def threshold1(self): 
+        return self.__threshold1
+    @threshold1.setter
+    def threshold1(self, v): 
+        self.__threshold1 = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold2', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
+    def threshold2(self): 
+        return self.__threshold2
+    @threshold2.setter
+    def threshold2(self, v): 
+        self.__threshold2 = v
+        self.on_new_image_listener(self.image_source)
+
+    def __init__(self, threshold1=80, threshold2=160, *args, **kwargs):
+        self.__threshold1 = threshold1
+        self.__threshold2 = threshold2
+        super(OpencvInRangeGrayscale, self).__init__("", *args, **kwargs)
+
+    def on_new_image_listener(self, emitter):
+        try:
+            self.image_source = emitter
+            self.set_image_data(cv2.inRange(emitter.img, self.threshold1, self.threshold2))
+        except:
+            print(traceback.format_exc())

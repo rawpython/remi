@@ -978,7 +978,9 @@ class Editor(App):
             drag_helper.setup(None, None)
         parent = self.selectedWidget.get_parent()
         parent.remove_child(self.selectedWidget)
+        todel = self.selectedWidget
         self.on_widget_selection(parent)
+        del todel
         print("tag deleted")
 
     def onkeydown(self, emitter, key, keycode, ctrl, shift, alt):
@@ -1004,5 +1006,5 @@ def on_dropped(self, left, top):
 
 
 if __name__ == "__main__":
-    start(Editor, debug=True, address='0.0.0.0', port=8082,
+    start(Editor, debug=False, address='0.0.0.0', port=8082,
           update_interval=0.05, multiple_instance=True)

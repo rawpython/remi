@@ -513,8 +513,9 @@ class Widget(Tag, EventSource):
     EVENT_ONCONTEXTMENU = "oncontextmenu"
     EVENT_ONUPDATE = 'onupdate'
 
-    #@editor_attribute_decorator("Generic",'''Indicates if the widget is created by the editor''', bool, {})
+    #None is not visible in editor
     @property
+    @editor_attribute_decorator("Generic",'''Indicates if the widget is created by the editor''', None, {})
     def attr_editor(self): return self.__dict__.get('__editor', False)
     @attr_editor.setter
     def attr_editor(self, value): self.__dict__['__editor'] = value
