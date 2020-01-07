@@ -64,6 +64,7 @@ class MyApp(App):
 
         # creating a Button instance
         self.button = gui.Button('Press Me')
+        #the self.on_button_click method will be called when the button gets clicked
         self.button.onclick.do(self.on_button_click)
 
         self.container.append([self.label, self.button])
@@ -79,120 +80,16 @@ if __name__ == "__main__":
     start(MyApp)
 ```
 
-This program shows a label and a button. When you click the button it triggers the event *onclick*. The event onclick is binded to the MyApp.on_button_click method that changes the text content of the label. The *on_button_click* method is called **listener** function, since it 'listens' for an event. Each listener function receives as first argument the 'event emitter' instance. This allows to handle multiple events with the same listener and get aware of the source of the event. In the shown example, the emitter will be the *self.button* instance. 
-Here is an example of different buttons of which the onclick event is binded to the same listener.
+This program shows a label and a button. When clicked, the button triggers the event *onclick*. The event onclick is binded to the MyApp.on_button_click method that changes the text content of the label. The *on_button_click* method is called **listener** function, since it 'listens' for an event. Each listener function receives as first argument the 'event emitter' instance. This allows to handle multiple events with the same listener and get aware of the source of the event. In the shown example, the emitter will be the *self.button* instance. 
 
-```python
-import remi.gui as gui
-from remi import start, App
+<t2>Append, widgets relationship, children</t2>
+The "gui.Tag" is the basic remi class that represent an html element. Tags are arranged in a tree data structure. Non-Container tags are the leafs of the tree, thus can't contain childrens. Container tags (the ones that inherits the gui.Container class) can contain other tags. A Container tag stores his children in the *tag.childrens* dictionary. Each element in this dictionary is characterized by a *key* and a *value*. The key can be set by developer when appending the related child. The value is the child instance.
+The tag.add_child(key, instance) method allows to add a child tag to another.
+The tag.remove_child(instance) method allows to remove a child tag. 
 
-class MyApp(App):
-    def main(self):
-        self.container = gui.VBox()
+The "gui.Widget" class inherits the "gui.Tag" class. Widget class exposes another method to add a child widget, it is called *widget.append(instance, key=None)*. 
+A Tag is called "parent" for the child appended to it. A child can retrieve the parent instance with the method *tag.get_parent()*.
 
-        # creating a Label instance
-        self.label = gui.Label('A label')
-
-        # creating a Button instance
-        self.button1 = gui.Button('Button 1')
-        self.button1.onclick.do(self.on_button_click)
-
-        # creating another Button instance
-        self.button2 = gui.Button('Button 2')
-        self.button2.onclick.do(self.on_button_click)
-
-        self.container.append([self.label, self.button1, self.button2])
-
-        # returning the widget that will be shown
-        return self.container
-
-    def on_button_click(self, emitter):
-        self.label.set_text("Pressed: " + emitter.get_text())
-
-if __name__ == "__main__":
-    # starting the application
-    start(MyApp)
-```
-
-In this example the *onclick* event of both self.button1 and self.button2 is binded to the listener *on_button_click*. Of course you can create a different listener for each button, ie:
-
-```python
-import remi.gui as gui
-from remi import start, App
-
-class MyApp(App):
-    def main(self):
-        self.container = gui.VBox()
-
-        # creating a Label instance
-        self.label = gui.Label('A label')
-
-        # creating a Button instance
-        self.button1 = gui.Button('Button 1')
-        self.button1.onclick.do(self.on_button_click_1)
-
-        # creating another Button instance
-        self.button2 = gui.Button('Button 2')
-        self.button2.onclick.do(self.on_button_click_2)
-
-        self.container.append([self.label, self.button1, self.button2])
-
-        # returning the widget that will be shown
-        return self.container
-
-    def on_button_click_1(self, emitter):
-        self.label.set_text("Pressed: " + emitter.get_text())
-
-    def on_button_click_2(self, emitter):
-        self.label.set_text("Pressed: " + emitter.get_text())
-
-if __name__ == "__main__":
-    # starting the application
-    start(MyApp)
-```
-
-When binding an event to a listener function it is also possible to send custom parameters. These parameters will be stored and send to the listener function when the event occurs:
-
-```python
-import remi.gui as gui
-from remi import start, App
-
-class MyApp(App):
-    def main(self):
-        self.container = gui.VBox()
-
-        # creating a Label instance
-        self.label = gui.Label('What to buy?')
-
-        # creating a Button instance
-        self.button1 = gui.Button('Candies')
-        #next to the listener function, two additional custom parameters are passed to the binding function
-        self.button1.onclick.do(self.on_button_click, 'chocolate', 'strawberry candies')
-
-        # creating another Button instance
-        self.button2 = gui.Button('Meat')
-        #next to the listener function, two additional custom parameters are passed to the binding function
-        self.button2.onclick.do(self.on_button_click, 'beef', 'polpette')
-
-        self.container.append([self.label, self.button1, self.button2])
-
-        # returning the widget that will be shown
-        return self.container
-
-    #here we will receive the additional parameters
-    def on_button_click(self, emitter, param1, param2):
-        self.label.set_text("Buy list: " + param1 + ' ' + param2)
-
-if __name__ == "__main__":
-    # starting the application
-    start(MyApp)
-```
-
-
-
-Children/parent
-    Append
-    remove_child
 
 Style parameters
 
