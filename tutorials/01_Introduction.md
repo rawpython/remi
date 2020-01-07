@@ -1,14 +1,20 @@
-<t1>Welcome</t1>
+<h1>Welcome</h1>
+<p style="white-space:pre">
 
-What is remi
-Remi is a Graphical User Interface library (GUI) for python language. It is designed to be lightweight, multiplatform and remotable.
+**Remi** is a Graphical User Interface library (GUI) for python language. 
+It is designed to be lightweight, multiplatform and remotable.
 In a few kilobytes of source code you get a complete library that allows you build fancy powerful applications.
 Remi applications are compatible with almost all platforms that allow to run python scripts (also on Android).
-Your applications would benefit also of the remotable capability, making it possible to access your interfaces exactly as for a webpage with a common web browser. Suppose you build a raspberrypi GPIO commander, than you will be able to command your raspberrypi with your smartphone or laptop (or both at the same time). Suppose you write an application for office management, all coworkers will be able to access the application from every stations without installing nothing.  
+Your applications would benefit also of the remotable capability, making it possible to access your interfaces exactly 
+as for a webpage with a common web browser. Suppose you build a raspberrypi GPIO commander, than you will be able 
+to command your raspberrypi with your smartphone or laptop (or both at the same time). Suppose you write an 
+application for office management, all coworkers will be able to access the application from every stations without 
+installing nothing.  
 
-Remi has an API interface similar to other common GUI libraries. The single GUI elements are called widgets, such as Buttons, TextInput fields, Tables and so on. The widgets collection is complete enough to make every kind of applications, from image processing to data plotting. If you feel comfortable with Object Oriented development you will feel great with it.
+Remi has an API interface similar to other common GUI libraries. The single GUI elements are called widgets, such as Buttons, TextInput fields, Tables and so on. The widgets collection is complete enough to make every kind of applications. If you feel comfortable with Object Oriented development you will feel great with it.
 
 Here is presented a basic Hello World application:
+</p>
 
 ```python
 import remi.gui as gui
@@ -44,9 +50,11 @@ The shown example is composed as follow:
 - Started the application by *start* function, giving it your *MyApp* class as parameter
 
 
-<t2>Events<t2>
-Now we can speak about events. Graphical User Interfaces must allow user interaction to execute commands and fill in data.
-User interaction happens by means of a wide range of widgets. One of the most basic one is the Button.
+<h2>Events</h2>
+Now we can speak about events. 
+Graphical User Interfaces must allow user interaction to execute commands and fill in data.
+User interaction happens by means of a wide range of widgets. 
+One of the most basic one is the Button.
 Beside the graphical aspect, a button is characterized by an event that gets triggered by the **click** action.
 An event is something that happens and for which the develper can link a function to, that will be executed when it occurs.
 To better explain events, we can make a simple example that shows the "Hey mate" text when a button is clicked.
@@ -79,17 +87,17 @@ if __name__ == "__main__":
     # starting the application
     start(MyApp)
 ```
-
 This program shows a label and a button. When clicked, the button triggers the event *onclick*. The event onclick is binded to the MyApp.on_button_click method that changes the text content of the label. The *on_button_click* method is called **listener** function, since it 'listens' for an event. Each listener function receives as first argument the 'event emitter' instance. This allows to handle multiple events with the same listener and get aware of the source of the event. In the shown example, the emitter will be the *self.button* instance. 
 
-<t2>Append, widgets relationship, children</t2>
+
+<h2>Append, widgets relationship, children</h2>
+
 The "gui.Tag" is the basic remi class that represent an html element. Tags are arranged in a tree data structure. Non-Container tags are the leafs of the tree, thus can't contain childrens. Container tags (the ones that inherits the gui.Container class) can contain other tags. A Container tag stores his children in the *tag.childrens* dictionary. Each element in this dictionary is characterized by a *key* and a *value*. The key can be set by developer when appending the related child. The value is the child instance.
 The tag.add_child(key, instance) method allows to add a child tag to another.
 The tag.remove_child(instance) method allows to remove a child tag. 
 
 The "gui.Widget" class inherits the "gui.Tag" class. Widget class exposes another method to add a child widget, it is called *widget.append(instance, key=None)*. 
 A Tag is called "parent" for the child appended to it. A child can retrieve the parent instance with the method *tag.get_parent()*.
-
 
 Style parameters
 
