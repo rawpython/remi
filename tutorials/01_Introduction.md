@@ -10,6 +10,7 @@ Remi has an API interface similar to other common GUI libraries. The single GUI 
 
 Here is presented a basic Hello World application:
 
+```python
 import remi.gui as gui
 from remi import start, App
 
@@ -24,6 +25,7 @@ class MyApp(App):
 if __name__ == "__main__":
     # starting the application
     start(MyApp)
+```
 
 When you run this script the web browser appears with the 'Hello World!' text.
 
@@ -49,6 +51,68 @@ Beside the graphical aspect, a button is characterized by an event that gets tri
 An event is something that happens and for which the develper can link a function to, that will be executed when it occurs.
 To better explain events, we can make a simple example that shows the "Hey mate" text when a button is clicked.
 
+```python
+import remi.gui as gui
+from remi import start, App
+
+class MyApp(App):
+    def main(self):
+        self.container = gui.VBox()
+
+        # creating a Label instance
+        self.label = gui.Label('A label')
+
+        # creating a Button instance
+        self.button = gui.Button('Press Me')
+        self.button.onclick.do(self.on_button_click)
+
+        self.container.append([self.label, self.button])
+
+        # returning the widget that will be shown
+        return self.container
+
+    def on_button_click(self, emitter):
+        self.label.set_text("Hey mate")
+
+if __name__ == "__main__":
+    # starting the application
+    start(MyApp)
+```
+
+This program shows a label and a button. When you click the button it triggers the event *onclick*. The event onclick is binded to the MyApp.on_button_click method that changes the text content of the label. The *on_button_click* method is called **listener** function, since it 'listens' for an event. Each listener function receives as first argument the 'event emitter' instance. This allows to handle multiple events with the same listener and get aware of the source of the event. In the shown example, the emitter will be the *self.button* instance. Here is an example of different buttons of which the onclick event is binded to the same listener.
+
+
+```python
+import remi.gui as gui
+from remi import start, App
+
+class MyApp(App):
+    def main(self):
+        self.container = gui.VBox()
+
+        # creating a Label instance
+        self.label = gui.Label('A label')
+
+        # creating a Button instance
+        self.button1 = gui.Button('Button 1')
+        self.button.onclick.do(self.on_button_click)
+
+        # creating another Button instance
+        self.button2 = gui.Button('Button 2')
+        self.button.onclick.do(self.on_button_click)
+
+        self.container.append([self.label, self.button1, self.button2])
+
+        # returning the widget that will be shown
+        return self.container
+
+    def on_button_click(self, emitter):
+        self.label.set_text("Pressed: " + emitter.get_text())
+
+if __name__ == "__main__":
+    # starting the application
+    start(MyApp)
+```
 
 
 Children/parent
