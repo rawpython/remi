@@ -4,21 +4,22 @@
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png" width="430">
 </p>
 
-<p align="center" style="font-size:30px;">
-    A Platform-independent Python GUI library for your applications
+<h2 align="center" style="font-weight:bolder">
+    GUI library for your Python applications
+</h2>
+
+<p align="center" style="white-space:pre">
+Remi is a GUI library for Python applications that gets rendered in web browsers. 
+This allows you to access your interface locally and remotely.
 </p>
 
-
-Remi is a GUI library for Python applications that gets rendered in web browsers. This allows you to access your interface locally and remotely.
-
-
-Do you need support? Reach us on:
+Do you need support?
 <p align="center">
 <a href="https://www.reddit.com/r/RemiGUI" style="font-size:25px">Reddit - (subreddit RemiGUI)</a>
 </p>
 
 
-There is also a drag n drop GUI Editor. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
+There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
 
 
 Changelog
@@ -98,7 +99,7 @@ or install directly using pip
 pip install git+https://github.com/dddomodossola/remi.git
 ```
 
-Then start the test script:
+Then start the test script (download it from github https://github.com/dddomodossola/remi/blob/master/examples/widgets_overview_app.py):
 ```
 python widgets_overview_app.py
 ```
@@ -162,9 +163,6 @@ Kivy, PyQT, and PyGObject all require native code for the host operating system,
 
 - **Do I need to know HTML?**
 NO, It is not required, you have to code only in Python.
-
-- **Which browsers can I use this with?**
-Tested on Chrome Firefox and Edge (on Windows, Linux, and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
 
 - **Is it open source?**
 For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
