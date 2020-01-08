@@ -9,7 +9,7 @@
 </p>
 
 
-Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
+Remi is a GUI library for Python applications that gets rendered in web browsers. This allows you to access your interface locally and remotely.
 
 
 Do you need support? Reach us on:
@@ -18,7 +18,7 @@ Do you need support? Reach us on:
 </p>
 
 
-There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
+There is also a drag n drop GUI Editor. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
 
 
 Changelog
@@ -112,7 +112,7 @@ Platform independent Python GUI library. In less than 100 Kbytes of source code,
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png" title="Widgets overview">
 </p>
 
-Remi enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a web server that will be accessible on your network.
+Remi enables developers to create platform independent GUI with Python. The entire GUI is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a web server that will be accessible on your network.
 
 A basic application appears like this:
 
