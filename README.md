@@ -26,7 +26,7 @@ Changelog
 ===
 *2019 December 26*
 
-Since now remi is adopting class properties to setup css style and html attributes to make it explicit the applicable properties.
+Since now remi is adopting class properties to setup css style and html attributes to make the applicable properties explicit.
 This means that for example, to change a widget background you can now do:
 
 ```python
@@ -43,8 +43,8 @@ The old method to setup style and attributes is still accepted:
 *2019 November 21*
 
 Widget class has no more **append** method. This means it cannot be used as a Container.
-Use instead the new class Container as a generic container.
-This allows to get higher code consistency.
+Use the new class Container as a generic container instead.
+This allows higher code consistency.
 
 
 *2019 April 1*
@@ -74,7 +74,7 @@ Subfolders are accepted, and so:
 my_widget.attributes['background-image'] = "url('/my_resources:subfolder/other_subfolder/image.png')"
 ```
 
-The event TextInput.onenter is no more supported.
+The event TextInput.onenter is no longer supported.
 
 The events TextInput.onkeydown and TextInput.onkeyup are now different, and require a different listener format. There is an additional parameter keycode.
 
@@ -203,10 +203,10 @@ start(MyApp)
 
 Run the script. If all it's OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
 
-You can customize optional parameters in the `start` call like.
+You can customize optional parameters in the `start` call like:
 
 ```py
-start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True)
+start(MyApp, address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True)
 ```
 
 Parameters:
