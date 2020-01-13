@@ -194,14 +194,14 @@ class MyApp(App):
         return lbl
 ```
 
-Outside the main class start the application calling the function `start` passing as parameter the name of the class you declared previously.
+Outside the main class, start the application by calling the function `start` and passing the name of the class you declared previously as the parameter:
 
 ```py
 # starts the webserver
 start(MyApp)
 ```
 
-Run the script. If all it's OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
+Run the script. If it's all OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
 
 You can customize optional parameters in the `start` call like:
 
