@@ -602,6 +602,8 @@ class WidgetCollection(gui.Container):
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.TabBox, width='200px', height='200px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        self.add_widget_to_collection(gui.FileUploader, width='150px', height='30px', style={
+                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(
             gui.Svg, style={'top': '20px', 'left': '20px', 'position': 'absolute', 'border':'1px solid gray'})
         self.add_widget_to_collection(gui.SvgLine, attributes={
@@ -709,6 +711,7 @@ class EditorAttributes(gui.VBox):
         self.attributeGroups = {}
 
     def set_widget(self, widget):
+        print("EditorAttributes set widget")
         self.infoLabel.set_text("Selected widget: %s" % widget.identifier)
         self.attributes['selected_widget_id'] = widget.identifier
 

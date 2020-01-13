@@ -3781,6 +3781,24 @@ class FileUploader(Container):
         allows to upload multiple files to a specified folder.
         implements the onsuccess and onfailed events.
     """
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''If True multiple files can be 
+        selected at the same time''', bool, {})
+    def multiple_selection_allowed(self): return ('multiple' in self.__dict__.keys())
+    @multiple_selection_allowed.setter
+    def multiple_selection_allowed(self, value): 
+        if value:
+            self.__dict__["multiple"] = "multiple"
+        else:
+            if 'multiple' in self.__dict__.keys():
+                del self.__dict__["multiple"]
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the path where to save the file''', str, {})
+    def savepath(self): return self._savepath
+    @savepath.setter
+    def savepath(self, value): 
+        self._savepath = value
 
     def __init__(self, savepath='./', multiple_selection_allowed=False, *args, **kwargs):
         super(FileUploader, self).__init__(*args, **kwargs)
