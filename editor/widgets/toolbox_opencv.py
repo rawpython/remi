@@ -78,11 +78,6 @@ class OpencvImage(gui.Image, OpencvWidget):
         super(OpencvImage, self).__init__(filename, *args, **kwargs)
         OpencvWidget._setup(self)
 
-    def _need_update(self, emitter=None):
-        #overriding this method allows to correct the image url that gets updated by the editor
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
-        super(OpencvImage, self)._need_update(emitter)
-
     def on_new_image_listener(self, emitter):
         if emitter.img is None:
             return
