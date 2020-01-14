@@ -531,6 +531,12 @@ class Project(gui.Container):
                 continue
             self.prepare_path_to_this_widget(child)
 
+    def download(self): 
+        print("test>>>>>>")
+        headers = {'Content-type': 'application/octet-stream', 'Content-Disposition': 'attachment; filename="%s"' % "my_wonderful_script.py"} 
+        content = self.save("my_wonderful_script.py", self.configuration) 
+        return [content, headers] 
+
     def save(self, save_path_filename, configuration):
         compiled_code = ''
         code_classes = ''
@@ -566,11 +572,13 @@ class Project(gui.Container):
                                                          }
 
         print(compiled_code)
-
+        """
         if save_path_filename != None:
             f = open(save_path_filename, "w")
             f.write(compiled_code)
             f.close()
+        """
+        return compiled_code
 
 
 class Editor(App):
@@ -600,10 +608,10 @@ class Editor(App):
         m12 = gui.MenuItem('Save Your App', width=150, height=30)
         #m12.style['visibility'] = 'hidden'
         m121 = gui.MenuItem('Save', width=100, height=30)
-        m122 = gui.MenuItem('Save as', width=100, height=30)
+        m122 = gui.MenuItem('Download', width=100, height=30)
         m123 = gui.MenuItem('Export widget as', width=200, height=30)
-        m1.append([m10, m11, m12])
-        m12.append([m121, m122, m123])
+        m1.append([m10, m12])
+        m12.append([m122])
 
         m2 = gui.MenuItem('Edit', width=100, height='100%')
         m21 = gui.MenuItem('Cut', width=100, height=30)
@@ -649,7 +657,7 @@ class Editor(App):
         m10.onclick.do(self.menu_new_clicked)
         m11.onclick.do(self.fileOpenDialog.show)
         m121.onclick.do(self.menu_save_clicked)
-        m122.onclick.do(self.fileSaveAsDialog.show)
+        m122.onclick.do(self.menu_download_clicked)
         m123.onclick.do(self.menu_save_widget_clicked)
         m21.onclick.do(self.menu_cut_selection_clicked)
         m22.onclick.do(self.menu_paste_selection_clicked)
@@ -987,6 +995,13 @@ class Editor(App):
         if str(keycode) == '46':  # 46 the delete keycode
             self.toolbar_delete_clicked(None)
         print("Key pressed: " + str(keycode))
+
+    def menu_download_clicked(self, emitter):
+        #the dragHelper have to be removed
+        for drag_helper in self.drag_helpers:
+            drag_helper.setup(None, None)
+        self.project.configuration = self.projectConfiguration
+        self.execute_javascript('window.location = "/%s/download"'%str(self.project.identifier))
 
     def show_error_dialog(self, title, message):
         error_dialog = gui.GenericDialog(title, message)
