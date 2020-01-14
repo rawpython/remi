@@ -314,7 +314,7 @@ class Project(gui.Container):
 
     def __init__(self, **kwargs):
         super(Project, self).__init__(**kwargs)
-
+        self.identifier = 'App_' + str(id(self)) 
         self.style.update({'position': 'relative',
                            'overflow': 'auto',
                            'background-color': 'rgb(250,248,240)',
@@ -861,7 +861,6 @@ class Editor(App):
                 sendCallbackParam(data[1],'%(evt)s',params);
                 
                 return false;""" % {'evt': self.EVENT_ONDROPPPED}
-        self.project.identifier = 'App'
         self.project.onkeydown.do(self.onkeydown)
         self.centralContainer.append(self.project, 'project')
         self.project.style['position'] = 'relative'
