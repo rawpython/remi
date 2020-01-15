@@ -132,7 +132,7 @@ h6 {
 h6,
 p {
     font-weight: 400;
-    line-height: 24px
+    /*line-height: 24px*/
 }
 p {
     letter-spacing: 0;
@@ -253,7 +253,6 @@ button {
     border-radius: 0px;
     color: #000;
     position: relative;
-    height: 36px;
     margin: 0;
     padding: 0 0px;
     display: inline-block;
@@ -493,21 +492,21 @@ input[type='range']:focus:not(:active)::-moz-range-thumb {
 input[type='range']:active::-webkit-slider-thumb {
     background-image: none;
     background: rgb(2, 70, 147);
-    -webkit-transform: scale(1.5);
-    transform: scale(1.5)
+    /*-webkit-transform: scale(1.5);*/
+    /*transform: scale(1.5)*/
 }
 input[type='range']:active::-moz-range-thumb {
     background-image: none;
     background: rgb(2, 70, 147);
-    transform: scale(1.5)
+    /*transform: scale(1.5)*/
 }
 input[type='range']::-ms-thumb {
-    width: 32px;
-    height: 32px;
+    width: 15px;
+    height: 15px;
     border: none;
     border-radius: 50%;
     background: rgb(2, 70, 147);
-    transform: scale(.375);
+    /*transform: scale(.375);*/
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1);
     transition: transform .18s cubic-bezier(.4, 0, .2, 1), background .28s cubic-bezier(.4, 0, .2, 1), -webkit-transform .18s cubic-bezier(.4, 0, .2, 1)
 }
@@ -517,19 +516,19 @@ input[type='range']:focus:not(:active)::-ms-thumb {
 }
 input[type='range']:active::-ms-thumb {
     background: rgb(2, 70, 147);
-    transform: scale(.5625)
+    /*transform: scale(.5625)*/
 }
 input[type='range']:disabled:focus::-webkit-slider-thumb,
 input[type='range']:disabled:active::-webkit-slider-thumb,
 input[type='range']:disabled::-webkit-slider-thumb {
     -webkit-transform: scale(.667);
-    transform: scale(.667);
+    /*transform: scale(.667);*/
     background: rgba(0, 0, 0, .26)
 }
 input[type='range']:disabled:focus::-moz-range-thumb,
 input[type='range']:disabled:active::-moz-range-thumb,
 input[type='range']:disabled::-moz-range-thumb {
-    transform: scale(.667);
+    /*transform: scale(.667);*/
     background: rgba(0, 0, 0, .26)
 }
 #loading {
@@ -573,6 +572,10 @@ input[type='range']:disabled::-moz-range-thumb {
   }
 }
 
+.TabBox{
+    box-shadow: 3px 3px 5px rgb(150,150,150);
+}
+
 .TabBox ul {
     padding-left: 0;
 }
@@ -583,12 +586,13 @@ input[type='range']:disabled::-moz-range-thumb {
     text-decoration: none;
     color: #888;
     padding: 20px 0;
-    border-bottom: 2px solid #888;
-    background: #f7f7f7;
+    outline: 1px solid #888;
+    background: #e7e7e7;
 }
 
 .TabBox ul li.active {
-    background: #ddd;
+    background: white;
+    outline: none;
 }
 
 .clearfix:after {

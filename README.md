@@ -4,33 +4,50 @@
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png" width="430">
 </p>
 
-<p align="center" style="font-size:30px;">
-    A Platform-independent Python GUI library for your applications
+<h2 align="center" style="font-weight:bolder">
+    GUI library for your Python applications
+</h2>
+
+<p align="center" style="white-space:pre">
+Remi is a GUI library for Python applications that gets rendered in web browsers. 
+This allows you to access your interface locally and remotely.
 </p>
 
-
-Remi is a GUI library for Python applications which transpiles an application's interface into HTML to be rendered in a web browser. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
-
-
-Do you need support? Reach us on:
+Do you need support?
 <p align="center">
 <a href="https://www.reddit.com/r/RemiGUI" style="font-size:25px">Reddit - (subreddit RemiGUI)</a>
 </p>
 
 
-There is also a drag n drop GUI editor. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy, or try it first at:
+There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
 <p align="center">
-<a href="http://remiguieditor--daviderosa.repl.co/ " style="font-size:25px">live try GUI editor overview at repl.it</a>
+** <a href="https://remiguieditor.daviderosa.repl.co/">Live Play Graphical GUI Editor</a> **
+- For a comfortable use download it
 </p>
-
 
 Changelog
 ===
+*2019 December 26*
+
+Since now remi is adopting class properties to setup css style and html attributes to make the applicable properties explicit.
+This means that for example, to change a widget background you can now do:
+
+```python
+    mywidget.css_background_color = 'green'
+```
+
+The old method to setup style and attributes is still accepted:
+
+```python
+    mywidget.style['background-color'] = 'green'
+```
+
+
 *2019 November 21*
 
 Widget class has no more **append** method. This means it cannot be used as a Container.
-Use instead the new class Container as a generic container.
-This allows to get higher code consistency.
+Use the new class Container as a generic container instead.
+This allows higher code consistency.
 
 
 *2019 April 1*
@@ -60,7 +77,7 @@ Subfolders are accepted, and so:
 my_widget.attributes['background-image'] = "url('/my_resources:subfolder/other_subfolder/image.png')"
 ```
 
-The event TextInput.onenter is no more supported.
+The event TextInput.onenter is no longer supported.
 
 The events TextInput.onkeydown and TextInput.onkeyup are now different, and require a different listener format. There is an additional parameter keycode.
 
@@ -85,7 +102,7 @@ or install directly using pip
 pip install git+https://github.com/dddomodossola/remi.git
 ```
 
-Then start the test script:
+Then start the test script (download it from github https://github.com/dddomodossola/remi/blob/master/examples/widgets_overview_app.py):
 ```
 python widgets_overview_app.py
 ```
@@ -99,7 +116,7 @@ Platform independent Python GUI library. In less than 100 Kbytes of source code,
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png" title="Widgets overview">
 </p>
 
-Remi enables developers to create platform independent GUI with Python. The entire GUI is converted to HTML and is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a web server that will be accessible on your network.
+Remi enables developers to create platform independent GUI with Python. The entire GUI is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a web server that will be accessible on your network.
 
 A basic application appears like this:
 
@@ -150,9 +167,6 @@ Kivy, PyQT, and PyGObject all require native code for the host operating system,
 - **Do I need to know HTML?**
 NO, It is not required, you have to code only in Python.
 
-- **Which browsers can I use this with?**
-Tested on Chrome Firefox and Edge (on Windows, Linux, and Android) and haven't tested it elsewhere. It will probably work fine elsewhere though!
-
 - **Is it open source?**
 For sure! Remi is released under the Apache License. See the ``LICENSE`` file for more details.
 
@@ -183,19 +197,19 @@ class MyApp(App):
         return lbl
 ```
 
-Outside the main class start the application calling the function `start` passing as parameter the name of the class you declared previously.
+Outside the main class, start the application by calling the function `start` and passing the name of the class you declared previously as the parameter:
 
 ```py
 # starts the webserver
 start(MyApp)
 ```
 
-Run the script. If all it's OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
+Run the script. If it's all OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
 
-You can customize optional parameters in the `start` call like.
+You can customize optional parameters in the `start` call like:
 
 ```py
-start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True)
+start(MyApp, address='127.0.0.1', port=8081, multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True)
 ```
 
 Parameters:
@@ -309,7 +323,7 @@ This allows great flexibility, getting different behaviors with the same event l
 
 HTML Attribute accessibility
 ===
-Sometimes could be required to access Widget's HTML representation in order to manipulate HTML attributes.
+Sometimes it is required to access Widget's HTML representation in order to manipulate HTML attributes.
 The library allows accessing this information easily.
 
 A simple example: It is the case where you would like to add a hover text to a widget. This can be achieved by the *title* attribute of an HTML tag.
@@ -360,7 +374,7 @@ Here is an example about this [standalone_app.py](https://github.com/dddomodosso
 
 Authentication
 ===
-In order to limit the remote access to your interface, you can define a username and password. It consists of a simple authentication process.
+In order to limit remote access to your interface, you can define a username and password. It consists of a simple authentication process.
 Just define the parameters **username** and **password** in the start call:
 ```py
 start(MyApp, username='myusername', password='mypassword')
@@ -378,7 +392,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args, static_file_path={'res':res_path})
 ```
 
-Make a copy the standard style.css from the remi folder and paste it inside your *res* folder. Edit it in order to customize.
+Copy the standard style.css file from the remi folder and paste it inside your *res* folder. Edit it in order to customize.
 This way the standard *style.css* file gets overridden by the one you created.
 
 
@@ -451,11 +465,9 @@ Yes, I know that GitHub already provides a list of contributors, but I feel that
 
 Projects using Remi
 ===
-[PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI)
-Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPython, Remi (in browser). Create custom layout GUI's simply. Python 2.7 & 3 Support. 100+ Demo programs & Cookbook for rapid start. Extensive documentation.
+[PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI): Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPython, Remi (in browser). Create custom layout GUI's simply. Python 2.7 & 3 Support. 100+ Demo programs & Cookbook for rapid start. Extensive documentation.
 
-[App Template For REMI](https://bitbucket.org/cheak/app-template-for-remi)
-A really well written template for multiview applications.
+[App Template For REMI](https://bitbucket.org/cheak/app-template-for-remi): A really well written template for multiview applications.
 
 [Web based dynamic reconfigure for ROS robots](https://github.com/awesomebytes/web_dyn_reconf)
 
@@ -469,10 +481,9 @@ A really well written template for multiview applications.
 
 [LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
 
-[rElectrum](https://github.com/emanuelelaface/rElectrum)
-A powerful promising Electrum wallet manager for safe transactions.
+[rElectrum](https://github.com/emanuelelaface/rElectrum): A powerful promising Electrum wallet manager for safe transactions.
 
 Other Implementations
 ===
-Here are listed other implementations of this library:
+Listed here are other implementations of this library:
 - [**cremi**](https://github.com/cyberpro4/cremi): (WIP) developed for your C++ projects by [Claudio Cannatà](https://github.com/cyberpro4).

@@ -50,7 +50,7 @@ class MyApp(App):
             |label |text                        |
             |label |text                        |
             |label |text                        |
-            """)
+            """, 10, 10)
 
         main_container.append({'label':label, 'button':button, 'text':text})
 
@@ -61,6 +61,8 @@ class MyApp(App):
         #redefining grid layout
         container.define_grid([ ['text','label','button'],['text','.','.']])
         container.style.update({'grid-template-columns':'33% 33% 33%', 'grid-template-rows':'50% 50%'})
+        container.set_column_gap("0%")
+        container.set_row_gap("0%")
         emitter.set_text("Done")
 
 

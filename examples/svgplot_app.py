@@ -28,6 +28,7 @@ class SvgComposedPoly(gui.SvgGroup):
         super(SvgComposedPoly, self).__init__(x, y, *args, **kwargs)
         self.maxlen = maxlen
         self.plotData = gui.SvgPolyline(self.maxlen)
+        self.plotData.set_fill('none')
         self.append(self.plotData)
         self.set_stroke(stroke, color)
         self.set_fill(color)

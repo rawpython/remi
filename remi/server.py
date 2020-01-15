@@ -51,6 +51,13 @@ except ImportError:
 import cgi
 import weakref
 
+import zlib
+
+
+def gzip_encode(content):
+    gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
+    data = gzip_compress.compress(content) + gzip_compress.flush()
+    return data
 
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
@@ -706,7 +713,7 @@ class App(BaseHTTPRequestHandler, object):
         """
         self._log.debug('App.onpagehide event occurred')
 
-    def onpageshow(self, emitter):
+    def onpageshow(self, emitter, width, height):
         """ WebPage Event that occurs on webpage gets shown
         """
         self._log.debug('App.onpageshow event occurred')
