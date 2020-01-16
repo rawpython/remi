@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='remi',
-    version='2020.01',
+    version='2020.1.16',
     description='Python REMote Interface library',
     long_description=long_description,
     long_description_content_type="text/markdown",
