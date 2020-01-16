@@ -321,8 +321,8 @@ class Tag(object):
         #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
+    #@editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
     @property
-    @editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
     def identifier(self):
         return self.attributes['id']
 

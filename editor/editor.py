@@ -398,7 +398,8 @@ class Project(gui.Container):
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
 
                     if (event['eventlistener'].attr_editor_newclass == True):
-                        self.code_declared_classes[event['eventlistener']
+                        if not event['skip_function_definition']:
+                            self.code_declared_classes[event['eventlistener']
                                                    .identifier] += event['listenerClassFunction']
         return code_nested_listener
 
@@ -476,15 +477,16 @@ class Project(gui.Container):
                             if pending['listenerfuncname'] == listenerFunctionName:
                                 skip = True
                                 break
-                    if skip:
-                        continue
+                    #if skip:
+                    #    continue
 
                     self.pending_listener_registration.append({'done': False,
                                                                'eventsource': widget,
                                                                'eventlistener': listener,
                                                                'setoneventfuncname': setOnEventListenerFuncname,
                                                                'listenerfuncname': listenerFunctionName,
-                                                               'listenerClassFunction': listenerClassFunction})
+                                                               'listenerClassFunction': listenerClassFunction,
+                                                               'skip_function_definition':skip})
 
         if widget.attr_editor_newclass:
             widgetVarName = 'self'
