@@ -314,12 +314,11 @@ class Project(gui.Container):
 
     def __init__(self, **kwargs):
         super(Project, self).__init__(**kwargs)
-
+        self.variable_name = 'App'# + str(id(self)) 
         self.style.update({'position': 'relative',
                            'overflow': 'auto',
                            'background-color': 'rgb(250,248,240)',
                            'background-image': "url('/editor_resources:background.png')"})
-        self.attr_editor = True
         self.attr_editor_newclass = True
 
     def load(self, ifile, configuration):
@@ -354,7 +353,7 @@ class Project(gui.Container):
         # checking if pending listeners code production can be solved
         for event in self.pending_listener_registration:
             if force or (hasattr(event['eventsource'], 'path_to_this_widget') and hasattr(event['eventlistener'], 'path_to_this_widget')):
-                if (force or (widget.identifier in event['eventsource'].path_to_this_widget and widget.identifier in event['eventlistener'].path_to_this_widget)) and event['done'] == False:
+                if (force or (widget.variable_name in event['eventsource'].path_to_this_widget and widget.variable_name in event['eventlistener'].path_to_this_widget)) and event['done'] == False:
                     # this means that this is the root node from where the leafs(listener and source) departs, hre can be set the listener
                     event['done'] = True
 
@@ -367,14 +366,14 @@ class Project(gui.Container):
                         listener_filtered_path.remove(v)
 
                     if len(source_filtered_path) == 0 and event['eventsource'].attr_editor_newclass == False:
-                        sourcename = event['eventsource'].identifier
+                        sourcename = event['eventsource'].variable_name
 
                     #    listenername = event['eventlistener'].identifier
                     if force or (self.children['root'] == widget and not (widget.attr_editor_newclass == True)):
-                        sourcename = self.children['root'].identifier
-                        if self.children['root'].identifier in source_filtered_path:
+                        sourcename = self.children['root'].variable_name
+                        if self.children['root'].variable_name in source_filtered_path:
                             source_filtered_path.remove(
-                                self.children['root'].identifier)
+                                self.children['root'].variable_name)
 
                     if len(source_filtered_path) > 0:
                         sourcename = (
@@ -384,9 +383,9 @@ class Project(gui.Container):
                     listenername = "self"
                     if force or (self.children['root'] == widget and not (widget.attr_editor_newclass == True)):
                         if event['eventlistener'] != self:
-                            listenername = self.children['root'].identifier
+                            listenername = self.children['root'].variable_name
                     if len(listener_filtered_path) == 0 and event['eventlistener'].attr_editor_newclass == False:
-                        listenername = event['eventlistener'].identifier
+                        listenername = event['eventlistener'].variable_name
                     if len(listener_filtered_path) > 0:
                         listenername = (
                             "%s.children['" + "'].children['".join(listener_filtered_path) + "']") % listenername
@@ -399,7 +398,8 @@ class Project(gui.Container):
                         self.code_declared_classes[event['eventlistener'].identifier] = ''
 
                     if (event['eventlistener'].attr_editor_newclass == True):
-                        self.code_declared_classes[event['eventlistener']
+                        if not event['skip_function_definition']:
+                            self.code_declared_classes[event['eventlistener']
                                                    .identifier] += event['listenerClassFunction']
         return code_nested_listener
 
@@ -416,16 +416,16 @@ class Project(gui.Container):
             self.prepare_path_to_this_widget(self.children['root'])
         self.known_project_children.append(widget)
 
-        widget.path_to_this_widget.append(widget.identifier)
+        widget.path_to_this_widget.append(widget.variable_name)
 
-        print(widget.identifier)
+        print(widget.variable_name)
 
         code_nested = ''  # the code strings to return
 
         if not hasattr(widget, 'attributes'):
             return ''  # no nested code
 
-        widgetVarName = widget.identifier
+        widgetVarName = widget.variable_name
         classname = 'CLASS' + \
             widgetVarName if widget.attr_editor_newclass else widget.__class__.__name__
 
@@ -477,15 +477,16 @@ class Project(gui.Container):
                             if pending['listenerfuncname'] == listenerFunctionName:
                                 skip = True
                                 break
-                    if skip:
-                        continue
+                    #if skip:
+                    #    continue
 
                     self.pending_listener_registration.append({'done': False,
                                                                'eventsource': widget,
                                                                'eventlistener': listener,
                                                                'setoneventfuncname': setOnEventListenerFuncname,
                                                                'listenerfuncname': listenerFunctionName,
-                                                               'listenerClassFunction': listenerClassFunction})
+                                                               'listenerClassFunction': listenerClassFunction,
+                                                               'skip_function_definition':skip})
 
         if widget.attr_editor_newclass:
             widgetVarName = 'self'
@@ -498,12 +499,12 @@ class Project(gui.Container):
                 continue
             if not issubclass(child.__class__, gui.Widget):
                 continue
-            if not child.attr_editor:
+            if child.variable_name is None:
                 continue
             child.path_to_this_widget = widget.path_to_this_widget[:]
             children_code_nested += self.repr_widget_for_editor(child)
             children_code_nested += prototypes.proto_layout_append % {
-                'parentname': widgetVarName, 'varname': "%s,'%s'" % (child.identifier, child.identifier)}
+                'parentname': widgetVarName, 'varname': "%s,'%s'" % (child.variable_name, child.variable_name)}
 
         children_code_nested += self.check_pending_listeners(
             widget, widgetVarName)
@@ -527,7 +528,7 @@ class Project(gui.Container):
                 continue
             if not issubclass(child.__class__, gui.Widget):
                 continue
-            if not child.attr_editor:
+            if child.variable_name is None:
                 continue
             self.prepare_path_to_this_widget(child)
 
@@ -548,7 +549,7 @@ class Project(gui.Container):
         main_code_class = prototypes.proto_code_main_class % {'classname': configuration.configDict[configuration.KEY_PRJ_NAME],
                                                               'config_resourcepath': configuration.configDict[configuration.KEY_RESOURCEPATH],
                                                               'code_nested': code_nested,
-                                                              'mainwidgetname': self.children['root'].identifier}
+                                                              'mainwidgetname': self.children['root'].variable_name}
 
         if self.identifier in self.code_declared_classes.keys():
             main_code_class += self.code_declared_classes[self.identifier]
@@ -753,7 +754,7 @@ class Editor(App):
         """
         if not issubclass(widget.__class__, gui.Widget):
             return
-        if not widget.attr_editor:
+        if widget.variable_name is None:
             return
 
         # for all the methods of this widget
@@ -846,7 +847,7 @@ class Editor(App):
             drag_helper.setup(widget, parent)
         # self.instancesWidget.select(self.selectedWidget)
         self.instancesWidget.update(self.project, self.selectedWidget)
-        print("selected widget: " + widget.identifier)
+        print("selected widget: " + widget.variable_name)
         print("selected widget class: " + widget.__class__.__name__)
         print("is widget Container: " +
               str(issubclass(self.selectedWidget.__class__, gui.Container)))
@@ -869,7 +870,6 @@ class Editor(App):
                 sendCallbackParam(data[1],'%(evt)s',params);
                 
                 return false;""" % {'evt': self.EVENT_ONDROPPPED}
-        self.project.identifier = 'App'
         self.project.onkeydown.do(self.onkeydown)
         self.centralContainer.append(self.project, 'project')
         self.project.style['position'] = 'relative'
@@ -956,7 +956,7 @@ class Editor(App):
         parent = self.selectedWidget.get_parent()
         self.editCuttedWidget = self.selectedWidget
         parent.remove_child(self.selectedWidget)
-        print("tag cutted:" + self.editCuttedWidget.identifier)
+        print("tag cutted:" + self.editCuttedWidget.variable_name)
         self.on_widget_selection(parent)
 
     def menu_paste_selection_clicked(self, widget):

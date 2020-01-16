@@ -25,29 +25,13 @@ class InstancesTree(gui.TreeView):
         super(InstancesTree, self).__init__(**kwargs)
 
     def append_instance(self, instance, parent):
-        item = gui.TreeItem(instance.identifier)
+        item = gui.TreeItem(instance.variable_name)
         if parent == None:
             parent = self
         item.instance = instance
         item.onclick.do(self.on_tree_item_selected)
         parent.append(item)
         return item
-
-    def item_by_instance(self, node, instance):
-        if not hasattr(node, 'attributes'):
-            return None
-        if node.identifier != self.identifier:
-            if not hasattr(node, 'instance'):
-                return None
-
-        for item in node.children.values():
-            if self.item_by_instance(item, instance) == instance.identifier:
-                return [node, item]
-        return None
-
-    def remove_instance(self, instance):
-        node, item = self.item_by_instance(self, instance)
-        node.remove_child(item)
 
     def select_instance(self, node, instance):
         if not hasattr(node, 'attributes'):
@@ -70,7 +54,7 @@ class InstancesTree(gui.TreeView):
     def append_instances_from_tree(self, node, parent=None):
         if not hasattr(node, 'attributes'):
             return
-        if not (hasattr(node, 'attr_editor') and node.attr_editor):
+        if not (hasattr(node, 'variable_name') and not node.variable_name is None):
             return
         nodeTreeItem = self.append_instance(node, parent)
         for child in node.children.values():
@@ -170,7 +154,7 @@ class SignalConnection(gui.HBox):
         self.listenersList = listenersList
         self.dropdownListeners.append(gui.DropDownItem("None"))
         for w in listenersList:
-            ddi = gui.DropDownItem(w.identifier)
+            ddi = gui.DropDownItem(w.variable_name)
             ddi.listenerInstance = w
             self.dropdownListeners.append(ddi)
 
@@ -181,10 +165,10 @@ class SignalConnection(gui.HBox):
                 print(str(type(eventConnectionFunc.callback)))
 
                 if issubclass(type(eventConnectionFunc.callback), gui.ClassEventConnector):
-                    connectedListenerName = eventConnectionFunc.callback.event_method_bound.__self__.identifier
+                    connectedListenerName = eventConnectionFunc.callback.event_method_bound.__self__.variable_name
                     connectedListenerFunction = eventConnectionFunc.callback.event_method_bound
                 else:
-                    connectedListenerName = eventConnectionFunc.callback.__self__.identifier
+                    connectedListenerName = eventConnectionFunc.callback.__self__.variable_name
                     connectedListenerFunction = eventConnectionFunc.callback
 
                 self.dropdownListeners.select_by_value(connectedListenerName)
@@ -230,7 +214,7 @@ class SignalConnection(gui.HBox):
             # here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             if listener.attr_editor_newclass:
                 custom_listener_name = self.eventConnectionFuncName + \
-                    "_" + self.refWidget.identifier
+                    "_" + self.refWidget.variable_name
                 setattr(listener, custom_listener_name, types.MethodType(
                     copy_func(fakeListenerFunc), listener))
                 getattr(
@@ -288,7 +272,7 @@ class SignalConnectionManager(gui.Container):
     def build_widget_list_from_tree(self, node):
         self.listeners_list.append(node)
         for child in node.children.values():
-            if hasattr(child, 'attributes') and (hasattr(child, 'attr_editor') and child.attr_editor):
+            if hasattr(child, 'attributes') and (hasattr(child, 'variable_name') and not child.variable_name is None):
                 self.build_widget_list_from_tree(child)
 
     def update(self, widget, widget_tree):
@@ -299,7 +283,7 @@ class SignalConnectionManager(gui.Container):
         self.listeners_list = []
         self.build_widget_list_from_tree(widget_tree)
 
-        self.label.set_text('Signal connections: ' + widget.identifier)
+        self.label.set_text('Signal connections: ' + widget.variable_name)
         #del self.container
         self.container = gui.VBox(width='100%', height='90%')
         self.container.style['justify-content'] = 'flex-start'
@@ -485,16 +469,16 @@ class WidgetHelper(gui.HBox):
     def build_widget_name_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
-        if not (hasattr(node, 'attr_editor') and node.attr_editor):
+        if not (hasattr(node, 'variable_name') and not node.variable_name is None):
             return
-        self.varname_list.append(node.identifier)
+        self.varname_list.append(node.variable_name)
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
 
     def build_widget_used_keys_list_from_tree(self, node):
         if not hasattr(node, 'attributes'):
             return
-        if not (hasattr(node, 'attr_editor') and node.attr_editor):
+        if not (hasattr(node, 'variable_name') and not node.variable_name is None):
             return
         self.used_keys_list.extend(list(node.children.keys()))
         for child in node.children.values():
@@ -532,9 +516,8 @@ class WidgetHelper(gui.HBox):
         """
         # here we create and decorate the widget
         widget = self.widgetClass(**self.kwargs_to_widget)
-        widget.attr_editor = True
         widget.attr_editor_newclass = False
-        widget.identifier = variableName
+        widget.variable_name = variableName
 
         for key in self.optional_style_dict:
             widget.style[key] = self.optional_style_dict[key]
@@ -712,8 +695,7 @@ class EditorAttributes(gui.VBox):
 
     def set_widget(self, widget):
         print("EditorAttributes set widget")
-        self.infoLabel.set_text("Selected widget: %s" % widget.identifier)
-        self.attributes['selected_widget_id'] = widget.identifier
+        self.infoLabel.set_text("Selected widget: %s" % widget.variable_name)
 
         for w in self.attributeGroups.values():
             self.remove_child(w)

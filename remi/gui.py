@@ -321,8 +321,8 @@ class Tag(object):
         #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
+    #@editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
     @property
-    @editor_attribute_decorator("Generic",'''The unique variable name''', str, {})
     def identifier(self):
         return self.attributes['id']
 
@@ -515,12 +515,12 @@ class Widget(Tag, EventSource):
 
     #None is not visible in editor
     @property
-    @editor_attribute_decorator("Generic",'''Indicates if the widget is created by the editor''', None, {})
-    def attr_editor(self): return self.__dict__.get('__editor', False)
-    @attr_editor.setter
-    def attr_editor(self, value): self.__dict__['__editor'] = value
-    @attr_editor.deleter
-    def attr_editor(self): del self.__dict__['__editor']
+    @editor_attribute_decorator("Generic",'''The variable name used by the editor''', str, {})
+    def variable_name(self): return self.__dict__.get('__variable_name', None)
+    @variable_name.setter
+    def variable_name(self, value): self.__dict__['__variable_name'] = value
+    @variable_name.deleter
+    def variable_name(self): del self.__dict__['__variable_name']
 
     @property
     @editor_attribute_decorator("Generic",'''Defines if to overload the base class''', bool, {})
@@ -1971,8 +1971,8 @@ class HBox(Container):
         if not isinstance(value, Widget):
             raise ValueError('value should be a Widget (otherwise use add_child(key,other)')
 
-        value.css_left = None
-        value.css_right = None
+        del value.css_left
+        del value.css_right
 
         if value.css_order == None:
             value.css_position = 'static'
