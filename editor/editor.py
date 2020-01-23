@@ -72,9 +72,9 @@ class DraggableItem(gui.EventSource):
 
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.app_instance.project.onmousemove.do(self.on_drag)
-        self.app_instance.project.onmouseup.do(self.stop_drag)
-        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0)
+        self.app_instance.project.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.project.onmouseup.do(self.stop_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True, js_stop_propagation=False)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -761,7 +761,7 @@ class Editor(App):
 
         # we force a connection, also if back_callback is None, to get the widget selectable
         back_callback = widget.onclick.callback
-        widget.onclick.do(back_callback)
+        widget.onclick.do(back_callback, js_stop_propagation=True)
         widget.onclick.editor_listener_callback = self.on_widget_selection
 
         # setup of the on_dropped function of the widget in order to manage the dragNdrop
