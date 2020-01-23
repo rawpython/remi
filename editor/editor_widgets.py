@@ -241,7 +241,7 @@ class SignalConnection(gui.HBox):
 
         listener = self.dropdownMethods._selected_item.listenerInstance
         getattr(self.refWidget, self.eventConnectionFuncName).do(
-            self.dropdownMethods._selected_item.listenerFunction)
+            self.dropdownMethods._selected_item.listenerFunction, js_stop_propagation=False)
 
 
 def copy_func(f):

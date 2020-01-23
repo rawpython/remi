@@ -72,9 +72,9 @@ class DraggableItem(gui.EventSource):
 
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.app_instance.project.onmousemove.do(self.on_drag, js_prevent_default=True)
-        self.app_instance.project.onmouseup.do(self.stop_drag, js_prevent_default=True)
-        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True)
+        self.app_instance.project.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.project.onmouseup.do(self.stop_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True, js_stop_propagation=False)
         self.origin_x = -1
         self.origin_y = -1
 

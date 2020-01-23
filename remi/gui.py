@@ -140,14 +140,15 @@ class ClassEventConnector(object):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
         """
-        js_stop_propagation=kwuserdata.pop('js_stop_propagation', False)
-        js_prevent_default=kwuserdata.pop('js_prevent_default', False)
 
         if hasattr(self.event_method_bound, '_js_code'):
+            js_stop_propagation=kwuserdata.pop('js_stop_propagation', True)
+            js_prevent_default=kwuserdata.pop('js_prevent_default', True)
             self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
                 'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name} + \
                 ("event.stopPropagation();" if js_stop_propagation else "") + \
                 ("event.preventDefault();" if js_prevent_default else "")
+                
         self.callback = callback
         if userdata:
             self.userdata = userdata
