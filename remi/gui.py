@@ -2279,7 +2279,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.onkeydown.connect(callback, *userdata)
 
 
-class Label(Container, _MixinTextualWidget):
+class Label(Widget, _MixinTextualWidget):
     """ Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
         function get_text.
     """
