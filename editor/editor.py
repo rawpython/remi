@@ -813,7 +813,7 @@ class Editor(App):
                 self.widgetsCollection, 'widgets_collection')
         else:
             self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container" %
-                                                   self.selectedWidget.__class__.__name__), 'widgets_collection')
+                                                   widget.__class__.__name__), 'widgets_collection')
 
         if self.selectedWidget == widget or widget == self.project:
             self.selectedWidget = widget
