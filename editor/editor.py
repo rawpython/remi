@@ -927,19 +927,6 @@ class Editor(App):
         if 'box-shadow' in self.selectedWidget.style.keys():
             del self.selectedWidget.style['box-shadow']
 
-    '''
-    def recursive_get_parent(self, widget, root=None):
-        """ The ability to change the widget identifier at runtime causes 
-            that it cannot be found directly in runtimeInstances. So a parent have to be found
-        """
-        if root==None:
-            root = self.project
-        if widget in root.children.values():
-            return root
-        for c in root.children.values():
-            return self.recursive_get_parent(widget, c)
-    '''
-
     def menu_cut_selection_clicked(self, widget):
         if self.selectedWidget == self.project:
             return

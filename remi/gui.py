@@ -3330,8 +3330,32 @@ class SpinBox(Input):
 
 class Slider(Input):
 
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_value(self): return self.attributes.get('value', '0')
+    @attr_value.setter
+    def attr_value(self, value): self.attributes['value'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_min(self): return self.attributes.get('min', '0')
+    @attr_min.setter
+    def attr_min(self, value): self.attributes['min'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_max(self): return self.attributes.get('max', '65535')
+    @attr_max.setter
+    def attr_max(self, value): self.attributes['max'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the Slider.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    def attr_step(self): return self.attributes.get('step', '1')
+    @attr_step.setter
+    def attr_step(self, value): self.attributes['step'] = str(value)
+
     # noinspection PyShadowingBuiltins
-    def __init__(self, default_value='', min=0, max=65535, step=1, **kwargs):
+    def __init__(self, default_value=0, min=0, max=65535, step=1, **kwargs):
         """
         Args:
             default_value (str):
