@@ -973,8 +973,7 @@ class Editor(App):
     def move_widget(self, css_key, value):
         # css_key can be 'top' or 'left'
         # value (int): positive or negative value
-        if issubclass(self.selectedWidget.__class__, gui.Widget) and css_key in self.selectedWidget.style and \
-            self.selectedWidget.css_position=='absolute':
+        if issubclass(self.selectedWidget.__class__, gui.Widget) and css_key in self.selectedWidget.style:
             self.selectedWidget.style[css_key] = gui.to_pix(gui.from_pix(self.selectedWidget.style[css_key]) + value)
 
     def onkeydown(self, emitter, key, keycode, ctrl, shift, alt):
