@@ -35,7 +35,7 @@ class ResizeHelper(gui.Widget, gui.EventSource):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.onmousedown.do(self.start_drag)
+        self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -63,7 +63,7 @@ class ResizeHelper(gui.Widget, gui.EventSource):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.do(self.on_drag)
+        self.project.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
         self.project.onmouseup.do(self.stop_drag)
         self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
@@ -110,7 +110,7 @@ class DragHelper(gui.Widget, gui.EventSource):
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.onmousedown.do(self.start_drag)
+        self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
 
         self.origin_x = -1
         self.origin_y = -1
@@ -138,7 +138,7 @@ class DragHelper(gui.Widget, gui.EventSource):
             
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.do(self.on_drag)
+        self.project.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
         self.project.onmouseup.do(self.stop_drag)
         self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1

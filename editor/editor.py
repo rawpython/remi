@@ -72,9 +72,9 @@ class DraggableItem(gui.EventSource):
 
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.app_instance.project.onmousemove.do(self.on_drag)
-        self.app_instance.project.onmouseup.do(self.stop_drag)
-        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0)
+        self.app_instance.project.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.project.onmouseup.do(self.stop_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True, js_stop_propagation=False)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -639,10 +639,10 @@ class Editor(App):
             '/editor_resources:paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
 
         lbl = gui.Label("Snap grid", width=100)
-        spin_grid_size = gui.SpinBox('15', '1', '100', width=50)
-        spin_grid_size.set_on_change_listener(self.on_snap_grid_size_change)
+        self.spin_grid_size = gui.SpinBox('15', '1', '100', width=50)
+        self.spin_grid_size.set_on_change_listener(self.on_snap_grid_size_change)
 
-        grid_size = gui.HBox(children=[lbl, spin_grid_size], style={
+        grid_size = gui.HBox(children=[lbl, self.spin_grid_size], style={
                              'outline': '1px solid gray', 'margin': '2px', 'margin-left': '10px'})
         self.toolbar.append(grid_size)
 
@@ -731,7 +731,7 @@ class Editor(App):
 
         self.menu_new_clicked(None)
         self.on_snap_grid_size_change(
-            spin_grid_size, spin_grid_size.get_value())
+            self.spin_grid_size, self.spin_grid_size.get_value())
 
         self.projectPathFilename = ''
         self.editCuttedWidget = None  # cut operation, contains the cutted tag
@@ -769,7 +769,7 @@ class Editor(App):
 
         # we force a connection, also if back_callback is None, to get the widget selectable
         back_callback = widget.onclick.callback
-        widget.onclick.do(back_callback)
+        widget.onclick.do(back_callback, js_stop_propagation=True)
         widget.onclick.editor_listener_callback = self.on_widget_selection
 
         # setup of the on_dropped function of the widget in order to manage the dragNdrop
@@ -821,7 +821,7 @@ class Editor(App):
                 self.widgetsCollection, 'widgets_collection')
         else:
             self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container" %
-                                                   self.selectedWidget.__class__.__name__), 'widgets_collection')
+                                                   widget.__class__.__name__), 'widgets_collection')
 
         if self.selectedWidget == widget or widget == self.project:
             self.selectedWidget = widget
@@ -935,19 +935,6 @@ class Editor(App):
         if 'box-shadow' in self.selectedWidget.style.keys():
             del self.selectedWidget.style['box-shadow']
 
-    '''
-    def recursive_get_parent(self, widget, root=None):
-        """ The ability to change the widget identifier at runtime causes 
-            that it cannot be found directly in runtimeInstances. So a parent have to be found
-        """
-        if root==None:
-            root = self.project
-        if widget in root.children.values():
-            return root
-        for c in root.children.values():
-            return self.recursive_get_parent(widget, c)
-    '''
-
     def menu_cut_selection_clicked(self, widget):
         if self.selectedWidget == self.project:
             return
@@ -991,10 +978,34 @@ class Editor(App):
         del todel
         print("tag deleted")
 
+    def move_widget(self, css_key, value):
+        # css_key can be 'top' or 'left'
+        # value (int): positive or negative value
+        if issubclass(self.selectedWidget.__class__, gui.Widget) and css_key in self.selectedWidget.style:
+            self.selectedWidget.style[css_key] = gui.to_pix(gui.from_pix(self.selectedWidget.style[css_key]) + value)
+
     def onkeydown(self, emitter, key, keycode, ctrl, shift, alt):
-        if str(keycode) == '46':  # 46 the delete keycode
+        arrow_left = '37'
+        arrow_right = '39'
+        arrow_up = '38'
+        arrow_down = '40'
+        key_canc = '46'
+        ctrl = ctrl.lower() == 'true'
+        shift = shift.lower() == 'true'
+        if str(keycode) == key_canc:  # 46 the delete keycode
             self.toolbar_delete_clicked(None)
-        print("Key pressed: " + str(keycode))
+            return
+
+        value = int(self.spin_grid_size.get_value())
+        value = value if str(keycode) in (arrow_down, arrow_right) else -value
+        key = 'left' if str(keycode) in (arrow_left, arrow_right) else 'top'
+        if ctrl:
+            key = {'left':'width', 'top':'height'}[key]
+
+        self.move_widget(key, value)
+        self.on_drag_resize_end(self)
+
+        print("Key pressed: " + str(keycode) + "  ctrl: " + str(ctrl) + "  shift: " + str(shift))
 
     def menu_download_clicked(self, emitter):
         #the dragHelper have to be removed

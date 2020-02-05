@@ -140,9 +140,15 @@ class ClassEventConnector(object):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
         """
+
         if hasattr(self.event_method_bound, '_js_code'):
+            js_stop_propagation=kwuserdata.pop('js_stop_propagation', False)
+            js_prevent_default=kwuserdata.pop('js_prevent_default', False)
             self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
-                'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name}
+                'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name} + \
+                ("event.stopPropagation();" if js_stop_propagation else "") + \
+                ("event.preventDefault();" if js_prevent_default else "")
+                
         self.callback = callback
         if userdata:
             self.userdata = userdata
@@ -929,39 +935,31 @@ class Widget(Tag, EventSource):
         return super(Widget, self).repr(changed_widgets)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onfocus(self):
         """Called when the Widget gets focus."""
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onblur(self):
         """Called when the Widget loses focus"""
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onclick(self):
         """Called when the Widget gets clicked by the user with the left mouse button."""
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def ondblclick(self):
         """Called when the Widget gets double clicked by the user with the left mouse button."""
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();" \
-                       "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def oncontextmenu(self):
         """Called when the Widget gets clicked by the user with the right mouse button.
         """
@@ -972,9 +970,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=event.clientX-boundingBox.left;" \
             "params['y']=event.clientY-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
 
@@ -989,9 +985,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=event.clientX-boundingBox.left;" \
             "params['y']=event.clientY-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
 
@@ -1002,9 +996,7 @@ class Widget(Tag, EventSource):
         return (x, y)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();" \
-                       "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onmouseout(self):
         """Called when the mouse cursor moves outside a Widget.
 
@@ -1014,9 +1006,7 @@ class Widget(Tag, EventSource):
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();" \
-                       "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onmouseleave(self):
         """Called when the mouse cursor moves outside a Widget.
 
@@ -1033,9 +1023,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=event.clientX-boundingBox.left;" \
             "params['y']=event.clientY-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onmousemove(self, x, y):
         """Called when the mouse cursor moves inside the Widget.
 
@@ -1050,9 +1038,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
             "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchmove(self, x, y):
         """Called continuously while a finger is dragged across the screen, over a Widget.
 
@@ -1067,9 +1053,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
             "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchstart(self, x, y):
         """Called when a finger touches the widget.
 
@@ -1084,9 +1068,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
             "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchend(self, x, y):
         """Called when a finger is released from the widget.
 
@@ -1101,9 +1083,7 @@ class Widget(Tag, EventSource):
             "var boundingBox = this.getBoundingClientRect();" \
             "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
             "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" \
-            "event.stopPropagation();event.preventDefault();" \
-            "return false;")
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchenter(self, x, y):
         """Called when a finger touches from outside to inside the widget.
 
@@ -1114,18 +1094,14 @@ class Widget(Tag, EventSource):
         return (x, y)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();" \
-                       "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def ontouchleave(self):
         """Called when a finger touches from inside to outside the widget.
         """
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-                       "event.stopPropagation();event.preventDefault();" \
-                       "return false;")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def ontouchcancel(self):
         """Called when a touch point has been disrupted in an implementation-specific manner
         (for example, too many touch points are created).
@@ -1138,8 +1114,7 @@ class Widget(Tag, EventSource):
             params['ctrl']=event.ctrlKey;
             params['shift']=event.shiftKey;
             params['alt']=event.altKey;
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-            event.stopPropagation();event.preventDefault();return false;""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeyup(self, key, keycode, ctrl, shift, alt):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
@@ -1157,8 +1132,7 @@ class Widget(Tag, EventSource):
             params['ctrl']=event.ctrlKey;
             params['shift']=event.shiftKey;
             params['alt']=event.altKey;
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-            event.stopPropagation();event.preventDefault();return false;""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onkeydown(self, key, keycode, ctrl, shift, alt):
         """Called when user types and releases a key.
         The widget should be able to receive the focus in order to emit the event.
@@ -1666,9 +1640,7 @@ class BODY(Container):
         self.append(loading_container)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');""")
     def onload(self):
         """Called when page gets loaded."""
         return ()
@@ -1686,16 +1658,12 @@ class BODY(Container):
         return (message, source, lineno, colno)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');""")
     def ononline(self):
         return ()
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');
-            event.stopPropagation();event.preventDefault();
-            return false;""")
+    @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');""")
     def onpagehide(self):
         return ()
 
@@ -1704,9 +1672,7 @@ class BODY(Container):
             var params={};
             params['width']=window.innerWidth;
             params['height']=window.innerHeight;
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-            event.stopPropagation();event.preventDefault();
-            return false;""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onpageshow(self, width, height):
         return (width, height)
 
@@ -1715,9 +1681,7 @@ class BODY(Container):
             var params={};
             params['width']=window.innerWidth;
             params['height']=window.innerHeight;
-            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-            event.stopPropagation();event.preventDefault();
-            return false;""")
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onresize(self, width, height):
         return (width, height)
 
@@ -2279,7 +2243,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.onkeydown.connect(callback, *userdata)
 
 
-class Label(Container, _MixinTextualWidget):
+class Label(Widget, _MixinTextualWidget):
     """ Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
         function get_text.
     """
@@ -3366,8 +3330,32 @@ class SpinBox(Input):
 
 class Slider(Input):
 
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_value(self): return self.attributes.get('value', '0')
+    @attr_value.setter
+    def attr_value(self, value): self.attributes['value'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_min(self): return self.attributes.get('min', '0')
+    @attr_min.setter
+    def attr_min(self, value): self.attributes['min'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def attr_max(self): return self.attributes.get('max', '65535')
+    @attr_max.setter
+    def attr_max(self, value): self.attributes['max'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the Slider.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    def attr_step(self): return self.attributes.get('step', '1')
+    @attr_step.setter
+    def attr_step(self, value): self.attributes['step'] = str(value)
+
     # noinspection PyShadowingBuiltins
-    def __init__(self, default_value='', min=0, max=65535, step=1, **kwargs):
+    def __init__(self, default_value=0, min=0, max=65535, step=1, **kwargs):
         """
         Args:
             default_value (str):
@@ -3753,8 +3741,7 @@ class TreeItem(Container, _MixinTextualWidget):
         self.attributes['treeopen'] = 'false'
         self.attributes['has-subtree'] = 'false'
         self.attributes[Widget.EVENT_ONCLICK] = \
-            "sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-            "event.stopPropagation();event.preventDefault();"% \
+            "sendCallback('%(emitter_identifier)s','%(event_name)s');"% \
             {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCLICK}
 
     def append(self, value, key=''):
@@ -3948,8 +3935,7 @@ class VideoPlayer(Widget):
             self.attributes.pop('loop', None)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');" \
-            "event.stopPropagation();event.preventDefault();")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onended(self):
         """Called when the media has been played and reached the end."""
         return ()

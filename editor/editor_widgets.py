@@ -241,7 +241,7 @@ class SignalConnection(gui.HBox):
 
         listener = self.dropdownMethods._selected_item.listenerInstance
         getattr(self.refWidget, self.eventConnectionFuncName).do(
-            self.dropdownMethods._selected_item.listenerFunction)
+            self.dropdownMethods._selected_item.listenerFunction, js_stop_propagation=(self.eventConnectionFuncName not in ("onmousedown", "onmousemove", "onmouseleave", "onkeydown")))
 
 
 def copy_func(f):
@@ -667,6 +667,7 @@ class EditorAttributesGroup(gui.VBox):
 class EditorAttributes(gui.VBox):
     """ Contains EditorAttributeInput each one of which notify a new value with an event
     """
+    __ref_widget = None #The reference widget set by set_widget 
 
     def __init__(self, appInstance, **kwargs):
         super(EditorAttributes, self).__init__(**kwargs)
@@ -693,7 +694,23 @@ class EditorAttributes(gui.VBox):
         self.append(self.titleLabel)
         self.attributeGroups = {}
 
+    def update_widget(self):
+        for x, y in inspect.getmembers(self.__ref_widget.__class__):
+            if type(y) == property:
+                if hasattr(y, "fget"):
+                    if hasattr(y.fget, "editor_attributes"):
+                        group = y.fget.editor_attributes['group']
+                        self.attributeGroups[group].container.children[x].set_value(getattr(self.__ref_widget, x))
+
+
     def set_widget(self, widget):
+
+        if not self.__ref_widget is None:
+            if self.__ref_widget.identifier == widget.identifier:
+                self.update_widget()
+                return
+        self.__ref_widget = widget
+
         print("EditorAttributes set widget")
         self.infoLabel.set_text("Selected widget: %s" % widget.variable_name)
 
@@ -704,12 +721,10 @@ class EditorAttributes(gui.VBox):
             if w.attributeDict['group'] in self.attributeGroups:
                 self.attributeGroups[w.attributeDict['group']].remove_child(w)
 
-        self.targetWidget = widget
-
         index = 100
         default_width = "100%"
         default_height = "22px"
-        for x, y in inspect.getmembers(self.targetWidget.__class__):
+        for x, y in inspect.getmembers(self.__ref_widget.__class__):
             if type(y) == property:
                 if hasattr(y, "fget"):
                     if hasattr(y.fget, "editor_attributes"):
@@ -723,39 +738,39 @@ class EditorAttributes(gui.VBox):
                                 chk = gui.CheckBox(
                                     'checked', width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputGeneric(
-                                    chk, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    chk, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == int:
                                 spin = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict[
                                                    'additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputInt(
-                                    spin, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    spin, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == float:
                                 spin = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict[
                                                    'additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
                                 attributeEditor = EditorAttributeInputFloat(
-                                    spin, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    spin, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == gui.ColorPicker.__name__:
                                 attributeEditor = EditorAttributeInputColor(
-                                    self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == gui.DropDown.__name__:
                                 drop = gui.DropDown(
                                     width=default_width, height=default_height)
                                 for value in attributeDict['additional_data']['possible_values']:
                                     drop.append(gui.DropDownItem(value), value)
                                 attributeEditor = EditorAttributeInputGeneric(
-                                    drop, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    drop, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'url_editor':
                                 attributeEditor = EditorAttributeInputUrl(
-                                    self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'base64_image':
                                 attributeEditor = EditorAttributeInputBase64Image(
-                                    self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'css_size':
                                 attributeEditor = EditorAttributeInputCssSize(
-                                    self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
                             elif attributeDict['type'] == 'file':
                                 attributeEditor = EditorAttributeInputFile(
-                                    self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
 
                         else:  
                             #None is not visible
@@ -765,7 +780,7 @@ class EditorAttributes(gui.VBox):
                             txt = gui.TextInput(
                                 width=default_width, height=default_height)
                             attributeEditor = EditorAttributeInputGeneric(
-                                txt, self.targetWidget, x, y, y.fget.editor_attributes, self.appInstance)
+                                txt, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
 
                         if not group in self.attributeGroups.keys():
                             groupContainer = EditorAttributesGroup(
@@ -775,12 +790,12 @@ class EditorAttributes(gui.VBox):
                             index = index + 1
                             self.attributeGroups[group] = groupContainer
 
-                        if getattr(self.targetWidget, x) is None:
+                        if getattr(self.__ref_widget, x) is None:
                             attributeEditor.set_valid(False)
                         else:
                             attributeEditor.set_value(
-                                getattr(self.targetWidget, x))
-                        self.attributeGroups[group].append(attributeEditor)
+                                getattr(self.__ref_widget, x))
+                        self.attributeGroups[group].append(attributeEditor, key = x)
                         self.attributesInputs.append(attributeEditor)
 
         for w in self.attributeGroups.values():
@@ -850,7 +865,8 @@ class EditorAttributeInputBase(gui.GridBox):
 
     def set_value(self, value):
         self.set_valid(not value is None)
-        self.inputWidget.set_value(value)
+        if not value is None:
+            self.inputWidget.set_value(value)
 
     def on_attribute_changed(self, widget, value):
         self.set_valid()
@@ -923,14 +939,15 @@ class EditorAttributeInputCssSize(EditorAttributeInputBase):
         """
         v = 0
         measure_unit = 'px'
-        try:
-            v = int(float(value.replace('px', '')))
-        except ValueError:
+        if not value is None:
             try:
-                v = int(float(value.replace('%', '')))
-                measure_unit = '%'
+                v = int(float(value.replace('px', '')))
             except ValueError:
-                pass
+                try:
+                    v = int(float(value.replace('%', '')))
+                    measure_unit = '%'
+                except ValueError:
+                    pass
         self.numInput.set_value(v)
         self.dropMeasureUnit.set_value(measure_unit)
         self.set_valid(not value is None)
@@ -1005,8 +1022,9 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         setattr(self.targetWidget, self.attributeName, self.to_str())
 
     def set_value(self, value):
-        self.from_str(value)
         self.set_valid(not value is None)
+        if not value is None:
+            self.from_str(value)
 
 
 class EditorAttributeInputUrl(EditorAttributeInputBase):
@@ -1048,8 +1066,9 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
             return self.on_attribute_changed(None, self.inputWidget.get_value())
 
     def set_value(self, value):
-        self.inputWidget.set_value(value)
         self.set_valid(not value is None)
+        if not value is None:
+            self.inputWidget.set_value(value)
 
 
 class EditorAttributeInputBase64Image(EditorAttributeInputUrl):
