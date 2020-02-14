@@ -562,7 +562,7 @@ class Project(gui.Container):
 
         modules_to_import = []
         for w in self.known_project_children:
-            if not w.__module__ in modules_to_import and w.__module__ != "__main__" and w.__module__ != "project":
+            if not w.__module__ in modules_to_import and w.__module__ != "__main__" and w.__module__ != "project" and w.__module__ != "editor":
                 modules_to_import.append(w.__module__)
 
         code_classes += main_code_class
