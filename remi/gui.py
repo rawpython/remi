@@ -3740,10 +3740,8 @@ class TreeItem(Container, _MixinTextualWidget):
         self.treeopen = False
         self.attributes['treeopen'] = 'false'
         self.attributes['has-subtree'] = 'false'
-        self.attributes[Widget.EVENT_ONCLICK] = \
-            "sendCallback('%(emitter_identifier)s','%(event_name)s');"% \
-            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCLICK}
-
+        self.onclick.do(None, js_stop_propagation=True)
+        
     def append(self, value, key=''):
         if self.sub_container is None:
             self.attributes['has-subtree'] = 'true'
@@ -3752,7 +3750,7 @@ class TreeItem(Container, _MixinTextualWidget):
         return self.sub_container.append(value, key=key)
 
     @decorate_set_on_listener("(self, emitter)")
-    @decorate_event
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onclick(self):
         self.treeopen = not self.treeopen
         if self.treeopen:
