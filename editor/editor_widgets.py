@@ -29,7 +29,7 @@ class InstancesTree(gui.TreeView):
         if parent == None:
             parent = self
         item.instance = instance
-        item.onclick.do(self.on_tree_item_selected)
+        item.onclick.do(self.on_tree_item_selected, js_stop_propagation=True)
         parent.append(item)
         return item
 
