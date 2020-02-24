@@ -29,7 +29,7 @@ class InstancesTree(gui.TreeView):
         if parent == None:
             parent = self
         item.instance = instance
-        item.onclick.do(self.on_tree_item_selected)
+        item.onclick.do(self.on_tree_item_selected, js_stop_propagation=True)
         parent.append(item)
         return item
 
@@ -240,8 +240,11 @@ class SignalConnection(gui.HBox):
             return
 
         listener = self.dropdownMethods._selected_item.listenerInstance
+        kwargs = {}
+        if hasattr(getattr(self.refWidget, self.eventConnectionFuncName).event_method_bound, "_js_code"):
+            kwargs["js_stop_propagation"] = (self.eventConnectionFuncName not in ("onmousedown", "onmousemove", "onmouseleave", "onkeydown"))
         getattr(self.refWidget, self.eventConnectionFuncName).do(
-            self.dropdownMethods._selected_item.listenerFunction, js_stop_propagation=(self.eventConnectionFuncName not in ("onmousedown", "onmousemove", "onmouseleave", "onkeydown")))
+            self.dropdownMethods._selected_item.listenerFunction, **kwargs)
 
 
 def copy_func(f):
