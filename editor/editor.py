@@ -520,6 +520,117 @@ class Project(gui.Container):
 
         return code_nested
 
+    def export_widget_for_app_template(self, widget, first_node=False):
+        if first_node:
+            self.code_declared_classes = {}
+            self.pending_listener_registration = list()
+            # a list containing widgets that have been parsed and that are considered valid listeners
+            self.known_project_children = [self, ]
+            # a list containing dicts {listener, emitter, register_function, listener_function}
+            self.pending_signals_to_connect = list()
+            self.path_to_this_widget = []
+            self.prepare_path_to_this_widget(self.children['root'])
+        self.known_project_children.append(widget)
+
+        widget.path_to_this_widget.append(widget.variable_name)
+
+        code_nested = ''  # the code strings to return
+
+        if not hasattr(widget, 'attributes'):
+            return ''  # no nested code
+
+        widgetVarName = widget.variable_name
+        classname = 'CLASS' + \
+            widgetVarName if widget.attr_editor_newclass else widget.__class__.__name__
+
+        code_nested = prototypes.proto_widget_allocation % {
+            'varname': widgetVarName, 'classname': classname}
+
+        for x, y in inspect.getmembers(widget.__class__):
+            if type(y) == property and not getattr(widget, x) is None:
+                if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
+                    _value = getattr(widget, x)
+                    if type(_value) == str:
+                        _value = '"%s"' % _value
+                    code_nested += prototypes.proto_property_setup % {
+                        'varname': widgetVarName, 'property': x, 'value': _value}
+
+        # for all the methods of this widget
+        for (setOnEventListenerFuncname, setOnEventListenerFunc) in inspect.getmembers(widget):
+            # if the member is decorated by decorate_set_on_listener
+            if issubclass(type(setOnEventListenerFunc), gui.ClassEventConnector):
+                # if there is a callback
+                if not setOnEventListenerFunc.callback is None and hasattr(setOnEventListenerFunc.event_method_bound, '_event_info'):
+                    listenerFunction = setOnEventListenerFunc.callback
+                    if issubclass(type(listenerFunction), gui.ClassEventConnector):
+                        listenerFunction = listenerFunction.event_method_bound
+
+                    listenerPrototype = setOnEventListenerFunc.event_method_bound._event_info[
+                        'prototype']
+                    listener = listenerFunction.__self__
+
+                    # setOnEventListenerFunc._event_info['name'] + "_" + widget.identifier
+                    listenerFunctionName = listenerFunction.__name__
+
+                    listenerClassFunction = prototypes.proto_code_function % {'funcname': listenerFunctionName,
+                                                                              'parameters': listenerPrototype}
+
+                    # override, if already implemented, we use this code, unless it is a fakeListenerFunction
+                    if hasattr(listener, listenerFunctionName) and listenerFunction.__code__ != editor_widgets.fakeListenerFunc.__code__:
+                        listenerClassFunction = inspect.getsource(
+                            listenerFunction)
+
+                    # if the listener is already in the dictionary, and so it already used by another event
+                    # skip
+                    skip = False
+                    for pending in self.pending_listener_registration:
+                        if pending['eventlistener'] == listener:
+                            if pending['listenerfuncname'] == listenerFunctionName:
+                                skip = True
+                                break
+                    #if skip:
+                    #    continue
+
+                    self.pending_listener_registration.append({'done': False,
+                                                               'eventsource': widget,
+                                                               'eventlistener': listener,
+                                                               'setoneventfuncname': setOnEventListenerFuncname,
+                                                               'listenerfuncname': listenerFunctionName,
+                                                               'listenerClassFunction': listenerClassFunction,
+                                                               'skip_function_definition':skip})
+
+        if widget.attr_editor_newclass:
+            widgetVarName = 'self'
+
+        children_code_nested = ''
+        for child_key in widget.children.keys():
+            child = widget.children[child_key]
+            if type(child) == str:
+                #children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
+                continue
+            if not issubclass(child.__class__, gui.Widget):
+                continue
+            if child.variable_name is None:
+                continue
+            child.path_to_this_widget = widget.path_to_this_widget[:]
+            children_code_nested += self.repr_widget_for_editor(child)
+            children_code_nested += prototypes.proto_layout_append % {
+                'parentname': widgetVarName, 'varname': "%s,'%s'" % (child.variable_name, child.variable_name)}
+
+        events_registration = self.check_pending_listeners(
+            widget, widgetVarName)
+
+        # and not (classname in self.code_declared_classes.keys()):
+        if widget.attr_editor_newclass:
+            if not widget.identifier in self.code_declared_classes:
+                self.code_declared_classes[widget.identifier] = ''
+            self.code_declared_classes[widget.identifier] = prototypes.proto_export_app_template % {'classname': classname, 'superclassname': widget.__class__.__name__,
+                                                                                           'nested_code': children_code_nested, 'events_registration': events_registration} + self.code_declared_classes[widget.identifier]
+        else:
+            code_nested = code_nested + children_code_nested
+
+        return code_nested
+
     def prepare_path_to_this_widget(self, node):
         # here gets initiated to null list the path_to_this_widget chain
         node.path_to_this_widget = []
@@ -603,8 +714,9 @@ class Editor(App):
         m121 = gui.MenuItem('Save', width=100, height=30)
         m122 = gui.MenuItem('Save as', width=100, height=30)
         m123 = gui.MenuItem('Export widget as', width=200, height=30)
+        m124 = gui.MenuItem('Export widget for App Template', width=400, height=30)
         m1.append([m10, m11, m12])
-        m12.append([m121, m122, m123])
+        m12.append([m121, m122, m123, m124])
 
         m2 = gui.MenuItem('Edit', width=100, height='100%')
         m21 = gui.MenuItem('Cut', width=100, height=30)
@@ -652,6 +764,7 @@ class Editor(App):
         m121.onclick.do(self.menu_save_clicked)
         m122.onclick.do(self.fileSaveAsDialog.show)
         m123.onclick.do(self.menu_save_widget_clicked)
+        m124.onclick.do(self.menu_export_widget_clicked)
         m21.onclick.do(self.menu_cut_selection_clicked)
         m22.onclick.do(self.menu_paste_selection_clicked)
 
@@ -920,6 +1033,28 @@ class Editor(App):
         for key in self.project.code_declared_classes.keys():
             code_class = self.project.code_declared_classes[key]
             code = code + code_class
+        with open(self.projectPathFilename, "w") as f:
+            f.write(code)
+
+    def menu_export_widget_clicked(self, widget, path=""):
+        """ This method allows to export the selected widget for app_template 
+            https://bitbucket.org/cheak/app-template-for-remi/src/master/views/from_remi_editor2.py
+        """
+        if len(path):
+            self.projectPathFilename = path + '/' + \
+                self.fileSaveAsDialog.get_fileinput_value()
+        else:
+            self.fileSaveAsDialog.confirm_value.do(
+                self.menu_save_widget_clicked)
+            self.fileSaveAsDialog.show()
+            return
+
+        code = ""
+        code = code + \
+            self.project.export_widget_for_app_template(self.selectedWidget, True)
+        #for key in self.project.code_declared_classes.keys():
+        #    code_class = self.project.code_declared_classes[key]
+        #    code = code + code_class
         with open(self.projectPathFilename, "w") as f:
             f.write(code)
 
