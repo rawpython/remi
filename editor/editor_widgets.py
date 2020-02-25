@@ -181,7 +181,7 @@ class SignalConnection(gui.HBox):
                 self.dropdownMethods.select_by_value(
                     connectedListenerFunction.__name__)
                 # force the connection
-                self.on_connection(None, None)
+                #self.on_connection(None, None)
             except:
                 print(traceback.format_exc())
                 print(dir(eventConnectionFunc.callback))

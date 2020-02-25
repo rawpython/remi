@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import remi
 import remi.gui as gui
 from remi.gui import *
 import snap7
@@ -88,6 +89,7 @@ class PLCSiemens(Image):
     connected = False
     linked_widgets = []                     #the widget list that are linked to the PLC
     update_lock = threading.RLock()
+    app_instance = None
 
     def __init__(self, ip_address='', rack=0, slot=3, update_interval=1.0, *args, **kwargs):
         self.__ip_address = ''
@@ -168,6 +170,13 @@ class PLCSiemens(Image):
         self.update_interval = 0
         self.snap7_client.destroy()
 
+    def search_app_instance(self, node):
+        if issubclass(node.__class__, remi.server.App):
+            return node
+        if not hasattr(node, "get_parent"):
+            return None
+        return self.search_app_instance(node.get_parent()) 
+
     def check_connection_state(self):
         _con = self.snap7_client.get_connected()
         if _con != self.connected:
@@ -176,15 +185,22 @@ class PLCSiemens(Image):
             else:
                 self.on_disconnected()
         self.connected = _con
-        with self.update_lock:
-            for w in self.linked_widgets:
-                if hasattr(w, "update"):
-                    try:
-                        w.update()
-                    except:
-                        print(traceback.format_exc())
+
+        if self.app_instance==None:
+            self.app_instance = self.search_app_instance(self)
+            
+        if self.app_instance:
+            with self.update_lock:
+                with self.app_instance.update_lock:
+                    for w in self.linked_widgets:
+                        if hasattr(w, "update"):
+                            try:
+                                w.update()
+                            except:
+                                print(traceback.format_exc())
+
         if self.update_interval>0.0:
-            Timer(self.__update_interval, self.check_connection_state).start()
+            Timer(self.update_interval, self.check_connection_state).start()
 
     def set_bool(self, db_index, byte_index, bit_index, value):
         reading = self.snap7_client.db_read(db_index, byte_index, 1)    # read 1 byte from db 31 staring from byte 120
@@ -251,9 +267,10 @@ class SiemensWidget(object):
         self.link_to.do = self.do
 
     def do(self, callback, *userdata):
-        if self.plc_instance:
+        if self.plc_instance and (callback is None):
             print("removing connection to the PLC")
             self.plc_instance.remove_link_to(self)
+            self.plc_instance = None
 
         if hasattr(self.link_to.event_method_bound, '_js_code'):
             self.link_to.event_source_instance.attributes[self.link_to.event_name] = self.link_to.event_method_bound._js_code%{
