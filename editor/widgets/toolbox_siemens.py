@@ -81,8 +81,8 @@ class PLCSiemens(Image):
     @update_interval.setter
     def update_interval(self, v): 
         self.__dict__['__update_interval'] = v
-        self.disconnect()
-        self.connect()
+        #self.disconnect()
+        #self.connect()
 
     snap7_client = snap7.client.Client()    #the snap7.client.Client() instance that manages data exchange with PLC  
     connected = False
@@ -184,7 +184,7 @@ class PLCSiemens(Image):
                     except:
                         print(traceback.format_exc())
         if self.update_interval>0.0:
-            Timer(1, self.check_connection_state).start()
+            Timer(self.__update_interval, self.check_connection_state).start()
 
     def set_bool(self, db_index, byte_index, bit_index, value):
         reading = self.snap7_client.db_read(db_index, byte_index, 1)    # read 1 byte from db 31 staring from byte 120
