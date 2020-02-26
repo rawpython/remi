@@ -61,7 +61,7 @@ import remi        # This doesn't work with files from remi
 from remi.gui import *
 from remi import start, App
 
-class class %(classname)s( %(superclassname)s )::
+class %(classname)s( %(superclassname)s ):
 # The name of the class has to be identical with the name of the file (view_template.py), but with capital first letter!
 # Files which have a Underscore at first place in filename will not be loaded (by renaming you can take them out for development easily).
 
@@ -71,7 +71,7 @@ class class %(classname)s( %(superclassname)s )::
         self.AppInst = AppInst                  # Holds the Instance of the App. We need it to access uiControl
         self.shownInMenu = 'My Example Menu'          # Use None if it should not be visible in any Menu
         self.menuTitle = 'from REMI Editor container rel'
-        self.style.update({'width': '100%', 'margin': 'auto', 'border': '1px solid black', 'padding': '10px', 'margin-top': '20px'})
+        self.style.update({'width': '100%%', 'margin': 'auto', 'border': '1px solid black', 'padding': '10px', 'margin-top': '20px'})
         self.append(self.constructUI())
         self.registerEventHandlers()
 

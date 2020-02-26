@@ -543,17 +543,21 @@ class Project(gui.Container):
         classname = 'CLASS' + \
             widgetVarName if widget.attr_editor_newclass else widget.__class__.__name__
 
-        code_nested = prototypes.proto_widget_allocation % {
-            'varname': widgetVarName, 'classname': classname}
+        if not first_node:
+            code_nested = prototypes.proto_widget_allocation % {
+                'varname': widgetVarName, 'classname': classname}
 
-        for x, y in inspect.getmembers(widget.__class__):
-            if type(y) == property and not getattr(widget, x) is None:
-                if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
-                    _value = getattr(widget, x)
-                    if type(_value) == str:
-                        _value = '"%s"' % _value
-                    code_nested += prototypes.proto_property_setup % {
-                        'varname': widgetVarName, 'property': x, 'value': _value}
+            for x, y in inspect.getmembers(widget.__class__):
+                if type(y) == property and not getattr(widget, x) is None:
+                    if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
+                        _value = getattr(widget, x)
+                        if type(_value) == str:
+                            _value = '"%s"' % _value
+                        code_nested += prototypes.proto_property_setup % {
+                            'varname': widgetVarName, 'property': x, 'value': _value}
+        else:
+            #eventually, properties have to be placed in the container constructor
+            pass
 
         # for all the methods of this widget
         for (setOnEventListenerFuncname, setOnEventListenerFunc) in inspect.getmembers(widget):
@@ -620,12 +624,18 @@ class Project(gui.Container):
         events_registration = self.check_pending_listeners(
             widget, widgetVarName)
 
+
         # and not (classname in self.code_declared_classes.keys()):
-        if widget.attr_editor_newclass:
+        if widget.attr_editor_newclass or first_node:
             if not widget.identifier in self.code_declared_classes:
                 self.code_declared_classes[widget.identifier] = ''
-            self.code_declared_classes[widget.identifier] = prototypes.proto_export_app_template % {'classname': classname, 'superclassname': widget.__class__.__name__,
+            if first_node:
+                self.code_declared_classes[widget.identifier] = prototypes.proto_export_app_template % {'classname': classname, 'superclassname': widget.__class__.__name__,
                                                                                            'nested_code': children_code_nested, 'events_registration': events_registration} + self.code_declared_classes[widget.identifier]
+            else:
+                children_code_nested += events_registration
+                self.code_declared_classes[widget.identifier] = prototypes.proto_code_class % {'classname': classname, 'superclassname': widget.__class__.__name__,
+                                                                                           'nested_code': children_code_nested} + self.code_declared_classes[widget.identifier]
         else:
             code_nested = code_nested + children_code_nested
 
@@ -714,7 +724,7 @@ class Editor(App):
         m121 = gui.MenuItem('Save', width=100, height=30)
         m122 = gui.MenuItem('Save as', width=100, height=30)
         m123 = gui.MenuItem('Export widget as', width=200, height=30)
-        m124 = gui.MenuItem('Export widget for App Template', width=400, height=30)
+        m124 = gui.MenuItem('Export widget for App Template', width=200, height=30)
         m1.append([m10, m11, m12])
         m12.append([m121, m122, m123, m124])
 
@@ -1045,16 +1055,15 @@ class Editor(App):
                 self.fileSaveAsDialog.get_fileinput_value()
         else:
             self.fileSaveAsDialog.confirm_value.do(
-                self.menu_save_widget_clicked)
+                self.menu_export_widget_clicked)
             self.fileSaveAsDialog.show()
             return
 
         code = ""
         code = code + \
             self.project.export_widget_for_app_template(self.selectedWidget, True)
-        #for key in self.project.code_declared_classes.keys():
-        #    code_class = self.project.code_declared_classes[key]
-        #    code = code + code_class
+        for key in self.project.code_declared_classes.keys():
+            code = code + self.project.code_declared_classes[key]
         with open(self.projectPathFilename, "w") as f:
             f.write(code)
 
