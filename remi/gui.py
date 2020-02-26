@@ -2027,7 +2027,7 @@ class TabBox(Container):
                 self.selected_widget_key = k
         self.children[self.selected_widget_key].css_display = 'block'
         self.container_tab_titles.children[self.selected_widget_key].add_class('active')
-        return (self.selected_widget_key)
+        return (self.selected_widget_key,)
 
     def select_by_widget(self, widget):
         for k in self.children.keys():

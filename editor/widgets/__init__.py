@@ -41,7 +41,7 @@ except:
 from .toolbox_scheduling import TimerWidget
 
 try:
-    from .toolbox_siemens import PLCSiemens, SiemensButton, BitStatusWidget, WordEditWidget
+    from .toolbox_siemens import PLCSiemens, SiemensButton, BitStatusWidget, WordEditWidget, ByteViewWidget
 except:
     class SIEMENSPlaceholder(gui.Label):
         icon = default_icon("missing SIEMENS")
