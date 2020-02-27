@@ -603,7 +603,7 @@ class Project(gui.Container):
                                                                'listenerClassFunction': listenerClassFunction,
                                                                'skip_function_definition':skip})
 
-        if widget.attr_editor_newclass:
+        if widget.attr_editor_newclass or first_node:
             widgetVarName = 'self'
 
         children_code_nested = ''
@@ -630,6 +630,8 @@ class Project(gui.Container):
             if not widget.identifier in self.code_declared_classes:
                 self.code_declared_classes[widget.identifier] = ''
             if first_node:
+                if len(events_registration) < 1:
+                    events_registration = 'pass'
                 self.code_declared_classes[widget.identifier] = prototypes.proto_export_app_template % {'classname': classname, 'superclassname': widget.__class__.__name__,
                                                                                            'nested_code': children_code_nested, 'events_registration': events_registration} + self.code_declared_classes[widget.identifier]
             else:
