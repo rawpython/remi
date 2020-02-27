@@ -4089,11 +4089,12 @@ class _MixinSvgSize():
         self.attr_height = h
 
 
-class SvgGroup(Container, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill):
-    def __init__(self, x=0, y=0, *args, **kwargs):
+class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
+    """svg group - a non visible container for svg widgets,
+        this have to be appended into Svg elements."""
+    def __init__(self, *args, **kwargs):
         super(SvgGroup, self).__init__(*args, **kwargs)
         self.type = 'g'
-        self.set_position(x, y)
 
 
 class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill):

@@ -600,6 +600,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.SvgPath, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
         self.add_widget_to_collection(gui.SvgImage)
+        self.add_widget_to_collection(gui.SvgGroup)
 
         self.load_additional_widgets()
 
