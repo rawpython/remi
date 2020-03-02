@@ -3943,50 +3943,6 @@ class VideoPlayer(Widget):
         self.onended.connect(callback, *userdata)
 
 
-class Svg(Container):
-    """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
-    def attr_preserveAspectRatio(self): return self.attributes.get('preserveAspectRatio', None)
-    @attr_preserveAspectRatio.setter
-    def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
-    @attr_preserveAspectRatio.deleter
-    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
-
-    @property
-    @editor_attribute_decorator("WidgetSpecific",'''viewBox of the svg drawing. es='x, y, width, height' ''', 'str', {})
-    def attr_viewBox(self): return self.attributes.get('viewBox', None)
-    @attr_viewBox.setter
-    def attr_viewBox(self, value): self.attributes['viewBox'] = str(value)
-    @attr_viewBox.deleter
-    def attr_viewBox(self): del self.attributes['viewBox'] 
-
-    def __init__(self, width=100, height=100, *args, **kwargs):
-        """
-        Args:
-            width (int): the viewBox width in pixel
-            height (int): the viewBox height in pixel
-            kwargs: See Widget.__init__()
-        """
-        super(Svg, self).__init__(*args, **kwargs)
-        self.set_size(width, height)
-        self.attributes['width'] = width
-        self.attributes['height'] = height
-        self.type = 'svg'
-
-    def set_viewbox(self, x, y, w, h):
-        """Sets the origin and size of the viewbox, describing a virtual view area.
-
-        Args:
-            x (int): x coordinate of the viewbox origin
-            y (int): y coordinate of the viewbox origin
-            w (int): width of the viewBox
-            h (int): height of the viewBox
-        """
-        self.attr_viewBox = "%s %s %s %s" % (x, y, w, h)
-        self.attr_preserveAspectRatio = 'none'
-
-
 class _MixinSvgStroke():
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
@@ -4087,6 +4043,61 @@ class _MixinSvgSize():
         """
         self.attr_width = w
         self.attr_height = h
+
+
+class Svg(Container):
+    """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
+    def attr_preserveAspectRatio(self): return self.attributes.get('preserveAspectRatio', None)
+    @attr_preserveAspectRatio.setter
+    def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
+    @attr_preserveAspectRatio.deleter
+    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''viewBox of the svg drawing. es='x, y, width, height' ''', 'str', {})
+    def attr_viewBox(self): return self.attributes.get('viewBox', None)
+    @attr_viewBox.setter
+    def attr_viewBox(self, value): self.attributes['viewBox'] = str(value)
+    @attr_viewBox.deleter
+    def attr_viewBox(self): del self.attributes['viewBox'] 
+
+    def __init__(self, *args, **kwargs):
+        """
+        Args:
+            kwargs: See Widget.__init__()
+        """
+        super(Svg, self).__init__(*args, **kwargs)
+        self.type = 'svg'
+        
+    def set_viewbox(self, x, y, w, h):
+        """Sets the origin and size of the viewbox, describing a virtual view area.
+
+        Args:
+            x (int): x coordinate of the viewbox origin
+            y (int): y coordinate of the viewbox origin
+            w (int): width of the viewBox
+            h (int): height of the viewBox
+        """
+        self.attr_viewBox = "%s %s %s %s" % (x, y, w, h)
+        self.attr_preserveAspectRatio = 'none'
+
+
+class SvgSubcontainer(Svg, _MixinSvgPosition, _MixinSvgSize):
+    """svg widget to nest within another Svg element- is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
+
+    def __init__(self, x=0, y=0, width=100, height=100, *args, **kwargs):
+        """
+        Args:
+            width (int): the viewBox width in pixel
+            height (int): the viewBox height in pixel
+            kwargs: See Widget.__init__()
+        """
+        super(SvgSubcontainer, self).__init__(*args, **kwargs)
+        self.type = 'svg'
+        self.set_position(x, y)
+        _MixinSvgSize.set_size(self, width, height)
 
 
 class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):

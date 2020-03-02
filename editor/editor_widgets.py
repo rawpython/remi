@@ -591,7 +591,9 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.FileUploader, width='150px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(
-            gui.Svg, style={'top': '20px', 'left': '20px', 'position': 'absolute', 'border':'1px solid gray'})
+            gui.Svg, style={'top': '20px', 'left': '20px', 'width':'150px', 'height':'150px', 'position': 'absolute', 'border':'1px solid gray'})
+        self.add_widget_to_collection(
+            gui.SvgSubcontainer, x = '10', y = '10', width = '80', height = '80')
         self.add_widget_to_collection(gui.SvgLine, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
         self.add_widget_to_collection(gui.SvgCircle)

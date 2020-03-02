@@ -841,8 +841,8 @@ class Editor(App):
                              SvgDraggablePoint(
                                  self, 'x2', 'y2', [gui.SvgLine]),
                              SvgDraggablePoint(
-                                 self, 'x', 'y', [gui.SvgRectangle, gui.SvgText, gui.SvgImage]),
-                             SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle, gui.SvgImage])]
+                                 self, 'x', 'y', [gui.SvgRectangle, gui.SvgText, gui.SvgImage, gui.SvgSubcontainer]),
+                             SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle, gui.SvgImage, gui.SvgSubcontainer])]
         for drag_helper in self.drag_helpers:
             drag_helper.stop_drag.do(self.on_drag_resize_end)
 
