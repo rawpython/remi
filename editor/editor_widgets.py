@@ -609,6 +609,9 @@ class WidgetCollection(gui.Container):
     def load_additional_widgets(self):
         try:
             import widgets
+        except:
+            from . import widgets
+        try:
             classes = inspect.getmembers(widgets, inspect.isclass)
             for (classname, classvalue) in classes:
                 if issubclass(classvalue, gui.Widget):

@@ -18,8 +18,13 @@ from remi import start, App
 import inspect
 import sys
 import os  # for path handling
-import prototypes
-import editor_widgets
+try:
+    import prototypes
+    import editor_widgets
+except:
+    from . import prototypes
+    from . import editor_widgets
+
 import threading
 import traceback
 

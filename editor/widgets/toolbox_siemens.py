@@ -16,7 +16,7 @@ def default_icon(name, view_w=1, view_h=0.6):
     A simple function to make a default svg icon for the widgets
       such icons can be replaced later with a good one 
     """
-    icon = gui.Svg(50,30)
+    icon = gui.Svg(width=50,height=30)
     icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
     text = gui.SvgText(0,0,name)
     text.style['font-size'] = "0.2px"

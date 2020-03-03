@@ -1,4 +1,10 @@
-from editor import Editor
+from editor import prototypes
+from editor import editor_widgets
+try:
+    from editor import Editor
+except:
+    from editor.editor import Editor
+
 from remi import start
 
 if __name__ == "__main__":
