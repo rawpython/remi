@@ -25,7 +25,7 @@ class SvgComposedPoly(gui.SvgGroup):
     """ A group of polyline and circles
     """
     def __init__(self, x, y, maxlen, stroke, color, *args, **kwargs):
-        super(SvgComposedPoly, self).__init__(x, y, *args, **kwargs)
+        super(SvgComposedPoly, self).__init__(*args, **kwargs)
         self.maxlen = maxlen
         self.plotData = gui.SvgPolyline(self.maxlen)
         self.plotData.set_fill('none')
@@ -72,10 +72,10 @@ class SvgComposedPoly(gui.SvgGroup):
         
 
 class SvgPlot(gui.Svg):
-    def __init__(self, width, height):
-        super(SvgPlot, self).__init__(width, height)
-        self.width = width
-        self.height = height
+    def __init__(self, _width, _height):
+        super(SvgPlot, self).__init__(width = _width, height = _height)
+        self.width = _width
+        self.height = _height
         self.polyList = []
         self.font_size = 15
         self.plot_inner_border = self.font_size
