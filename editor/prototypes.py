@@ -56,31 +56,24 @@ class %(classname)s(App):
 """
 
 proto_export_app_template = """
-import core.globals
-import remi        # This doesn't work with files from remi
 from remi.gui import *
-from remi import start, App
 
-class %(classname)s( %(superclassname)s ):
-# The name of the class has to be identical with the name of the file (view_template.py), but with capital first letter!
-# Files which have a Underscore at first place in filename will not be loaded (by renaming you can take them out for development easily).
+class %(classname)s( %(superclassname)s ):                                                                                                          #cheak:Maybe change class name to name of root container
 
     def __init__(self, AppInst=None, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)       # Initializes the Parent Object remi.gui.Container
-        self.AppInst = AppInst                  # Holds the Instance of the App. We need it to access uiControl
-        self.shownInMenu = 'My Example Menu'          # Use None if it should not be visible in any Menu
-        self.menuTitle = 'from REMI Editor container rel'
-        self.style.update({'width': '100%%', 'margin': 'auto', 'border': '1px solid black', 'padding': '10px', 'margin-top': '20px'})
-        self.append(self.constructUI())
-        self.registerEventHandlers()
+        super().__init__(*args, **kwargs)                                                                                                #cheak:remove Comments
+        self.AppInst = AppInst                                                                                                           #cheak:remove Comments
+        self.constructUI()                                                                                                               #cheak:instead we just call it
+        self.userInit(args, kwargs)                                                                                                      #more. Register events. Add custom widgets. Add css classes etc.
+                                                                                                                                         # pass kwargs to user init in case user needs it.
 
     def constructUI(self):
-
         %(nested_code)s
-
-    def registerEventHandlers(self):
         %(events_registration)s
+
+    def userInit(self, *args, **kwargs):
+        self.shownInMenu = 'My Menu Name'
+        self.menuTitle = 'My View Name'
 
     def updateView(self):
         # Here you can update the view if it needs updates

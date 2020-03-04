@@ -552,14 +552,14 @@ class Project(gui.Container):
             code_nested = prototypes.proto_widget_allocation % {
                 'varname': widgetVarName, 'classname': classname}
 
-            for x, y in inspect.getmembers(widget.__class__):
-                if type(y) == property and not getattr(widget, x) is None:
-                    if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
-                        _value = getattr(widget, x)
-                        if type(_value) == str:
-                            _value = '"%s"' % _value
-                        code_nested += prototypes.proto_property_setup % {
-                            'varname': widgetVarName, 'property': x, 'value': _value}
+        for x, y in inspect.getmembers(widget.__class__):
+            if type(y) == property and not getattr(widget, x) is None:
+                if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
+                    _value = getattr(widget, x)
+                    if type(_value) == str:
+                        _value = '"%s"' % _value
+                    code_nested += prototypes.proto_property_setup % {
+                        'varname': 'self' if first_node else widgetVarName, 'property': x, 'value': _value}
         else:
             #eventually, properties have to be placed in the container constructor
             pass
@@ -638,7 +638,8 @@ class Project(gui.Container):
                 if len(events_registration) < 1:
                     events_registration = 'pass'
                 self.code_declared_classes[widget.identifier] = prototypes.proto_export_app_template % {'classname': classname, 'superclassname': widget.__class__.__name__,
-                                                                                           'nested_code': children_code_nested, 'events_registration': events_registration} + self.code_declared_classes[widget.identifier]
+                                                                                           'nested_code': code_nested + children_code_nested, 'events_registration': events_registration} + self.code_declared_classes[widget.identifier]
+                code_nested = ''                                                                                           
             else:
                 children_code_nested += events_registration
                 self.code_declared_classes[widget.identifier] = prototypes.proto_code_class % {'classname': classname, 'superclassname': widget.__class__.__name__,
