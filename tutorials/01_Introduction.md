@@ -1,19 +1,15 @@
 <h1>Welcome</h1>
 <p style="white-space:pre">
 
-**Remi** is a Graphical User Interface library (GUI) for python language. 
-It is designed to be lightweight, multiplatform and remotable.
-In a few kilobytes of source code you get a complete library that allows you build fancy powerful applications.
-Remi applications are compatible with almost all platforms that allow to run python scripts (also on Android).
-Your applications would benefit also of the remotable capability, making it possible to access your interfaces exactly 
-as for a webpage with a common web browser. Suppose you build a raspberrypi GPIO commander, than you will be able 
-to command your raspberrypi with your smartphone or laptop (or both at the same time). Suppose you write an 
-application for office management, all coworkers will be able to access the application from every stations without 
-installing nothing.  
+**Remi** is a Graphical User Interface library (GUI) for the Python language. Remi is designed to be lightweight, multiplatform, and accessed remotely via a web browser. In a few kilobytes of source code, you get a complete library that allows you to build rich and robust applications. Remi applications are compatible with almost all platforms that can run Python scripts (Remo also works on Android). You can even access your Remi applications remotely with a browser, making it possible to access your interfaces as a web page. 
 
-Remi has an API interface similar to other common GUI libraries. The single GUI elements are called widgets, such as Buttons, TextInput fields, Tables and so on. The widgets collection is complete enough to make every kind of applications. If you feel comfortable with Object Oriented development you will feel great with it.
+Suppose you build a GPIO command interface for a Raspberry Pi. With a Remi GUI, you can send commands to your Raspberry Pi with your smartphone or laptop (or even both at the same time). 
 
-Here is presented a basic Hello World application:
+Suppose you write an application for office management: all coworkers can access the application from their workstations using just a browser.
+
+Remi has an API interface similar to other common GUI libraries. Each single GUI element is called a widget. Remi comes with many widgets such as Buttons, TextInput fields, Tables. The widgets collection is complete enough to make almost any kind of GUI application you would want. If you are comfortable with Object-Oriented development, you should be able to learn to build GUI applications quickly.
+
+Presented below is a basic Hello World application:
 </p>
 
 ```python
