@@ -1140,13 +1140,15 @@ class Editor(App):
             self.toolbar_delete_clicked(None)
             return
 
-        value = int(self.spin_grid_size.get_value())
-        value = value if str(keycode) in (arrow_down, arrow_right) else -value
-        key = 'left' if str(keycode) in (arrow_left, arrow_right) else 'top'
-        if ctrl:
-            key = {'left':'width', 'top':'height'}[key]
+        if keycode in (arrow_left, arrow_right, arrow_up, arrow_down):
+            value = int(self.spin_grid_size.get_value())
+            value = value if str(keycode) in (arrow_down, arrow_right) else -value
+            key = 'left' if str(keycode) in (arrow_left, arrow_right) else 'top'
+            if ctrl:
+                key = {'left':'width', 'top':'height'}[key]
 
-        self.move_widget(key, value)
+            self.move_widget(key, value)
+        
         self.on_drag_resize_end(self)
 
         print("Key pressed: " + str(keycode) + "  ctrl: " + str(ctrl) + "  shift: " + str(shift))

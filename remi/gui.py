@@ -2126,6 +2126,14 @@ class TextInput(Widget, _MixinTextualWidget):
      retrieve its content with get_text.
     """
 
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum text content length.''', int, {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
+    def attr_maxlength(self): return self.attributes.get('maxlength', '0')
+    @attr_maxlength.setter
+    def attr_maxlength(self, value): self.attributes['maxlength'] = str(value)
+    @attr_maxlength.deleter
+    def attr_maxlength(self): del self.attributes['maxlength']
+
     def __init__(self, single_line=True, hint='', *args, **kwargs):
         """
         Args:
