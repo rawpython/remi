@@ -885,7 +885,7 @@ class StandaloneServer(Server):
 
 def start(main_gui_class, **kwargs):
     """This method starts the webserver with a specific App subclass."""
-    debug = kwargs.pop('debug', False)
+    debug = True if sys.flags.debug else kwargs.pop('debug', False)
     standalone = kwargs.pop('standalone', False)
 
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
