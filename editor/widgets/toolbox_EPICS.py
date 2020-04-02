@@ -299,7 +299,7 @@ class EPICSValueGaugeWidget(Svg, EPICSWidget):
         default_style = {'position':'absolute','left':'10px','top':'10px'}
         default_style.update(kwargs.get('style',{}))
         kwargs['style'] = default_style
-        super(EPICSValueGaugeWidget, self).__init__(w, h, *args, **kwargs)
+        super(EPICSValueGaugeWidget, self).__init__(width=w, height=h, *args, **kwargs)
         self.epics_pv_name = epics_pv_name
 
         #the indicator
