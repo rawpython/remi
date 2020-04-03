@@ -3413,6 +3413,117 @@ class Date(Input):
         super(Date, self).__init__('date', default_value, **kwargs)
 
 
+class Datalist(Container):
+    def __init__(self, *args, **kwargs):
+        super(Datalist, self).__init__(*args, **kwargs)
+        self.type = 'datalist'
+        self.css_display = 'none'
+
+    def append(self, options, key=''):
+        if type(options) in (list, tuple, dict):
+            if type(options)==dict:
+                for k in options.keys():
+                    self.append(options[k], k)
+                return options.keys()
+            keys = []
+            for child in options:
+                keys.append( self.append(child) )
+            return keys
+
+        if not isinstance(options, DatalistItem):
+            raise ValueError('options should be an Option or an iterable of Option(otherwise use add_child(key,other)')
+
+        key = options.identifier if key == '' else key
+        self.add_child(key, options)
+        return key
+
+
+class DatalistItem(Widget, _MixinTextualWidget):
+    """item widget for the DropDown"""
+
+    def __init__(self, text='', *args, **kwargs):
+        """
+        Args:
+            kwargs: See Widget.__init__()
+        """
+        super(DatalistItem, self).__init__(*args, **kwargs)
+        self.type = 'option'
+        self.set_text(text)
+
+    def set_value(self, text):
+        return self.set_text(text)
+
+    def get_value(self):
+        return self.get_text()
+
+
+class SelectionInput(Input):
+    """ selection input widget useful list selection field implements the oninput event.
+        https://developer.mozilla.org/en-US/docs/Web/HTML/Element/datalist
+    """
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the widget.''', str, {})
+    def attr_value(self): return self.attributes.get('value', '0')
+    @attr_value.setter
+    def attr_value(self, value): self.attributes['value'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the datalist.''', str, {})
+    def attr_datalist_identifier(self): 
+        return self.attributes.get('list', '0')
+    @attr_datalist_identifier.setter
+    def attr_datalist_identifier(self, value): 
+        if isinstance(value, Datalist):
+            value = value.identifier
+        self.attributes['list'] = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
+    def attr_input_type(self): return self.attributes.get('type', 'text')
+    @attr_input_type.setter
+    def attr_input_type(self, value): self.attributes['type'] = str(value)
+
+    def __init__(self, default_value="", input_type="text", **kwargs):
+        """
+        Args:
+            selection_type (str): text, search, url, tel, email, date, month, week, time, datetime-local, number, range, color. 
+            kwargs: See Widget.__init__()
+        """
+        super(SelectionInput, self).__init__(input_type, default_value, **kwargs)
+        
+        self.attributes[Widget.EVENT_ONCHANGE] = \
+            "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
+
+    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_event_js("""var params={};
+            params['value']=this.value;
+            sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
+    def oninput(self, value):
+        self.disable_refresh()
+        self.set_value(value)
+        self.enable_refresh()
+        return (value, )
+
+    def set_value(self, value):
+        self.attr_value = value
+
+    def get_value(self):
+        """
+        Returns:
+            str: the actual value
+        """
+        return self.attr_value
+
+    def set_datalist_identifier(self, datalist):
+        self.attr_datalist_identifier = datalist
+
+    def get_datalist_identifier(self):
+        return self.attr_datalist_identifier
+
+
 class GenericObject(Widget):
     """
     GenericObject widget - allows to show embedded object like pdf,swf..
