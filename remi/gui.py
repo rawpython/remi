@@ -614,7 +614,7 @@ class Widget(Tag, EventSource):
     @css_bottom.setter
     def css_bottom(self, value): self.style['bottom'] = str(value)
     @css_bottom.deleter
-    def css_bottom(self, value): del self.style['bottom']
+    def css_bottom(self): del self.style['bottom']
 
     @property
     @editor_attribute_decorator("Geometry",'''Visibility behavior in case of content does not fit in size.''', 'DropDown', {'possible_values': ('visible', 'hidden', 'scroll', 'auto')})
@@ -622,7 +622,7 @@ class Widget(Tag, EventSource):
     @css_overflow.setter
     def css_overflow(self, value): self.style['overflow'] = str(value)
     @css_overflow.deleter
-    def css_overflow(self, value): del self.style['overflow']
+    def css_overflow(self): del self.style['overflow']
 
     @property
     @editor_attribute_decorator("Background",'''Background color of the widget''', 'ColorPicker', {})
