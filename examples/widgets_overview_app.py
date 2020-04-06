@@ -250,7 +250,7 @@ class MyApp(App):
     def open_input_dialog(self, widget):
         self.inputDialog = gui.InputDialog('Input Dialog', 'Your name?',
                                            initial_value='type here', 
-                                           width=500, height=160)
+                                           width=500)
         self.inputDialog.confirm_value.do(
             self.on_input_dialog_confirm)
 

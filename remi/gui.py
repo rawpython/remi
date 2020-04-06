@@ -869,7 +869,8 @@ class Widget(Tag, EventSource):
 
         self.oldRootWidget = None  # used when hiding the widget
 
-        self.css_margin = kwargs.get('margin', '0px')
+        if 'margin' in kwargs:
+            self.css_margin = kwargs.get('margin')
         self.set_size(kwargs.get('width'), kwargs.get('height'))
         self.set_style(style)
 

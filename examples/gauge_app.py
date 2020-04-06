@@ -48,7 +48,7 @@ class InputGauge(gui.VBox, gui.EventSource):
 
 class Gauge(gui.Svg):
     def __init__(self, width, height, _min, _max):
-        super(Gauge, self).__init__(width, height)
+        super(Gauge, self).__init__(width=width, height=height)
         self.width = width
         self.height = height
         self.min = _min
