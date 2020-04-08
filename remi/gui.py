@@ -3161,7 +3161,8 @@ class Input(Widget):
             default_value (str):
             kwargs: See Widget.__init__()
         """
-        kwargs['_class'] = input_type
+        if not '_class' in kwargs:
+            kwargs['_class'] = input_type
         super(Input, self).__init__(*args, **kwargs)
         self.type = 'input'
 
