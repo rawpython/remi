@@ -4166,6 +4166,151 @@ class _MixinSvgSize():
         self.attr_height = h
 
 
+class SvgStop(Tag):
+    """ """
+     
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient color''', 'ColorPicker', {})
+    def css_stop_color(self): return self.style.get('stop-color', None)
+    @css_stop_color.setter
+    def css_stop_color(self, value): self.style['stop-color'] = str(value)
+    @css_stop_color.deleter
+    def css_stop_color(self): del self.style['stop-color']
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''The opacity property sets the opacity level for the gradient.
+    The opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 0 is completely transparent.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    def css_stop_opactity(self): return self.style.get('stop-opacity', None)
+    @css_stop_opactity.setter
+    def css_stop_opactity(self, value): self.style['stop-opacity'] = str(value)
+    @css_stop_opactity.deleter
+    def css_stop_opactity(self): del self.style['stop-opacity']
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''The offset value for the gradient stop. It is in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_offset(self): return self.attributes.get('offset', None)
+    @attr_offset.setter
+    def attr_offset(self, value): self.attributes['offset'] = str(value)
+
+    def __init__(self, offset='0%', color="rgb(255,255,0)", opacity=1.0, *args, **kwargs):
+        super(SvgStop, self).__init__(*args, **kwargs)
+        self.type = 'stop'
+        self.attr_offset = offset
+        self.css_stop_color = color
+        self.css_stop_opactity = opacity
+
+
+class SvgGradientLinear(Tag):
+    """ """
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_x1(self): return self.attributes.get('x1', None)
+    @attr_x1.setter
+    def attr_x1(self, value): 
+        self.attributes['x1'] = str(value)
+        if not self.attributes['x1'][-1]=='%':
+            self.attributes['x1'] = self.attributes['x1'] + '%'
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_y1(self): return self.attributes.get('y1', None)
+    @attr_y1.setter
+    def attr_y1(self, value): 
+        self.attributes['y1'] = str(value)
+        if not self.attributes['y1'][-1]=='%':
+            self.attributes['y1'] = self.attributes['y1'] + '%'
+    
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_x2(self): return self.attributes.get('x2', None)
+    @attr_x2.setter
+    def attr_x2(self, value): 
+        self.attributes['x2'] = str(value)
+        if not self.attributes['x2'][-1]=='%':
+            self.attributes['x2'] = self.attributes['x2'] + '%'
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_y2(self): return self.attributes.get('y2', None)
+    @attr_y2.setter
+    def attr_y2(self, value): 
+        self.attributes['y2'] = str(value)
+        if not self.attributes['y2'][-1]=='%':
+            self.attributes['y2'] = self.attributes['y2'] + '%'
+
+    def __init__(self, x1, y1, x2, y2, *args, **kwargs):
+        super(SvgGradientLinear, self).__init__(*args, **kwargs)
+        self.type = 'linearGradient'
+        self.attr_x1 = x1
+        self.attr_y1 = y1
+        self.attr_x2 = x2
+        self.attr_y2 = y2
+
+
+class SvgGradientRadial(Tag):
+    """ """
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_cx(self): return self.attributes.get('cx', None)
+    @attr_cx.setter
+    def attr_cx(self, value): 
+        self.attributes['cx'] = str(value)
+        if not self.attributes['cx'][-1]=='%':
+            self.attributes['cx'] = self.attributes['cx'] + '%'
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_cy(self): return self.attributes.get('cy', None)
+    @attr_cy.setter
+    def attr_cy(self, value): 
+        self.attributes['cy'] = str(value)
+        if not self.attributes['cy'][-1]=='%':
+            self.attributes['cy'] = self.attributes['cy'] + '%'
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_fx(self): return self.attributes.get('fx', None)
+    @attr_fx.setter
+    def attr_fx(self, value): 
+        self.attributes['fx'] = str(value)
+        if not self.attributes['fx'][-1]=='%':
+            self.attributes['fx'] = self.attributes['fx'] + '%'
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_fy(self): return self.attributes.get('fy', None)
+    @attr_fy.setter
+    def attr_fy(self, value): 
+        self.attributes['fy'] = str(value)
+        if not self.attributes['fy'][-1]=='%':
+            self.attributes['fy'] = self.attributes['fy'] + '%'
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient radius value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_r(self): return self.attributes.get('r', None)
+    @attr_r.setter
+    def attr_r(self, value): 
+        self.attributes['r'] = str(value)
+        if not self.attributes['r'][-1]=='%':
+            self.attributes['r'] = self.attributes['r'] + '%'
+
+    def __init__(self, cx="20%", cy="30%", r="30%", fx="50%", fy="50%", *args, **kwargs):
+        super(SvgGradientRadial, self).__init__(*args, **kwargs)
+        self.type = 'radialGradient'
+        self.attr_cx = cx
+        self.attr_cy = cy
+        self.attr_fx = fx
+        self.attr_fy = fy
+        self.attr_r  = r
+
+
+class SvgDefs(Tag):
+    """ """
+    def __init__(self, *args, **kwargs):
+        super(SvgDefs, self).__init__(*args, **kwargs)
+        self.type = 'defs'
+    
+
 class Svg(Container):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
     @property
@@ -4230,6 +4375,18 @@ class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
 
 
 class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill):
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Horizontal round corners value.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_round_corners_h(self): return self.attributes.get('rx', '0')
+    @attr_round_corners_h.setter
+    def attr_round_corners_h(self, value): self.attributes['rx'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Vertical round corners value. Defaults to attr_round_corners_h.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_round_corners_y(self): return self.attributes.get('ry', '0')
+    @attr_round_corners_y.setter
+    def attr_round_corners_y(self, value): self.attributes['ry'] = str(value)
 
     def __init__(self, x=0, y=0, w=100, h=100, *args, **kwargs):
         """
