@@ -1909,8 +1909,9 @@ class HBox(Container):
 
         # fixme: support old browsers
         # http://stackoverflow.com/a/19031640
-        self.style.update({'display':'flex', 'justify-content':'space-around',
-            'align-items':'center', 'flex-direction':'row'})
+        self.style.update({'display':'flex', 'flex-direction':'row'})
+        self.style['justify-content'] = self.style.get('justify-content', 'space-around')
+        self.style['align-items'] = self.style.get('align-items', 'center')
 
     def append(self, value, key=''):
         """It allows to add child widgets to this.
