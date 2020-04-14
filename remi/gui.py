@@ -3630,7 +3630,6 @@ class FileFolderNavigator(Container):
             if (not is_folder) and (not self.allow_file_selection):
                 continue
             fi = FileFolderItem(i, is_folder)
-            fi.css_display = 'block'
             fi.onclick.connect(self.on_folder_item_click)  # navigation purpose
             fi.onselection.connect(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
@@ -3708,13 +3707,10 @@ class FileFolderNavigator(Container):
 class FileFolderItem(Container):
     """FileFolderItem widget for the FileFolderNavigator"""
 
-    def __init__(self, text, is_folder=False, **kwargs):
-        super(FileFolderItem, self).__init__(**kwargs)
-        super(FileFolderItem, self).set_layout_orientation(Container.LAYOUT_HORIZONTAL)
-        self.css_margin = '3px'
+    def __init__(self, text, is_folder=False, *args, **kwargs):
+        super(FileFolderItem, self).__init__(*args, **kwargs)
         self.isFolder = is_folder
         self.icon = Widget(_class='FileFolderItemIcon')
-        self.icon.set_size(30, 30)
         # the icon click activates the onselection event, that is propagates to registered listener
         if is_folder:
             self.icon.onclick.connect(self.onclick)
@@ -3723,7 +3719,6 @@ class FileFolderItem(Container):
         icon_file = '/res:folder.png' if is_folder else '/res:file.png'
         self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
-        self.label.set_size(400, 30)
         self.label.onclick.connect(self.onselection)
         self.append(self.icon, key='icon')
         self.append(self.label, key='text')
