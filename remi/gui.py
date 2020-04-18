@@ -3250,6 +3250,12 @@ class CheckBoxLabel(HBox):
     def set_on_change_listener(self, callback, *userdata):
         self.onchange.connect(callback, *userdata)
 
+    def get_text(self):
+        return self._label.get_text()
+
+    def set_text(self, t):
+        self._label.set_text(t)
+
 
 class CheckBox(Input):
     """check box widget useful as numeric input field implements the onchange event."""
