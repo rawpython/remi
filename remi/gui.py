@@ -1008,6 +1008,15 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
+    def onmouseover(self):
+        """Called when the mouse cursor moves onto a Widget.
+
+        Note: This event is often used together with the Widget.onmouseout event.
+        """
+        return ()
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("sendCallback('%(emitter_identifier)s','%(event_name)s');")
     def onmouseleave(self):
         """Called when the mouse cursor moves outside a Widget.
 
