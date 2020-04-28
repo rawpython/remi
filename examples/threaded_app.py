@@ -22,12 +22,12 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def idle(self):
-        #this function is called automatically by remi library at specific interval
+        # this function is called automatically by remi library at specific interval
         # so here I can assign values to widget
-        self.lbl.set_text( 'Thread result:' + str(self.my_thread_result))
-        
+        self.lbl.set_text('Thread result:' + str(self.my_thread_result))
+
     def main(self):
-        #margin 0px auto allows to center the app to the screen
+        # margin 0px auto allows to center the app to the screen
         wid = gui.VBox(width=300, height=200, margin='0px auto')
         self.lbl = gui.Label('Thread result:', width='80%', height='50%')
         self.lbl.style['margin'] = 'auto'
@@ -41,10 +41,10 @@ class MyApp(App):
 
         self.thread_alive_flag = True
         self.my_thread_result = 0
-        #Here I start a parallel thread that executes my algorithm for a long time
+        # Here I start a parallel thread that executes my algorithm for a long time
         t = threading.Thread(target=self.my_intensive_long_time_algorithm)
         t.start()
-        
+
         bt.onclick.do(self.on_button_pressed)
 
         # returning the root widget
@@ -53,13 +53,14 @@ class MyApp(App):
     def my_intensive_long_time_algorithm(self):
         while self.thread_alive_flag:
             self.my_thread_result = self.my_thread_result + 1
-            
+
     def on_button_pressed(self, emitter):
         self.thread_alive_flag = False
 
     def on_close(self):
         self.thread_alive_flag = False
         super(MyApp, self).on_close()
-        
+
+
 if __name__ == "__main__":
-    start(MyApp, debug=True, address='0.0.0.0', port=0, update_interval = 0.1)
+    start(MyApp, debug=True, address='0.0.0.0', port=0, update_interval=0.1)
