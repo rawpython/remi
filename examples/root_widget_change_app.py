@@ -22,22 +22,24 @@ import remi.gui as gui
 from remi import start, App
 import os
 
+
 class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        #static_file_path can be an array of strings allowing to define
+        # static_file_path can be an array of strings allowing to define
         #  multiple resource path in where the resources will be placed
         super(MyApp, self).__init__(*args, static_file_path=res_path)
 
-    def main(self):        
-        #creating two "pages" widgets to be shown alternatively
-        lbl = gui.Label("Page 2. Press the button to change the page.", style={'font-size':'20px'})
+    def main(self):
+        # creating two "pages" widgets to be shown alternatively
+        lbl = gui.Label("Page 2. Press the button to change the page.", style={'font-size': '20px'})
         bt2 = gui.Button("change page")
-        page2 = gui.HBox(children=[lbl, bt2], style={'margin':'0px auto', 'background-color':'lightgray'})
-        
-        lbl = gui.Label("Page 1. Press the button to change the page.", style={'font-size':'20px'})
+        page2 = gui.HBox(children=[lbl, bt2], style={'margin': '0px auto', 'background-color': 'lightgray'})
+
+        lbl = gui.Label("Page 1. Press the button to change the page.", style={'font-size': '20px'})
         bt1 = gui.Button("change page")
-        page1 = gui.VBox(children=[lbl, bt1], style={'width':'300px', 'height':'200px', 'margin':'0px auto', 'background-color':'white'})
+        page1 = gui.VBox(children=[lbl, bt1],
+                         style={'width': '300px', 'height': '200px', 'margin': '0px auto', 'background-color': 'white'})
 
         bt1.onclick.do(self.set_different_root_widget, page2)
         bt2.onclick.do(self.set_different_root_widget, page1)

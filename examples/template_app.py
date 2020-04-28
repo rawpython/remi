@@ -16,10 +16,11 @@ import remi.gui as gui
 from remi import start, App
 import os
 
+
 class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        #static_file_path can be an array of strings allowing to define
+        # static_file_path can be an array of strings allowing to define
         #  multiple resource path in where the resources will be placed
         super(MyApp, self).__init__(*args, static_file_path=res_path)
 
@@ -32,8 +33,8 @@ class MyApp(App):
         pass
 
     def main(self):
-        #creating a container VBox type, vertical (you can use also HBox or Widget)
-        main_container = gui.VBox(width=300, height=200, style={'margin':'0px auto'})
+        # creating a container VBox type, vertical (you can use also HBox or Widget)
+        main_container = gui.VBox(width=300, height=200, style={'margin': '0px auto'})
 
         # returning the root widget
         return main_container
