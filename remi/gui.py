@@ -88,7 +88,7 @@ def load_resource(filename):
         data = data.encode('utf-8')
     else:
         data = str(data, 'utf-8')
-    return "data:%(mime)s;base64,%(data)s"%{'mime':mimetype, 'data':data}
+    return "data:%(mime)s;base64,%(data)s" % {'mime': mimetype, 'data': data}
 
 
 def to_uri(uri_data):
@@ -100,7 +100,7 @@ def to_uri(uri_data):
         Returns:
             str: the input string encased in url('') ie. url('/res:image.png')
     """
-    return ("url('%s')"%uri_data)
+    return ("url('%s')" % uri_data)
 
 
 class EventSource(object):
@@ -134,7 +134,7 @@ class ClassEventConnector(object):
         self.callback = None
         self.userdata = ()
         self.kwuserdata = {}
-        self.connect = self.do #for compatibility reasons
+        self.connect = self.do  # for compatibility reasons
 
     def do(self, callback, *userdata, **kwuserdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
@@ -142,10 +142,10 @@ class ClassEventConnector(object):
         """
 
         if hasattr(self.event_method_bound, '_js_code'):
-            js_stop_propagation=kwuserdata.pop('js_stop_propagation', False)
-            js_prevent_default=kwuserdata.pop('js_prevent_default', False)
-            self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
-                'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name} + \
+            js_stop_propagation = kwuserdata.pop('js_stop_propagation', False)
+            js_prevent_default = kwuserdata.pop('js_prevent_default', False)
+            self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code % {
+                'emitter_identifier': self.event_source_instance.identifier, 'event_name': self.event_name} + \
                 ("event.stopPropagation();" if js_stop_propagation else "") + \
                 ("event.preventDefault();" if js_prevent_default else "")
                 
@@ -156,15 +156,15 @@ class ClassEventConnector(object):
             self.kwuserdata = kwuserdata
 
     def __call__(self, *args, **kwargs):
-        #here the event method gets called
-        callback_params =  self.event_method_bound(*args, **kwargs)
+        # here the event method gets called
+        callback_params = self.event_method_bound(*args, **kwargs)
         if not self.callback:
             return callback_params
         if not callback_params:
             callback_params = self.userdata
         else:
             callback_params = callback_params + self.userdata
-        #here the listener gets called, passing as parameters the return values of the event method
+        # here the listener gets called, passing as parameters the return values of the event method
         # plus the userdata parameters
         return self.callback(self.event_source_instance, *callback_params, **self.kwuserdata)
 
@@ -184,8 +184,8 @@ def decorate_event_js(js_code):
             widget.attributes['onclick'] = js_code%{'emitter_identifier':widget.identifier, 'event_name':'onclick'}
     """
     def add_annotation(method):
-        setattr(method, "__is_event", True )
-        setattr(method, "_js_code", js_code )
+        setattr(method, "__is_event", True)
+        setattr(method, "_js_code", js_code)
         return method
     return add_annotation
 
@@ -285,7 +285,7 @@ class Tag(object):
     but it is not necessarily graphically representable.
     """
 
-    def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
+    def __init__(self, attributes=None, _type='', _class=None,  **kwargs):
         """
         Args:
             attributes (dict): The attributes to be applied.
@@ -294,7 +294,7 @@ class Tag(object):
            id (str): the unique identifier for the class instance, useful for public API definition.
         """
         if attributes is None:
-            attributes={}
+            attributes = {}
         self._parent = None
 
         self.kwargs = kwargs
@@ -313,7 +313,7 @@ class Tag(object):
         self.type = _type
         self.identifier = str(id(self))
 
-        #attribute['id'] can be overwritten to get a static Tag identifier
+        # attribute['id'] can be overwritten to get a static Tag identifier
         self.attributes.update(attributes)
 
         # the runtime instances are processed every time a requests arrives, searching for the called method
@@ -324,10 +324,10 @@ class Tag(object):
         self._classes = []
         self.add_class(self.__class__.__name__ if _class == None else _class)
 
-        #this variable will contain the repr of this tag, in order to avoid useless operations
+        # this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
-    #@editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
+    # @editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
     @property
     def identifier(self):
         return self.attributes['id']
@@ -372,8 +372,8 @@ class Tag(object):
         if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>',
                                         _innerHTML, '</', self.type, '>'))
-            #faster but unsupported before python3.6
-            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
+            # faster but unsupported before python3.6
+            # self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
         if self._ischanged():
             # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
@@ -384,13 +384,13 @@ class Tag(object):
         return self._backup_repr
 
     def _need_update(self, emitter=None):
-        #if there is an emitter, it means self is the actual changed widget
+        # if there is an emitter, it means self is the actual changed widget
         if emitter:
             tmp = dict(self.attributes)
             if len(self.style):
                 tmp['style'] = jsonize(self.style)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                                tmp.items())
+                                             tmp.items())
             
         if not self.ignore_update:
             if self.get_parent():
@@ -433,7 +433,7 @@ class Tag(object):
                 of Tag is a dict, each item's key is set as 'key' param
         """
         if type(value) in (list, tuple, dict):
-            if type(value)==dict:
+            if type(value) == dict:
                 for k in value.keys():
                     self.add_child(k, value[k])
                 return
@@ -519,7 +519,7 @@ class Widget(Tag, EventSource):
     EVENT_ONCONTEXTMENU = "oncontextmenu"
     EVENT_ONUPDATE = 'onupdate'
 
-    #None is not visible in editor
+    # None is not visible in editor
     @property
     @editor_attribute_decorator("Generic",'''The variable name used by the editor''', str, {})
     def variable_name(self): return self.__dict__.get('__variable_name', None)
@@ -850,7 +850,7 @@ class Widget(Tag, EventSource):
     @css_position.deleter
     def css_position(self): del self.style['position']
 
-    def __init__(self, style = None, *args, **kwargs):
+    def __init__(self, style=None, *args, **kwargs):
 
         """
         Args:
@@ -860,7 +860,7 @@ class Widget(Tag, EventSource):
             margin (str): CSS margin specifier
         """
         if style is None:
-            style={}
+            style = {}
         if '_type' not in kwargs:
             kwargs['_type'] = 'div'
 
@@ -927,12 +927,11 @@ class Widget(Tag, EventSource):
         """Represents the widget as HTML format, packs all the attributes, children and so on.
 
         Args:
-            client (App): Client instance.
             changed_widgets (dict): A dictionary containing a collection of widgets that have to be updated.
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
         if changed_widgets is None:
-            changed_widgets={}
+            changed_widgets = {}
         return super(Widget, self).repr(changed_widgets)
 
     @decorate_set_on_listener("(self, emitter)")
@@ -1247,7 +1246,7 @@ class Container(Widget):
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
 
-    def __init__(self, children = None, *args, **kwargs):
+    def __init__(self, children=None, *args, **kwargs):
         """
         Args:
             children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
@@ -1276,13 +1275,13 @@ class Container(Widget):
                 of an iterable 'value' param
         """
         if type(value) in (list, tuple, dict):
-            if type(value)==dict:
+            if type(value) == dict:
                 for k in value.keys():
                     self.append(value[k], k)
                 return value.keys()
             keys = []
             for child in value:
-                keys.append( self.append(child) )
+                keys.append(self.append(child))
             return keys
 
         if not isinstance(value, Widget):
@@ -1323,7 +1322,7 @@ class HTML(Tag):
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
         if changed_widgets is None:
-            changed_widgets={}
+            changed_widgets = {}
         local_changed_widgets = {}
         self._set_updated()
         return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
@@ -1624,7 +1623,7 @@ class HEAD(Tag):
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
         if changed_widgets is None:
-            changed_widgets={}
+            changed_widgets = {}
         local_changed_widgets = {}
         self._set_updated()
         return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
@@ -1749,7 +1748,7 @@ class GridBox(Container):
             matrix (list): list of iterables of strings (lists or something else).
                 Items in the matrix have to correspond to a key for the children.
         """
-        self.css_grid_template_areas = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
+        self.css_grid_template_areas = ''.join("'%s'" % (' '.join(x)) for x in matrix)
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
@@ -1767,13 +1766,13 @@ class GridBox(Container):
                 of an iterable 'value' param
         """
         if type(value) in (list, tuple, dict):
-            if type(value)==dict:
+            if type(value) == dict:
                 for k in value.keys():
                     self.append(value[k], k)
                 return value.keys()
             keys = []
             for child in value:
-                keys.append( self.append(child) )
+                keys.append(self.append(child))
             return keys
 
         if not isinstance(value, Widget):
@@ -1789,7 +1788,7 @@ class GridBox(Container):
     def remove_child(self, child):
         if 'grid-area' in child.style.keys():
             del child.style['grid-area']
-        super(GridBox,self).remove_child(child)
+        super(GridBox, self).remove_child(child)
 
     def set_column_sizes(self, values):
         """Sets the size value for each column
@@ -1845,18 +1844,18 @@ class GridBox(Container):
                 \"\"\"
 
             Args:
-                value (str): The ascii defined grid
+                asciipattern (str): The ascii defined grid
                 column_gap (int): Percentage value of the total width to be used as gap between columns
                 row_gap (int): Percentage value of the total height to be used as gap between rows
 
         """
         rows = asciipattern.split("\n")
-        #remove empty rows
+        # remove empty rows
         for r in rows[:]:
             if len(r.replace(" ", ""))<1:
                 rows.remove(r)
         for ri in range(0,len(rows)):
-            #slicing row removing the first and the last separators
+            # slicing row removing the first and the last separators
             rows[ri] = rows[ri][rows[ri].find("|")+1:rows[ri].rfind("|")]
 
         columns = collections.OrderedDict()
