@@ -57,7 +57,7 @@ class Camera(App):
     def process_image(self, **kwargs):
         try:
             image = Image.open(io.BytesIO(base64.b64decode(kwargs['image'])))
-        except:
+        except Exception:
             return
 
         qr_code_list = decode(image)

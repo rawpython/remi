@@ -113,7 +113,7 @@ def parse_session_cookie(cookie_to_cook):
             #print("found session id: %s"%str(tok))
             try:
                 session_value = int(tok.replace('remi_session=', ''))
-            except:
+            except Exception:
                 pass
     return session_value
 
@@ -269,7 +269,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             self.finish()
             if terminate_server:
                 self.server.shutdown()
-        except:
+        except Exception:
             self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
 
 
@@ -419,12 +419,12 @@ class App(BaseHTTPRequestHandler, object):
             with self.update_lock:
                 try:
                     self.idle()
-                except:
+                except Exception:
                     self._log.error("exception in App.idle method", exc_info=True)
                 if self._need_update_flag:
                     try:
                         self.do_gui_update()
-                    except:
+                    except Exception:
                         self._log.error('''exception during gui update. It is advisable to 
                             use App.update_lock using external threads.''', exc_info=True)
 
@@ -475,12 +475,12 @@ class App(BaseHTTPRequestHandler, object):
             try:
                 #self._log.debug("sending websocket spontaneous message")
                 ws.send_message(message)
-            except:
+            except Exception:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
                 try:
                     self.websockets.remove(ws)
                     ws.close(terminate_server=False)
-                except:
+                except Exception:
                     self._log.error("unable to remove websocket client - already not in list", exc_info=True)
 
     def execute_javascript(self, code):
@@ -594,7 +594,7 @@ class App(BaseHTTPRequestHandler, object):
                         self._log.info('built UI (path=%s)' % path)
                         self.set_root_widget(self.main(*self.server.userdata))
                 self._process_all(path)
-            except:
+            except Exception:
                 self._log.error('error processing GET request', exc_info=True)
 
     def _get_static_file(self, filename):
@@ -844,7 +844,7 @@ class Server(object):
         while self._alive:
             try:
                 time.sleep(1)
-            except:
+            except Exception:
                 self._alive = False
         self._log.debug(' ** serve_forever() quitting')
 

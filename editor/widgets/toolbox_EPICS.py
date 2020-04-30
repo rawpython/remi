@@ -24,7 +24,7 @@ class EPICSWidget(object):
         self.disconnect()
         try:
             self.epics_pv = epics.PV(self.__epics_pv_name, auto_monitor=True, callback=self.onChanges, connection_callback=self.onConnectionChange, connection_timeout=2)
-        except:
+        except Exception:
             print(traceback.format_exc())
     
     epics_pv = None     # here will be stored the PV instance
@@ -215,7 +215,7 @@ class EPICSValueMeterWidget(Progress, EPICSWidget):
 
 try:
     import pygal
-except:
+except ImportError:
     print("It is required to install pygal to use EPICSPlotPV widget")
 
 class EPICSPlotPV(gui.Svg, EPICSWidget):
@@ -257,7 +257,7 @@ class EPICSPlotPV(gui.Svg, EPICSWidget):
                     pairs.append([self.values.coordsX[i], self.values.coordsY[i]])
                 plot.add(self.epics_pv_name, pairs)
                 self.add_child("chart", plot.render())
-            except:
+            except Exception:
                 self.style['overflow'] = "visible"
                 self.add_child("chart", gui.SvgText(10,10, "Install pygal to use this widget"))
 

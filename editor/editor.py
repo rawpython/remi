@@ -21,7 +21,7 @@ import os  # for path handling
 try:
     import prototypes
     import editor_widgets
-except:
+except ImportError:
     from . import prototypes
     from . import editor_widgets
 
@@ -62,7 +62,7 @@ class DraggableItem(gui.EventSource):
         if self.parent:
             try:
                 self.parent.remove_child(self)
-            except:
+            except Exception:
                 pass
         if newParent == None:
             return
@@ -71,7 +71,7 @@ class DraggableItem(gui.EventSource):
 
         try:
             self.parent.append(self)
-        except:
+        except Exception:
             pass
         self.update_position()
 
@@ -1013,7 +1013,7 @@ class Editor(App):
                 if widgetTree != None:
                     self.add_widget_to_editor(widgetTree)
                 self.projectPathFilename = filelist[0]
-            except:
+            except Exception:
                 self.show_error_dialog("ERROR: Unable to load the project",
                                        "There were an error during project load: %s" % traceback.format_exc())
 
