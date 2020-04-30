@@ -321,8 +321,7 @@ class Tag(object):
         # we not callable
         runtimeInstances[self.identifier] = self
 
-        self._classes = []
-        self.add_class(self.__class__.__name__ if _class == None else _class)
+        self.attr_class = self.__class__.__name__ if _class == None else _class
 
         #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
@@ -411,16 +410,19 @@ class Tag(object):
         self.ignore_update = False
 
     def add_class(self, cls):
-        self._classes.append(cls)
-        if len(self._classes):
-            self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
+        self.attributes['class'] = self.attributes['class'] + ' ' + cls
 
     def remove_class(self, cls):
+        classes = [''] #as the result of split
         try:
-            self._classes.remove(cls)
+            classes = self.attributes['class'].split(' ')
+            classes.remove(cls)
         except ValueError:
             pass
-        self.attributes['class'] = ' '.join(self._classes) if self._classes else ''
+        if len(classes) > 0:
+            self.attributes['class'] = ' '.join(classes) if len(classes)>1 else classes[0]
+        else:
+            self.attributes['class'] = ''
 
     def add_child(self, key, value):
         """Adds a child to the Tag
@@ -527,6 +529,14 @@ class Widget(Tag, EventSource):
     def variable_name(self, value): self.__dict__['__variable_name'] = value
     @variable_name.deleter
     def variable_name(self): del self.__dict__['__variable_name']
+
+    @property
+    @editor_attribute_decorator("Generic",'''The html class attribute, allows to assign a css style class. Multiple classes have to be separed by space.''', str, {})
+    def attr_class(self): return self.attributes.get('class', None)
+    @attr_class.setter
+    def attr_class(self, value): self.attributes['class'] = value
+    @attr_class.deleter
+    def attr_class(self): del self.attributes['class']
 
     @property
     @editor_attribute_decorator("Generic",'''Defines if to overload the base class''', bool, {})
@@ -1312,7 +1322,6 @@ class Container(Widget):
 class HTML(Tag):
     def __init__(self, *args, **kwargs):
         super(HTML, self).__init__(*args, _type='html', **kwargs)
-        self._classes = []
 
     def repr(self, changed_widgets=None):
         """It is used to automatically represent the object to HTML format
@@ -1337,7 +1346,6 @@ class HEAD(Tag):
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
 
-        self._classes = []
         self.set_title(title)
 
     def set_icon_file(self, filename, rel="icon"):
