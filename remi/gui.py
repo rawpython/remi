@@ -19,38 +19,32 @@ import functools
 import threading
 import collections
 import inspect
-
 try:
     import html
-
     escape = html.escape
 except ImportError:
     import cgi
-
     escape = cgi.escape
 import mimetypes
 import base64
-
 try:
     # Python 2.6-2.7
     from HTMLParser import HTMLParser
-
     h = HTMLParser()
     unescape = h.unescape
 except ImportError:
     # Python 3
     try:
         from html.parser import HTMLParser
-
         h = HTMLParser()
         unescape = h.unescape
     except ImportError:
         # Python 3.4+
         import html
-
         unescape = html.unescape
 
 from .server import runtimeInstances
+
 
 log = logging.getLogger('remi.gui')
 
@@ -94,7 +88,7 @@ def load_resource(filename):
         data = data.encode('utf-8')
     else:
         data = str(data, 'utf-8')
-    return "data:%(mime)s;base64,%(data)s" % {'mime': mimetype, 'data': data}
+    return "data:%(mime)s;base64,%(data)s"%{'mime':mimetype, 'data':data}
 
 
 def to_uri(uri_data):
@@ -106,7 +100,7 @@ def to_uri(uri_data):
         Returns:
             str: the input string encased in url('') ie. url('/res:image.png')
     """
-    return ("url('%s')" % uri_data)
+    return ("url('%s')"%uri_data)
 
 
 class EventSource(object):
@@ -133,7 +127,6 @@ class ClassEventConnector(object):
         by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
         and after that the listener method is called too.
     """
-
     def __init__(self, event_source_instance, event_name, event_method_bound):
         self.event_source_instance = event_source_instance
         self.event_name = event_name
@@ -141,7 +134,7 @@ class ClassEventConnector(object):
         self.callback = None
         self.userdata = ()
         self.kwuserdata = {}
-        self.connect = self.do  # for compatibility reasons
+        self.connect = self.do #for compatibility reasons
 
     def do(self, callback, *userdata, **kwuserdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
@@ -149,13 +142,13 @@ class ClassEventConnector(object):
         """
 
         if hasattr(self.event_method_bound, '_js_code'):
-            js_stop_propagation = kwuserdata.pop('js_stop_propagation', False)
-            js_prevent_default = kwuserdata.pop('js_prevent_default', False)
-            self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code % {
-                'emitter_identifier': self.event_source_instance.identifier, 'event_name': self.event_name} + \
+            js_stop_propagation=kwuserdata.pop('js_stop_propagation', False)
+            js_prevent_default=kwuserdata.pop('js_prevent_default', False)
+            self.event_source_instance.attributes[self.event_name] = self.event_method_bound._js_code%{
+                'emitter_identifier':self.event_source_instance.identifier, 'event_name':self.event_name} + \
                 ("event.stopPropagation();" if js_stop_propagation else "") + \
                 ("event.preventDefault();" if js_prevent_default else "")
-
+                
         self.callback = callback
         if userdata:
             self.userdata = userdata
@@ -163,22 +156,22 @@ class ClassEventConnector(object):
             self.kwuserdata = kwuserdata
 
     def __call__(self, *args, **kwargs):
-        # here the event method gets called
-        callback_params = self.event_method_bound(*args, **kwargs)
+        #here the event method gets called
+        callback_params =  self.event_method_bound(*args, **kwargs)
         if not self.callback:
             return callback_params
         if not callback_params:
             callback_params = self.userdata
         else:
             callback_params = callback_params + self.userdata
-        # here the listener gets called, passing as parameters the return values of the event method
+        #here the listener gets called, passing as parameters the return values of the event method
         # plus the userdata parameters
         return self.callback(self.event_source_instance, *callback_params, **self.kwuserdata)
 
 
 def decorate_event(method):
     """ setup a method as an event """
-    setattr(method, "__is_event", True)
+    setattr(method, "__is_event", True )
     return method
 
 
@@ -190,12 +183,10 @@ def decorate_event_js(js_code):
             js_code is added to the widget html as
             widget.attributes['onclick'] = js_code%{'emitter_identifier':widget.identifier, 'event_name':'onclick'}
     """
-
     def add_annotation(method):
-        setattr(method, "__is_event", True)
-        setattr(method, "_js_code", js_code)
+        setattr(method, "__is_event", True )
+        setattr(method, "_js_code", js_code )
         return method
-
     return add_annotation
 
 
@@ -207,7 +198,6 @@ def decorate_set_on_listener(prototype):
             params (str): The list of parameters for the listener
                 method (es. "(self, new_value)")
     """
-
     # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(method):
         method._event_info = {}
@@ -227,17 +217,14 @@ def decorate_explicit_alias_for_listener_registration(method):
 
 
 def editor_attribute_decorator(group, description, _type, additional_data):
-    def add_annotation(prop):
-        setattr(prop, "editor_attributes",
-                {'description': description, 'type': _type, 'group': group, 'additional_data': additional_data})
+    def add_annotation(prop): 
+        setattr(prop, "editor_attributes", {'description':description, 'type':_type, 'group':group, 'additional_data':additional_data})
         return prop
-
     return add_annotation
 
 
 class _EventDictionary(dict, EventSource):
-    """
-    This dictionary allows to be notified if its content is changed.
+    """This dictionary allows to be notified if its content is changed.
     """
 
     def __init__(self, *args, **kwargs):
@@ -298,7 +285,7 @@ class Tag(object):
     but it is not necessarily graphically representable.
     """
 
-    def __init__(self, attributes=None, _type='', _class=None, **kwargs):
+    def __init__(self, attributes = None, _type = '', _class = None,  **kwargs):
         """
         Args:
             attributes (dict): The attributes to be applied.
@@ -307,7 +294,7 @@ class Tag(object):
            id (str): the unique identifier for the class instance, useful for public API definition.
         """
         if attributes is None:
-            attributes = {}
+            attributes={}
         self._parent = None
 
         self.kwargs = kwargs
@@ -326,7 +313,7 @@ class Tag(object):
         self.type = _type
         self.identifier = str(id(self))
 
-        # attribute['id'] can be overwritten to get a static Tag identifier
+        #attribute['id'] can be overwritten to get a static Tag identifier
         self.attributes.update(attributes)
 
         # the runtime instances are processed every time a requests arrives, searching for the called method
@@ -337,10 +324,10 @@ class Tag(object):
         self._classes = []
         self.add_class(self.__class__.__name__ if _class == None else _class)
 
-        # this variable will contain the repr of this tag, in order to avoid useless operations
+        #this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
 
-    # @editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
+    #@editor_attribute_decorator("Generic",'''The unique object identifier''', None, {})
     @property
     def identifier(self):
         return self.attributes['id']
@@ -382,11 +369,11 @@ class Tag(object):
         local_changed_widgets = {}
         _innerHTML = self.innerHTML(local_changed_widgets)
 
-        if self._ischanged() or (len(local_changed_widgets) > 0):
+        if self._ischanged() or ( len(local_changed_widgets) > 0 ):
             self._backup_repr = ''.join(('<', self.type, ' ', self._repr_attributes, '>',
-                                         _innerHTML, '</', self.type, '>'))
-            # faster but unsupported before python3.6
-            # self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
+                                        _innerHTML, '</', self.type, '>'))
+            #faster but unsupported before python3.6
+            #self._backup_repr = f'<{self.type} {self._repr_attributes}>{_innerHTML}</{self.type}>'
         if self._ischanged():
             # if self changed, no matter about the children because will be updated the entire parent
             # and so local_changed_widgets is not merged
@@ -397,14 +384,14 @@ class Tag(object):
         return self._backup_repr
 
     def _need_update(self, emitter=None):
-        # if there is an emitter, it means self is the actual changed widget
+        #if there is an emitter, it means self is the actual changed widget
         if emitter:
             tmp = dict(self.attributes)
             if len(self.style):
                 tmp['style'] = jsonize(self.style)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
-                                             tmp.items())
-
+                                                tmp.items())
+            
         if not self.ignore_update:
             if self.get_parent():
                 self.get_parent()._need_update()
@@ -446,7 +433,7 @@ class Tag(object):
                 of Tag is a dict, each item's key is set as 'key' param
         """
         if type(value) in (list, tuple, dict):
-            if type(value) == dict:
+            if type(value)==dict:
                 for k in value.keys():
                     self.add_child(k, value[k])
                 return
@@ -504,9 +491,8 @@ class Tag(object):
 
 
 class Widget(Tag, EventSource):
-    """
-    Base class for graphical gui widgets.
-    A widget has a graphical css style and receives events from the webpage.
+    """ Base class for graphical gui widgets.
+        A widget has a graphical css style and receives events from the webpage
     """
     # some constants for the events
     EVENT_ONCLICK = 'onclick'
@@ -533,600 +519,338 @@ class Widget(Tag, EventSource):
     EVENT_ONCONTEXTMENU = "oncontextmenu"
     EVENT_ONUPDATE = 'onupdate'
 
-    # None is not visible in editor
+    #None is not visible in editor
     @property
-    @editor_attribute_decorator("Generic", '''The variable name used by the editor''', str, {})
-    def variable_name(self):
-        return self.__dict__.get('__variable_name', None)
-
+    @editor_attribute_decorator("Generic",'''The variable name used by the editor''', str, {})
+    def variable_name(self): return self.__dict__.get('__variable_name', None)
     @variable_name.setter
-    def variable_name(self, value):
-        self.__dict__['__variable_name'] = value
-
+    def variable_name(self, value): self.__dict__['__variable_name'] = value
     @variable_name.deleter
-    def variable_name(self):
-        del self.__dict__['__variable_name']
+    def variable_name(self): del self.__dict__['__variable_name']
 
     @property
-    @editor_attribute_decorator("Generic", '''Defines if to overload the base class''', bool, {})
-    def attr_editor_newclass(self):
-        return self.__dict__.get('__editor_newclass', False)
-
+    @editor_attribute_decorator("Generic",'''Defines if to overload the base class''', bool, {})
+    def attr_editor_newclass(self): return self.__dict__.get('__editor_newclass', False)
     @attr_editor_newclass.setter
-    def attr_editor_newclass(self, value):
-        self.__dict__['__editor_newclass'] = value
-
+    def attr_editor_newclass(self, value): self.__dict__['__editor_newclass'] = value
     @attr_editor_newclass.deleter
-    def attr_editor_newclass(self):
-        del self.__dict__['__editor_newclass']
+    def attr_editor_newclass(self): del self.__dict__['__editor_newclass']
 
     @property
-    @editor_attribute_decorator("Layout", '''CSS float.''', 'DropDown',
-                                {'possible_values': ('none', 'inherit ', 'left', 'right')})
-    def css_float(self):
-        return self.style.get('float', None)
-
+    @editor_attribute_decorator("Layout",'''CSS float.''', 'DropDown', {'possible_values': ('none', 'inherit ', 'left', 'right')})
+    def css_float(self): return self.style.get('float', None)
     @css_float.setter
-    def css_float(self, value):
-        self.style['float'] = str(value)
-
+    def css_float(self, value): self.style['float'] = str(value)
     @css_float.deleter
-    def css_float(self):
-        del self.style['float']
+    def css_float(self): del self.style['float']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Margins allows to define spacing aroung element''', str, {})
-    def css_margin(self):
-        return self.style.get('margin', None)
-
+    @editor_attribute_decorator("Geometry",'''Margins allows to define spacing aroung element''', str, {})
+    def css_margin(self): return self.style.get('margin', None)
     @css_margin.setter
-    def css_margin(self, value):
-        self.style['margin'] = str(value)
-
+    def css_margin(self, value): self.style['margin'] = str(value)
     @css_margin.deleter
-    def css_margin(self):
-        del self.style['margin']
+    def css_margin(self): del self.style['margin']
 
     @property
-    @editor_attribute_decorator("Generic", '''Advisory information for the element''', str, {})
-    def attr_title(self):
-        return self.attributes.get('title', None)
-
+    @editor_attribute_decorator("Generic",'''Advisory information for the element''', str, {})
+    def attr_title(self): return self.attributes.get('title', None)
     @attr_title.setter
-    def attr_title(self, value):
-        self.attributes['title'] = str(value)
-
+    def attr_title(self, value): self.attributes['title'] = str(value)
     @attr_title.deleter
-    def attr_title(self):
-        del self.attributes['title']
+    def attr_title(self): del self.attributes['title']
 
     @property
-    @editor_attribute_decorator("Generic", '''Specifies whether or not an element is visible.''', 'DropDown',
-                                {'possible_values': ('visible', 'hidden')})
-    def css_visibility(self):
-        return self.style.get('visibility', None)
-
+    @editor_attribute_decorator("Generic",'''Specifies whether or not an element is visible.''', 'DropDown', {'possible_values': ('visible', 'hidden')})
+    def css_visibility(self): return self.style.get('visibility', None)
     @css_visibility.setter
-    def css_visibility(self, value):
-        self.style['visibility'] = str(value)
-
+    def css_visibility(self, value): self.style['visibility'] = str(value)
     @css_visibility.deleter
-    def css_visibility(self):
-        del self.style['visibility']
+    def css_visibility(self): del self.style['visibility']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Widget width.''', 'css_size', {})
-    def css_width(self):
-        return self.style.get('width', None)
-
+    @editor_attribute_decorator("Geometry",'''Widget width.''', 'css_size', {})
+    def css_width(self): return self.style.get('width', None)
     @css_width.setter
-    def css_width(self, value):
-        self.style['width'] = str(value)
-
+    def css_width(self, value): self.style['width'] = str(value)
     @css_width.deleter
-    def css_width(self):
-        del self.style['width']
+    def css_width(self): del self.style['width']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Widget height.''', 'css_size', {})
-    def css_height(self):
-        return self.style.get('height', None)
-
+    @editor_attribute_decorator("Geometry",'''Widget height.''', 'css_size', {})
+    def css_height(self): return self.style.get('height', None)
     @css_height.setter
-    def css_height(self, value):
-        self.style['height'] = str(value)
-
+    def css_height(self, value): self.style['height'] = str(value)
     @css_height.deleter
-    def css_height(self):
-        del self.style['height']
+    def css_height(self): del self.style['height']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Widget left.''', 'css_size', {})
-    def css_left(self):
-        return self.style.get('left', None)
-
+    @editor_attribute_decorator("Geometry",'''Widget left.''', 'css_size', {})
+    def css_left(self): return self.style.get('left', None)
     @css_left.setter
-    def css_left(self, value):
-        self.style['left'] = str(value)
-
+    def css_left(self, value):self.style['left'] = str(value)
     @css_left.deleter
-    def css_left(self):
-        del self.style['left']
+    def css_left(self):del self.style['left']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Widget top.''', 'css_size', {})
-    def css_top(self):
-        return self.style.get('top', None)
-
+    @editor_attribute_decorator("Geometry",'''Widget top.''', 'css_size', {})
+    def css_top(self): return self.style.get('top', None)
     @css_top.setter
-    def css_top(self, value):
-        self.style['top'] = str(value)
-
+    def css_top(self, value): self.style['top'] = str(value)
     @css_top.deleter
-    def css_top(self):
-        del self.style['top']
+    def css_top(self):del self.style['top']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Widget right.''', 'css_size', {})
-    def css_right(self):
-        return self.style.get('right', None)
-
+    @editor_attribute_decorator("Geometry",'''Widget right.''', 'css_size', {})
+    def css_right(self): return self.style.get('right', None)
     @css_right.setter
-    def css_right(self, value):
-        self.style['right'] = str(value)
-
+    def css_right(self, value): self.style['right'] = str(value)
     @css_right.deleter
-    def css_right(self):
-        del self.style['right']
+    def css_right(self):del self.style['right']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Widget bottom.''', 'css_size', {})
-    def css_bottom(self):
-        return self.style.get('bottom', None)
-
+    @editor_attribute_decorator("Geometry",'''Widget bottom.''', 'css_size', {})
+    def css_bottom(self): return self.style.get('bottom', None)
     @css_bottom.setter
-    def css_bottom(self, value):
-        self.style['bottom'] = str(value)
-
+    def css_bottom(self, value): self.style['bottom'] = str(value)
     @css_bottom.deleter
-    def css_bottom(self):
-        del self.style['bottom']
+    def css_bottom(self): del self.style['bottom']
 
     @property
-    @editor_attribute_decorator("Geometry", '''Visibility behavior in case of content does not fit in size.''',
-                                'DropDown', {'possible_values': ('visible', 'hidden', 'scroll', 'auto')})
-    def css_overflow(self):
-        return self.style.get('overflow', None)
-
+    @editor_attribute_decorator("Geometry",'''Visibility behavior in case of content does not fit in size.''', 'DropDown', {'possible_values': ('visible', 'hidden', 'scroll', 'auto')})
+    def css_overflow(self): return self.style.get('overflow', None)
     @css_overflow.setter
-    def css_overflow(self, value):
-        self.style['overflow'] = str(value)
-
+    def css_overflow(self, value): self.style['overflow'] = str(value)
     @css_overflow.deleter
-    def css_overflow(self):
-        del self.style['overflow']
+    def css_overflow(self): del self.style['overflow']
 
     @property
-    @editor_attribute_decorator("Background", '''Background color of the widget''', 'ColorPicker', {})
-    def css_background_color(self):
-        return self.style.get('background-color', None)
-
+    @editor_attribute_decorator("Background",'''Background color of the widget''', 'ColorPicker', {})
+    def css_background_color(self): return self.style.get('background-color', None)
     @css_background_color.setter
-    def css_background_color(self, value):
-        self.style['background-color'] = str(value)
-
+    def css_background_color(self, value): self.style['background-color'] = str(value)
     @css_background_color.deleter
-    def css_background_color(self):
-        del self.style['background-color']
+    def css_background_color(self): del self.style['background-color']
 
     @property
-    @editor_attribute_decorator("Background", '''An optional background image''', 'url_editor', {})
-    def css_background_image(self):
-        return self.style.get('background-image', None)
-
+    @editor_attribute_decorator("Background",'''An optional background image''', 'url_editor', {})
+    def css_background_image(self): return self.style.get('background-image', None)
     @css_background_image.setter
-    def css_background_image(self, value):
-        self.style['background-image'] = str(value)
-
+    def css_background_image(self, value): self.style['background-image'] = str(value)
     @css_background_image.deleter
-    def css_background_image(self):
-        del self.style['background-image']
+    def css_background_image(self): del self.style['background-image']
 
     @property
-    @editor_attribute_decorator("Background", '''The position of an optional background in the form 0% 0%''', str, {})
-    def css_background_position(self):
-        return self.style.get('background-position', None)
-
+    @editor_attribute_decorator("Background",'''The position of an optional background in the form 0% 0%''', str, {})
+    def css_background_position(self): return self.style.get('background-position', None)
     @css_background_position.setter
-    def css_background_position(self, value):
-        self.style['background-position'] = str(value)
-
+    def css_background_position(self, value): self.style['background-position'] = str(value)
     @css_background_position.deleter
-    def css_background_position(self):
-        del self.style['background-position']
+    def css_background_position(self): del self.style['background-position']
 
     @property
-    @editor_attribute_decorator("Background", '''The repeat behaviour of an optional background image''', 'DropDown', {
-        'possible_values': ('repeat', 'repeat-x', 'repeat-y', 'no-repeat', 'round', 'inherit')})
-    def css_background_repeat(self):
-        return self.style.get('background-repeat', None)
-
+    @editor_attribute_decorator("Background",'''The repeat behaviour of an optional background image''', 'DropDown', {'possible_values': ('repeat', 'repeat-x', 'repeat-y', 'no-repeat', 'round', 'inherit')})
+    def css_background_repeat(self): return self.style.get('background-repeat', None)
     @css_background_repeat.setter
-    def css_background_repeat(self, value):
-        self.style['background-repeat'] = str(value)
-
+    def css_background_repeat(self, value): self.style['background-repeat'] = str(value)
     @css_background_repeat.deleter
-    def css_background_repeat(self):
-        del self.style['background-repeat']
+    def css_background_repeat(self): del self.style['background-repeat']
 
     @property
-    @editor_attribute_decorator("Layout", '''The opacity property sets the opacity level for an element.
-    The opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 
-    0 is completely transparent.''',
-                                float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
-    def css_opacity(self):
-        return self.style.get('opacity', None)
-
+    @editor_attribute_decorator("Layout",'''The opacity property sets the opacity level for an element.
+    The opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 0 is completely transparent.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    def css_opacity(self): return self.style.get('opacity', None)
     @css_opacity.setter
-    def css_opacity(self, value):
-        self.style['opacity'] = str(value)
-
+    def css_opacity(self, value): self.style['opacity'] = str(value)
     @css_opacity.deleter
-    def css_opacity(self):
-        del self.style['opacity']
+    def css_opacity(self): del self.style['opacity']
 
     @property
-    @editor_attribute_decorator("Border", '''Border color''', 'ColorPicker', {})
-    def css_border_color(self):
-        return self.style.get('border-color', None)
-
+    @editor_attribute_decorator("Border",'''Border color''', 'ColorPicker', {})
+    def css_border_color(self): return self.style.get('border-color', None)
     @css_border_color.setter
-    def css_border_color(self, value):
-        self.style['border-color'] = str(value)
-
+    def css_border_color(self, value): self.style['border-color'] = str(value)
     @css_border_color.deleter
-    def css_border_color(self):
-        del self.style['border-color']
+    def css_border_color(self): del self.style['border-color']
 
     @property
-    @editor_attribute_decorator("Border", '''Border thickness''', 'css_size', {})
-    def css_border_width(self):
-        return self.style.get('border-width', None)
-
+    @editor_attribute_decorator("Border",'''Border thickness''', 'css_size', {})
+    def css_border_width(self): return self.style.get('border-width', None)
     @css_border_width.setter
-    def css_border_width(self, value):
-        self.style['border-width'] = str(value)
-
+    def css_border_width(self, value): self.style['border-width'] = str(value)
     @css_border_width.deleter
-    def css_border_width(self):
-        del self.style['border-width']
+    def css_border_width(self): del self.style['border-width']
 
     @property
-    @editor_attribute_decorator("Border", '''Border thickness''', 'DropDown',
-                                {'possible_values': ('none', 'solid', 'dotted', 'dashed')})
-    def css_border_style(self):
-        return self.style.get('border-style', None)
-
+    @editor_attribute_decorator("Border",'''Border thickness''', 'DropDown', {'possible_values': ('none', 'solid', 'dotted', 'dashed')})
+    def css_border_style(self): return self.style.get('border-style', None)
     @css_border_style.setter
-    def css_border_style(self, value):
-        self.style['border-style'] = str(value)
-
+    def css_border_style(self, value): self.style['border-style'] = str(value)
     @css_border_style.deleter
-    def css_border_style(self):
-        del self.style['border-style']
+    def css_border_style(self): del self.style['border-style']
 
     @property
-    @editor_attribute_decorator("Border", '''Border rounding radius''', 'css_size', {})
-    def css_border_radius(self):
-        return self.style.get('border-radius', None)
-
+    @editor_attribute_decorator("Border",'''Border rounding radius''', 'css_size', {})
+    def css_border_radius(self): return self.style.get('border-radius', None)
     @css_border_radius.setter
-    def css_border_radius(self, value):
-        self.style['border-radius'] = str(value)
-
+    def css_border_radius(self, value): self.style['border-radius'] = str(value)
     @css_border_radius.deleter
-    def css_border_radius(self):
-        del self.style['border-radius']
+    def css_border_radius(self): del self.style['border-radius']
 
     @property
-    @editor_attribute_decorator("Font", '''Text color''', 'ColorPicker', {})
-    def css_color(self):
-        return self.style.get('color', None)
-
+    @editor_attribute_decorator("Font",'''Text color''', 'ColorPicker', {})
+    def css_color(self): return self.style.get('color', None)
     @css_color.setter
-    def css_color(self, value):
-        self.style['color'] = str(value)
-
+    def css_color(self, value): self.style['color'] = str(value)
     @css_color.deleter
-    def css_color(self):
-        del self.style['color']
+    def css_color(self): del self.style['color']
 
     @property
-    @editor_attribute_decorator("Font", '''Font family name''', str, {})
-    def css_font_family(self):
-        return self.style.get('font-family', None)
-
+    @editor_attribute_decorator("Font",'''Font family name''', str, {})
+    def css_font_family(self): return self.style.get('font-family', None)
     @css_font_family.setter
-    def css_font_family(self, value):
-        self.style['font-family'] = str(value)
-
+    def css_font_family(self, value): self.style['font-family'] = str(value)
     @css_font_family.deleter
-    def css_font_family(self):
-        del self.style['font-family']
+    def css_font_family(self): del self.style['font-family']
 
     @property
-    @editor_attribute_decorator("Font", '''Font size''', 'css_size', {})
-    def css_font_size(self):
-        return self.style.get('font-size', None)
-
+    @editor_attribute_decorator("Font",'''Font size''', 'css_size', {})
+    def css_font_size(self): return self.style.get('font-size', None)
     @css_font_size.setter
-    def css_font_size(self, value):
-        self.style['font-size'] = str(value)
-
+    def css_font_size(self, value): self.style['font-size'] = str(value)
     @css_font_size.deleter
-    def css_font_size(self):
-        del self.style['font-size']
+    def css_font_size(self): del self.style['font-size']
 
     @property
-    @editor_attribute_decorator("Font", '''The line height in pixels''', 'css_size', {})
-    def css_line_height(self):
-        return self.style.get('line-height', None)
-
+    @editor_attribute_decorator("Font",'''The line height in pixels''', 'css_size', {})
+    def css_line_height(self): return self.style.get('line-height', None)
     @css_line_height.setter
-    def css_line_height(self, value):
-        self.style['line-height'] = str(value)
-
+    def css_line_height(self, value): self.style['line-height'] = str(value)
     @css_line_height.deleter
-    def css_line_height(self):
-        del self.style['line-height']
+    def css_line_height(self): del self.style['line-height']
 
     @property
-    @editor_attribute_decorator("Font", '''Style''', 'DropDown',
-                                {'possible_values': ('normal', 'italic', 'oblique', 'inherit')})
-    def css_font_style(self):
-        return self.style.get('font-style', None)
-
+    @editor_attribute_decorator("Font",'''Style''', 'DropDown', {'possible_values': ('normal', 'italic', 'oblique', 'inherit')})
+    def css_font_style(self): return self.style.get('font-style', None)
     @css_font_style.setter
-    def css_font_style(self, value):
-        self.style['font-style'] = str(value)
-
+    def css_font_style(self, value): self.style['font-style'] = str(value)
     @css_font_style.deleter
-    def css_font_style(self):
-        del self.style['font-style']
+    def css_font_style(self): del self.style['font-style']
 
     @property
-    @editor_attribute_decorator("Font", '''Style''', 'DropDown', {'possible_values': (
-            'normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900',
-            'inherit')})
-    def css_font_weight(self):
-        return self.style.get('font-weight', None)
-
+    @editor_attribute_decorator("Font",'''Style''', 'DropDown', {'possible_values': ('normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900', 'inherit')})
+    def css_font_weight(self): return self.style.get('font-weight', None)
     @css_font_weight.setter
-    def css_font_weight(self, value):
-        self.style['font-weight'] = str(value)
-
+    def css_font_weight(self, value): self.style['font-weight'] = str(value)
     @css_font_weight.deleter
-    def css_font_weight(self):
-        del self.style['font-weight']
+    def css_font_weight(self): del self.style['font-weight']
 
     @property
-    @editor_attribute_decorator("Font", '''Specifies how white-space inside an element is handled''', 'DropDown', {
-        'possible_values': ('normal', 'nowrap', 'pre', 'pre-line', 'pre-wrap', 'initial', 'inherit')})
-    def css_white_space(self):
-        return self.style.get('white-space', None)
-
+    @editor_attribute_decorator("Font",'''Specifies how white-space inside an element is handled''', 'DropDown', {'possible_values': ('normal', 'nowrap', 'pre', 'pre-line', 'pre-wrap', 'initial', 'inherit')})
+    def css_white_space(self): return self.style.get('white-space', None)
     @css_white_space.setter
-    def css_white_space(self, value):
-        self.style['white-space'] = str(value)
-
+    def css_white_space(self, value): self.style['white-space'] = str(value)
     @css_white_space.deleter
-    def css_white_space(self):
-        del self.style['white-space']
+    def css_white_space(self): del self.style['white-space']
 
     @property
-    @editor_attribute_decorator("Font", '''Increases or decreases the space between characters in a text.''',
-                                'css_size', {})
-    def css_letter_spacing(self):
-        return self.style.get('letter-spacing', None)
-
+    @editor_attribute_decorator("Font",'''Increases or decreases the space between characters in a text.''', 'css_size', {})
+    def css_letter_spacing(self): return self.style.get('letter-spacing', None)
     @css_letter_spacing.setter
-    def css_letter_spacing(self, value):
-        self.style['letter-spacing'] = str(value)
-
+    def css_letter_spacing(self, value): self.style['letter-spacing'] = str(value)
     @css_letter_spacing.deleter
-    def css_letter_spacing(self):
-        del self.style['letter-spacing']
+    def css_letter_spacing(self): del self.style['letter-spacing']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The flex-direction property specifies the direction of the flexible items.
-                                Note: If the element is not a flexible item, the flex-direction property has no 
-                                effect.''',
-                                'DropDown', {'possible_values': ('row', 'row-reverse', 'column', 'column-reverse',
-                                                                 'initial', 'inherit')})
-    def css_flex_direction(self):
-        return self.style.get('flex-direction', None)
-
+    @editor_attribute_decorator("Layout",'''The flex-direction property specifies the direction of the flexible items. Note: If the element is not a flexible item, the flex-direction property has no effect.''', 'DropDown', {'possible_values': ('row', 'row-reverse', 'column', 'column-reverse', 'initial', 'inherit')})
+    def css_flex_direction(self): return self.style.get('flex-direction', None)
     @css_flex_direction.setter
-    def css_flex_direction(self, value):
-        self.style['flex-direction'] = str(value)
-
+    def css_flex_direction(self, value): self.style['flex-direction'] = str(value)
     @css_flex_direction.deleter
-    def css_flex_direction(self):
-        del self.style['flex-direction']
+    def css_flex_direction(self): del self.style['flex-direction']
 
     @property
-    @editor_attribute_decorator("Layout", '''The display property specifies the type of box used for an HTML element''',
-                                'DropDown', {'possible_values': ('inline', 'block', 'contents', 'flex', 'grid',
-                                                                 'inline-block', 'inline-flex', 'inline-grid',
-                                                                 'inline-table', 'list-item', 'run-in', 'table', 'none',
-                                                                 'inherit')})
-    def css_display(self):
-        return self.style.get('display', None)
-
+    @editor_attribute_decorator("Layout",'''The display property specifies the type of box used for an HTML element''', 'DropDown', {'possible_values': ('inline', 'block', 'contents', 'flex', 'grid', 'inline-block', 'inline-flex', 'inline-grid', 'inline-table', 'list-item', 'run-in', 'table', 'none', 'inherit')})
+    def css_display(self): return self.style.get('display', None)
     @css_display.setter
-    def css_display(self, value):
-        self.style['display'] = str(value)
-
+    def css_display(self, value): self.style['display'] = str(value)
     @css_display.deleter
-    def css_display(self):
-        del self.style['display']
+    def css_display(self): del self.style['display']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The justify-content property aligns the flexible container's items when the items do 
-                                not use all available space on the main-axis (horizontally)''',
-                                'DropDown', {'possible_values': ('flex-start', 'flex-end', 'center', 'space-between',
-                                                                 'space-around', 'initial', 'inherit')})
-    def css_justify_content(self):
-        return self.style.get('justify-content', None)
-
+    @editor_attribute_decorator("Layout",'''The justify-content property aligns the flexible container's items when the items do not use all available space on the main-axis (horizontally)''', 'DropDown', {'possible_values': ('flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'initial', 'inherit')})
+    def css_justify_content(self): return self.style.get('justify-content', None)
     @css_justify_content.setter
-    def css_justify_content(self, value):
-        self.style['justify-content'] = str(value)
-
+    def css_justify_content(self, value): self.style['justify-content'] = str(value)
     @css_justify_content.deleter
-    def css_justify_content(self):
-        del self.style['justify-content']
+    def css_justify_content(self): del self.style['justify-content']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The align-items property specifies the default alignment for items inside the 
-                                flexible container''',
-                                'DropDown', {'possible_values': ('stretch', 'center', 'flex-start', 'flex-end',
-                                                                 'baseline', 'initial', 'inherit')})
-    def css_align_items(self):
-        return self.style.get('align-items', None)
-
+    @editor_attribute_decorator("Layout",'''The align-items property specifies the default alignment for items inside the flexible container''', 'DropDown', {'possible_values': ('stretch', 'center', 'flex-start', 'flex-end', 'baseline', 'initial', 'inherit')})
+    def css_align_items(self): return self.style.get('align-items', None)
     @css_align_items.setter
-    def css_align_items(self, value):
-        self.style['align-items'] = str(value)
-
+    def css_align_items(self, value): self.style['align-items'] = str(value)
     @css_align_items.deleter
-    def css_align_items(self):
-        del self.style['align-items']
+    def css_align_items(self): del self.style['align-items']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The flex-wrap property specifies whether the flexible items should wrap or not.
-                                Note: If the elements are not flexible items, the flex-wrap property has no effect''',
-                                'DropDown',
-                                {'possible_values': ('nowrap', 'wrap', 'wrap-reverse', 'initial', 'inherit')})
-    def css_flex_wrap(self):
-        return self.style.get('flex-wrap', None)
-
+    @editor_attribute_decorator("Layout",'''The flex-wrap property specifies whether the flexible items should wrap or not. Note: If the elements are not flexible items, the flex-wrap property has no effect''', 'DropDown', {'possible_values': ('nowrap', 'wrap', 'wrap-reverse', 'initial', 'inherit')})
+    def css_flex_wrap(self): return self.style.get('flex-wrap', None)
     @css_flex_wrap.setter
-    def css_flex_wrap(self, value):
-        self.style['flex-wrap'] = str(value)
-
+    def css_flex_wrap(self, value): self.style['flex-wrap'] = str(value)
     @css_flex_wrap.deleter
-    def css_flex_wrap(self):
-        del self.style['flex-wrap']
+    def css_flex_wrap(self): del self.style['flex-wrap']
 
     @property
-    @editor_attribute_decorator("Layout", '''The align-content property modifies the behavior of the flex-wrap property.
-    It is similar to align-items, but instead of aligning flex items, it aligns flex lines. Tip: Use the 
-    justify-content property to align the items on the main-axis (horizontally).Note: There must be multiple lines of 
-    items for this property to have any effect.''', 'DropDown', {'possible_values': (
-        'stretch', 'center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'initial', 'inherit')})
-    def css_align_content(self):
-        return self.style.get('align-content', None)
-
+    @editor_attribute_decorator("Layout",'''The align-content property modifies the behavior of the flex-wrap property.
+    It is similar to align-items, but instead of aligning flex items, it aligns flex lines. Tip: Use the justify-content property to align the items on the main-axis (horizontally).Note: There must be multiple lines of items for this property to have any effect.''', 'DropDown', {'possible_values': ('stretch', 'center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'initial', 'inherit')})
+    def css_align_content(self): return self.style.get('align-content', None)
     @css_align_content.setter
-    def css_align_content(self, value):
-        self.style['align-content'] = str(value)
-
+    def css_align_content(self, value): self.style['align-content'] = str(value)
     @css_align_content.deleter
-    def css_align_content(self):
-        del self.style['align-content']
+    def css_align_content(self): del self.style['align-content']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The flex-flow property is a shorthand property for the flex-direction and the 
-                                flex-wrap properties. The flex-direction property specifies the direction of the 
-                                flexible items.''',
-                                'DropDown', {'possible_values': ('flex-direction', 'flex-wrap', 'initial', 'inherit')})
-    def css_flex_flow(self):
-        return self.style.get('flex-flow', None)
-
+    @editor_attribute_decorator("Layout",'''The flex-flow property is a shorthand property for the flex-direction and the flex-wrap properties. The flex-direction property specifies the direction of the flexible items.''', 'DropDown', {'possible_values': ('flex-direction', 'flex-wrap', 'initial', 'inherit')})
+    def css_flex_flow(self): return self.style.get('flex-flow', None)
     @css_flex_flow.setter
-    def css_flex_flow(self, value):
-        self.style['flex-flow'] = str(value)
-
+    def css_flex_flow(self, value): self.style['flex-flow'] = str(value)
     @css_flex_flow.deleter
-    def css_flex_flow(self):
-        del self.style['flex-flow']
+    def css_flex_flow(self): del self.style['flex-flow']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The order property specifies the order of a flexible item relative to the rest of 
-                                the flexible items inside the same container. Note: If the element is not a flexible 
-                                item, the order property has no effect.''',
-                                int, {'possible_values': '', 'min': -10000, 'max': 10000, 'default': 1, 'step': 1})
-    def css_order(self):
-        return self.style.get('order', None)
-
+    @editor_attribute_decorator("Layout",'''The order property specifies the order of a flexible item relative to the rest of the flexible items inside the same container. Note: If the element is not a flexible item, the order property has no effect.''', int, {'possible_values': '', 'min': -10000, 'max': 10000, 'default': 1, 'step': 1})
+    def css_order(self): return self.style.get('order', None)
     @css_order.setter
-    def css_order(self, value):
-        self.style['order'] = str(value)
-
+    def css_order(self, value): self.style['order'] = str(value)
     @css_order.deleter
-    def css_order(self):
-        del self.style['order']
+    def css_order(self): del self.style['order']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The align-self property specifies the alignment for the selected item inside the 
-                                flexible container. Note: The align-self property overrides the flexible container's 
-                                align-items property''',
-                                'DropDown', {'possible_values': ('auto', 'stretch', 'center', 'flex-start', 'flex-end',
-                                                                 'baseline', 'initial', 'inherit')})
-    def css_align_self(self):
-        return self.style.get('align-self', None)
-
+    @editor_attribute_decorator("Layout",'''The align-self property specifies the alignment for the selected item inside the flexible container. Note: The align-self property overrides the flexible container's align-items property''', 'DropDown', {'possible_values': ('auto', 'stretch', 'center', 'flex-start', 'flex-end', 'baseline', 'initial', 'inherit')})
+    def css_align_self(self): return self.style.get('align-self', None)
     @css_align_self.setter
-    def css_align_self(self, value):
-        self.style['align-self'] = str(value)
-
+    def css_align_self(self, value): self.style['align-self'] = str(value)
     @css_align_self.deleter
-    def css_align_self(self):
-        del self.style['align-self']
+    def css_align_self(self): del self.style['align-self']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The flex property specifies the length of the item, relative to the rest of the 
-                                flexible items inside the same container. The flex property is a shorthand for the 
-                                flex-grow, flex-shrink, and the flex-basis properties. Note: If the element is not a 
-                                flexible item, the flex property has no effect.''',
-                                int, {'possible_values': '', 'min': -10000, 'max': 10000, 'default': 1, 'step': 1})
-    def css_flex(self):
-        return self.style.get('flex', None)
-
+    @editor_attribute_decorator("Layout",'''The flex property specifies the length of the item, relative to the rest of the flexible items inside the same container. The flex property is a shorthand for the flex-grow, flex-shrink, and the flex-basis properties. Note: If the element is not a flexible item, the flex property has no effect.''', int, {'possible_values': '', 'min': -10000, 'max': 10000, 'default': 1, 'step': 1})
+    def css_flex(self): return self.style.get('flex', None)
     @css_flex.setter
-    def css_flex(self, value):
-        self.style['flex'] = str(value)
-
+    def css_flex(self, value): self.style['flex'] = str(value)
     @css_flex.deleter
-    def css_flex(self):
-        del self.style['flex']
+    def css_flex(self): del self.style['flex']
 
     @property
-    @editor_attribute_decorator("Layout",
-                                '''The position property specifies the type of positioning method used for an 
-                                element.''', 'DropDown',
-                                {'possible_values': ('static', 'absolute', 'fixed', 'relative', 'initial', 'inherit')})
-    def css_position(self):
-        return self.style.get('position', None)
-
+    @editor_attribute_decorator("Layout",'''The position property specifies the type of positioning method used for an element.''', 'DropDown', {'possible_values': ('static', 'absolute', 'fixed', 'relative', 'initial', 'inherit')})
+    def css_position(self): return self.style.get('position', None)
     @css_position.setter
-    def css_position(self, value):
-        self.style['position'] = str(value)
-
+    def css_position(self, value): self.style['position'] = str(value)
     @css_position.deleter
-    def css_position(self):
-        del self.style['position']
+    def css_position(self): del self.style['position']
 
-    def __init__(self, style=None, *args, **kwargs):
+    def __init__(self, style = None, *args, **kwargs):
 
         """
         Args:
@@ -1136,7 +860,7 @@ class Widget(Tag, EventSource):
             margin (str): CSS margin specifier
         """
         if style is None:
-            style = {}
+            style={}
         if '_type' not in kwargs:
             kwargs['_type'] = 'div'
 
@@ -1208,7 +932,7 @@ class Widget(Tag, EventSource):
                 The Widget that have to be updated is the key, and the value is its textual repr.
         """
         if changed_widgets is None:
-            changed_widgets = {}
+            changed_widgets={}
         return super(Widget, self).repr(changed_widgets)
 
     @decorate_set_on_listener("(self, emitter)")
@@ -1244,10 +968,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=event.clientX-boundingBox.left;" \
-                       "params['y']=event.clientY-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onmousedown(self, x, y):
         """Called when the user presses left or right mouse button over a Widget.
 
@@ -1259,10 +983,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=event.clientX-boundingBox.left;" \
-                       "params['y']=event.clientY-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onmouseup(self, x, y):
         """Called when the user releases left or right mouse button over a Widget.
 
@@ -1306,10 +1030,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=event.clientX-boundingBox.left;" \
-                       "params['y']=event.clientY-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def onmousemove(self, x, y):
         """Called when the mouse cursor moves inside the Widget.
 
@@ -1321,10 +1045,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
-                       "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchmove(self, x, y):
         """Called continuously while a finger is dragged across the screen, over a Widget.
 
@@ -1336,10 +1060,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
-                       "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchstart(self, x, y):
         """Called when a finger touches the widget.
 
@@ -1351,10 +1075,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
-                       "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchend(self, x, y):
         """Called when a finger is released from the widget.
 
@@ -1366,10 +1090,10 @@ class Widget(Tag, EventSource):
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("var params={};" \
-                       "var boundingBox = this.getBoundingClientRect();" \
-                       "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
-                       "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
-                       "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=parseInt(event.changedTouches[0].clientX)-boundingBox.left;" \
+            "params['y']=parseInt(event.changedTouches[0].clientY)-boundingBox.top;" \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
     def ontouchenter(self, x, y):
         """Called when a finger touches from outside to inside the widget.
 
@@ -1523,7 +1247,7 @@ class Container(Widget):
     LAYOUT_HORIZONTAL = True
     LAYOUT_VERTICAL = False
 
-    def __init__(self, children=None, *args, **kwargs):
+    def __init__(self, children = None, *args, **kwargs):
         """
         Args:
             children (Widget, or iterable of Widgets): The child to be appended. In case of a dictionary,
@@ -1552,13 +1276,13 @@ class Container(Widget):
                 of an iterable 'value' param
         """
         if type(value) in (list, tuple, dict):
-            if type(value) == dict:
+            if type(value)==dict:
                 for k in value.keys():
                     self.append(value[k], k)
                 return value.keys()
             keys = []
             for child in value:
-                keys.append(self.append(child))
+                keys.append( self.append(child) )
             return keys
 
         if not isinstance(value, Widget):
@@ -1599,7 +1323,7 @@ class HTML(Tag):
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
         if changed_widgets is None:
-            changed_widgets = {}
+            changed_widgets={}
         local_changed_widgets = {}
         self._set_updated()
         return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
@@ -1609,7 +1333,7 @@ class HEAD(Tag):
     def __init__(self, title, *args, **kwargs):
         super(HEAD, self).__init__(*args, _type='head', **kwargs)
         self.add_child('meta',
-                       """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+                """<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
                 <meta content='utf-8' http-equiv='encoding'>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">""")
 
@@ -1624,7 +1348,7 @@ class HEAD(Tag):
                 rel (str): leave it unchanged (standard "icon")
         """
         mimetype, encoding = mimetypes.guess_type(filename)
-        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />' % (rel, filename, mimetype))
+        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, filename, mimetype))
 
     def set_icon_data(self, base64_data, mimetype="image/png", rel="icon"):
         """ Allows to define an icon for the App
@@ -1634,11 +1358,11 @@ class HEAD(Tag):
                 mimetype (str): mimetype of the image ("image/png" or "image/x-icon"...)
                 rel (str): leave it unchanged (standard "icon")
         """
-        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />' % (rel, base64_data, mimetype))
+        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, base64_data, mimetype))
 
     def set_internal_js(self, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
         self.add_child('internal_js',
-                       """
+                """
                 <script>
                 // from http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
                 // using UTF8 strings I noticed that the javascript .length of a string returned less
@@ -1884,9 +1608,9 @@ class HEAD(Tag):
                     fd.append('upload_file', file);
                     xhr.send(fd);
                 };
-                </script>""" % {'host': net_interface_ip,
-                                'max_pending_messages': pending_messages_queue_length,
-                                'messaging_timeout': websocket_timeout_timer_ms})
+                </script>""" % {'host':net_interface_ip,
+                                'max_pending_messages':pending_messages_queue_length,
+                                'messaging_timeout':websocket_timeout_timer_ms})
 
     def set_title(self, title):
         self.add_child('title', "<title>%s</title>" % title)
@@ -1900,7 +1624,7 @@ class HEAD(Tag):
                 The tag that have to be updated is the key, and the value is its textual repr.
         """
         if changed_widgets is None:
-            changed_widgets = {}
+            changed_widgets={}
         local_changed_widgets = {}
         self._set_updated()
         return ''.join(('<', self.type, '>\n', self.innerHTML(local_changed_widgets), '\n</', self.type, '>'))
@@ -1919,7 +1643,7 @@ class BODY(Container):
         loading_anim = Widget()
         loading_anim.css_margin = None
         loading_anim.identifier = "loading-animation"
-        loading_container = Container(children=[loading_anim], style={'display': 'none'})
+        loading_container = Container(children=[loading_anim], style={'display':'none'})
         loading_container.css_margin = None
         loading_container.identifier = "loading"
 
@@ -1983,62 +1707,40 @@ class GridBox(Container):
     """
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Column sizes (i.e. 50% 30% 20%).''', str, {})
-    def css_grid_template_columns(self):
-        return self.style.get('grid-template-columns', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Column sizes (i.e. 50% 30% 20%).''', str, {})
+    def css_grid_template_columns(self): return self.style.get('grid-template-columns', None)
     @css_grid_template_columns.setter
-    def css_grid_template_columns(self, value):
-        self.style['grid-template-columns'] = str(value)
-
+    def css_grid_template_columns(self, value): self.style['grid-template-columns'] = str(value)
     @css_grid_template_columns.deleter
-    def css_grid_template_columns(self):
-        del self.style['grid-template-columns']
+    def css_grid_template_columns(self): del self.style['grid-template-columns']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Row sizes (i.e. 50% 30% 20%).''', str, {})
-    def css_grid_template_rows(self):
-        return self.style.get('grid-template-rows', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Row sizes (i.e. 50% 30% 20%).''', str, {})
+    def css_grid_template_rows(self): return self.style.get('grid-template-rows', None)
     @css_grid_template_rows.setter
-    def css_grid_template_rows(self, value):
-        self.style['grid-template-rows'] = str(value)
-
+    def css_grid_template_rows(self, value): self.style['grid-template-rows'] = str(value)
     @css_grid_template_rows.deleter
-    def css_grid_template_rows(self):
-        del self.style['grid-template-rows']
+    def css_grid_template_rows(self): del self.style['grid-template-rows']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",
-                                '''Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').''', str, {})
-    def css_grid_template_areas(self):
-        return self.style.get('grid-template-areas', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Grid matrix (i.e. 'widget1 widget1 widget2' 'widget1 widget1 widget2').''', str, {})
+    def css_grid_template_areas(self): return self.style.get('grid-template-areas', None)
     @css_grid_template_areas.setter
-    def css_grid_template_areas(self, value):
-        self.style['grid-template-areas'] = str(value)
-
+    def css_grid_template_areas(self, value): self.style['grid-template-areas'] = str(value)
     @css_grid_template_areas.deleter
-    def css_grid_template_areas(self):
-        del self.style['grid-template-areas']
+    def css_grid_template_areas(self): del self.style['grid-template-areas']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the size of the gap between the rows and columns.''',
-                                'css_size', {})
-    def css_grid_gap(self):
-        return self.style.get('grid-gap', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the size of the gap between the rows and columns.''', 'css_size', {})
+    def css_grid_gap(self): return self.style.get('grid-gap', None)
     @css_grid_gap.setter
-    def css_grid_gap(self, value):
-        self.style['grid-gap'] = str(value)
-
+    def css_grid_gap(self, value): self.style['grid-gap'] = str(value)
     @css_grid_gap.deleter
-    def css_grid_gap(self):
-        del self.style['grid-gap']
+    def css_grid_gap(self): del self.style['grid-gap']
 
     def __init__(self, *args, **kwargs):
         super(GridBox, self).__init__(*args, **kwargs)
-        self.style.update({'display': 'grid'})
+        self.style.update({'display':'grid'})
 
     def define_grid(self, matrix):
         """Populates the Table with a list of tuples of strings.
@@ -2047,7 +1749,7 @@ class GridBox(Container):
             matrix (list): list of iterables of strings (lists or something else).
                 Items in the matrix have to correspond to a key for the children.
         """
-        self.css_grid_template_areas = ''.join("'%s'" % (' '.join(x)) for x in matrix)
+        self.css_grid_template_areas = ''.join("'%s'"%(' '.join(x)) for x in matrix) 
 
     def append(self, value, key=''):
         """Adds a child widget, generating and returning a key if not provided
@@ -2065,13 +1767,13 @@ class GridBox(Container):
                 of an iterable 'value' param
         """
         if type(value) in (list, tuple, dict):
-            if type(value) == dict:
+            if type(value)==dict:
                 for k in value.keys():
                     self.append(value[k], k)
                 return value.keys()
             keys = []
             for child in value:
-                keys.append(self.append(child))
+                keys.append( self.append(child) )
             return keys
 
         if not isinstance(value, Widget):
@@ -2087,7 +1789,7 @@ class GridBox(Container):
     def remove_child(self, child):
         if 'grid-area' in child.style.keys():
             del child.style['grid-area']
-        super(GridBox, self).remove_child(child)
+        super(GridBox,self).remove_child(child)
 
     def set_column_sizes(self, values):
         """Sets the size value for each column
@@ -2095,8 +1797,7 @@ class GridBox(Container):
         Args:
             values (iterable of int or str): values are treated as percentage.
         """
-        self.css_grid_template_columns = ' '.join(
-            map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%'), values))
+        self.css_grid_template_columns = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
 
     def set_row_sizes(self, values):
         """Sets the size value for each row
@@ -2104,9 +1805,8 @@ class GridBox(Container):
         Args:
             values (iterable of int or str): values are treated as percentage.
         """
-        self.css_grid_template_rows = ' '.join(
-            map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%'), values))
-
+        self.css_grid_template_rows = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
+    
     def set_column_gap(self, value):
         """Sets the gap value between columns
 
@@ -2151,13 +1851,13 @@ class GridBox(Container):
 
         """
         rows = asciipattern.split("\n")
-        # remove empty rows
+        #remove empty rows
         for r in rows[:]:
-            if len(r.replace(" ", "")) < 1:
+            if len(r.replace(" ", ""))<1:
                 rows.remove(r)
-        for ri in range(0, len(rows)):
-            # slicing row removing the first and the last separators
-            rows[ri] = rows[ri][rows[ri].find("|") + 1:rows[ri].rfind("|")]
+        for ri in range(0,len(rows)):
+            #slicing row removing the first and the last separators
+            rows[ri] = rows[ri][rows[ri].find("|")+1:rows[ri].rfind("|")]
 
         columns = collections.OrderedDict()
         row_count = 0
@@ -2165,41 +1865,41 @@ class GridBox(Container):
         row_max_width = 0
 
         row_sizes = []
-        for ri in range(0, len(rows)):
+        for ri in range(0,len(rows)):
             if ri > 0:
-                if rows[ri] == rows[ri - 1]:
-                    row_sizes[row_count - 1] = row_sizes[row_count - 1] + 1  # increment identical row count
+                if rows[ri] == rows[ri-1]:
+                    row_sizes[row_count-1] = row_sizes[row_count-1] + 1 #increment identical row count
                     continue
 
-            row_defs[row_count] = rows[ri].replace(" ", "").split("|")
+            row_defs[row_count] = rows[ri].replace(" ","").split("|")
             row_sizes.append(1)
-            # placeholder . where cell is empty
-            row_defs[row_count] = ['.' if elem == '' else elem for elem in row_defs[row_count]]
+            #placeholder . where cell is empty
+            row_defs[row_count] = ['.' if elem=='' else elem for elem in row_defs[row_count]]
             row_count = row_count + 1
             row_max_width = max(row_max_width, len(rows[ri]))
 
-            i = rows[ri].find("|", 0)
-            while i > -1:
+            i=rows[ri].find("|",0)
+            while i>-1:
                 columns[i] = i
-                i = rows[ri].find("|", i + 1)
+                i=rows[ri].find("|",i+1)
 
         columns[row_max_width] = row_max_width
 
-        for r in range(0, len(row_sizes)):
-            row_sizes[r] = float(row_sizes[r]) / float(len(rows)) * (100.0 - row_gap * (len(row_sizes) - 1))
+        for r in range(0,len(row_sizes)):
+            row_sizes[r] = float(row_sizes[r])/float(len(rows))*(100.0-row_gap*(len(row_sizes)-1))
 
         column_sizes = []
         prev_size = 0.0
         for c in columns.values():
-            value = float(c) / float(row_max_width) * (100.0 - column_gap * (len(columns) - 1))
-            column_sizes.append(value - prev_size)
+            value = float(c)/float(row_max_width)*(100.0-column_gap*(len(columns)-1))
+            column_sizes.append(value-prev_size)
             prev_size = value
 
         self.define_grid(row_defs.values())
         self.set_column_sizes(column_sizes)
         self.set_row_sizes(row_sizes)
-        self.set_column_gap("%s%%" % column_gap)
-        self.set_row_gap("%s%%" % row_gap)
+        self.set_column_gap("%s%%"%column_gap)
+        self.set_row_gap("%s%%"%row_gap)
 
 
 class HBox(Container):
@@ -2218,7 +1918,7 @@ class HBox(Container):
 
         # fixme: support old browsers
         # http://stackoverflow.com/a/19031640
-        self.style.update({'display': 'flex', 'flex-direction': 'row'})
+        self.style.update({'display':'flex', 'flex-direction':'row'})
         self.style['justify-content'] = self.style.get('justify-content', 'space-around')
         self.style['align-items'] = self.style.get('align-items', 'center')
 
@@ -2233,13 +1933,13 @@ class HBox(Container):
             in the layout
         """
         if type(value) in (list, tuple, dict):
-            if type(value) == dict:
+            if type(value)==dict:
                 for k in value.keys():
                     self.append(value[k], k)
                 return value.keys()
             keys = []
             for child in value:
-                keys.append(self.append(child))
+                keys.append( self.append(child) )
             return keys
 
         key = str(key)
@@ -2283,11 +1983,9 @@ class TabBox(Container):
         Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
         The widget can be a container with other child widgets.
     """
-
     def __init__(self, *args, **kwargs):
         super(TabBox, self).__init__(layout_orientation=Container.LAYOUT_VERTICAL, *args, **kwargs)
-        self.container_tab_titles = ListView(width="100%", layout_orientation=Container.LAYOUT_HORIZONTAL,
-                                             _class='tabs clearfix')
+        self.container_tab_titles = ListView( width="100%", layout_orientation=Container.LAYOUT_HORIZONTAL, _class = 'tabs clearfix' )
         self.container_tab_titles.onselection.do(self.on_tab_selection)
         super(TabBox, self).append(self.container_tab_titles, "_container_tab_titles")
         self.selected_widget_key = None
@@ -2307,7 +2005,7 @@ class TabBox(Container):
         self.tab_keys_ordered_list.append(key)
         self.container_tab_titles.append(ListItem(key), key)
         self.resize_tab_titles()
-        # if first tab, select
+        #if first tab, select
         if self.selected_widget_key is None:
             self.on_tab_selection(None, key)
         else:
@@ -2336,7 +2034,7 @@ class TabBox(Container):
                 continue
             w.css_display = 'none'
             self.container_tab_titles.children[k].remove_class('active')
-            if k == key:
+            if k==key:
                 self.selected_widget_key = k
         self.children[self.selected_widget_key].css_display = 'block'
         self.container_tab_titles.children[self.selected_widget_key].add_class('active')
@@ -2371,41 +2069,32 @@ class TabBox(Container):
 # noinspection PyUnresolvedReferences
 class _MixinTextualWidget(object):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Text content''', str, {})
+    @editor_attribute_decorator("WidgetSpecific",'''Text content''', str, {})
     def text(self): return self.get_text()
-
     @text.setter
     def text(self, value): self.set_text(value)
 
     @property
-    @editor_attribute_decorator("Font", '''Specifies whether the text have to be horizontal or vertical.''', 'DropDown',
-                                {'possible_values': ('none', 'horizontal-tb', 'vertical-rl', 'vertical-lr')})
+    @editor_attribute_decorator("Font",'''Specifies whether the text have to be horizontal or vertical.''', 'DropDown', {'possible_values': ('none', 'horizontal-tb', 'vertical-rl', 'vertical-lr')})
     def css_writing_mode(self): return self.style.get('writing-mode', None)
-
     @css_writing_mode.setter
     def css_writing_mode(self, value): self.style['writing-mode'] = str(value)
-
     @css_writing_mode.deleter
     def css_writing_mode(self): del self.style['writing-mode']
 
     @property
-    @editor_attribute_decorator("Font", '''Text alignment.''', 'DropDown',
-                                {'possible_values': ('none', 'center', 'left', 'right', 'justify')})
+    @editor_attribute_decorator("Font",'''Text alignment.''', 'DropDown', {'possible_values': ('none', 'center', 'left', 'right', 'justify')})
     def css_text_align(self): return self.style.get('text-align', None)
-
     @css_text_align.setter
     def css_text_align(self, value): self.style['text-align'] = str(value)
-
     @css_text_align.deleter
     def css_text_align(self): del self.style['text-align']
 
     @property
-    @editor_attribute_decorator("Font", '''Text direction.''', 'DropDown', {'possible_values': ('none', 'ltr', 'rtl')})
+    @editor_attribute_decorator("Font",'''Text direction.''', 'DropDown', {'possible_values': ('none', 'ltr', 'rtl')})
     def css_direction(self): return self.style.get('direction', None)
-
     @css_direction.setter
     def css_direction(self, value): self.style['direction'] = str(value)
-
     @css_direction.deleter
     def css_direction(self): del self.style['direction']
 
@@ -2432,7 +2121,6 @@ class Button(Widget, _MixinTextualWidget):
     """The Button widget. Have to be used in conjunction with its event onclick.
         Use Widget.onclick.connect in order to register the listener.
     """
-
     def __init__(self, text='', *args, **kwargs):
         """
         Args:
@@ -2450,18 +2138,12 @@ class TextInput(Widget, _MixinTextualWidget):
     """
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum text content length.''', int,
-                                {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
-    def attr_maxlength(self):
-        return self.attributes.get('maxlength', '0')
-
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum text content length.''', int, {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
+    def attr_maxlength(self): return self.attributes.get('maxlength', '0')
     @attr_maxlength.setter
-    def attr_maxlength(self, value):
-        self.attributes['maxlength'] = str(value)
-
+    def attr_maxlength(self, value): self.attributes['maxlength'] = str(value)
     @attr_maxlength.deleter
-    def attr_maxlength(self):
-        del self.attributes['maxlength']
+    def attr_maxlength(self): del self.attributes['maxlength']
 
     def __init__(self, single_line=True, hint='', *args, **kwargs):
         """
@@ -2486,7 +2168,7 @@ class TextInput(Widget, _MixinTextualWidget):
                     var params={};params['new_value']=elem.value;
                     sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
                 }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
-        # else:
+        #else:
         #    self.attributes[self.EVENT_ONINPUT] = """
         #        var elem = document.getElementById('%(emitter_identifier)s');
         #        var params={};params['new_value']=elem.value;
@@ -2502,7 +2184,7 @@ class TextInput(Widget, _MixinTextualWidget):
 
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['new_value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
             {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
     def set_value(self, text):
@@ -2535,7 +2217,7 @@ class TextInput(Widget, _MixinTextualWidget):
         self.disable_refresh()
         self.set_value(new_value)
         self.enable_refresh()
-        return (new_value,)
+        return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
     @decorate_event_js("""var elem=document.getElementById('%(emitter_identifier)s');
@@ -2601,24 +2283,18 @@ class Progress(Widget):
     """
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the progress bar.''', int,
-                                {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the progress bar.''', int, {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
-
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
-
     @attr_value.deleter
     def attr_value(self): del self.attributes['value']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the progress bar.''', int,
-                                {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the progress bar.''', int, {'possible_values': '', 'min': 0, 'max': 10000, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '100')
-
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
-
     @attr_max.deleter
     def attr_max(self): del self.attributes['max']
 
@@ -2668,7 +2344,7 @@ class GenericDialog(Container):
         """
         super(GenericDialog, self).__init__(*args, **kwargs)
         self.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.style.update({'display': 'block', 'overflow': 'auto', 'margin': '0px auto'})
+        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
 
         if len(title) > 0:
             t = Label(title)
@@ -2681,7 +2357,7 @@ class GenericDialog(Container):
             self.append(m, "message")
 
         self.container = Container()
-        self.container.style.update({'display': 'block', 'overflow': 'auto', 'margin': '5px'})
+        self.container.style.update({'display':'block', 'overflow':'auto', 'margin':'5px'})
         self.container.set_layout_orientation(Container.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
@@ -2725,7 +2401,7 @@ class GenericDialog(Container):
         label.css_margin = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
-        container.style.update({'justify-content': 'space-between', 'overflow': 'auto', 'padding': '3px'})
+        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
@@ -2742,7 +2418,7 @@ class GenericDialog(Container):
         """
         self.inputs[key] = field
         container = HBox()
-        container.style.update({'justify-content': 'space-between', 'overflow': 'auto', 'padding': '3px'})
+        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -2819,7 +2495,7 @@ class InputDialog(GenericDialog):
 
         propagates the string content of the input field
         """
-        if keycode == "13":
+        if keycode=="13":
             self.hide()
             self.inputText.set_text(value)
             self.confirm_value(self)
@@ -2841,7 +2517,7 @@ class ListView(Container):
     its onselection event. Register a listener with ListView.onselection.connect.
     """
 
-    def __init__(self, selectable=True, *args, **kwargs):
+    def __init__(self, selectable = True, *args, **kwargs):
         """
         Args:
             kwargs: See Container.__init__()
@@ -3109,7 +2785,7 @@ class DropDown(Container):
         """
         log.debug('combo box. selected %s' % value)
         self.select_by_value(value)
-        return (value,)
+        return (value, )
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_change_listener(self, callback, *userdata):
@@ -3137,14 +2813,11 @@ class DropDownItem(Widget, _MixinTextualWidget):
 
 class Image(Widget):
     """image widget."""
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Image data or url''', 'base64_image', {})
+    @editor_attribute_decorator("WidgetSpecific",'''Image data or url''', 'base64_image', {})
     def attr_src(self): return self.attributes.get('src', '')
-
     @attr_src.setter
     def attr_src(self, value): self.attributes['src'] = str(value)
-
     @attr_src.deleter
     def attr_src(self): del self.attributes['src']
 
@@ -3243,35 +2916,23 @@ class TableWidget(Table):
     Basic table model widget.
     Each item is addressed by stringified integer key in the children dictionary.
     """
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Table colum count.''', int,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
-    def column_count(self):
-        return self.__column_count
-
+    @editor_attribute_decorator("WidgetSpecific",'''Table colum count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    def column_count(self): return self.__column_count
     @column_count.setter
-    def column_count(self, value):
-        self.set_column_count(value)
+    def column_count(self, value): self.set_column_count(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Table row count.''', int,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
-    def row_count(self):
-        return len(self.children)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Table row count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    def row_count(self): return len(self.children)
     @row_count.setter
-    def row_count(self, value):
-        self.set_row_count(value)
+    def row_count(self, value): self.set_row_count(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Table use title.''', bool, {})
-    def use_title(self):
-        return self.__use_title
-
+    @editor_attribute_decorator("WidgetSpecific",'''Table use title.''', bool, {})
+    def use_title(self): return self.__use_title
     @use_title.setter
-    def use_title(self, value):
-        self.set_use_title(value)
+    def use_title(self, value): self.set_use_title(value)
 
     def __init__(self, n_rows=2, n_columns=2, use_title=True, editable=False, *args, **kwargs):
         """
@@ -3283,7 +2944,7 @@ class TableWidget(Table):
             kwargs: See Container.__init__()
         """
         self.__column_count = 0
-        self.__use_title = use_title
+        self.__use_title = use_title 
         super(TableWidget, self).__init__(*args, **kwargs)
         self._editable = editable
         self.set_use_title(use_title)
@@ -3309,7 +2970,7 @@ class TableWidget(Table):
             for c_key in self.children['0'].children.keys():
                 instance = cl(self.children['0'].children[c_key].get_text())
                 self.children['0'].append(instance, c_key)
-                # here the cells of the first row are overwritten and aren't appended by the standard Table.append
+                #here the cells of the first row are overwritten and aren't appended by the standard Table.append
                 # method. We have to restore de standard on_click internal listener in order to make it working
                 # the Table.on_table_row_click functionality
                 instance.onclick.connect(self.children['0'].on_row_item_click)
@@ -3439,7 +3100,7 @@ class TableRow(Container):
             emitter (TableRow): The emitter of the event.
             item (TableItem): The clicked TableItem.
         """
-        return (item,)
+        return (item, )
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_row_item_click_listener(self, callback, *userdata):
@@ -3467,7 +3128,7 @@ class TableEditableItem(Container, _MixinTextualWidget):
     @decorate_set_on_listener("(self, emitter, new_value)")
     @decorate_event
     def onchange(self, emitter, new_value):
-        return (new_value,)
+        return (new_value, )
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_change_listener(self, callback, *userdata):
@@ -3520,8 +3181,8 @@ class Input(Widget):
         self.attributes['autocomplete'] = 'off'
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
-            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+        {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     def set_value(self, value):
         self.attributes['value'] = str(value)
@@ -3534,7 +3195,7 @@ class Input(Widget):
     @decorate_event
     def onchange(self, value):
         self.attributes['value'] = value
-        return (value,)
+        return (value, )
 
     def set_read_only(self, readonly):
         if readonly:
@@ -3551,13 +3212,13 @@ class Input(Widget):
 
 
 class CheckBoxLabel(HBox):
+
     _checkbox = None
     _label = None
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Text content''', str, {})
+    @editor_attribute_decorator("WidgetSpecific",'''Text content''', str, {})
     def text(self): return self._label.get_text()
-
     @text.setter
     def text(self, value): self._label.set_text(value)
 
@@ -3583,7 +3244,7 @@ class CheckBoxLabel(HBox):
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def onchange(self, widget, value):
-        return (value,)
+        return (value, )
 
     @decorate_explicit_alias_for_listener_registration
     def set_on_change_listener(self, callback, *userdata):
@@ -3610,15 +3271,15 @@ class CheckBox(Input):
         self.set_value(checked)
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').checked;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
-            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def onchange(self, value):
         value = value in ('True', 'true')
         self.set_value(value)
-        return (value,)
+        return (value, )
 
     def set_value(self, checked):
         if checked:
@@ -3638,36 +3299,27 @@ class CheckBox(Input):
 class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the spin box.''', float,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
-
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the spin box.''', float,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
-
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the spin box.''', float,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
-
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the step value for the spin box.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the spin box.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
     def attr_step(self): return self.attributes.get('step', '1')
-
     @attr_step.setter
     def attr_step(self, value): self.attributes['step'] = str(value)
 
@@ -3694,7 +3346,7 @@ class SpinBox(Input):
             js += ' || (key == 8 || key == 46 || key == 45|| key == 44 )'  # allow backspace and delete and minus and coma
             js += ' || (key == 13)'  # allow enter
         self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
-        # FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
+        #FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
         self.attributes[self.EVENT_ONKEYUP] = \
             "var key = event.keyCode || event.charCode;" \
             "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
@@ -3705,34 +3357,26 @@ class SpinBox(Input):
 class Slider(Input):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the Slider.''', float,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
-
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the Slider.''', float,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
-
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the Slider.''', float,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
-
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the step value for the Slider.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the Slider.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
     def attr_step(self): return self.attributes.get('step', '1')
-
     @attr_step.setter
     def attr_step(self, value): self.attributes['step'] = str(value)
 
@@ -3752,13 +3396,13 @@ class Slider(Input):
         self.attributes['step'] = str(step)
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
-            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def oninput(self, value):
-        return (value,)
+        return (value, )
 
     @decorate_explicit_alias_for_listener_registration
     def set_oninput_listener(self, callback, *userdata):
@@ -3795,13 +3439,13 @@ class Datalist(Container):
 
     def append(self, options, key=''):
         if type(options) in (list, tuple, dict):
-            if type(options) == dict:
+            if type(options)==dict:
                 for k in options.keys():
                     self.append(options[k], k)
                 return options.keys()
             keys = []
             for child in options:
-                keys.append(self.append(child))
+                keys.append( self.append(child) )
             return keys
 
         if not isinstance(options, DatalistItem):
@@ -3837,29 +3481,24 @@ class SelectionInput(Input):
     """
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the widget.''', str, {})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the widget.''', str, {})
     def attr_value(self): return self.attributes.get('value', '0')
-
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the datalist.''', str, {})
-    def attr_datalist_identifier(self):
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the datalist.''', str, {})
+    def attr_datalist_identifier(self): 
         return self.attributes.get('list', '0')
-
     @attr_datalist_identifier.setter
-    def attr_datalist_identifier(self, value):
+    def attr_datalist_identifier(self, value): 
         if isinstance(value, Datalist):
             value = value.identifier
         self.attributes['list'] = value
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the view type.''', 'DropDown', {'possible_values': (
-    'text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range',
-    'color')})
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
     def attr_input_type(self): return self.attributes.get('type', 'text')
-
     @attr_input_type.setter
     def attr_input_type(self, value): self.attributes['type'] = str(value)
 
@@ -3870,11 +3509,11 @@ class SelectionInput(Input):
             kwargs: See Widget.__init__()
         """
         super(SelectionInput, self).__init__(input_type, default_value, **kwargs)
-
+        
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
-            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
+            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("""var params={};
@@ -3884,7 +3523,7 @@ class SelectionInput(Input):
         self.disable_refresh()
         self.set_value(value)
         self.enable_refresh()
-        return (value,)
+        return (value, )
 
     def set_value(self, value):
         self.attr_value = value
@@ -3950,7 +3589,7 @@ class FileFolderNavigator(Container):
         self.controlsContainer.append(self.pathEditor, "url_editor")
         self.controlsContainer.append(self.controlGo, "button_go")
 
-        self.itemContainer = Container(width='100%', height=300)
+        self.itemContainer = Container(width='100%',height=300)
 
         self.append(self.controlsContainer, "controls_container")
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
@@ -3998,7 +3637,7 @@ class FileFolderNavigator(Container):
         # creation of a new instance of a itemContainer
         self.itemContainer = Container(width='100%', height=300)
         self.itemContainer.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden', 'display': 'block'})
+        self.itemContainer.style.update({'overflow-y':'scroll', 'overflow-x':'hidden', 'display':'block'})
 
         for i in l:
             full_path = os.path.join(directory, i)
@@ -4181,7 +3820,7 @@ class Menu(Container):
         Args:
             kwargs: See Container.__init__()
         """
-        super(Menu, self).__init__(layout_orientation=Container.LAYOUT_HORIZONTAL, *args, **kwargs)
+        super(Menu, self).__init__(layout_orientation = Container.LAYOUT_HORIZONTAL, *args, **kwargs)
         self.type = 'ul'
 
 
@@ -4201,6 +3840,7 @@ class MenuItem(Container, _MixinTextualWidget):
         self.set_text(text)
 
     def append(self, value, key=''):
+
         return self.sub_container.append(value, key=key)
 
 
@@ -4233,7 +3873,7 @@ class TreeItem(Container, _MixinTextualWidget):
         self.attributes['treeopen'] = 'false'
         self.attributes['has-subtree'] = 'false'
         self.onclick.do(None, js_stop_propagation=True)
-
+        
     def append(self, value, key=''):
         if self.sub_container is None:
             self.attributes['has-subtree'] = 'true'
@@ -4258,15 +3898,12 @@ class FileUploader(Container):
         allows to upload multiple files to a specified folder.
         implements the onsuccess and onfailed events.
     """
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''If True multiple files can be 
+    @editor_attribute_decorator("WidgetSpecific",'''If True multiple files can be 
         selected at the same time''', bool, {})
-    def multiple_selection_allowed(self):
-        return ('multiple' in self.__dict__.keys())
-
+    def multiple_selection_allowed(self): return ('multiple' in self.__dict__.keys())
     @multiple_selection_allowed.setter
-    def multiple_selection_allowed(self, value):
+    def multiple_selection_allowed(self, value): 
         if value:
             self.__dict__["multiple"] = "multiple"
         else:
@@ -4274,12 +3911,10 @@ class FileUploader(Container):
                 del self.__dict__["multiple"]
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the path where to save the file''', str, {})
-    def savepath(self):
-        return self._savepath
-
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the path where to save the file''', str, {})
+    def savepath(self): return self._savepath
     @savepath.setter
-    def savepath(self, value):
+    def savepath(self, value): 
         self._savepath = value
 
     def __init__(self, savepath='./', multiple_selection_allowed=False, *args, **kwargs):
@@ -4305,12 +3940,12 @@ class FileUploader(Container):
     @decorate_set_on_listener("(self, emitter, filename)")
     @decorate_event
     def onsuccess(self, filename):
-        return (filename,)
+        return (filename, )
 
     @decorate_set_on_listener("(self, emitter, filename)")
     @decorate_event
     def onfailed(self, filename):
-        return (filename,)
+        return (filename, )
 
     @decorate_set_on_listener("(self, emitter, filedata, filename)")
     @decorate_event
@@ -4354,9 +3989,8 @@ class FileDownloader(Container, _MixinTextualWidget):
 
 class Link(Container, _MixinTextualWidget):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Link url''', str, {})
+    @editor_attribute_decorator("WidgetSpecific",'''Link url''', str, {})
     def attr_href(self): return self.attributes.get('href', '')
-
     @attr_href.setter
     def attr_href(self, value): self.attributes['href'] = str(value)
 
@@ -4375,49 +4009,34 @@ class Link(Container, _MixinTextualWidget):
 class VideoPlayer(Widget):
     # some constants for the events
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Video url''', str, {})
-    def attr_src(self):
-        return self.attributes.get('src', '')
-
+    @editor_attribute_decorator("WidgetSpecific",'''Video url''', str, {})
+    def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
-    def attr_src(self, value):
-        self.attributes['src'] = str(value)
+    def attr_src(self, value): self.attributes['src'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Video poster img''', 'base64_image', {})
-    def attr_poster(self):
-        return self.attributes.get('poster', '')
-
+    @editor_attribute_decorator("WidgetSpecific",'''Video poster img''', 'base64_image', {})
+    def attr_poster(self): return self.attributes.get('poster', '')
     @attr_poster.setter
-    def attr_poster(self, value):
-        self.attributes['poster'] = str(value)
+    def attr_poster(self, value): self.attributes['poster'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Video autoplay''', bool, {})
-    def attr_autoplay(self):
-        return self.attributes.get('autoplay', '')
-
+    @editor_attribute_decorator("WidgetSpecific",'''Video autoplay''', bool, {})
+    def attr_autoplay(self): return self.attributes.get('autoplay', '')
     @attr_autoplay.setter
-    def attr_autoplay(self, value):
-        self.attributes['autoplay'] = str(value).lower()
+    def attr_autoplay(self, value): self.attributes['autoplay'] = str(value).lower()
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Video loop''', bool, {})
-    def attr_loop(self):
-        return self.attributes.get('loop', '')
-
+    @editor_attribute_decorator("WidgetSpecific",'''Video loop''', bool, {})
+    def attr_loop(self): return self.attributes.get('loop', '')
     @attr_loop.setter
-    def attr_loop(self, value):
-        self.attributes['loop'] = str(value).lower()
+    def attr_loop(self, value): self.attributes['loop'] = str(value).lower()
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Video type''', str, {})
-    def attr_type(self):
-        return self.attributes.get('type', '')
-
+    @editor_attribute_decorator("WidgetSpecific",'''Video type''', str, {})
+    def attr_type(self): return self.attributes.get('type', '')
     @attr_type.setter
-    def attr_type(self, value):
-        self.attributes['type'] = str(value).lower()
+    def attr_type(self, value): self.attributes['type'] = str(value).lower()
 
     def __init__(self, video='', poster=None, autoplay=False, loop=False, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
@@ -4458,25 +4077,20 @@ class VideoPlayer(Widget):
 
 class _MixinSvgStroke():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Color for svg elements.''', 'ColorPicker', {})
+    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
     def attr_stroke(self): return self.attributes.get('stroke', None)
-
     @attr_stroke.setter
     def attr_stroke(self, value): self.attributes['stroke'] = str(value)
-
     @attr_stroke.deleter
-    def attr_stroke(self): del self.attributes['stroke']
+    def attr_stroke(self): del self.attributes['stroke'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Stroke width for svg elements.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
-
     @attr_stroke_width.setter
     def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
-
     @attr_stroke_width.deleter
-    def attr_stroke_width(self): del self.attributes['stroke-width']
+    def attr_stroke_width(self): del self.attributes['stroke-width'] 
 
     def set_stroke(self, width=1, color='black'):
         """Sets the stroke properties.
@@ -4491,25 +4105,20 @@ class _MixinSvgStroke():
 
 class _MixinSvgFill():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Fill color for svg elements.''', 'ColorPicker', {})
+    @editor_attribute_decorator("WidgetSpecific",'''Fill color for svg elements.''', 'ColorPicker', {})
     def attr_fill(self): return self.attributes.get('fill', None)
-
     @attr_fill.setter
     def attr_fill(self, value): self.attributes['fill'] = str(value)
-
     @attr_fill.deleter
-    def attr_fill(self): del self.attributes['fill']
+    def attr_fill(self): del self.attributes['fill'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Fill opacity for svg elements.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Fill opacity for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
     def attr_fill_opacity(self): return self.attributes.get('fill-opacity', None)
-
     @attr_fill_opacity.setter
     def attr_fill_opacity(self, value): self.attributes['fill-opacity'] = str(value)
-
     @attr_fill_opacity.deleter
-    def attr_fill_opacity(self): del self.attributes['fill-opacity']
+    def attr_fill_opacity(self): del self.attributes['fill-opacity'] 
 
     def set_fill(self, color='black'):
         """Sets the fill color.
@@ -4522,18 +4131,14 @@ class _MixinSvgFill():
 
 class _MixinSvgPosition():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x(self): return self.attributes.get('x', '0')
-
     @attr_x.setter
     def attr_x(self, value): self.attributes['x'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y(self): return self.attributes.get('y', '0')
-
     @attr_y.setter
     def attr_y(self, value): self.attributes['y'] = str(value)
 
@@ -4550,18 +4155,14 @@ class _MixinSvgPosition():
 
 class _MixinSvgSize():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Width for Svg element.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_width(self): return self.attributes.get('width', '100')
-
     @attr_width.setter
     def attr_width(self, value): self.attributes['width'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Height for Svg element.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_height(self): return self.attributes.get('height', '100')
-
     @attr_height.setter
     def attr_height(self, value): self.attributes['height'] = str(value)
 
@@ -4578,34 +4179,27 @@ class _MixinSvgSize():
 
 class SvgStop(Tag):
     """ """
-
+     
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient color''', 'ColorPicker', {})
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient color''', 'ColorPicker', {})
     def css_stop_color(self): return self.style.get('stop-color', None)
-
     @css_stop_color.setter
     def css_stop_color(self, value): self.style['stop-color'] = str(value)
-
     @css_stop_color.deleter
     def css_stop_color(self): del self.style['stop-color']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''The opacity property sets the opacity level for the gradient.
-    The opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 0 is completely transparent.''',
-                                float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''The opacity property sets the opacity level for the gradient.
+    The opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 0 is completely transparent.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
     def css_stop_opactity(self): return self.style.get('stop-opacity', None)
-
     @css_stop_opactity.setter
     def css_stop_opactity(self, value): self.style['stop-opacity'] = str(value)
-
     @css_stop_opactity.deleter
     def css_stop_opactity(self): del self.style['stop-opacity']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''The offset value for the gradient stop. It is in percentage''',
-                                float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific",'''The offset value for the gradient stop. It is in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_offset(self): return self.attributes.get('offset', None)
-
     @attr_offset.setter
     def attr_offset(self, value): self.attributes['offset'] = str(value)
 
@@ -4619,53 +4213,40 @@ class SvgStop(Tag):
 
 class SvgGradientLinear(Tag):
     """ """
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_x1(self):
-        return self.attributes.get('x1', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
-    def attr_x1(self, value):
+    def attr_x1(self, value): 
         self.attributes['x1'] = str(value)
-        if not self.attributes['x1'][-1] == '%':
+        if not self.attributes['x1'][-1]=='%':
             self.attributes['x1'] = self.attributes['x1'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_y1(self):
-        return self.attributes.get('y1', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_y1(self): return self.attributes.get('y1', None)
     @attr_y1.setter
-    def attr_y1(self, value):
+    def attr_y1(self, value): 
         self.attributes['y1'] = str(value)
-        if not self.attributes['y1'][-1] == '%':
+        if not self.attributes['y1'][-1]=='%':
             self.attributes['y1'] = self.attributes['y1'] + '%'
-
+    
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_x2(self):
-        return self.attributes.get('x2', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_x2(self): return self.attributes.get('x2', None)
     @attr_x2.setter
-    def attr_x2(self, value):
+    def attr_x2(self, value): 
         self.attributes['x2'] = str(value)
-        if not self.attributes['x2'][-1] == '%':
+        if not self.attributes['x2'][-1]=='%':
             self.attributes['x2'] = self.attributes['x2'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_y2(self):
-        return self.attributes.get('y2', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_y2(self): return self.attributes.get('y2', None)
     @attr_y2.setter
-    def attr_y2(self, value):
+    def attr_y2(self, value): 
         self.attributes['y2'] = str(value)
-        if not self.attributes['y2'][-1] == '%':
+        if not self.attributes['y2'][-1]=='%':
             self.attributes['y2'] = self.attributes['y2'] + '%'
 
     def __init__(self, x1, y1, x2, y2, *args, **kwargs):
@@ -4679,65 +4260,49 @@ class SvgGradientLinear(Tag):
 
 class SvgGradientRadial(Tag):
     """ """
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_cx(self):
-        return self.attributes.get('cx', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
-    def attr_cx(self, value):
+    def attr_cx(self, value): 
         self.attributes['cx'] = str(value)
-        if not self.attributes['cx'][-1] == '%':
+        if not self.attributes['cx'][-1]=='%':
             self.attributes['cx'] = self.attributes['cx'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_cy(self):
-        return self.attributes.get('cy', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
-    def attr_cy(self, value):
+    def attr_cy(self, value): 
         self.attributes['cy'] = str(value)
-        if not self.attributes['cy'][-1] == '%':
+        if not self.attributes['cy'][-1]=='%':
             self.attributes['cy'] = self.attributes['cy'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_fx(self):
-        return self.attributes.get('fx', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_fx(self): return self.attributes.get('fx', None)
     @attr_fx.setter
-    def attr_fx(self, value):
+    def attr_fx(self, value): 
         self.attributes['fx'] = str(value)
-        if not self.attributes['fx'][-1] == '%':
+        if not self.attributes['fx'][-1]=='%':
             self.attributes['fx'] = self.attributes['fx'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_fy(self):
-        return self.attributes.get('fy', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_fy(self): return self.attributes.get('fy', None)
     @attr_fy.setter
-    def attr_fy(self, value):
+    def attr_fy(self, value): 
         self.attributes['fy'] = str(value)
-        if not self.attributes['fy'][-1] == '%':
+        if not self.attributes['fy'][-1]=='%':
             self.attributes['fy'] = self.attributes['fy'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Gradient radius value. It is expressed in percentage''', float,
-                                {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
-    def attr_r(self):
-        return self.attributes.get('r', None)
-
+    @editor_attribute_decorator("WidgetSpecific",'''Gradient radius value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    def attr_r(self): return self.attributes.get('r', None)
     @attr_r.setter
-    def attr_r(self, value):
+    def attr_r(self, value): 
         self.attributes['r'] = str(value)
-        if not self.attributes['r'][-1] == '%':
+        if not self.attributes['r'][-1]=='%':
             self.attributes['r'] = self.attributes['r'] + '%'
 
     def __init__(self, cx="20%", cy="30%", r="30%", fx="50%", fy="50%", *args, **kwargs):
@@ -4747,43 +4312,33 @@ class SvgGradientRadial(Tag):
         self.attr_cy = cy
         self.attr_fx = fx
         self.attr_fy = fy
-        self.attr_r = r
+        self.attr_r  = r
 
 
 class SvgDefs(Tag):
     """ """
-
     def __init__(self, *args, **kwargs):
         super(SvgDefs, self).__init__(*args, **kwargs)
         self.type = 'defs'
-
+    
 
 class Svg(Container):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''preserveAspectRatio' ''', 'DropDown', {'possible_values': (
-    'none', 'xMinYMin meet', 'xMidYMin meet', 'xMaxYMin meet', 'xMinYMid meet', 'xMidYMid meet', 'xMaxYMid meet',
-    'xMinYMax meet', 'xMidYMax meet', 'xMaxYMax meet', 'xMinYMin slice', 'xMidYMin slice', 'xMaxYMin slice',
-    'xMinYMid slice', 'xMidYMid slice', 'xMaxYMid slice', 'xMinYMax slice', 'xMidYMax slice', 'xMaxYMax slice')})
+    @editor_attribute_decorator("WidgetSpecific",'''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
     def attr_preserveAspectRatio(self): return self.attributes.get('preserveAspectRatio', None)
-
     @attr_preserveAspectRatio.setter
     def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
-
     @attr_preserveAspectRatio.deleter
-    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio']
+    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''viewBox of the svg drawing. es='x, y, width, height' ''', 'str',
-                                {})
+    @editor_attribute_decorator("WidgetSpecific",'''viewBox of the svg drawing. es='x, y, width, height' ''', 'str', {})
     def attr_viewBox(self): return self.attributes.get('viewBox', None)
-
     @attr_viewBox.setter
     def attr_viewBox(self, value): self.attributes['viewBox'] = str(value)
-
     @attr_viewBox.deleter
-    def attr_viewBox(self): del self.attributes['viewBox']
+    def attr_viewBox(self): del self.attributes['viewBox'] 
 
     def __init__(self, *args, **kwargs):
         """
@@ -4792,7 +4347,7 @@ class Svg(Container):
         """
         super(Svg, self).__init__(*args, **kwargs)
         self.type = 'svg'
-
+        
     def set_viewbox(self, x, y, w, h):
         """Sets the origin and size of the viewbox, describing a virtual view area.
 
@@ -4825,7 +4380,6 @@ class SvgSubcontainer(Svg, _MixinSvgPosition, _MixinSvgSize):
 class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
     """svg group - a non visible container for svg widgets,
         this have to be appended into Svg elements."""
-
     def __init__(self, *args, **kwargs):
         super(SvgGroup, self).__init__(*args, **kwargs)
         self.type = 'g'
@@ -4834,18 +4388,14 @@ class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
 class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Horizontal round corners value.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Horizontal round corners value.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_round_corners_h(self): return self.attributes.get('rx', '0')
-
     @attr_round_corners_h.setter
     def attr_round_corners_h(self, value): self.attributes['rx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Vertical round corners value. Defaults to attr_round_corners_h.''',
-                                float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Vertical round corners value. Defaults to attr_round_corners_h.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_round_corners_y(self): return self.attributes.get('ry', '0')
-
     @attr_round_corners_y.setter
     def attr_round_corners_y(self, value): self.attributes['ry'] = str(value)
 
@@ -4867,31 +4417,21 @@ class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _M
 class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
     """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
-
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''preserveAspectRatio' ''', 'DropDown', {'possible_values': (
-    'none', 'xMinYMin meet', 'xMidYMin meet', 'xMaxYMin meet', 'xMinYMid meet', 'xMidYMid meet', 'xMaxYMid meet',
-    'xMinYMax meet', 'xMidYMax meet', 'xMaxYMax meet', 'xMinYMin slice', 'xMidYMin slice', 'xMaxYMin slice',
-    'xMinYMid slice', 'xMidYMid slice', 'xMaxYMid slice', 'xMinYMax slice', 'xMidYMax slice', 'xMaxYMax slice')})
+    @editor_attribute_decorator("WidgetSpecific",'''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
     def attr_preserveAspectRatio(self): return self.attributes.get('preserveAspectRatio', None)
-
     @attr_preserveAspectRatio.setter
     def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
-
     @attr_preserveAspectRatio.deleter
-    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio']
+    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",
-                                '''Image data or url  or a base64 data string, html attribute xlink:href''',
-                                'base64_image', {})
+    @editor_attribute_decorator("WidgetSpecific",'''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
     def image_data(self): return self.attributes.get('xlink:href', '')
-
     @image_data.setter
     def image_data(self, value): self.attributes['xlink:href'] = str(value)
-
     @image_data.deleter
-    def image_data(self): del self.attributes['xlink:href']
+    def image_data(self): del self.attributes['xlink:href'] 
 
     def __init__(self, image_data='', x=0, y=0, w=100, h=100, *args, **kwargs):
         """
@@ -4912,26 +4452,20 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
 
 class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
-
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
-
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Radius of SvgCircle.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_r(self): return self.attributes.get('r', None)
-
     @attr_r.setter
     def attr_r(self, value): self.attributes['r'] = str(value)
 
@@ -4969,34 +4503,26 @@ class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
 
 class SvgLine(Widget, _MixinSvgStroke):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''P1 coordinate for SvgLine.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
-
     @attr_x1.setter
     def attr_x1(self, value): self.attributes['x1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''P1 coordinate for SvgLine.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y1(self): return self.attributes.get('y1', None)
-
     @attr_y1.setter
     def attr_y1(self, value): self.attributes['y1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''P2 coordinate for SvgLine.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x2(self): return self.attributes.get('x2', None)
-
     @attr_x2.setter
     def attr_x2(self, value): self.attributes['x2'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''P2 coordinate for SvgLine.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y2(self): return self.attributes.get('y2', None)
-
     @attr_y2.setter
     def attr_y2(self, value): self.attributes['y2'] = str(value)
 
@@ -5020,13 +4546,10 @@ class SvgLine(Widget, _MixinSvgStroke):
 
 class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum values count.''', int,
-                                {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
-    def maxlen(self):
-        return self.__maxlen
-
+    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum values count.''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def maxlen(self): return self.__maxlen
     @maxlen.setter
-    def maxlen(self, value):
+    def maxlen(self, value): 
         self.__maxlen = int(value)
         self.coordsX = collections.deque(maxlen=self.__maxlen)
         self.coordsY = collections.deque(maxlen=self.__maxlen)
@@ -5058,26 +4581,20 @@ class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill):
 class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Width for svg elements.''', int,
-                                {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_textLength(self): return self.attributes.get('textLength', None)
-
     @attr_textLength.setter
     def attr_textLength(self, value): self.attributes['textLength'] = str(value)
-
     @attr_textLength.deleter
-    def attr_textLength(self): del self.attributes['textLength']
+    def attr_textLength(self): del self.attributes['textLength'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float,
-                                {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
     def attr_rotate(self): return self.attributes.get('rotate', None)
-
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
-
     @attr_rotate.deleter
-    def attr_rotate(self): del self.attributes['rotate']
+    def attr_rotate(self): del self.attributes['rotate'] 
 
     def __init__(self, x=10, y=10, text='svg text', *args, **kwargs):
         super(SvgText, self).__init__(*args, **kwargs)
@@ -5088,9 +4605,8 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
 
 class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Instructions for SvgPath.''', str, {})
+    @editor_attribute_decorator("WidgetSpecific",'''Instructions for SvgPath.''', str, {})
     def attr_d(self): return self.attributes.get('d', None)
-
     @attr_d.setter
     def attr_d(self, value): self.attributes['d'] = str(value)
 
@@ -5100,12 +4616,10 @@ class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attributes['d'] = path_value
 
     def add_position(self, x, y):
-        self.attributes['d'] = self.attributes['d'] + "M %s %s" % (x, y)
+        self.attributes['d'] = self.attributes['d'] + "M %s %s"%(x,y)
 
     def add_arc(self, x, y, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag):
-        # A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-        self.attributes['d'] = self.attributes[
-                                   'd'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s" % {
-                                   'x': x,
-                                   'y': y, 'rx': rx, 'ry': ry, 'x-axis-rotation': x_axis_rotation,
-                                   'large-arc-flag': large_arc_flag, 'sweep-flag': sweep_flag}
+        #A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+        self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x,
+            'y':y, 'rx':rx, 'ry':ry, 'x-axis-rotation':x_axis_rotation, 'large-arc-flag':large_arc_flag, 'sweep-flag':sweep_flag}
+
