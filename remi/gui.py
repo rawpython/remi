@@ -898,6 +898,12 @@ class Widget(Tag, EventSource):
                     self.style[k.strip()] = v.strip()
 
     def set_enabled(self, enabled):
+        """ Sets the enabled status. 
+            If a widget is disabled the user iteraction is not allowed
+
+            Args:
+                enabled(bool) : the enabling flag
+        """
         if enabled:
             try:
                 del self.attributes['disabled']
@@ -905,6 +911,11 @@ class Widget(Tag, EventSource):
                 pass
         else:
             self.attributes['disabled'] = 'True'
+
+    def get_enabled(self):
+        """ Returns a bool.
+        """
+        return not ('disabled' in self.attributes.keys())
 
     def set_size(self, width, height):
         """Set the widget size.
