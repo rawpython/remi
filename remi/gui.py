@@ -321,8 +321,7 @@ class Tag(object):
         # we not callable
         runtimeInstances[self.identifier] = self
 
-        self._classes = []
-        self.add_class(self.__class__.__name__ if (_class is None) else _class)
+        self.attr_class = self.__class__.__name__ if _class == None else _class
 
         # this variable will contain the repr of this tag, in order to avoid useless operations
         self._backup_repr = ''
