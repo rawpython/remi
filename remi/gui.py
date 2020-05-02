@@ -2339,7 +2339,7 @@ class Progress(Widget):
     def set_max(self, _max):
         """
         Args:
-            max (int): The maximum progress value.
+            _max (int): The maximum progress value.
         """
         self.attributes['max'] = str(_max)
 
@@ -2363,7 +2363,7 @@ class GenericDialog(Container):
         """
         super(GenericDialog, self).__init__(*args, **kwargs)
         self.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
+        self.style.update({'display': 'block', 'overflow': 'auto', 'margin': '0px auto'})
 
         if len(title) > 0:
             t = Label(title)
@@ -2376,7 +2376,7 @@ class GenericDialog(Container):
             self.append(m, "message")
 
         self.container = Container()
-        self.container.style.update({'display':'block', 'overflow':'auto', 'margin':'5px'})
+        self.container.style.update({'display': 'block', 'overflow': 'auto', 'margin': '5px'})
         self.container.set_layout_orientation(Container.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
@@ -2420,7 +2420,7 @@ class GenericDialog(Container):
         label.css_margin = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
-        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
+        container.style.update({'justify-content': 'space-between', 'overflow': 'auto', 'padding': '3px'})
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
@@ -2437,7 +2437,7 @@ class GenericDialog(Container):
         """
         self.inputs[key] = field
         container = HBox()
-        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
+        container.style.update({'justify-content': 'space-between', 'overflow': 'auto', 'padding': '3px'})
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -2514,7 +2514,7 @@ class InputDialog(GenericDialog):
 
         propagates the string content of the input field
         """
-        if keycode=="13":
+        if keycode == "13":
             self.hide()
             self.inputText.set_text(value)
             self.confirm_value(self)
@@ -2536,7 +2536,7 @@ class ListView(Container):
     its onselection event. Register a listener with ListView.onselection.connect.
     """
 
-    def __init__(self, selectable = True, *args, **kwargs):
+    def __init__(self, selectable=True, *args, **kwargs):
         """
         Args:
             kwargs: See Container.__init__()
@@ -2574,12 +2574,12 @@ class ListView(Container):
         keys = super(ListView, self).append(value, key=key)
         if type(value) in (list, tuple, dict):
             for k in keys:
-                if not self.EVENT_ONCLICK in self.children[k].attributes:
+                if self.EVENT_ONCLICK not in self.children[k].attributes:
                     self.children[k].onclick.connect(self.onselection)
                 self.children[k].attributes['selected'] = False
         else:
             # if an event listener is already set for the added item, it will not generate a selection event
-            if not self.EVENT_ONCLICK in value.attributes:
+            if self.EVENT_ONCLICK not in value.attributes:
                 value.onclick.connect(self.onselection)
             value.attributes['selected'] = False
         return keys
@@ -2833,7 +2833,7 @@ class DropDownItem(Widget, _MixinTextualWidget):
 class Image(Widget):
     """image widget."""
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Image data or url''', 'base64_image', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Image data or url''', 'base64_image', {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
     def attr_src(self, value): self.attributes['src'] = str(value)
@@ -2936,19 +2936,19 @@ class TableWidget(Table):
     Each item is addressed by stringified integer key in the children dictionary.
     """
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Table colum count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Table colum count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
     def column_count(self): return self.__column_count
     @column_count.setter
     def column_count(self, value): self.set_column_count(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Table row count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Table row count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
     def row_count(self): return len(self.children)
     @row_count.setter
     def row_count(self, value): self.set_row_count(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Table use title.''', bool, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Table use title.''', bool, {})
     def use_title(self): return self.__use_title
     @use_title.setter
     def use_title(self, value): self.set_use_title(value)
@@ -2989,7 +2989,7 @@ class TableWidget(Table):
             for c_key in self.children['0'].children.keys():
                 instance = cl(self.children['0'].children[c_key].get_text())
                 self.children['0'].append(instance, c_key)
-                #here the cells of the first row are overwritten and aren't appended by the standard Table.append
+                # here the cells of the first row are overwritten and aren't appended by the standard Table.append
                 # method. We have to restore de standard on_click internal listener in order to make it working
                 # the Table.on_table_row_click functionality
                 instance.onclick.connect(self.children['0'].on_row_item_click)
@@ -3190,7 +3190,7 @@ class Input(Widget):
             default_value (str):
             kwargs: See Widget.__init__()
         """
-        if not '_class' in kwargs:
+        if '_class' not in kwargs:
             kwargs['_class'] = input_type
         super(Input, self).__init__(*args, **kwargs)
         self.type = 'input'
@@ -3200,8 +3200,8 @@ class Input(Widget):
         self.attributes['autocomplete'] = 'off'
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
-        {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
+        {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
     def set_value(self, value):
         self.attributes['value'] = str(value)
@@ -3236,7 +3236,7 @@ class CheckBoxLabel(HBox):
     _label = None
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Text content''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Text content''', str, {})
     def text(self): return self._label.get_text()
     @text.setter
     def text(self, value): self._label.set_text(value)
@@ -3290,8 +3290,8 @@ class CheckBox(Input):
         self.set_value(checked)
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').checked;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
-            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
+            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
@@ -3319,25 +3319,25 @@ class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the spin box.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the step value for the spin box.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
     def attr_step(self): return self.attributes.get('step', '1')
     @attr_step.setter
     def attr_step(self, value): self.attributes['step'] = str(value)
@@ -3365,7 +3365,7 @@ class SpinBox(Input):
             js += ' || (key == 8 || key == 46 || key == 45|| key == 44 )'  # allow backspace and delete and minus and coma
             js += ' || (key == 13)'  # allow enter
         self.attributes[self.EVENT_ONKEYPRESS] = '%s;' % js
-        #FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
+        # FIXES Edge behaviour where onchange event not fires in case of key arrow Up or Down
         self.attributes[self.EVENT_ONKEYUP] = \
             "var key = event.keyCode || event.charCode;" \
             "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
@@ -3376,25 +3376,25 @@ class SpinBox(Input):
 class Slider(Input):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the step value for the Slider.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the step value for the Slider.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 0, 'step': 1})
     def attr_step(self): return self.attributes.get('step', '1')
     @attr_step.setter
     def attr_step(self, value): self.attributes['step'] = str(value)
@@ -3415,8 +3415,8 @@ class Slider(Input):
         self.attributes['step'] = str(step)
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
-            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
+            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
@@ -3458,13 +3458,13 @@ class Datalist(Container):
 
     def append(self, options, key=''):
         if type(options) in (list, tuple, dict):
-            if type(options)==dict:
+            if type(options) == dict:
                 for k in options.keys():
                     self.append(options[k], k)
                 return options.keys()
             keys = []
             for child in options:
-                keys.append( self.append(child) )
+                keys.append(self.append(child))
             return keys
 
         if not isinstance(options, DatalistItem):
@@ -3500,13 +3500,13 @@ class SelectionInput(Input):
     """
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the actual value for the widget.''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the widget.''', str, {})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the datalist.''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the datalist.''', str, {})
     def attr_datalist_identifier(self): 
         return self.attributes.get('list', '0')
     @attr_datalist_identifier.setter
@@ -3516,7 +3516,7 @@ class SelectionInput(Input):
         self.attributes['list'] = value
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
     def attr_input_type(self): return self.attributes.get('type', 'text')
     @attr_input_type.setter
     def attr_input_type(self, value): self.attributes['type'] = str(value)
@@ -3531,8 +3531,8 @@ class SelectionInput(Input):
         
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
-            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
-            {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
+            "sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);" % \
+            {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
 
     @decorate_set_on_listener("(self, emitter, x, y)")
     @decorate_event_js("""var params={};
@@ -3608,7 +3608,7 @@ class FileFolderNavigator(Container):
         self.controlsContainer.append(self.pathEditor, "url_editor")
         self.controlsContainer.append(self.controlGo, "button_go")
 
-        self.itemContainer = Container(width='100%',height=300)
+        self.itemContainer = Container(width='100%', height=300)
 
         self.append(self.controlsContainer, "controls_container")
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
@@ -3656,7 +3656,7 @@ class FileFolderNavigator(Container):
         # creation of a new instance of a itemContainer
         self.itemContainer = Container(width='100%', height=300)
         self.itemContainer.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.itemContainer.style.update({'overflow-y':'scroll', 'overflow-x':'hidden', 'display':'block'})
+        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden', 'display': 'block'})
 
         for i in l:
             full_path = os.path.join(directory, i)
@@ -3839,7 +3839,7 @@ class Menu(Container):
         Args:
             kwargs: See Container.__init__()
         """
-        super(Menu, self).__init__(layout_orientation = Container.LAYOUT_HORIZONTAL, *args, **kwargs)
+        super(Menu, self).__init__(layout_orientation=Container.LAYOUT_HORIZONTAL, *args, **kwargs)
         self.type = 'ul'
 
 
@@ -3930,7 +3930,7 @@ class FileUploader(Container):
                 del self.__dict__["multiple"]
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Defines the path where to save the file''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the path where to save the file''', str, {})
     def savepath(self): return self._savepath
     @savepath.setter
     def savepath(self, value): 
@@ -4008,7 +4008,7 @@ class FileDownloader(Container, _MixinTextualWidget):
 
 class Link(Container, _MixinTextualWidget):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Link url''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Link url''', str, {})
     def attr_href(self): return self.attributes.get('href', '')
     @attr_href.setter
     def attr_href(self, value): self.attributes['href'] = str(value)
@@ -4028,31 +4028,31 @@ class Link(Container, _MixinTextualWidget):
 class VideoPlayer(Widget):
     # some constants for the events
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Video url''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Video url''', str, {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
     def attr_src(self, value): self.attributes['src'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Video poster img''', 'base64_image', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Video poster img''', 'base64_image', {})
     def attr_poster(self): return self.attributes.get('poster', '')
     @attr_poster.setter
     def attr_poster(self, value): self.attributes['poster'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Video autoplay''', bool, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Video autoplay''', bool, {})
     def attr_autoplay(self): return self.attributes.get('autoplay', '')
     @attr_autoplay.setter
     def attr_autoplay(self, value): self.attributes['autoplay'] = str(value).lower()
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Video loop''', bool, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Video loop''', bool, {})
     def attr_loop(self): return self.attributes.get('loop', '')
     @attr_loop.setter
     def attr_loop(self, value): self.attributes['loop'] = str(value).lower()
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Video type''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Video type''', str, {})
     def attr_type(self): return self.attributes.get('type', '')
     @attr_type.setter
     def attr_type(self, value): self.attributes['type'] = str(value).lower()
@@ -4096,7 +4096,7 @@ class VideoPlayer(Widget):
 
 class _MixinSvgStroke():
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Color for svg elements.''', 'ColorPicker', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Color for svg elements.''', 'ColorPicker', {})
     def attr_stroke(self): return self.attributes.get('stroke', None)
     @attr_stroke.setter
     def attr_stroke(self, value): self.attributes['stroke'] = str(value)
@@ -4104,7 +4104,7 @@ class _MixinSvgStroke():
     def attr_stroke(self): del self.attributes['stroke'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Stroke width for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Stroke width for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_stroke_width(self): return self.attributes.get('stroke-width', None)
     @attr_stroke_width.setter
     def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
@@ -4124,7 +4124,7 @@ class _MixinSvgStroke():
 
 class _MixinSvgFill():
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Fill color for svg elements.''', 'ColorPicker', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Fill color for svg elements.''', 'ColorPicker', {})
     def attr_fill(self): return self.attributes.get('fill', None)
     @attr_fill.setter
     def attr_fill(self, value): self.attributes['fill'] = str(value)
@@ -4132,7 +4132,7 @@ class _MixinSvgFill():
     def attr_fill(self): del self.attributes['fill'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Fill opacity for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Fill opacity for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
     def attr_fill_opacity(self): return self.attributes.get('fill-opacity', None)
     @attr_fill_opacity.setter
     def attr_fill_opacity(self, value): self.attributes['fill-opacity'] = str(value)
@@ -4150,13 +4150,13 @@ class _MixinSvgFill():
 
 class _MixinSvgPosition():
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_x(self): return self.attributes.get('x', '0')
     @attr_x.setter
     def attr_x(self, value): self.attributes['x'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_y(self): return self.attributes.get('y', '0')
     @attr_y.setter
     def attr_y(self, value): self.attributes['y'] = str(value)
@@ -4174,13 +4174,13 @@ class _MixinSvgPosition():
 
 class _MixinSvgSize():
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_width(self): return self.attributes.get('width', '100')
     @attr_width.setter
     def attr_width(self, value): self.attributes['width'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_height(self): return self.attributes.get('height', '100')
     @attr_height.setter
     def attr_height(self, value): self.attributes['height'] = str(value)
@@ -4200,7 +4200,7 @@ class SvgStop(Tag):
     """ """
      
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient color''', 'ColorPicker', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient color''', 'ColorPicker', {})
     def css_stop_color(self): return self.style.get('stop-color', None)
     @css_stop_color.setter
     def css_stop_color(self, value): self.style['stop-color'] = str(value)
@@ -4208,7 +4208,7 @@ class SvgStop(Tag):
     def css_stop_color(self): del self.style['stop-color']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''The opacity property sets the opacity level for the gradient.
+    @editor_attribute_decorator("WidgetSpecific", '''The opacity property sets the opacity level for the gradient.
     The opacity-level describes the transparency-level, where 1 is not transparent at all, 0.5 is 50% see-through, and 0 is completely transparent.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
     def css_stop_opactity(self): return self.style.get('stop-opacity', None)
     @css_stop_opactity.setter
@@ -4217,7 +4217,7 @@ class SvgStop(Tag):
     def css_stop_opactity(self): del self.style['stop-opacity']
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''The offset value for the gradient stop. It is in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''The offset value for the gradient stop. It is in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_offset(self): return self.attributes.get('offset', None)
     @attr_offset.setter
     def attr_offset(self, value): self.attributes['offset'] = str(value)
@@ -4233,39 +4233,39 @@ class SvgStop(Tag):
 class SvgGradientLinear(Tag):
     """ """
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
     def attr_x1(self, value): 
         self.attributes['x1'] = str(value)
-        if not self.attributes['x1'][-1]=='%':
+        if not self.attributes['x1'][-1] == '%':
             self.attributes['x1'] = self.attributes['x1'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_y1(self): return self.attributes.get('y1', None)
     @attr_y1.setter
     def attr_y1(self, value): 
         self.attributes['y1'] = str(value)
-        if not self.attributes['y1'][-1]=='%':
+        if not self.attributes['y1'][-1] == '%':
             self.attributes['y1'] = self.attributes['y1'] + '%'
     
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_x2(self): return self.attributes.get('x2', None)
     @attr_x2.setter
     def attr_x2(self, value): 
         self.attributes['x2'] = str(value)
-        if not self.attributes['x2'][-1]=='%':
+        if not self.attributes['x2'][-1] == '%':
             self.attributes['x2'] = self.attributes['x2'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_y2(self): return self.attributes.get('y2', None)
     @attr_y2.setter
     def attr_y2(self, value): 
         self.attributes['y2'] = str(value)
-        if not self.attributes['y2'][-1]=='%':
+        if not self.attributes['y2'][-1] == '%':
             self.attributes['y2'] = self.attributes['y2'] + '%'
 
     def __init__(self, x1, y1, x2, y2, *args, **kwargs):
@@ -4280,48 +4280,48 @@ class SvgGradientLinear(Tag):
 class SvgGradientRadial(Tag):
     """ """
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): 
         self.attributes['cx'] = str(value)
-        if not self.attributes['cx'][-1]=='%':
+        if not self.attributes['cx'][-1] == '%':
             self.attributes['cx'] = self.attributes['cx'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): 
         self.attributes['cy'] = str(value)
-        if not self.attributes['cy'][-1]=='%':
+        if not self.attributes['cy'][-1] == '%':
             self.attributes['cy'] = self.attributes['cy'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_fx(self): return self.attributes.get('fx', None)
     @attr_fx.setter
     def attr_fx(self, value): 
         self.attributes['fx'] = str(value)
-        if not self.attributes['fx'][-1]=='%':
+        if not self.attributes['fx'][-1] == '%':
             self.attributes['fx'] = self.attributes['fx'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_fy(self): return self.attributes.get('fy', None)
     @attr_fy.setter
     def attr_fy(self, value): 
         self.attributes['fy'] = str(value)
-        if not self.attributes['fy'][-1]=='%':
+        if not self.attributes['fy'][-1] == '%':
             self.attributes['fy'] = self.attributes['fy'] + '%'
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Gradient radius value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Gradient radius value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_r(self): return self.attributes.get('r', None)
     @attr_r.setter
     def attr_r(self, value): 
         self.attributes['r'] = str(value)
-        if not self.attributes['r'][-1]=='%':
+        if not self.attributes['r'][-1] == '%':
             self.attributes['r'] = self.attributes['r'] + '%'
 
     def __init__(self, cx="20%", cy="30%", r="30%", fx="50%", fy="50%", *args, **kwargs):
@@ -4331,7 +4331,7 @@ class SvgGradientRadial(Tag):
         self.attr_cy = cy
         self.attr_fx = fx
         self.attr_fy = fy
-        self.attr_r  = r
+        self.attr_r = r
 
 
 class SvgDefs(Tag):
@@ -4407,13 +4407,13 @@ class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
 class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Horizontal round corners value.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Horizontal round corners value.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_round_corners_h(self): return self.attributes.get('rx', '0')
     @attr_round_corners_h.setter
     def attr_round_corners_h(self, value): self.attributes['rx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Vertical round corners value. Defaults to attr_round_corners_h.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Vertical round corners value. Defaults to attr_round_corners_h.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_round_corners_y(self): return self.attributes.get('ry', '0')
     @attr_round_corners_y.setter
     def attr_round_corners_y(self, value): self.attributes['ry'] = str(value)
@@ -4437,7 +4437,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
     """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
+    @editor_attribute_decorator("WidgetSpecific", '''preserveAspectRatio' ''', 'DropDown', {'possible_values': ('none','xMinYMin meet','xMidYMin meet','xMaxYMin meet','xMinYMid meet','xMidYMid meet','xMaxYMid meet','xMinYMax meet','xMidYMax meet','xMaxYMax meet','xMinYMin slice','xMidYMin slice','xMaxYMin slice','xMinYMid slice','xMidYMid slice','xMaxYMid slice','xMinYMax slice','xMidYMax slice','xMaxYMax slice')})
     def attr_preserveAspectRatio(self): return self.attributes.get('preserveAspectRatio', None)
     @attr_preserveAspectRatio.setter
     def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
@@ -4445,7 +4445,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
     def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
     def image_data(self): return self.attributes.get('xlink:href', '')
     @image_data.setter
     def image_data(self, value): self.attributes['xlink:href'] = str(value)
@@ -4471,13 +4471,13 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
 
 class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
@@ -4600,7 +4600,7 @@ class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill):
 class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_textLength(self): return self.attributes.get('textLength', None)
     @attr_textLength.setter
     def attr_textLength(self, value): self.attributes['textLength'] = str(value)
@@ -4608,7 +4608,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     def attr_textLength(self): del self.attributes['textLength'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
     def attr_rotate(self): return self.attributes.get('rotate', None)
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
@@ -4624,7 +4624,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
 
 class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Instructions for SvgPath.''', str, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Instructions for SvgPath.''', str, {})
     def attr_d(self): return self.attributes.get('d', None)
     @attr_d.setter
     def attr_d(self, value): self.attributes['d'] = str(value)
@@ -4635,10 +4635,10 @@ class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attributes['d'] = path_value
 
     def add_position(self, x, y):
-        self.attributes['d'] = self.attributes['d'] + "M %s %s"%(x,y)
+        self.attributes['d'] = self.attributes['d'] + "M %s %s" % (x, y)
 
     def add_arc(self, x, y, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag):
-        #A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+        # A rx ry x-axis-rotation large-arc-flag sweep-flag x y
         self.attributes['d'] = self.attributes['d'] + "A %(rx)s %(ry)s, %(x-axis-rotation)s, %(large-arc-flag)s, %(sweep-flag)s, %(x)s %(y)s"%{'x':x,
-            'y':y, 'rx':rx, 'ry':ry, 'x-axis-rotation':x_axis_rotation, 'large-arc-flag':large_arc_flag, 'sweep-flag':sweep_flag}
+            'y': y, 'rx': rx, 'ry': ry, 'x-axis-rotation': x_axis_rotation, 'large-arc-flag': large_arc_flag, 'sweep-flag': sweep_flag}
 
