@@ -360,12 +360,14 @@ class App(BaseHTTPRequestHandler, object):
             head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
             
             body = gui.BODY()
+            body.add_class('remi-main')
             body.onload.connect(self.onload)
             body.onerror.connect(self.onerror)
             body.ononline.connect(self.ononline)
             body.onpagehide.connect(self.onpagehide)
             body.onpageshow.connect(self.onpageshow)
             body.onresize.connect(self.onresize)
+
             self.page = gui.HTML()
             self.page.add_child('head', head)
             self.page.add_child('body', body)
