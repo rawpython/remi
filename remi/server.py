@@ -142,7 +142,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if self.handshake():
             while True:
                 if not self.read_next_message():
-                    clients[self.session].websockets.remove(self)
+                    clients[self.session].websockets.discard(self)
                     self.handshake_done = False
                     self._log.debug('ws ending websocket service')
                     break
@@ -239,7 +239,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             try:
                 # saving the websocket in order to update the client
                 if self not in clients[self.session].websockets:
-                    clients[self.session].websockets.append(self)
+                    clients[self.session].websockets.add(self)
 
                 # parsing messages
                 chunks = message.split('/')
@@ -373,7 +373,7 @@ class App(BaseHTTPRequestHandler, object):
             self.page.add_child('body', body)
 
             if not hasattr(self, 'websockets'):
-                self.websockets = []
+                self.websockets = set()
 
             self.update_lock = threading.RLock()
 
@@ -472,7 +472,7 @@ class App(BaseHTTPRequestHandler, object):
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
-        for ws in self.websockets[:]:
+        for ws in list(self.websockets):
             # noinspection PyBroadException
             try:
                 #self._log.debug("sending websocket spontaneous message")
@@ -481,9 +481,10 @@ class App(BaseHTTPRequestHandler, object):
                 self._log.error("sending websocket spontaneous message", exc_info=True)
                 try:
                     self.websockets.remove(ws)
-                    ws.close(terminate_server=False)
                 except Exception:
-                    self._log.error("unable to remove websocket client - already not in list", exc_info=True)
+                    pass # happens when there are multiple clients
+                else:
+                    ws.close(terminate_server=False)
 
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
