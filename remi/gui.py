@@ -2338,7 +2338,7 @@ class Progress(Widget):
     def set_max(self, _max):
         """
         Args:
-            max (int): The maximum progress value.
+            _max (int): The maximum progress value.
         """
         self.attributes['max'] = str(_max)
 
@@ -2362,7 +2362,7 @@ class GenericDialog(Container):
         """
         super(GenericDialog, self).__init__(*args, **kwargs)
         self.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.style.update({'display':'block', 'overflow':'auto', 'margin':'0px auto'})
+        self.style.update({'display': 'block', 'overflow': 'auto', 'margin': '0px auto'})
 
         if len(title) > 0:
             t = Label(title)
@@ -2375,7 +2375,7 @@ class GenericDialog(Container):
             self.append(m, "message")
 
         self.container = Container()
-        self.container.style.update({'display':'block', 'overflow':'auto', 'margin':'5px'})
+        self.container.style.update({'display': 'block', 'overflow': 'auto', 'margin': '5px'})
         self.container.set_layout_orientation(Container.LAYOUT_VERTICAL)
         self.conf = Button('Ok')
         self.conf.set_size(100, 30)
@@ -2419,7 +2419,7 @@ class GenericDialog(Container):
         label.css_margin = '0px 5px'
         label.style['min-width'] = '30%'
         container = HBox()
-        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
+        container.style.update({'justify-content': 'space-between', 'overflow': 'auto', 'padding': '3px'})
         container.append(label, key='lbl' + key)
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
@@ -2436,7 +2436,7 @@ class GenericDialog(Container):
         """
         self.inputs[key] = field
         container = HBox()
-        container.style.update({'justify-content':'space-between', 'overflow':'auto', 'padding':'3px'})
+        container.style.update({'justify-content': 'space-between', 'overflow': 'auto', 'padding': '3px'})
         container.append(self.inputs[key], key=key)
         self.container.append(container, key=key)
 
@@ -2513,7 +2513,7 @@ class InputDialog(GenericDialog):
 
         propagates the string content of the input field
         """
-        if keycode=="13":
+        if keycode == "13":
             self.hide()
             self.inputText.set_text(value)
             self.confirm_value(self)
@@ -2535,7 +2535,7 @@ class ListView(Container):
     its onselection event. Register a listener with ListView.onselection.connect.
     """
 
-    def __init__(self, selectable = True, *args, **kwargs):
+    def __init__(self, selectable=True, *args, **kwargs):
         """
         Args:
             kwargs: See Container.__init__()
@@ -2573,12 +2573,12 @@ class ListView(Container):
         keys = super(ListView, self).append(value, key=key)
         if type(value) in (list, tuple, dict):
             for k in keys:
-                if not self.EVENT_ONCLICK in self.children[k].attributes:
+                if self.EVENT_ONCLICK not in self.children[k].attributes:
                     self.children[k].onclick.connect(self.onselection)
                 self.children[k].attributes['selected'] = False
         else:
             # if an event listener is already set for the added item, it will not generate a selection event
-            if not self.EVENT_ONCLICK in value.attributes:
+            if self.EVENT_ONCLICK not in value.attributes:
                 value.onclick.connect(self.onselection)
             value.attributes['selected'] = False
         return keys
@@ -2832,7 +2832,7 @@ class DropDownItem(Widget, _MixinTextualWidget):
 class Image(Widget):
     """image widget."""
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Image data or url''', 'base64_image', {})
+    @editor_attribute_decorator("WidgetSpecific", '''Image data or url''', 'base64_image', {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
     def attr_src(self, value): self.attributes['src'] = str(value)
@@ -2935,19 +2935,19 @@ class TableWidget(Table):
     Each item is addressed by stringified integer key in the children dictionary.
     """
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Table colum count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Table colum count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
     def column_count(self): return self.__column_count
     @column_count.setter
     def column_count(self, value): self.set_column_count(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Table row count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Table row count.''', int, {'possible_values': '', 'min': 0, 'max': 100, 'default': 1, 'step': 1})
     def row_count(self): return len(self.children)
     @row_count.setter
     def row_count(self, value): self.set_row_count(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Table use title.''', bool, {})
+    @editor_attribute_decorator("WidgetSpecific", '''Table use title.''', bool, {})
     def use_title(self): return self.__use_title
     @use_title.setter
     def use_title(self, value): self.set_use_title(value)
@@ -2988,7 +2988,7 @@ class TableWidget(Table):
             for c_key in self.children['0'].children.keys():
                 instance = cl(self.children['0'].children[c_key].get_text())
                 self.children['0'].append(instance, c_key)
-                #here the cells of the first row are overwritten and aren't appended by the standard Table.append
+                # here the cells of the first row are overwritten and aren't appended by the standard Table.append
                 # method. We have to restore de standard on_click internal listener in order to make it working
                 # the Table.on_table_row_click functionality
                 instance.onclick.connect(self.children['0'].on_row_item_click)
