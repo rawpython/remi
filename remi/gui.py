@@ -1557,9 +1557,10 @@ class HEAD(Tag):
                     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
                     this._pendingSendMessages.push(message);
                     if( this._pendingSendMessages.length < %(max_pending_messages)s ){
-                        this._ws.send(message);
-                        if(this._comTimeout==null)
-                            this._comTimeout = setTimeout(this._checkTimeout, %(messaging_timeout)s);
+                        if (this._ws !== null && this._ws.readyState == 1)
+                            this._ws.send(message);
+                            if(this._comTimeout==null)
+                                this._comTimeout = setTimeout(this._checkTimeout, %(messaging_timeout)s);
                     }else{
                         console.debug('Renewing connection, this._ws.readyState when trying to send was: ' + this._ws.readyState)
                         this._renewConnection();
