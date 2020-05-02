@@ -22,7 +22,7 @@ class MyApp(App):
         res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
         # static_file_path can be an array of strings allowing to define
         #  multiple resource path in where the resources will be placed
-        super(MyApp, self).__init__(*args, static_file_path=res_path)
+        super(MyApp, self).__init__(*args, static_file_path={'myres':res_path})
 
     def idle(self):
         """ Idle loop, you can place here custom code,

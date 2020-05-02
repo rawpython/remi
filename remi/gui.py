@@ -1378,7 +1378,7 @@ class HEAD(Tag):
         """
         self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, base64_data, mimetype))
 
-    def set_internal_js(self, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
+    def set_internal_js(self, app_identifier, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
         self.add_child('internal_js',
                 """
                 <script>
@@ -1626,9 +1626,22 @@ class HEAD(Tag):
                     fd.append('upload_file', file);
                     xhr.send(fd);
                 };
+
+                window.onerror = function(message, source, lineno, colno, error) {
+                    var params={};params['message']=message;
+                    params['source']=source;
+                    params['lineno']=lineno;
+                    params['colno']=colno;
+                    params['error']=JSON.stringify(error);
+                    sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+                    return false;
+                };
+
                 </script>""" % {'host':net_interface_ip,
                                 'max_pending_messages':pending_messages_queue_length,
-                                'messaging_timeout':websocket_timeout_timer_ms})
+                                'messaging_timeout':websocket_timeout_timer_ms,
+                                'emitter_identifier':app_identifier,
+                                'event_name':'onerror'})
 
     def set_title(self, title):
         self.add_child('title', "<title>%s</title>" % title)
@@ -1672,18 +1685,6 @@ class BODY(Container):
     def onload(self):
         """Called when page gets loaded."""
         return ()
-
-    @decorate_set_on_listener("(self, emitter)")
-    @decorate_event_js("""var params={};params['message']=event.message;
-                params['source']=event.source;
-                params['lineno']=event.lineno;
-                params['colno']=event.colno;
-                sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                return false;
-            """)
-    def onerror(self, message, source, lineno, colno):
-        """Called when an error occurs."""
-        return (message, source, lineno, colno)
 
     @decorate_set_on_listener("(self, emitter)")
     @decorate_event_js("""sendCallback('%(emitter_identifier)s','%(event_name)s');""")

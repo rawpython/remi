@@ -358,10 +358,9 @@ class App(BaseHTTPRequestHandler, object):
             head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
             head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
-            
+
             body = gui.BODY()
             body.onload.connect(self.onload)
-            body.onerror.connect(self.onerror)
             body.ononline.connect(self.ononline)
             body.onpagehide.connect(self.onpagehide)
             body.onpageshow.connect(self.onpageshow)
@@ -402,7 +401,7 @@ class App(BaseHTTPRequestHandler, object):
         net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
-        self.page.children['head'].set_internal_js(net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
+        self.page.children['head'].set_internal_js(str(id(self)), net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
 
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
@@ -697,11 +696,11 @@ class App(BaseHTTPRequestHandler, object):
         """
         self._log.debug('App.onload event occurred')
 
-    def onerror(self, emitter, message, source, lineno, colno):
+    def onerror(self, message, source, lineno, colno, error):
         """ WebPage Event that occurs on webpage errors
         """
         self._log.debug("""App.onerror event occurred in webpage: 
-            \nMESSAGE:%s\nSOURCE:%s\nLINENO:%s\nCOLNO:%s\n"""%(message, source, lineno, colno))
+            \nMESSAGE:%s\nSOURCE:%s\nLINENO:%s\nCOLNO:%s\ERROR:%s\n"""%(message, source, lineno, colno, error))
 
     def ononline(self, emitter):
         """ WebPage Event that occurs on webpage goes online after a disconnection
