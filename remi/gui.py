@@ -1591,7 +1591,7 @@ class HEAD(Tag):
                 };
 
                 Remi.prototype._checkTimeout = function(){
-                    if(this._pendingSendMessages.length>0)
+                    if(this._pendingSendMessages !== undefined)
                         this._renewConnection();
                 };
 
