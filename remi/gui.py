@@ -1492,7 +1492,7 @@ class HEAD(Tag):
                                 }catch(e){console.debug(e.message);};
                             }else if( received_msg[0]=='3' ){ /*ack*/
                                 self._pendingSendMessages.shift() /*remove the oldest*/
-                                if(self._comTimeout!=null)
+                                if(self._comTimeout!==null)
                                     clearTimeout(self._comTimeout);
                             }
                         };
@@ -1553,13 +1553,13 @@ class HEAD(Tag):
                 /*this uses websockets*/
                 Remi.prototype.sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
                     var paramStr = '';
-                    if(params!=null) paramStr=this._paramPacketize(params);
+                    if(params!==null) paramStr=this._paramPacketize(params);
                     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
                     this._pendingSendMessages.push(message);
                     if( this._pendingSendMessages.length < %(max_pending_messages)s ){
                         if (this._ws !== null && this._ws.readyState == 1)
                             this._ws.send(message);
-                            if(this._comTimeout==null)
+                            if(this._comTimeout===null)
                                 this._comTimeout = setTimeout(this._checkTimeout, %(messaging_timeout)s);
                     }else{
                         console.debug('Renewing connection, this._ws.readyState when trying to send was: ' + this._ws.readyState)
