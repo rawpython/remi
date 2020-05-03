@@ -2,7 +2,7 @@ from editor import prototypes
 from editor import editor_widgets
 try:
     from editor import Editor
-except:
+except ImportError:
     from editor.editor import Editor
 
 from remi import start

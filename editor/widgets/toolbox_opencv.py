@@ -127,7 +127,7 @@ class OpencvImage(gui.Image, OpencvWidget):
             if ret:
                 headers = {'Content-type': 'image/png', 'Cache-Control':'no-cache'}
                 return [png.tostring(), headers]
-        except:
+        except Exception:
             pass
             #print(traceback.format_exc())
         return None, None
@@ -240,7 +240,7 @@ class OpencvVideo(OpencvImage):
                     headers = {'Content-type': 'image/png', 'Cache-Control':'no-cache'}
                     # tostring is an alias to tobytes, which wasn't added till numpy 1.9
                     return [png.tostring(), headers]
-        except:
+        except Exception:
             print(traceback.format_exc())
         return None, None
 
@@ -495,7 +495,7 @@ class OpencvBitwiseNot(OpencvImage):
     def on_new_image_listener(self, emitter):
         try:
             self.set_image_data(cv2.bitwise_not(emitter.img))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -512,14 +512,14 @@ class BinaryOperator(object):
         try:
             self.img1 = emitter.img
             self.process()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def on_new_image_2_listener(self, emitter):
         try:
             self.img2 = emitter.img
             self.process()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -664,7 +664,7 @@ class OpencvBilateralFilter(OpencvImage):
             self.image_source = emitter
             border = self.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.bilateralFilter(emitter.img, self.diameter, self.sigma_color, self.sigma_space, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -703,7 +703,7 @@ class OpencvBlurFilter(OpencvImage):
             self.image_source = emitter
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.blur(emitter.img, (self.kernel_size,self.kernel_size), borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def on_kernel_size_listener(self, emitter, value=None):
@@ -773,7 +773,7 @@ class OpencvDilateFilter(OpencvImage):
             kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.dilate(emitter.img, kernel, iterations=self.iterations, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -791,7 +791,7 @@ class OpencvErodeFilter(OpencvDilateFilter):
             kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.erode(emitter.img, kernel, iterations=self.iterations, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -820,7 +820,7 @@ class OpencvLaplacianFilter(OpencvImage):
             self.image_source = emitter
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.Laplacian(emitter.img, -1, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -858,7 +858,7 @@ class OpencvCanny(OpencvImage):
         try:
             self.image_source = emitter
             self.set_image_data(cv2.Canny(emitter.img, self.threshold1, self.threshold2))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def on_threshold1_listener(self, emitter, value=None):
@@ -1037,7 +1037,7 @@ class OpencvFindContours(OpencvImage):
                 img = cv2.drawContours(img, self.contours, i, 0, 1, cv2.LINE_AA)
             self.set_image_data(img)
             self.on_new_contours_result()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def do_contours_result(self, callback, *userdata, **kwuserdata):
@@ -1092,5 +1092,5 @@ class OpencvInRangeGrayscale(OpencvImage):
         try:
             self.image_source = emitter
             self.set_image_data(cv2.inRange(emitter.img, self.threshold1, self.threshold2))
-        except:
+        except Exception:
             print(traceback.format_exc())

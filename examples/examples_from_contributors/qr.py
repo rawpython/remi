@@ -38,7 +38,7 @@ class Camera(App):
                     canvas.height = video.videoHeight;
 	            canvas.getContext('2d').drawImage(video, 0, 0);
 		    params['image']=canvas.toDataURL().split(',')[1];
-		    sendCallbackParam('%(id)s','%(callback_function)s',params);
+		    remi.sendCallbackParam('%(id)s','%(callback_function)s',params);
                     frame = 0;
                 }
                 frame+=1;
@@ -57,7 +57,7 @@ class Camera(App):
     def process_image(self, **kwargs):
         try:
             image = Image.open(io.BytesIO(base64.b64decode(kwargs['image'])))
-        except:
+        except Exception:
             return
 
         qr_code_list = decode(image)

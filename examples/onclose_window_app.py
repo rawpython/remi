@@ -26,7 +26,7 @@ class MyApp(App):
 
         # add the following 3 lines to your app and the on_window_close method to make the console close automatically
         tag = gui.Tag(_type='script')
-        tag.add_child("javascript", """window.onunload=function(e){sendCallback('%s','%s');return "close?";};""" % (
+        tag.add_child("javascript", """window.onunload=function(e){remi.sendCallback('%s','%s');return "close?";};""" % (
             str(id(self)), "on_window_close"))
         wid.add_child("onunloadevent", tag)
 

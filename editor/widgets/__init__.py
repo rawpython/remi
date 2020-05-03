@@ -21,7 +21,7 @@ def default_icon(name, view_w=2, view_h=0.6):
 
 try:
     from .toolbox_EPICS import EPICSBooleanButton, EPICSLed, EPICSValueMeterWidget, EPICSPlotPV, EPICSValueGaugeWidget
-except:
+except ImportError:
     class EPICSPlaceholder(gui.Label):
         icon = default_icon("missing EPICS")
         def __init__(self, msg="In order to use EPICS widgets install pyepics \n" + traceback.format_exc()):
@@ -31,7 +31,7 @@ except:
 try:
     from .toolbox_opencv import OpencvImRead, OpencvCrop, OpencvVideo, OpencvThreshold, OpencvSplit, OpencvCvtColor, OpencvAddWeighted, OpencvBitwiseNot, OpencvBitwiseAnd, OpencvBitwiseOr,\
                             OpencvBilateralFilter, OpencvBlurFilter, OpencvDilateFilter, OpencvErodeFilter, OpencvLaplacianFilter, OpencvCanny, OpencvFindContours, OpencvInRangeGrayscale
-except:
+except ImportError:
     class OPENCVPlaceholder(gui.Label):
         icon = default_icon("missing OPENCV")
         def __init__(self, msg="In order to use OpenCv widgets install python-opencv \n" + traceback.format_exc()):
@@ -42,7 +42,7 @@ from .toolbox_scheduling import TimerWidget
 
 try:
     from .toolbox_siemens import PLCSiemens, SiemensButton, BitStatusWidget, WordEditWidget, ByteViewWidget
-except:
+except ImportError:
     class SIEMENSPlaceholder(gui.Label):
         icon = default_icon("missing SIEMENS")
         def __init__(self, msg="In order to use Siemens widgets install python-snap7 \n" + traceback.format_exc()):

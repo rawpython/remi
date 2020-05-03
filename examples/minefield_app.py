@@ -43,7 +43,7 @@ class Cell(gui.TableItem):
             self.style['background-color'] = 'rgb(255,255,255)'
         else:
             self.style['background-color'] = 'rgb(245,245,240)'
-        self.oncontextmenu.do(self.on_right_click)
+        self.oncontextmenu.do(self.on_right_click, js_stop_propagation=True, js_prevent_default=True)
         self.onclick.do(self.check_mine)
 
     def on_right_click(self, widget):

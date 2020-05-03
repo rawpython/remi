@@ -46,7 +46,7 @@ class ResizeHelper(gui.Widget, gui.EventSource):
         if self.parent:
             try:
                 self.parent.remove_child(self)
-            except:
+            except Exception:
                 #there was no ResizeHelper placed
                 pass
         if newParent==None:
@@ -55,7 +55,7 @@ class ResizeHelper(gui.Widget, gui.EventSource):
         self.refWidget = refWidget
         try:
             self.parent.append(self)
-        except:
+        except Exception:
             #the selected widget's parent can't contain a ResizeHelper
             pass
         #self.refWidget.style['position'] = 'relative'
@@ -121,7 +121,7 @@ class DragHelper(gui.Widget, gui.EventSource):
         if self.parent:
             try:
                 self.parent.remove_child(self)
-            except:
+            except Exception:
                 #there was no ResizeHelper placed
                 pass
         if newParent==None:
@@ -130,7 +130,7 @@ class DragHelper(gui.Widget, gui.EventSource):
         self.refWidget = refWidget
         try:
             self.parent.append(self)
-        except:
+        except Exception:
             #the selected widget's parent can't contain a ResizeHelper
             pass
         #self.refWidget.style['position'] = 'relative'
