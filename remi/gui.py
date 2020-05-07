@@ -1602,7 +1602,7 @@ class HEAD(Tag):
                 };
 
                 Remi.prototype._checkTimeout = function(){
-                    if(this._pendingSendMessages !== undefined)
+                    if(this._pendingSendMessages.length > 0)
                         this._renewConnection();
                 };
 

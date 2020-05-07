@@ -190,6 +190,10 @@ body.remi-main > div {
     background-color: white;
     z-index: 0;
 }
+.remi-main[disabled]{
+    filter: grayscale(100%) opacity(0.6);
+    pointer-events: none;
+}
 .remi-main .ListView {
     border: none;
     padding: 0;
