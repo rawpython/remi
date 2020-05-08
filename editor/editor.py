@@ -21,7 +21,7 @@ import os  # for path handling
 try:
     import prototypes
     import editor_widgets
-except:
+except ImportError:
     from . import prototypes
     from . import editor_widgets
 
@@ -62,7 +62,7 @@ class DraggableItem(gui.EventSource):
         if self.parent:
             try:
                 self.parent.remove_child(self)
-            except:
+            except Exception:
                 pass
         if newParent == None:
             return
@@ -71,7 +71,7 @@ class DraggableItem(gui.EventSource):
 
         try:
             self.parent.append(self)
-        except:
+        except Exception:
             pass
         self.update_position()
 
@@ -718,6 +718,13 @@ class Editor(App):
             drag_helper.update_position()
 
     def main(self):
+
+        #custom css
+        my_css_head = """
+            <link href='/editor_resources:style.css' rel='stylesheet' />
+            """
+        self.page.children['head'].add_child('mycss', my_css_head)
+
         self.mainContainer = gui.Container(width='100%', height='100%', layout_orientation=gui.Container.LAYOUT_VERTICAL, style={
                                            'background-color': 'white', 'border': 'none', 'overflow': 'hidden'})
 
@@ -990,7 +997,7 @@ class Editor(App):
                     params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
                     params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
                 }
-                sendCallbackParam(data[1],'%(evt)s',params);
+                remi.sendCallbackParam(data[1],'%(evt)s',params);
                 
                 return false;""" % {'evt': self.EVENT_ONDROPPPED}
         self.project.onkeydown.do(self.onkeydown)
@@ -1013,7 +1020,7 @@ class Editor(App):
                 if widgetTree != None:
                     self.add_widget_to_editor(widgetTree)
                 self.projectPathFilename = filelist[0]
-            except:
+            except Exception:
                 self.show_error_dialog("ERROR: Unable to load the project",
                                        "There were an error during project load: %s" % traceback.format_exc())
 

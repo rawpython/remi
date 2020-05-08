@@ -34,7 +34,7 @@ class Camera(App):
                     canvas.height = video.videoHeight;
 	            canvas.getContext('2d').drawImage(video, 0, 0);
 		    params['image']=canvas.toDataURL()
-		    sendCallbackParam('%(id)s','%(callback_function)s',params)
+		    remi.sendCallbackParam('%(id)s','%(callback_function)s',params)
                     frame = 0;
                 }
                 frame+=1;

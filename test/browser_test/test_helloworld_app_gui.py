@@ -20,7 +20,7 @@ class TestHelloWorld(unittest.TestCase):
             self.options.headless = True
             self.driver = self.DriverClass(options=self.options)
             self.driver.implicitly_wait(30)
-        except:
+        except Exception:
             self.skipTest("Selenium webdriver is not installed")
         self.server = remi.Server(MyApp, start=False, address='0.0.0.0', start_browser=False, multiple_instance=True)
         self.server.start()

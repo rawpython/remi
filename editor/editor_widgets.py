@@ -182,7 +182,7 @@ class SignalConnection(gui.HBox):
                     connectedListenerFunction.__name__)
                 # force the connection
                 #self.on_connection(None, None)
-            except:
+            except Exception:
                 print(traceback.format_exc())
                 print(dir(eventConnectionFunc.callback))
                 self.disconnect()
@@ -609,7 +609,7 @@ class WidgetCollection(gui.Container):
     def load_additional_widgets(self):
         try:
             import widgets
-        except:
+        except Exception:
             from . import widgets
         try:
             classes = inspect.getmembers(widgets, inspect.isclass)
@@ -618,7 +618,7 @@ class WidgetCollection(gui.Container):
                     self.add_widget_to_collection(
                         classvalue, classvalue.__module__)
 
-        except:
+        except Exception:
             logging.getLogger('remi.editor').error(
                 'error loading external widgets', exc_info=True)
 

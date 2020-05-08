@@ -113,7 +113,7 @@ class PLCSiemens(Image):
     def disconnect(self):
         try:
             self.snap7_client.disconnect()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def connect(self):
@@ -123,7 +123,7 @@ class PLCSiemens(Image):
             print("connecting to ip:%s  rack:%s  slot:%s"%(self.ip_address, self.rack, self.slot))
             self.snap7_client.connect(self.ip_address, self.rack, self.slot)
             
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def _set_params(self):
@@ -196,7 +196,7 @@ class PLCSiemens(Image):
                         if hasattr(w, "update"):
                             try:
                                 w.update()
-                            except:
+                            except Exception:
                                 print(traceback.format_exc())
 
         if self.update_interval>0.0:
