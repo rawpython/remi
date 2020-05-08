@@ -1618,11 +1618,11 @@ class HEAD(Tag):
                         if (xhr.readyState == 4 && xhr.status == 200) {
                             /* Every thing ok, file uploaded */
                             var params={};params['filename']=file.name;
-                            this.sendCallbackParam(widgetID, eventSuccess,params);
+                            remi.sendCallbackParam(widgetID, eventSuccess,params);
                             console.log('upload success: ' + file.name);
                         }else if(xhr.status == 400){
                             var params={};params['filename']=file.name;
-                            this.sendCallbackParam(widgetID,eventFail,params);
+                            remi.sendCallbackParam(widgetID,eventFail,params);
                             console.log('upload failed: ' + file.name);
                         }
                     };
