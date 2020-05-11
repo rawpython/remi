@@ -166,14 +166,24 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 length = struct.unpack('>H', self.rfile.read(2))[0]
             elif length == 127:
                 length = struct.unpack('>Q', self.rfile.read(8))[0]
+            
+            if length < 1:
+                return True
+
             masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
-            decoded = ''
-            for char in self.rfile.read(length):
-                decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-            self.on_message(from_websocket(decoded))
+            decoded = bytearray()
+            if not pyLessThan3:
+                for char in self.rfile.read(length):
+                    decoded.append(char ^ masks[len(decoded) % 4])
+            else:
+                for char in self.rfile.read(length):
+                    decoded.append(self.bytetonum(char) ^ masks[len(decoded) % 4])
+            
+            self.on_message(decoded)
         except socket.timeout:
             return False
         except Exception:
+            self._log.error('error websocket.read_next_message', exc_info=True)
             return False
         return True
 
@@ -241,24 +251,40 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                 if self not in clients[self.session].websockets:
                     clients[self.session].websockets.add(self)
 
-                # parsing messages
-                chunks = message.split('/')
-                self._log.debug('on_message: %s' % chunks[0])
+                self._log.debug('on_message type: %s' % message[0])
+                # if this is a callback    
+                if message[0] == 1: #msg_type callback
+                    indexof_first_slash = message.index(b'/')
+                    indexof_second_slash = message.index(b'/', indexof_first_slash+1)
+                    header = from_websocket(message[1:indexof_second_slash].decode('utf-8')) #1 is the message type, skipping
+                    params = from_websocket(message[indexof_second_slash+1:].decode('utf-8'))
+                    chunks = header.split('/') 
+                    widget_id = chunks[0]
+                    function_name = chunks[1]
 
-                if len(chunks) > 3:  # msgtype,widget,function,params
-                    # if this is a callback
-                    msg_type = 'callback'
-                    if chunks[0] == msg_type:
-                        widget_id = chunks[1]
-                        function_name = chunks[2]
-                        params = message[
-                            len(msg_type) + len(widget_id) + len(function_name) + 3:]
+                    self._log.debug('on callback - widget_id:%s  function_name:%s'%(chunks[0], chunks[1]))
+                    self._log.debug('callback params: %s' % params)
 
-                        param_dict = parse_parametrs(params)
+                    param_dict = parse_parametrs(params)
 
-                        callback = get_method_by_name(runtimeInstances[widget_id], function_name)
-                        if callback is not None:
-                            callback(**param_dict)
+                    callback = get_method_by_name(runtimeInstances[widget_id], function_name)
+                    if callback is not None:
+                        callback(**param_dict)
+                    return
+                    
+                if message[0] == 2: #msg_type callback with raw data
+                    indexof_first_slash = message.index(b'/')
+                    indexof_second_slash = message.index(b'/', indexof_first_slash+1)
+                    header = from_websocket(message[1:indexof_second_slash].decode('utf-8')) #1 is the message type, skipping
+                    params = message[indexof_second_slash+1:]
+                    chunks = header.split('/') 
+                    widget_id = chunks[0]
+                    function_name = chunks[1]
+
+                    callback = get_method_by_name(runtimeInstances[widget_id], function_name)
+                    if callback is not None:
+                        callback(raw_data = params)
+                    return
 
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)

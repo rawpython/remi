@@ -1561,10 +1561,19 @@ class HEAD(Tag):
 
 
                 /*this uses websockets*/
-                Remi.prototype.sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/){
+                Remi.prototype.sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/, sendRawParams=false){
                     var paramStr = '';
                     if(params!==null) paramStr=this._paramPacketize(params);
-                    var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
+                    var message = '';
+                    /*the messageType defines how data is treated in python server*/
+                    var messageType = 1; /*params are unescaped and converted to utf-8 string*/
+                    if(sendRawParams){
+                        messageType = 2; /*params are not manipulated, transferred to the widgetID.functionName as raw data*/
+                        var message = String.fromCharCode(messageType) + widgetID+'/'+functionName + '/' + encodeURIComponent(unescape(paramStr));
+                    }else{
+                        var message = String.fromCharCode(messageType) + widgetID+'/'+functionName + '/' + paramStr;
+                    }
+                    
                     this._pendingSendMessages.push(message);
                     if( this._pendingSendMessages.length < %(max_pending_messages)s ){
                         if (this._ws !== null && this._ws.readyState == 1)
