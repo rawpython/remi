@@ -2737,7 +2737,7 @@ class DropDown(Container):
             value = DropDownItem(value)
         keys = super(DropDown, self).append(value, key=key)
         if len(self.children) == 1:
-            self.select_by_value(value.get_value())
+            self.select_by_value(value.value)
         return keys
 
     def empty(self):
@@ -2771,10 +2771,11 @@ class DropDown(Container):
         self._selected_item = None
         for k in self.children:
             item = self.children[k]
-            if item.get_text() == value:
+            if item.value == value:
                 item.attributes['selected'] = 'selected'
                 self._selected_key = k
                 self._selected_item = item
+                log.debug('dropdown selected item with value %s' % value)
             else:
                 if 'selected' in item.attributes:
                     del item.attributes['selected']
@@ -2793,7 +2794,7 @@ class DropDown(Container):
         """
         if self._selected_item is None:
             return None
-        return self._selected_item.get_value()
+        return self._selected_item.value
 
     def get_key(self):
         """
@@ -2807,7 +2808,7 @@ class DropDown(Container):
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
-        log.debug('combo box. selected %s' % value)
+        log.debug('dropdown. selected %s' % value)
         self.select_by_value(value)
         return (value, )
 
@@ -2818,6 +2819,12 @@ class DropDown(Container):
 
 class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''The value returned to the DropDown in onchange event. 
+        By default it corresponds to the displayed text, unsless it is changes.''', str, {})
+    def value(self): return unescape(self.attributes.get('value', '').replace('&nbsp;', ' '))
+    @value.setter
+    def value(self, value): self.attributes['value'] = escape(value.replace('&nbsp;', ' '), quote=False)
 
     def __init__(self, text='', *args, **kwargs):
         """
@@ -2826,13 +2833,27 @@ class DropDownItem(Widget, _MixinTextualWidget):
         """
         super(DropDownItem, self).__init__(*args, **kwargs)
         self.type = 'option'
+        self.value = text
         self.set_text(text)
 
-    def set_value(self, text):
-        return self.set_text(text)
+    def set_text(self, text):
+        """
+        Sets the text label for the Widget.
 
-    def get_value(self):
-        return self.get_text()
+        Args:
+            text (str): The string label of the Widget.
+        """
+        _MixinTextualWidget.set_text(self, text)
+        self.children['text'] = self.children['text'].replace(' ', '&nbsp;')
+
+    def get_text(self):
+        """
+        Returns:
+            str: The text content of the Widget. You can set the text content with set_text(text).
+        """
+        if 'text' not in self.children.keys():
+            return ''
+        return unescape(self.get_child('text').replace('&nbsp;', ' '))
 
 
 class Image(Widget):
