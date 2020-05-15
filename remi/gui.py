@@ -1563,15 +1563,19 @@ class HEAD(Tag):
                 /*this uses websockets*/
                 Remi.prototype.sendCallbackParam = function (widgetID,functionName,params /*a dictionary of name:value*/, sendRawParams=false){
                     var paramStr = '';
-                    if(params!==null) paramStr=this._paramPacketize(params);
-                    var message = '';
+                    
+                    var message = null;
                     /*the messageType defines how data is treated in python server*/
                     var messageType = 1; /*params are unescaped and converted to utf-8 string*/
                     if(sendRawParams){
                         messageType = 2; /*params are not manipulated, transferred to the widgetID.functionName as raw data*/
-                        var message = String.fromCharCode(messageType) + widgetID+'/'+functionName + '/' + encodeURIComponent(unescape(paramStr));
+
+                        var uint8_msg_header  = String.fromCharCode(messageType) + widgetID+'/'+functionName + '/';
+                        /*the params have to be a type array*/
+                        message = new Blob( [(new TextEncoder()).encode(uint8_msg_header).buffer, params.buffer] );
                     }else{
-                        var message = String.fromCharCode(messageType) + widgetID+'/'+functionName + '/' + paramStr;
+                        if(params!==null) paramStr=this._paramPacketize(params);
+                        message = String.fromCharCode(messageType) + widgetID+'/'+functionName + '/' + encodeURIComponent(unescape(paramStr));
                     }
                     
                     this._pendingSendMessages.push(message);
