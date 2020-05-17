@@ -1382,7 +1382,7 @@ class HEAD(Tag):
         self.add_child('internal_js',
                 """
                 <script>
-                'use strict';
+                /*'use strict';*/
 
                 var Remi = function() {
                 this._pendingSendMessages = [];
