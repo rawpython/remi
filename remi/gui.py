@@ -2018,7 +2018,7 @@ class TabBox(Container):
     def resize_tab_titles(self):
         tab_w = 100.0 / len(self.container_tab_titles.children.values())
         for l in self.container_tab_titles.children.values():
-            l.set_size("%.1f%%" % tab_w, "100%")
+            l.set_size("%.1f%%" % tab_w, "auto")
 
     def append(self, widget, key=''):
         """ Adds a new tab.
