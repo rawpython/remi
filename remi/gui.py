@@ -384,10 +384,12 @@ class Tag(object):
 
     def _need_update(self, emitter=None):
         # if there is an emitter, it means self is the actual changed widget
-        if emitter:
+        if not emitter is None:
             tmp = dict(self.attributes)
             if len(self.style):
                 tmp['style'] = jsonize(self.style)
+            else:
+                tmp.pop('style', None)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                              tmp.items())
             
