@@ -625,7 +625,7 @@ class App(BaseHTTPRequestHandler, object):
 
         if (func == '/') or (not func):
             self.send_response(200)
-            self.send_header("Set-Cookie", "remi_session=%s"%(self.session))
+            self.send_header("Set-Cookie", "remi_session=%s; SameSite=Lax"%(self.session))
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             
