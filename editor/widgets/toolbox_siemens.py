@@ -11,22 +11,6 @@ import traceback
 # https://python-snap7.readthedocs.io/en/latest/util.html
 # https://github.com/gijzelaerr/python-snap7/blob/master/example/boolean.py
 
-def default_icon(name, view_w=1, view_h=0.6):
-    """
-    A simple function to make a default svg icon for the widgets
-      such icons can be replaced later with a good one 
-    """
-    icon = gui.Svg(width=50,height=30)
-    icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
-    text = gui.SvgText(0,0,name)
-    text.style['font-size'] = "0.2px"
-    text.style['text-anchor'] = "middle"
-    stroke_width = 0.01
-    rect = gui.SvgRectangle(-view_w/2+stroke_width,-view_h/2+stroke_width,view_w-stroke_width*2,view_h-stroke_width*2)
-    rect.set_fill("none")
-    rect.set_stroke(0.01,'black')
-    icon.append([rect, text])
-    return icon
 
 style_inheritance_dict = {'opacity':'inherit', 'overflow':'inherit', 'background-color':'inherit', 'background-image':'inherit', 'background-position':'inherit', 'background-repeat':'inherit', 'border-color':'inherit', 'border-width':'inherit', 'border-style':'inherit', 'border-radius':'inherit', 'color':'inherit', 'font-family':'inherit', 'font-size':'inherit', 'font-style':'inherit', 'font-weight':'inherit', 'white-space':'inherit', 'letter-spacing':'inherit'}
 style_inheritance_text_dict = {'opacity':'inherit', 'overflow':'inherit', 'color':'inherit', 'font-family':'inherit', 'font-size':'inherit', 'font-style':'inherit', 'font-weight':'inherit', 'white-space':'inherit', 'letter-spacing':'inherit'}
@@ -476,7 +460,7 @@ class ByteViewWidget(Label, SiemensWidget, _Mixin_DB_property, _Mixin_Byte_prope
         i.e.:
             widget.link_to.do(plc.on_link_to)
     """
-    icon = default_icon("ByteViewWidget")
+    #icon = default_icon("ByteViewWidget")
 
     @property
     def text(self): return self.get_text()

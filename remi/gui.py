@@ -4628,12 +4628,20 @@ class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill):
 class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Width for svg elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Length for svg text elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
     def attr_textLength(self): return self.attributes.get('textLength', None)
     @attr_textLength.setter
     def attr_textLength(self, value): self.attributes['textLength'] = str(value)
     @attr_textLength.deleter
     def attr_textLength(self): del self.attributes['textLength'] 
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Controls how text is stretched to fit the length.''', 'DropDown', {'possible_values': ('spacing','spacingAndGlyphs')})
+    def attr_lengthAdjust(self): return self.attributes.get('lengthAdjust', None)
+    @attr_lengthAdjust.setter
+    def attr_lengthAdjust(self, value): self.attributes['lengthAdjust'] = str(value)
+    @attr_lengthAdjust.deleter
+    def attr_lengthAdjust(self): del self.attributes['lengthAdjust'] 
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})

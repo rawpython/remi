@@ -18,6 +18,7 @@ import re
 import logging
 import types
 import traceback
+import os
 
 
 class InstancesTree(gui.TreeView):
@@ -430,6 +431,26 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         return params
 
 
+def default_icon(name, view_w=1, view_h=0.6):
+    """
+    A simple function to make a default svg icon for the widgets
+      such icons can be replaced later with a good one 
+    """
+    icon = gui.Svg(width=50,height=30)
+    icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
+    text = gui.SvgText(0,0,name)
+    text.attributes['textLength'] = "100%"
+    text.attributes['lengthAdjust'] = "spacingAndGlyphs"
+    text.style['font-size'] = "0.2px"
+    text.style['text-anchor'] = "middle"
+    stroke_width = 0.01
+    rect = gui.SvgRectangle(-view_w/2+stroke_width,-view_h/2+stroke_width,view_w-stroke_width*2,view_h-stroke_width*2)
+    rect.set_fill("none")
+    rect.set_stroke(0.01,'black')
+    icon.append([rect, text])
+    return icon
+
+
 class WidgetHelper(gui.HBox):
     """ Allocates the Widget to which it refers,
         interfacing to the user in order to obtain the necessary attribute values
@@ -452,7 +473,11 @@ class WidgetHelper(gui.HBox):
                 self.icon = gui.Image(icon_file, width='auto', margin='2px')
         else:
             icon_file = '/editor_resources:widget_%s.png' % self.widgetClass.__name__
-            self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            if os.path.exists(self.appInstance._get_static_file(icon_file)): 
+                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            else:
+                self.icon = default_icon(self.widgetClass.__name__)
+
         self.icon.style['max-width'] = '100%'
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'

@@ -8,24 +8,6 @@ import time
 import math
 
 
-def default_icon(name, view_w=1, view_h=0.6):
-    """
-    A simple function to make a default svg icon for the widgets
-      such icons can be replaced later with a good one 
-    """
-    icon = gui.Svg(width=50,height=30)
-    icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
-    text = gui.SvgText(0,0,name)
-    text.style['font-size'] = "0.2px"
-    text.style['text-anchor'] = "middle"
-    stroke_width = 0.01
-    rect = gui.SvgRectangle(-view_w/2+stroke_width,-view_h/2+stroke_width,view_w-stroke_width*2,view_h-stroke_width*2)
-    rect.set_fill("none")
-    rect.set_stroke(0.01,'black')
-    icon.append([rect, text])
-    return icon
-
-
 # noinspection PyUnresolvedReferences
 class OpencvWidget(object):
     def _setup(self):
@@ -488,7 +470,7 @@ class OpencvBitwiseNot(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("BitwiseNot")
+    #icon = default_icon("BitwiseNot")
     def __init__(self, *args, **kwargs):
         super(OpencvBitwiseNot, self).__init__("", *args, **kwargs)
 
@@ -530,7 +512,7 @@ class OpencvBitwiseAnd(OpencvImage, BinaryOperator):
             - Receives the mask on on_new_image_2_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("BitwiseAND", 1.1)
+    #icon = default_icon("BitwiseAND", 1.1)
     def __init__(self, *args, **kwargs):
         BinaryOperator.__init__(self)
         super(OpencvBitwiseAnd, self).__init__("", *args, **kwargs)
@@ -548,7 +530,7 @@ class OpencvBitwiseOr(OpencvImage, BinaryOperator):
             - Receives the mask on on_new_image_2_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("BitwiseOR")
+    #icon = default_icon("BitwiseOR")
     def __init__(self, *args, **kwargs):
         BinaryOperator.__init__(self)
         super(OpencvBitwiseOr, self).__init__("", *args, **kwargs)
@@ -673,7 +655,7 @@ class OpencvBlurFilter(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Blur")
+    #icon = default_icon("Blur")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter kernel_size', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
@@ -720,7 +702,7 @@ class OpencvDilateFilter(OpencvImage):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     morph_shape = {"MORPH_RECT": cv2.MORPH_RECT, "MORPH_CROSS": cv2.MORPH_CROSS, "MORPH_ELLIPSE": cv2.MORPH_ELLIPSE}
-    icon = default_icon("Dilate")
+    #icon = default_icon("Dilate")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The kernel morph shape', 'DropDown', {'possible_values': morph_shape.keys()})
@@ -782,7 +764,7 @@ class OpencvErodeFilter(OpencvDilateFilter):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Erode")
+    #icon = default_icon("Erode")
     def on_new_image_listener(self, emitter):
         try:
             self.image_source = emitter
@@ -800,7 +782,7 @@ class OpencvLaplacianFilter(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Laplacian")
+    #icon = default_icon("Laplacian")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter border parameter', 'DropDown', {'possible_values': OpencvBilateralFilter.border_type.keys()})
@@ -829,7 +811,7 @@ class OpencvCanny(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Canny")
+    #icon = default_icon("Canny")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold1', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
@@ -882,7 +864,7 @@ class OpencvFindContours(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("FindContours",1.2)
+    #icon = default_icon("FindContours",1.2)
 
     contours = None     #the contours result of processing
     hierarchy = None    #the hierarchy result of processing
@@ -1063,7 +1045,7 @@ class OpencvInRangeGrayscale(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("InRange")
+    #icon = default_icon("InRange")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold1', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
