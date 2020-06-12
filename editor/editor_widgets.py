@@ -468,6 +468,8 @@ class WidgetHelper(gui.HBox):
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon) == gui.Svg:
                 self.icon = widgetClass.icon
+            elif widgetClass.icon == None:
+                self.icon = default_icon(self.widgetClass.__name__)
             else:
                 icon_file = widgetClass.icon
                 self.icon = gui.Image(icon_file, width='auto', margin='2px')
