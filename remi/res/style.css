@@ -273,10 +273,17 @@ body.remi-main > div {
     color: rgb(255, 255, 255);
     box-shadow: 3px 3px 5px rgb(150,150,150);
 }
+@keyframes remi-main-outline-animation {
+    0% {outline: 1px dashed lightgray;}
+    100% {outline: 1px dashed white;}
+}
 .remi-main button:focus {
     box-shadow: 3px 3px 5px rgb(130,130,130);
-    font-weight: bold;
     outline: 1px dashed lightgray;
+    animation-name: remi-main-outline-animation;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
 }
 .remi-main button:disabled {
     background-color: #ddd;
