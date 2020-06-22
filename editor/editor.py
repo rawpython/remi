@@ -750,7 +750,7 @@ class Editor(App):
 
         m3 = gui.MenuItem('Project Config', width=200, height='100%')
 
-        m4 = gui.MenuItem('Became a Patron', width=200,
+        m4 = gui.MenuItem('Became a Sponsor', width=200,
                           height='100%', style={'font-weight': 'bold'})
 
         menu.append([m1, m2, m3, m4])
@@ -794,7 +794,7 @@ class Editor(App):
         m22.onclick.do(self.menu_paste_selection_clicked)
 
         m3.onclick.do(self.menu_project_config_clicked)
-        m4.onclick.do(self.menu_became_a_patron)
+        m4.onclick.do(self.menu_became_a_sponsor)
 
         self.subContainer = gui.HBox(
             width='100%', height='96%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
@@ -1104,11 +1104,19 @@ class Editor(App):
             self.editCuttedWidget = None
             self.instancesWidget.update(self.project, self.selectedWidget)
 
-    def menu_became_a_patron(self, widget):
+    def menu_became_a_sponsor(self, widget):
         dialog = gui.GenericDialog(
-            "Became a Patron", "This editor is made for you with passion. \nIt would be fantastic if you give a contribution, also a little one. ;-)", width="50%")
-        dialog.add_field("link", gui.Link("https://www.patreon.com/remigui",
-                                          "Click this link to Donate", True, style={'font-weight': 'bolder'}))
+            "Became a Sponsor", "This editor is made for you with passion. \nIt would be fantastic if you give a contribution, also a little one. ;-)", width="700px")
+
+        sponsor_card = gui.Widget(_type='iframe', width=610, height=230) 
+        #<iframe src="https://github.com/sponsors/dddomodossola/card" title="Sponsor dddomodossola" height="225" width="600" style="border: 0;"></iframe>
+        sponsor_card.attributes['src'] = "https://github.com/sponsors/dddomodossola/card"
+        sponsor_card.attributes['title'] = "Sponsor dddomodossola"
+        sponsor_card.attributes['height'] = "225"
+        sponsor_card.attributes['width'] = "600"
+        sponsor_card.style['border'] = "0"
+
+        dialog.add_field("sponsor card", sponsor_card)
         dialog.children["message"].style['white-space'] = 'pre'
         dialog.cancel.style['display'] = 'none'
         dialog.conf.set_text("Back")
