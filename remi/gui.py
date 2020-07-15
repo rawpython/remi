@@ -1472,7 +1472,7 @@ class HEAD(Tag):
                                     try{
                                         caretStart = document.activeElement.selectionStart;
                                         caretEnd = document.activeElement.selectionEnd;
-                                    }catch(e){}
+                                    }catch(e){console.debug(e.message);}
                                 }
                                 var index = received_msg.indexOf(',')+1;
                                 var idElem = received_msg.substr(1,index-2);
@@ -1487,6 +1487,7 @@ class HEAD(Tag):
                                     var ns = document.createElementNS("http://www.w3.org/2000/svg",'tmp');
                                     ns.innerHTML = decodeURIComponent(content);
                                     elem.parentElement.replaceChild(ns.firstChild, elem);
+                                    console.debug(e.message);
                                 }
 
                                 var elemToFocus = document.getElementById(focusedElement);
@@ -1495,7 +1496,7 @@ class HEAD(Tag):
                                     try{
                                         elemToFocus = document.getElementById(focusedElement);
                                         if(caretStart>-1 && caretEnd>-1) elemToFocus.setSelectionRange(caretStart, caretEnd);
-                                    }catch(e){}
+                                    }catch(e){console.debug(e.message);}
                                 }
                             }else if( received_msg[0]=='2' ){ /*javascript*/
                                 var content = received_msg.substr(1,received_msg.length-1);
@@ -3399,6 +3400,21 @@ class SpinBox(Input):
             "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
             "remi.sendCallbackParam('%(id)s','%(evt)s',params); return true;}" \
             "return false;" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
+        
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def onchange(self, value):
+        _value = max(float(value), float(self.attributes['min']))
+        _value = min(float(_value), float(self.attributes['max']))
+        self.attributes['value'] = str(_value)
+        #this is to force update in case a value out of limits arrived
+        # and the limiting ended up with the same previous value stored in self.attributes
+        # In this case the limitation gets not updated in browser 
+        # (because not triggering is_changed). So the update is forced.
+        if float(value) != _value:
+            self.attributes.onchange()
+
+        return (_value, )
 
 
 class Slider(Input):

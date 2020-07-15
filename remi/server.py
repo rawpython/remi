@@ -174,6 +174,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         except socket.timeout:
             return False
         except Exception:
+            self._log.error('Error managing incoming websocket message', exc_info=True)
             return False
         return True
 
