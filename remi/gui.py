@@ -3404,14 +3404,19 @@ class SpinBox(Input):
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def onchange(self, value):
-        _value = max(float(value), float(self.attributes['min']))
-        _value = min(float(_value), float(self.attributes['max']))
+        _type = int
+        try:
+            _, _, _ = int(value), int(self.attributes['min']), int(self.attributes['max'])
+        except:
+            _type = float
+        _value = max(_type(value), _type(self.attributes['min']))
+        _value = min(_type(_value), _type(self.attributes['max']))
         self.attributes['value'] = str(_value)
         #this is to force update in case a value out of limits arrived
         # and the limiting ended up with the same previous value stored in self.attributes
         # In this case the limitation gets not updated in browser 
         # (because not triggering is_changed). So the update is forced.
-        if float(value) != _value:
+        if _type(value) != _value:
             self.attributes.onchange()
 
         return (_value, )
