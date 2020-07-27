@@ -624,6 +624,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.SvgLine, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
         self.add_widget_to_collection(gui.SvgCircle)
+        self.add_widget_to_collection(gui.SvgEllipse)
         self.add_widget_to_collection(gui.SvgRectangle)
         self.add_widget_to_collection(gui.SvgText)
         self.add_widget_to_collection(gui.SvgPath, attributes={

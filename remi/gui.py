@@ -4569,6 +4569,66 @@ class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attr_cy = str(y)
 
 
+class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_cx(self): return self.attributes.get('cx', None)
+    @attr_cx.setter
+    def attr_cx(self, value): self.attributes['cx'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_cy(self): return self.attributes.get('cy', None)
+    @attr_cy.setter
+    def attr_cy(self, value): self.attributes['cy'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_rx(self): return self.attributes.get('rx', None)
+    @attr_rx.setter
+    def attr_rx(self, value): self.attributes['rx'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_ry(self): return self.attributes.get('ry', None)
+    @attr_ry.setter
+    def attr_ry(self, value): self.attributes['ry'] = str(value)
+
+    def __init__(self, x=0, y=0, rx=50, ry=30, *args, **kwargs):
+        """
+        Args:
+            x (float): the x center point of the ellipse
+            y (float): the y center point of the ellipse
+            rx (float): the ellipse radius
+            ry (float): the ellipse radius
+            kwargs: See Widget.__init__()
+        """
+        super(SvgEllipse, self).__init__(*args, **kwargs)
+        self.set_position(x, y)
+        self.set_radius(rx, ry)
+        self.type = 'ellipse'
+
+    def set_radius(self, rx, ry):
+        """Sets the ellipse radius.
+
+        Args:
+            rx (int): the ellipse radius
+            ry (int): the ellipse radius
+        """
+        self.attr_rx = rx
+        self.attr_ry = ry
+
+    def set_position(self, x, y):
+        """Sets the ellipse position.
+
+        Args:
+            x (int): the x coordinate
+            y (int): the y coordinate
+        """
+        self.attr_cx = str(x)
+        self.attr_cy = str(y)
+
+
 class SvgLine(Widget, _MixinSvgStroke):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
