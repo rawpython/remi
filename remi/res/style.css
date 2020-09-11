@@ -42,8 +42,10 @@
 .remi-main a:visited {
     text-decoration: underline
 }
-.remi-main {
+html{
     height: 100%;
+}
+.remi-main{
     width: 100%;
     margin: 0px;
     padding: 0px;
