@@ -2811,8 +2811,9 @@ class DropDown(Container):
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
-        log.debug('dropdown. selected %s' % value)
+        self.disable_refresh()
         self.select_by_value(value)
+        self.enable_refresh()
         return (value, )
 
     @decorate_explicit_alias_for_listener_registration
