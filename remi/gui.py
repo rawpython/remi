@@ -4733,6 +4733,22 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     @attr_rotate.deleter
     def attr_rotate(self): del self.attributes['rotate'] 
 
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Description.''', 'DropDown', {'possible_values': ('start', 'middle', 'end')})
+    def attr_text_anchor(self): return self.style.get('text-anchor', None)
+    @attr_text_anchor.setter
+    def attr_text_anchor(self, value): self.style['text-anchor'] = str(value)
+    @attr_text_anchor.deleter
+    def attr_text_anchor(self): del self.style['text-anchor']
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Description.''', 'DropDown', {'possible_values': ('auto', 'text-bottom', 'alphabetic', 'ideographic', 'middle', 'central', 'mathematical', 'hanging', 'text-top')})
+    def attr_dominant_baseline(self): return self.style.get('dominant-baseline', None)
+    @attr_dominant_baseline.setter
+    def attr_dominant_baseline(self, value): self.style['dominant-baseline'] = str(value)
+    @attr_dominant_baseline.deleter
+    def attr_dominant_baseline(self): del self.style['dominant-baseline']
+
     def __init__(self, x=10, y=10, text='svg text', *args, **kwargs):
         super(SvgText, self).__init__(*args, **kwargs)
         self.type = 'text'
