@@ -3986,7 +3986,7 @@ class FileUploader(Container):
     def savepath(self, value): 
         self._savepath = value
 
-    def __init__(self, savepath='./', multiple_selection_allowed=False, *args, **kwargs):
+    def __init__(self, savepath='./', multiple_selection_allowed=False, accepted_files='*.*' *args, **kwargs):
         super(FileUploader, self).__init__(*args, **kwargs)
         self._savepath = savepath
         self._multiple_selection_allowed = multiple_selection_allowed
@@ -3994,7 +3994,7 @@ class FileUploader(Container):
         self.attributes['type'] = 'file'
         if multiple_selection_allowed:
             self.attributes['multiple'] = 'multiple'
-        self.attributes['accept'] = '*.*'
+        self.attributes['accept'] = accepted_files
         self.EVENT_ON_SUCCESS = 'onsuccess'
         self.EVENT_ON_FAILED = 'onfailed'
         self.EVENT_ON_DATA = 'ondata'
