@@ -53,6 +53,8 @@ import weakref
 
 import zlib
 
+import select
+
 
 def gzip_encode(content):
     gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
@@ -198,7 +200,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if not pyLessThan3:
             message = message.encode('utf-8')
         out = out + message
-        self.request.send(out)
+
+        readable, writable, errors = select.select([], [self.request,], [], 0) #last parameter is timeout, when 0 is non blocking
+        #self._log.debug('socket status readable=%s writable=%s errors=%s'%((self.request in readable), (self.request in writable), (self.request in error$
+        writable = self.request in writable
+        if not writable:
+            raise Exception("Websocket is not writable")
+            return
+        self.request.sendall(out)
 
     def handshake(self):
         self._log.debug('handshake')
