@@ -21,9 +21,7 @@ Do you need support?
 
 There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
 <p align="center">
-** <a href="https://remiguieditor.daviderosa.repl.co/">Live Play Graphical GUI Editor</a> **
-- For a comfortable use download it
-</p>
+
 
 Changelog
 ===
