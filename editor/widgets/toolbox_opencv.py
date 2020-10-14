@@ -6,25 +6,13 @@ from threading import Timer, Thread
 import traceback
 import time
 import math
+import base64
+import numpy as np
 
-
-def default_icon(name, view_w=1, view_h=0.6):
-    """
-    A simple function to make a default svg icon for the widgets
-      such icons can be replaced later with a good one 
-    """
-    icon = gui.Svg(50,30)
-    icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
-    text = gui.SvgText(0,0,name)
-    text.style['font-size'] = "0.2px"
-    text.style['text-anchor'] = "middle"
-    stroke_width = 0.01
-    rect = gui.SvgRectangle(-view_w/2+stroke_width,-view_h/2+stroke_width,view_w-stroke_width*2,view_h-stroke_width*2)
-    rect.set_fill("none")
-    rect.set_stroke(0.01,'black')
-    icon.append([rect, text])
-    return icon
-
+b64encoded_sample_icon = "iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAFnQAABZ0B24EKIgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATOSURBVGiB5ZpdbBRVFMd/d6ZlpVCKQEF48jtEQkyMiRFNjEZe9AHUxMQHg/HBQOKjJD7ogxojwcYHIKAEP7AaYpQPQb6hQqpdqgIWRIpbChWU7W63y3a7O9vdmbk+lG637LYz087druH3tLn33HPOf+fOvWfujFi+eK7kFkKb7ATKTdXQD6HpBObcMZm5KGOgJ4y0LaBAcPWseh5cu33SklLJ6TeWk+0JA7fylHbDNHqYJ/9AExbdLCLJ/+8WcCW4GoPHWM8jcjMCG26s6+08w0HxHga3q8zRV1wIljwvV3IXzUU9C9lHnfyHRvEdNrqC9PzH8R5exO6SYoeYTxsP8aWvSanEUfBYYvM20tmmUnAUPFN2OTqZxWU/cikLjoJj3OvoJMr9viRTDhwFh8RSRych8bQvyTjRYfxES2IrphwYtw/HVbqDpzjHMhbxfcn+Tp7gLC+MOwE35KTBt92raU83kZMZ2vr38OqCrQTENM++XFVae0UDx8VqckzNt5kECLKK7eITQHgO7JaEFebTf1/mbGofOZkB4O/MKXZF3x6XP1eFh41OkFW0iteYQwgNkwgLsb0Vap7pTJ9gT+wdwtkLRX3t6aNcTLdwT80STz49ZWyjE2GhpwDjIScNjvau42RyB/1WtKRNxkrSFF/P3TWPIjzMMLWXyCWmzBLLdRHJdtBpBOnMBIlkLzqO6xo4STCxlSV1r7iO5UmwQQJDJAjI6UylDm2C5eSp5E5+T+4ikguRNHuwMT2Nt6RJa982Hq59kSlajasxjoLDop1mfQtXtTOkiGOKDDrV3CZrmSHnMVveyX3ycRZbz7r+A+LmVXZF36LTaJ3QFgMQyYbYH1vDsvp3XdmPKbhJ30Cr/hV9IlLUlxbX6RVXuMxvnGYnx/RNPGAv5UnzdaqYMqrP86kj7I+tJZrrcJWgG86lDrJk5grqq+9xtB11WzpY9SHHqjaWFHszNhZhcYEmfQMbpzxHi/5FSbtfEtvYHn3TV7EASSvK/tgaV7YlBbfpuzmhfU2OjOfg18R59la9z2fVK0gTz7cHE40cijeQsno9+3TDxXQLZ1P7HO2KBA+IFEf19WRE37iD21iEtGY2V7/EJa2V4/GPORxvIGXFnQePk6w0aI5vwZJjL3xFgg/oa4kK5y3BDd3aXzTqKzlirsOwkr74HIur2TMcv75pTJsRgrOkCWn+PtsaWgJzfgbqfHVbEiltTiV30D/GbTNC8M/658TEZf8z0YF5QK3/rm8mluviQOyDUftHCO7UTqjLpAqYT1lEn0//yJVMW8m+vGCJTVgUF+m+MiR6qpPhxEhbvRyKN5TsywvOYdAvetRmAoOiF4DqQ85LRiu/9n1T1J4XbIqs2gwKCYDqM3xLmgQTjUWla16w18J9wtQC09WGuJb9k8O9H41oKxBsqY1+MxowR32Ytv4fsAuKkRGLVtmpAWarDZEwr2HYw1VjgeBJ+hBgJsoXMFMOPxNM/uvSADBXbYjCizn5ggFmMCi8DFSGYB3lV3mIyhAMg1uU4m0KKkmwQPmKDQWCvZztKqOGwVVbIQWCK+ANvgBmqQ2hDf+okNkdQGkFJvKfHmqCVH2Z6+nRkIAJftVCNQkdcaOQHD6XtiXTuitgWiumQuZx+fgPED6yi1RbbEEAAAAASUVORK5CYII="
+sample_icon_data = base64.b64decode(b64encoded_sample_icon)
+sample_icon_data = np.fromstring(sample_icon_data, np.uint8)
+sample_icon_data = cv2.imdecode(sample_icon_data, cv2.IMREAD_COLOR) 
 
 # noinspection PyUnresolvedReferences
 class OpencvWidget(object):
@@ -55,8 +43,8 @@ class OpencvImage(gui.Image, OpencvWidget):
         Allows to read an image from file.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAuCAYAAAB04nriAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAFnQAABZ0B24EKIgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATOSURBVGiB5ZpdbBRVFMd/d6ZlpVCKQEF48jtEQkyMiRFNjEZe9AHUxMQHg/HBQOKjJD7ogxojwcYHIKAEP7AaYpQPQb6hQqpdqgIWRIpbChWU7W63y3a7O9vdmbk+lG637LYz087druH3tLn33HPOf+fOvWfujFi+eK7kFkKb7ATKTdXQD6HpBObcMZm5KGOgJ4y0LaBAcPWseh5cu33SklLJ6TeWk+0JA7fylHbDNHqYJ/9AExbdLCLJ/+8WcCW4GoPHWM8jcjMCG26s6+08w0HxHga3q8zRV1wIljwvV3IXzUU9C9lHnfyHRvEdNrqC9PzH8R5exO6SYoeYTxsP8aWvSanEUfBYYvM20tmmUnAUPFN2OTqZxWU/cikLjoJj3OvoJMr9viRTDhwFh8RSRych8bQvyTjRYfxES2IrphwYtw/HVbqDpzjHMhbxfcn+Tp7gLC+MOwE35KTBt92raU83kZMZ2vr38OqCrQTENM++XFVae0UDx8VqckzNt5kECLKK7eITQHgO7JaEFebTf1/mbGofOZkB4O/MKXZF3x6XP1eFh41OkFW0iteYQwgNkwgLsb0Vap7pTJ9gT+wdwtkLRX3t6aNcTLdwT80STz49ZWyjE2GhpwDjIScNjvau42RyB/1WtKRNxkrSFF/P3TWPIjzMMLWXyCWmzBLLdRHJdtBpBOnMBIlkLzqO6xo4STCxlSV1r7iO5UmwQQJDJAjI6UylDm2C5eSp5E5+T+4ikguRNHuwMT2Nt6RJa982Hq59kSlajasxjoLDop1mfQtXtTOkiGOKDDrV3CZrmSHnMVveyX3ycRZbz7r+A+LmVXZF36LTaJ3QFgMQyYbYH1vDsvp3XdmPKbhJ30Cr/hV9IlLUlxbX6RVXuMxvnGYnx/RNPGAv5UnzdaqYMqrP86kj7I+tJZrrcJWgG86lDrJk5grqq+9xtB11WzpY9SHHqjaWFHszNhZhcYEmfQMbpzxHi/5FSbtfEtvYHn3TV7EASSvK/tgaV7YlBbfpuzmhfU2OjOfg18R59la9z2fVK0gTz7cHE40cijeQsno9+3TDxXQLZ1P7HO2KBA+IFEf19WRE37iD21iEtGY2V7/EJa2V4/GPORxvIGXFnQePk6w0aI5vwZJjL3xFgg/oa4kK5y3BDd3aXzTqKzlirsOwkr74HIur2TMcv75pTJsRgrOkCWn+PtsaWgJzfgbqfHVbEiltTiV30D/GbTNC8M/658TEZf8z0YF5QK3/rm8mluviQOyDUftHCO7UTqjLpAqYT1lEn0//yJVMW8m+vGCJTVgUF+m+MiR6qpPhxEhbvRyKN5TsywvOYdAvetRmAoOiF4DqQ85LRiu/9n1T1J4XbIqs2gwKCYDqM3xLmgQTjUWla16w18J9wtQC09WGuJb9k8O9H41oKxBsqY1+MxowR32Ytv4fsAuKkRGLVtmpAWarDZEwr2HYw1VjgeBJ+hBgJsoXMFMOPxNM/uvSADBXbYjCizn5ggFmMCi8DFSGYB3lV3mIyhAMg1uU4m0KKkmwQPmKDQWCvZztKqOGwVVbIQWCK+ANvgBmqQ2hDf+okNkdQGkFJvKfHmqCVH2Z6+nRkIAJftVCNQkdcaOQHD6XtiXTuitgWiumQuZx+fgPED6yi1RbbEEAAAAASUVORK5CYII="
-
+    icon = "data:image/png;base64," + b64encoded_sample_icon
+    
     app_instance = None #the application instance used to send updates
     img = None          #the image data as numpy array
     default_style = {'position':'absolute','left':'10px','top':'10px'}
@@ -127,7 +115,7 @@ class OpencvImage(gui.Image, OpencvWidget):
             if ret:
                 headers = {'Content-type': 'image/png', 'Cache-Control':'no-cache'}
                 return [png.tostring(), headers]
-        except:
+        except Exception:
             pass
             #print(traceback.format_exc())
         return None, None
@@ -240,7 +228,7 @@ class OpencvVideo(OpencvImage):
                     headers = {'Content-type': 'image/png', 'Cache-Control':'no-cache'}
                     # tostring is an alias to tobytes, which wasn't added till numpy 1.9
                     return [png.tostring(), headers]
-        except:
+        except Exception:
             print(traceback.format_exc())
         return None, None
 
@@ -488,14 +476,15 @@ class OpencvBitwiseNot(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("BitwiseNot")
+    icon = "data:image/png;base64,"+base64.b64encode( cv2.imencode('.png', cv2.bitwise_not(cv2.threshold(cv2.cvtColor(sample_icon_data, cv2.COLOR_BGR2GRAY),130,255,cv2.THRESH_BINARY)[1]) )[1] ).decode("utf-8")
+    
     def __init__(self, *args, **kwargs):
         super(OpencvBitwiseNot, self).__init__("", *args, **kwargs)
 
     def on_new_image_listener(self, emitter):
         try:
             self.set_image_data(cv2.bitwise_not(emitter.img))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -512,14 +501,14 @@ class BinaryOperator(object):
         try:
             self.img1 = emitter.img
             self.process()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def on_new_image_2_listener(self, emitter):
         try:
             self.img2 = emitter.img
             self.process()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -530,7 +519,7 @@ class OpencvBitwiseAnd(OpencvImage, BinaryOperator):
             - Receives the mask on on_new_image_2_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("BitwiseAND", 1.1)
+    icon = None
     def __init__(self, *args, **kwargs):
         BinaryOperator.__init__(self)
         super(OpencvBitwiseAnd, self).__init__("", *args, **kwargs)
@@ -548,7 +537,7 @@ class OpencvBitwiseOr(OpencvImage, BinaryOperator):
             - Receives the mask on on_new_image_2_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("BitwiseOR")
+    icon = None
     def __init__(self, *args, **kwargs):
         BinaryOperator.__init__(self)
         super(OpencvBitwiseOr, self).__init__("", *args, **kwargs)
@@ -664,7 +653,7 @@ class OpencvBilateralFilter(OpencvImage):
             self.image_source = emitter
             border = self.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.bilateralFilter(emitter.img, self.diameter, self.sigma_color, self.sigma_space, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -673,7 +662,8 @@ class OpencvBlurFilter(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Blur")
+
+    icon = "data:image/png;base64,"+base64.b64encode( cv2.imencode('.png', cv2.blur(sample_icon_data,(6,6)) )[1] ).decode("utf-8")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter kernel_size', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
@@ -703,7 +693,7 @@ class OpencvBlurFilter(OpencvImage):
             self.image_source = emitter
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.blur(emitter.img, (self.kernel_size,self.kernel_size), borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def on_kernel_size_listener(self, emitter, value=None):
@@ -720,7 +710,7 @@ class OpencvDilateFilter(OpencvImage):
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     morph_shape = {"MORPH_RECT": cv2.MORPH_RECT, "MORPH_CROSS": cv2.MORPH_CROSS, "MORPH_ELLIPSE": cv2.MORPH_ELLIPSE}
-    icon = default_icon("Dilate")
+    icon = "data:image/png;base64,"+base64.b64encode( cv2.imencode('.png', cv2.dilate(cv2.threshold(cv2.cvtColor(sample_icon_data, cv2.COLOR_BGR2GRAY),130,255,cv2.THRESH_BINARY)[1], cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6)), iterations=1) )[1] ).decode("utf-8")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The kernel morph shape', 'DropDown', {'possible_values': morph_shape.keys()})
@@ -773,7 +763,7 @@ class OpencvDilateFilter(OpencvImage):
             kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.dilate(emitter.img, kernel, iterations=self.iterations, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -782,7 +772,7 @@ class OpencvErodeFilter(OpencvDilateFilter):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Erode")
+    icon = "data:image/png;base64,"+base64.b64encode( cv2.imencode('.png', cv2.erode(cv2.threshold(cv2.cvtColor(sample_icon_data, cv2.COLOR_BGR2GRAY),130,255,cv2.THRESH_BINARY)[1], cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6)), iterations=1) )[1] ).decode("utf-8")
     def on_new_image_listener(self, emitter):
         try:
             self.image_source = emitter
@@ -791,7 +781,7 @@ class OpencvErodeFilter(OpencvDilateFilter):
             kernel = cv2.getStructuringElement(_kernel_morph_shape, (self.kernel_size, self.kernel_size))
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.erode(emitter.img, kernel, iterations=self.iterations, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -800,7 +790,7 @@ class OpencvLaplacianFilter(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Laplacian")
+    icon = "data:image/png;base64,"+base64.b64encode( cv2.imencode('.png', cv2.Laplacian(cv2.cvtColor(sample_icon_data, cv2.COLOR_BGR2GRAY), -1) )[1] ).decode("utf-8")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter border parameter', 'DropDown', {'possible_values': OpencvBilateralFilter.border_type.keys()})
@@ -820,7 +810,7 @@ class OpencvLaplacianFilter(OpencvImage):
             self.image_source = emitter
             border = OpencvBilateralFilter.border_type[self.border] if type(self.border) == str else self.border
             self.set_image_data(cv2.Laplacian(emitter.img, -1, borderType=border))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
 
@@ -829,7 +819,7 @@ class OpencvCanny(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("Canny")
+    icon = "data:image/png;base64,"+base64.b64encode( cv2.imencode('.png', cv2.Canny(cv2.cvtColor(sample_icon_data, cv2.COLOR_BGR2GRAY), 50, 130) )[1] ).decode("utf-8")
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold1', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
@@ -858,7 +848,7 @@ class OpencvCanny(OpencvImage):
         try:
             self.image_source = emitter
             self.set_image_data(cv2.Canny(emitter.img, self.threshold1, self.threshold2))
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def on_threshold1_listener(self, emitter, value=None):
@@ -882,7 +872,7 @@ class OpencvFindContours(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("FindContours",1.2)
+    icon = None
 
     contours = None     #the contours result of processing
     hierarchy = None    #the hierarchy result of processing
@@ -1037,7 +1027,7 @@ class OpencvFindContours(OpencvImage):
                 img = cv2.drawContours(img, self.contours, i, 0, 1, cv2.LINE_AA)
             self.set_image_data(img)
             self.on_new_contours_result()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def do_contours_result(self, callback, *userdata, **kwuserdata):
@@ -1063,7 +1053,7 @@ class OpencvInRangeGrayscale(OpencvImage):
         Receives an image on on_new_image_listener.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
-    icon = default_icon("InRange")
+    icon = None
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The filter threshold1', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 1, 'step': 1})
@@ -1092,5 +1082,5 @@ class OpencvInRangeGrayscale(OpencvImage):
         try:
             self.image_source = emitter
             self.set_image_data(cv2.inRange(emitter.img, self.threshold1, self.threshold2))
-        except:
+        except Exception:
             print(traceback.format_exc())

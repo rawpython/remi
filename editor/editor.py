@@ -18,8 +18,13 @@ from remi import start, App
 import inspect
 import sys
 import os  # for path handling
-import prototypes
-import editor_widgets
+try:
+    import prototypes
+    import editor_widgets
+except ImportError:
+    from . import prototypes
+    from . import editor_widgets
+
 import threading
 import traceback
 
@@ -57,7 +62,7 @@ class DraggableItem(gui.EventSource):
         if self.parent:
             try:
                 self.parent.remove_child(self)
-            except:
+            except Exception:
                 pass
         if newParent == None:
             return
@@ -66,7 +71,7 @@ class DraggableItem(gui.EventSource):
 
         try:
             self.parent.append(self)
-        except:
+        except Exception:
             pass
         self.update_position()
 
@@ -520,6 +525,130 @@ class Project(gui.Container):
 
         return code_nested
 
+    def export_widget_for_app_template(self, widget, first_node=False):
+        if first_node:
+            self.code_declared_classes = {}
+            self.pending_listener_registration = list()
+            # a list containing widgets that have been parsed and that are considered valid listeners
+            self.known_project_children = [self, ]
+            # a list containing dicts {listener, emitter, register_function, listener_function}
+            self.pending_signals_to_connect = list()
+            self.path_to_this_widget = []
+            self.prepare_path_to_this_widget(self.children['root'])
+        self.known_project_children.append(widget)
+
+        widget.path_to_this_widget.append(widget.variable_name)
+
+        code_nested = ''  # the code strings to return
+
+        if not hasattr(widget, 'attributes'):
+            return ''  # no nested code
+
+        widgetVarName = widget.variable_name
+        classname = 'CLASS' + \
+            widgetVarName if widget.attr_editor_newclass else widget.__class__.__name__
+
+        if not first_node:
+            code_nested = prototypes.proto_widget_allocation % {
+                'varname': widgetVarName, 'classname': classname}
+
+        for x, y in inspect.getmembers(widget.__class__):
+            if type(y) == property and not getattr(widget, x) is None:
+                if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
+                    _value = getattr(widget, x)
+                    if type(_value) == str:
+                        _value = '"%s"' % _value
+                    code_nested += prototypes.proto_property_setup % {
+                        'varname': 'self' if first_node else widgetVarName, 'property': x, 'value': _value}
+        else:
+            #eventually, properties have to be placed in the container constructor
+            pass
+
+        # for all the methods of this widget
+        for (setOnEventListenerFuncname, setOnEventListenerFunc) in inspect.getmembers(widget):
+            # if the member is decorated by decorate_set_on_listener
+            if issubclass(type(setOnEventListenerFunc), gui.ClassEventConnector):
+                # if there is a callback
+                if not setOnEventListenerFunc.callback is None and hasattr(setOnEventListenerFunc.event_method_bound, '_event_info'):
+                    listenerFunction = setOnEventListenerFunc.callback
+                    if issubclass(type(listenerFunction), gui.ClassEventConnector):
+                        listenerFunction = listenerFunction.event_method_bound
+
+                    listenerPrototype = setOnEventListenerFunc.event_method_bound._event_info[
+                        'prototype']
+                    listener = listenerFunction.__self__
+
+                    # setOnEventListenerFunc._event_info['name'] + "_" + widget.identifier
+                    listenerFunctionName = listenerFunction.__name__
+
+                    listenerClassFunction = prototypes.proto_code_function % {'funcname': listenerFunctionName,
+                                                                              'parameters': listenerPrototype}
+
+                    # override, if already implemented, we use this code, unless it is a fakeListenerFunction
+                    if hasattr(listener, listenerFunctionName) and listenerFunction.__code__ != editor_widgets.fakeListenerFunc.__code__:
+                        listenerClassFunction = inspect.getsource(
+                            listenerFunction)
+
+                    # if the listener is already in the dictionary, and so it already used by another event
+                    # skip
+                    skip = False
+                    for pending in self.pending_listener_registration:
+                        if pending['eventlistener'] == listener:
+                            if pending['listenerfuncname'] == listenerFunctionName:
+                                skip = True
+                                break
+                    #if skip:
+                    #    continue
+
+                    self.pending_listener_registration.append({'done': False,
+                                                               'eventsource': widget,
+                                                               'eventlistener': listener,
+                                                               'setoneventfuncname': setOnEventListenerFuncname,
+                                                               'listenerfuncname': listenerFunctionName,
+                                                               'listenerClassFunction': listenerClassFunction,
+                                                               'skip_function_definition':skip})
+
+        if widget.attr_editor_newclass or first_node:
+            widgetVarName = 'self'
+
+        children_code_nested = ''
+        for child_key in widget.children.keys():
+            child = widget.children[child_key]
+            if type(child) == str:
+                #children_code_nested += prototypes.proto_layout_append%{'parentname':widgetVarName,'varname':"'%s'"%child}
+                continue
+            if not issubclass(child.__class__, gui.Widget):
+                continue
+            if child.variable_name is None:
+                continue
+            child.path_to_this_widget = widget.path_to_this_widget[:]
+            children_code_nested += self.repr_widget_for_editor(child)
+            children_code_nested += prototypes.proto_layout_append % {
+                'parentname': widgetVarName, 'varname': "%s,'%s'" % (child.variable_name, child.variable_name)}
+
+        events_registration = self.check_pending_listeners(
+            widget, widgetVarName)
+
+
+        # and not (classname in self.code_declared_classes.keys()):
+        if widget.attr_editor_newclass or first_node:
+            if not widget.identifier in self.code_declared_classes:
+                self.code_declared_classes[widget.identifier] = ''
+            if first_node:
+                if len(events_registration) < 1:
+                    events_registration = 'pass'
+                self.code_declared_classes[widget.identifier] = prototypes.proto_export_app_template % {'classname': classname, 'superclassname': widget.__class__.__name__,
+                                                                                           'nested_code': code_nested + children_code_nested, 'events_registration': events_registration} + self.code_declared_classes[widget.identifier]
+                code_nested = ''                                                                                           
+            else:
+                children_code_nested += events_registration
+                self.code_declared_classes[widget.identifier] = prototypes.proto_code_class % {'classname': classname, 'superclassname': widget.__class__.__name__,
+                                                                                           'nested_code': children_code_nested} + self.code_declared_classes[widget.identifier]
+        else:
+            code_nested = code_nested + children_code_nested
+
+        return code_nested
+
     def prepare_path_to_this_widget(self, node):
         # here gets initiated to null list the path_to_this_widget chain
         node.path_to_this_widget = []
@@ -597,6 +726,13 @@ class Editor(App):
             drag_helper.update_position()
 
     def main(self):
+
+        #custom css
+        my_css_head = """
+            <link href='/editor_resources:style.css' rel='stylesheet' />
+            """
+        self.page.children['head'].add_child('mycss', my_css_head)
+
         self.mainContainer = gui.Container(width='100%', height='100%', layout_orientation=gui.Container.LAYOUT_VERTICAL, style={
                                            'background-color': 'white', 'border': 'none', 'overflow': 'hidden'})
 
@@ -621,7 +757,7 @@ class Editor(App):
 
         m3 = gui.MenuItem('Project Config', width=200, height='100%')
 
-        m4 = gui.MenuItem('Became a Patron', width=200,
+        m4 = gui.MenuItem('Became a Sponsor', width=200,
                           height='100%', style={'font-weight': 'bold'})
 
         menu.append([m1, m2, m3, m4])
@@ -660,11 +796,12 @@ class Editor(App):
         m121.onclick.do(self.menu_save_clicked)
         m122.onclick.do(self.menu_download_clicked)
         m123.onclick.do(self.menu_save_widget_clicked)
+        #m124.onclick.do(self.menu_export_widget_clicked)
         m21.onclick.do(self.menu_cut_selection_clicked)
         m22.onclick.do(self.menu_paste_selection_clicked)
 
         m3.onclick.do(self.menu_project_config_clicked)
-        m4.onclick.do(self.menu_became_a_patron)
+        m4.onclick.do(self.menu_became_a_sponsor)
 
         self.subContainer = gui.HBox(
             width='100%', height='96%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
@@ -724,8 +861,8 @@ class Editor(App):
                              SvgDraggablePoint(
                                  self, 'x2', 'y2', [gui.SvgLine]),
                              SvgDraggablePoint(
-                                 self, 'x', 'y', [gui.SvgRectangle, gui.SvgText, gui.SvgImage]),
-                             SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle, gui.SvgImage])]
+                                 self, 'x', 'y', [gui.SvgRectangle, gui.SvgText, gui.SvgImage, gui.SvgSubcontainer]),
+                             SvgDraggableRectangleResizePoint(self, [gui.SvgRectangle, gui.SvgImage, gui.SvgSubcontainer])]
         for drag_helper in self.drag_helpers:
             drag_helper.stop_drag.do(self.on_drag_resize_end)
 
@@ -867,7 +1004,7 @@ class Editor(App):
                     params['left']=event.clientX-event.currentTarget.getBoundingClientRect().left;
                     params['top']=event.clientY-event.currentTarget.getBoundingClientRect().top;
                 }
-                sendCallbackParam(data[1],'%(evt)s',params);
+                remi.sendCallbackParam(data[1],'%(evt)s',params);
                 
                 return false;""" % {'evt': self.EVENT_ONDROPPPED}
         self.project.onkeydown.do(self.onkeydown)
@@ -890,7 +1027,7 @@ class Editor(App):
                 if widgetTree != None:
                     self.add_widget_to_editor(widgetTree)
                 self.projectPathFilename = filelist[0]
-            except:
+            except Exception:
                 self.show_error_dialog("ERROR: Unable to load the project",
                                        "There were an error during project load: %s" % traceback.format_exc())
 
@@ -931,6 +1068,27 @@ class Editor(App):
         with open(self.projectPathFilename, "w") as f:
             f.write(code)
 
+    def menu_export_widget_clicked(self, widget, path=""):
+        """ This method allows to export the selected widget for app_template 
+            https://bitbucket.org/cheak/app-template-for-remi/src/master/views/from_remi_editor2.py
+        """
+        if len(path):
+            self.projectPathFilename = path + '/' + \
+                self.fileSaveAsDialog.get_fileinput_value()
+        else:
+            self.fileSaveAsDialog.confirm_value.do(
+                self.menu_export_widget_clicked)
+            self.fileSaveAsDialog.show()
+            return
+
+        code = ""
+        code = code + \
+            self.project.export_widget_for_app_template(self.selectedWidget, True)
+        for key in self.project.code_declared_classes.keys():
+            code = code + self.project.code_declared_classes[key]
+        with open(self.projectPathFilename, "w") as f:
+            f.write(code)
+
     def remove_box_shadow_selected_widget(self):
         if 'box-shadow' in self.selectedWidget.style.keys():
             del self.selectedWidget.style['box-shadow']
@@ -953,11 +1111,19 @@ class Editor(App):
             self.editCuttedWidget = None
             self.instancesWidget.update(self.project, self.selectedWidget)
 
-    def menu_became_a_patron(self, widget):
+    def menu_became_a_sponsor(self, widget):
         dialog = gui.GenericDialog(
-            "Became a Patron", "This editor is made for you with passion. \nIt would be fantastic if you give a contribution, also a little one. ;-)", width="50%")
-        dialog.add_field("link", gui.Link("https://www.patreon.com/remigui",
-                                          "Click this link to Donate", True, style={'font-weight': 'bolder'}))
+            "Became a Sponsor", "This editor is made for you with passion. \nIt would be fantastic if you give a contribution, also a little one. ;-)", width="700px")
+
+        sponsor_card = gui.Widget(_type='iframe', width=610, height=230) 
+        #<iframe src="https://github.com/sponsors/dddomodossola/card" title="Sponsor dddomodossola" height="225" width="600" style="border: 0;"></iframe>
+        sponsor_card.attributes['src'] = "https://github.com/sponsors/dddomodossola/card"
+        sponsor_card.attributes['title'] = "Sponsor dddomodossola"
+        sponsor_card.attributes['height'] = "225"
+        sponsor_card.attributes['width'] = "600"
+        sponsor_card.style['border'] = "0"
+
+        dialog.add_field("sponsor card", sponsor_card)
         dialog.children["message"].style['white-space'] = 'pre'
         dialog.cancel.style['display'] = 'none'
         dialog.conf.set_text("Back")
@@ -996,13 +1162,15 @@ class Editor(App):
             self.toolbar_delete_clicked(None)
             return
 
-        value = int(self.spin_grid_size.get_value())
-        value = value if str(keycode) in (arrow_down, arrow_right) else -value
-        key = 'left' if str(keycode) in (arrow_left, arrow_right) else 'top'
-        if ctrl:
-            key = {'left':'width', 'top':'height'}[key]
+        if keycode in (arrow_left, arrow_right, arrow_up, arrow_down):
+            value = int(self.spin_grid_size.get_value())
+            value = value if str(keycode) in (arrow_down, arrow_right) else -value
+            key = 'left' if str(keycode) in (arrow_left, arrow_right) else 'top'
+            if ctrl:
+                key = {'left':'width', 'top':'height'}[key]
 
-        self.move_widget(key, value)
+            self.move_widget(key, value)
+        
         self.on_drag_resize_end(self)
 
         print("Key pressed: " + str(keycode) + "  ctrl: " + str(ctrl) + "  shift: " + str(shift))

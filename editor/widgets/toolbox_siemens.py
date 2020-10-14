@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import remi
 import remi.gui as gui
 from remi.gui import *
 import snap7
+import threading
 from threading import Timer
 import traceback
 
 # https://python-snap7.readthedocs.io/en/latest/util.html
 # https://github.com/gijzelaerr/python-snap7/blob/master/example/boolean.py
+
 
 style_inheritance_dict = {'opacity':'inherit', 'overflow':'inherit', 'background-color':'inherit', 'background-image':'inherit', 'background-position':'inherit', 'background-repeat':'inherit', 'border-color':'inherit', 'border-width':'inherit', 'border-style':'inherit', 'border-radius':'inherit', 'color':'inherit', 'font-family':'inherit', 'font-size':'inherit', 'font-style':'inherit', 'font-weight':'inherit', 'white-space':'inherit', 'letter-spacing':'inherit'}
 style_inheritance_text_dict = {'opacity':'inherit', 'overflow':'inherit', 'color':'inherit', 'font-family':'inherit', 'font-size':'inherit', 'font-style':'inherit', 'font-weight':'inherit', 'white-space':'inherit', 'letter-spacing':'inherit'}
@@ -21,6 +24,14 @@ class PLCSiemens(Image):
             widget.link_to.do(plc.on_link_to)
     """
     icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAvCAYAAAAIA1FgAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAADmwAAA5sBPN8HMQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANGSURBVFiF7ZbNbxtFGIefmR2vP+PUjkntxHGapmmpKpIoECggjpyQEBKqeoIjXDhw5cD/wZ0LEgiJEzck1EIrlUYBl7RJ1bQlbUpCHNux15+7MxycWnLzoX6sJZDyk1bzzsc+s/q9s7uv+PTzL40dCBCLRShsl/A8j1K5AoARnet5JAyoWDSC1hpjIDuS5sH6390Fi+9WyL49zungCPdam+TsFAMyjKObLNRXmbTTTIdyXKrdIiJsitohq4YoeBUWf19C3fvr4b47G2MAmLTTnLLTDMgQuUCKpeYDzgZHOR+eYt0tMmmn+cm5wRfDF/mm/AspK85qe4NFQBKuQ7gOyu2BFzYfAeChSVhRbKGomxbbXpU7rQ1iMoRGs+mWcY3mu52rvBaepKirnLYzHWsu3MAAmF/nMZfe6MK3NtZpvpOkOOYSt6N4xiNk2QQtm1KzihAgkcSDEZx2g4bXRglJW7sIIVGPXNRhSRldCTG68rinAA00SPbc1iABQGC3b+22AZT+/r1dH44dts9zSXF7wndoFy4++BEAs3wKbk75DD9zpxMVkp3M+gk3q7lOtN0Hz8237/sO7cLFiTUATGkQSnGf4Rd/6ERPvER+SPpKe0LKfPUxAKYR7AO87K/PPXD5ydcAmIVpzG8z/sJJlDtRuOErGECZq3OdaG2kZ0JaL55rZX5+a9+JZCr9wvC+HsX+nvP7q7do1mv+gwM2avzky76DH6u/tuw3eH5+FsepUW80GRtNc/nKdeZmzlGuVKlWHWZfOcv9tYfUG01i0QiBgOLaQv7p4JZloZRiKBkmffwl5mbOIaXg5IksrVabfwrb5JdWeHN+FtfTLOZv7vvke2yxLInahTtOjT/+XCYSCaGNYfXuGuWdCrVaHYBK1UFKweuvTiPE3qJSfPjRZ37/Ors6sCjKZTMMxgeoVB3GshkuX7nOYHyA1FCCUnmHWDRKq9VCStlTvD4VfDRzHBVQ5JdWyKSHMcbgeR5npibYKhS764QQzw53PY/EsUFGMsNsbG4xMZ4lFArSarURQhAOh2i32wgOLuAPhF9byKOUhet6PePLt++itUZK2S2znxkO7AEDaK172sP0//0qHsGP4Efw/zL8X7xWNIa0/NaYAAAAAElFTkSuQmCC"
+
+    #OpencvImage inherits gui.Image and so it already inherits attr_src. 
+    # I'm redefining it in order to avoid editor_attribute_decorator
+    # and so preventing it to be shown in editor.
+    @property
+    def attr_src(self): return self.attributes.get('src', '')
+    @attr_src.setter
+    def attr_src(self, value): self.attributes['src'] = str(value)
 
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The IP address as string', str, {})
@@ -55,12 +66,14 @@ class PLCSiemens(Image):
     @update_interval.setter
     def update_interval(self, v): 
         self.__dict__['__update_interval'] = v
-        self.disconnect()
-        self.connect()
+        #self.disconnect()
+        #self.connect()
 
     snap7_client = snap7.client.Client()    #the snap7.client.Client() instance that manages data exchange with PLC  
     connected = False
     linked_widgets = []                     #the widget list that are linked to the PLC
+    update_lock = threading.RLock()
+    app_instance = None
 
     def __init__(self, ip_address='', rack=0, slot=3, update_interval=1.0, *args, **kwargs):
         self.__ip_address = ''
@@ -84,25 +97,31 @@ class PLCSiemens(Image):
     def disconnect(self):
         try:
             self.snap7_client.disconnect()
-        except:
+        except Exception:
             print(traceback.format_exc())
 
     def connect(self):
         try:
+            if self.rack<0 or self.slot<0:
+                return
+            print("connecting to ip:%s  rack:%s  slot:%s"%(self.ip_address, self.rack, self.slot))
             self.snap7_client.connect(self.ip_address, self.rack, self.slot)
-        except:
+            
+        except Exception:
             print(traceback.format_exc())
 
     def _set_params(self):
-        values = (
+        values = ()
+        """(
                 (snap7.snap7types.PingTimeout, 1000),
                 (snap7.snap7types.SendTimeout, 500),
                 (snap7.snap7types.RecvTimeout, 3500),
                 (snap7.snap7types.SrcRef, 128),
                 (snap7.snap7types.DstRef, 128),
                 (snap7.snap7types.SrcTSap, 128),
-                (snap7.snap7types.PDURequest, 470),
+                (snap7.snap7types.PDURequest, 470)
             )
+        """
         for param, value in values:
             self.snap7_client.set_param(param, value)
 
@@ -135,6 +154,13 @@ class PLCSiemens(Image):
         self.update_interval = 0
         self.snap7_client.destroy()
 
+    def search_app_instance(self, node):
+        if issubclass(node.__class__, remi.server.App):
+            return node
+        if not hasattr(node, "get_parent"):
+            return None
+        return self.search_app_instance(node.get_parent()) 
+
     def check_connection_state(self):
         _con = self.snap7_client.get_connected()
         if _con != self.connected:
@@ -143,14 +169,22 @@ class PLCSiemens(Image):
             else:
                 self.on_disconnected()
         self.connected = _con
-        for w in self.linked_widgets:
-            if hasattr(w, "update"):
-                try:
-                    w.update()
-                except:
-                    print(traceback.format_exc())
+
+        if self.app_instance==None:
+            self.app_instance = self.search_app_instance(self)
+            
+        if self.app_instance:
+            with self.update_lock:
+                with self.app_instance.update_lock:
+                    for w in self.linked_widgets:
+                        if hasattr(w, "update"):
+                            try:
+                                w.update()
+                            except Exception:
+                                print(traceback.format_exc())
+
         if self.update_interval>0.0:
-            Timer(1, self.check_connection_state).start()
+            Timer(self.update_interval, self.check_connection_state).start()
 
     def set_bool(self, db_index, byte_index, bit_index, value):
         reading = self.snap7_client.db_read(db_index, byte_index, 1)    # read 1 byte from db 31 staring from byte 120
@@ -161,6 +195,11 @@ class PLCSiemens(Image):
         bytes_to_read_write = 1
         mem = self.snap7_client.db_read(db_index, byte_index, bytes_to_read_write)
         return snap7.util.get_bool(mem, byte_index, bit_index)
+
+    def get_byte(self, db_index, byte_index):
+        bytes_to_read_write = 1
+        mem = self.snap7_client.db_read(db_index, byte_index, bytes_to_read_write)
+        return bytearray(mem)
 
     def set_int(self, db_index, byte_index, value):
         mem = self.snap7_client.db_read(db_index, byte_index, 2)
@@ -193,9 +232,14 @@ class PLCSiemens(Image):
         """ Each widget registers itself to the PLC class by linking its "link_to" event 
             toward the "on_link_to" listener
         """
-        widget.set_plc_instance(self)
-        #the widget is appended to a link for cyclical update purpose
-        self.linked_widgets.append(widget)
+        with self.update_lock:
+            widget.set_plc_instance(self)
+            #the widget is appended to a link for cyclical update purpose
+            self.linked_widgets.append(widget)
+
+    def remove_link_to(self, widget):
+        with self.update_lock:
+            self.linked_widgets.remove(widget)
 
 
 # noinspection PyUnresolvedReferences
@@ -207,6 +251,11 @@ class SiemensWidget(object):
         self.link_to.do = self.do
 
     def do(self, callback, *userdata):
+        if self.plc_instance and (callback is None):
+            print("removing connection to the PLC")
+            self.plc_instance.remove_link_to(self)
+            self.plc_instance = None
+
         if hasattr(self.link_to.event_method_bound, '_js_code'):
             self.link_to.event_source_instance.attributes[self.link_to.event_name] = self.link_to.event_method_bound._js_code%{
                 'emitter_identifier':self.link_to.event_source_instance.identifier, 'event_name':self.link_to.event_name}
@@ -236,7 +285,7 @@ class _Mixin_DB_property():
 class _Mixin_Byte_property():
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The byte index in the DB as integer', int, {'possible_values': '', 'min': -1, 'max': 65535, 'default': 0, 'step': 1})
-    def byte_index(self): return self.__dict__.get('byte_index', -1)
+    def byte_index(self): return self.__dict__.get('__byte_index', -1)
     @byte_index.setter
     def byte_index(self, v): self.__dict__['__byte_index'] = v
 
@@ -282,11 +331,11 @@ class SiemensButton(gui.Container, SiemensWidget, _Mixin_DB_property, _Mixin_Byt
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','100px'))
         super(SiemensButton, self).__init__(*args, **kwargs)
+        SiemensWidget._setup(self)
         _style = {'position':'relative'}
         _style.update(style_inheritance_dict)
         self.append(gui.Container(children=[self.button, self.led], width="100%", height="100%", style=_style))
         self.toggle = toggle
-
         self.button.onmousedown.do(self.set_bit)
         self.button.onmouseup.do(self.reset_bit)
 
@@ -297,7 +346,7 @@ class SiemensButton(gui.Container, SiemensWidget, _Mixin_DB_property, _Mixin_Byt
         value = 1
         if self.toggle:
             value = 0 if self.led_status else 1
-        self.plc_instance.set_bool(self.db_index, self.byte_index, self.bit_index, self.value)
+        self.plc_instance.set_bool(self.db_index, self.byte_index, self.bit_index, value)
 
     def reset_bit(self, emitter, x, y, *args, **kwargs):
         if self.db_index<0 or self.byte_index<0 or self.bit_index<0:
@@ -306,10 +355,9 @@ class SiemensButton(gui.Container, SiemensWidget, _Mixin_DB_property, _Mixin_Byt
             self.plc_instance.set_bool(self.db_index, self.byte_index, self.bit_index, 0)
 
     def _set_value(self, value):
-        with self.get_app_instance().update_lock:
-            #this function gets called when the camonitor notifies a change on the PV
-            self.led_status = value
-            self.led.style.update({'background-color':self.color_active if self.led_status else self.color_inactive})
+        #this function gets called when the camonitor notifies a change on the PV
+        self.led_status = value
+        self.led.style.update({'background-color':self.color_active if self.led_status else self.color_inactive})
 
     def update(self, *args):
         #this method gets called by the plc_instance
@@ -405,3 +453,39 @@ class WordEditWidget(SpinBox, SiemensWidget, _Mixin_DB_property, _Mixin_Byte_pro
             return
         self.plc_instance.set_int( self.db_index, self.byte_index, int(self.get_value()))
 
+
+class ByteViewWidget(Label, SiemensWidget, _Mixin_DB_property, _Mixin_Byte_property):
+    """ A Byte (8bit) value view.
+        Connect the event link_to to a PLCSiemens widget on the "on_link_to" method.
+        i.e.:
+            widget.link_to.do(plc.on_link_to)
+    """
+    #icon = default_icon("ByteViewWidget")
+
+    @property
+    def text(self): return self.get_text()
+    @text.setter
+    def text(self, value): self.set_text(value)
+
+    def __init__(self, db_index=-1, byte_index=-1, *args, **kwargs):
+        """
+        Args:
+            kwargs: See Widget.__init__()
+        """
+        default_style = {'position':'absolute','left':'10px','top':'10px'}
+        default_style.update(kwargs.get('style',{}))
+        kwargs['style'] = default_style
+        kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','100px'))
+        kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','30px'))
+        super(ByteViewWidget, self).__init__(*args, **kwargs)
+        SiemensWidget._setup(self)
+        self.db_index = db_index
+        self.byte_index = byte_index
+
+    def update(self, *args):
+        if self.plc_instance==None:
+            return
+        if self.db_index<0 or self.byte_index<0:
+            return
+        value = self.plc_instance.get_byte(self.db_index, self.byte_index)
+        self.set_text( bin(value[0]) )

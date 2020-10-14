@@ -18,6 +18,7 @@ import re
 import logging
 import types
 import traceback
+import os
 
 
 class InstancesTree(gui.TreeView):
@@ -181,8 +182,8 @@ class SignalConnection(gui.HBox):
                 self.dropdownMethods.select_by_value(
                     connectedListenerFunction.__name__)
                 # force the connection
-                self.on_connection(None, None)
-            except:
+                #self.on_connection(None, None)
+            except Exception:
                 print(traceback.format_exc())
                 print(dir(eventConnectionFunc.callback))
                 self.disconnect()
@@ -430,6 +431,26 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         return params
 
 
+def default_icon(name, view_w=1, view_h=0.6):
+    """
+    A simple function to make a default svg icon for the widgets
+      such icons can be replaced later with a good one 
+    """
+    icon = gui.Svg(width=50,height=30)
+    icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
+    text = gui.SvgText(0,0,name)
+    text.attributes['textLength'] = "100%"
+    text.attributes['lengthAdjust'] = "spacingAndGlyphs"
+    text.style['font-size'] = "0.2px"
+    text.style['text-anchor'] = "middle"
+    stroke_width = 0.01
+    rect = gui.SvgRectangle(-view_w/2+stroke_width,-view_h/2+stroke_width,view_w-stroke_width*2,view_h-stroke_width*2)
+    rect.set_fill("none")
+    rect.set_stroke(0.01,'black')
+    icon.append([rect, text])
+    return icon
+
+
 class WidgetHelper(gui.HBox):
     """ Allocates the Widget to which it refers,
         interfacing to the user in order to obtain the necessary attribute values
@@ -447,12 +468,18 @@ class WidgetHelper(gui.HBox):
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon) == gui.Svg:
                 self.icon = widgetClass.icon
+            elif widgetClass.icon == None:
+                self.icon = default_icon(self.widgetClass.__name__)
             else:
                 icon_file = widgetClass.icon
                 self.icon = gui.Image(icon_file, width='auto', margin='2px')
         else:
             icon_file = '/editor_resources:widget_%s.png' % self.widgetClass.__name__
-            self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            if os.path.exists(self.appInstance._get_static_file(icon_file)): 
+                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            else:
+                self.icon = default_icon(self.widgetClass.__name__)
+
         self.icon.style['max-width'] = '100%'
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'
@@ -591,28 +618,35 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.FileUploader, width='150px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(
-            gui.Svg, style={'top': '20px', 'left': '20px', 'position': 'absolute', 'border':'1px solid gray'})
+            gui.Svg, style={'top': '20px', 'left': '20px', 'width':'150px', 'height':'150px', 'position': 'absolute', 'border':'1px solid gray'})
+        self.add_widget_to_collection(
+            gui.SvgSubcontainer, x = '10', y = '10', width = '80', height = '80')
         self.add_widget_to_collection(gui.SvgLine, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
         self.add_widget_to_collection(gui.SvgCircle)
+        self.add_widget_to_collection(gui.SvgEllipse)
         self.add_widget_to_collection(gui.SvgRectangle)
         self.add_widget_to_collection(gui.SvgText)
         self.add_widget_to_collection(gui.SvgPath, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
         self.add_widget_to_collection(gui.SvgImage)
+        self.add_widget_to_collection(gui.SvgGroup)
 
         self.load_additional_widgets()
 
     def load_additional_widgets(self):
         try:
             import widgets
+        except Exception:
+            from . import widgets
+        try:
             classes = inspect.getmembers(widgets, inspect.isclass)
             for (classname, classvalue) in classes:
                 if issubclass(classvalue, gui.Widget):
                     self.add_widget_to_collection(
                         classvalue, classvalue.__module__)
 
-        except:
+        except Exception:
             logging.getLogger('remi.editor').error(
                 'error loading external widgets', exc_info=True)
 

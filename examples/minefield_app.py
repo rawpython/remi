@@ -39,11 +39,11 @@ class Cell(gui.TableItem):
         self.style['font-weight'] = 'bold'
         self.style['text-align'] = 'center'
         self.style['background-size'] = 'contain'
-        if ((x+y)%2)>0:
+        if ((x + y) % 2) > 0:
             self.style['background-color'] = 'rgb(255,255,255)'
         else:
             self.style['background-color'] = 'rgb(245,245,240)'
-        self.oncontextmenu.do(self.on_right_click)
+        self.oncontextmenu.do(self.on_right_click, js_stop_propagation=True, js_prevent_default=True)
         self.onclick.do(self.check_mine)
 
     def on_right_click(self, widget):
@@ -91,7 +91,7 @@ class Cell(gui.TableItem):
 class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
-        super(MyApp, self).__init__(*args, static_file_path={'my_resources':res_path})
+        super(MyApp, self).__init__(*args, static_file_path={'my_resources': res_path})
 
     def display_time(self):
         self.lblTime.set_text('Play time: ' + str(self.time_count))
@@ -104,7 +104,7 @@ class MyApp(App):
         self.main_container = gui.Container(margin='0px auto')
         self.main_container.set_size(1020, 600)
         self.main_container.set_layout_orientation(gui.Container.LAYOUT_VERTICAL)
-        
+
         self.title = gui.Label('Mine Field GAME')
         self.title.set_size(1000, 30)
         self.title.style['margin'] = '10px'
@@ -149,7 +149,7 @@ class MyApp(App):
                              "This is an example of REMI gui library.")
         self.link.set_size(1000, 20)
         self.link.style['margin'] = '10px'
-        
+
         self.main_container.append([self.title, self.horizontal_container, self.link])
 
         self.new_game(self)
@@ -170,10 +170,9 @@ class MyApp(App):
 
     def new_game(self, widget):
         self.time_count = 0
-        self.mine_table = gui.Table(margin='0px auto')#900, 450
+        self.mine_table = gui.Table(margin='0px auto')  # 900, 450
         self.mine_matrix = self.build_mine_matrix(8, 8, 5)
         self.mine_table.empty()
-
 
         for x in range(0, len(self.mine_matrix[0])):
             row = gui.TableRow()
@@ -182,7 +181,7 @@ class MyApp(App):
                 self.mine_matrix[y][x].onclick.do(self.mine_matrix[y][x].check_mine)
             self.mine_table.append(row)
 
-        #self.mine_table.append_from_list(self.mine_matrix, False)
+        # self.mine_table.append_from_list(self.mine_matrix, False)
         self.main_container.append(self.mine_table, key="mine_table")
         self.check_if_win()
         self.set_root_widget(self.main_container)
@@ -258,7 +257,7 @@ class MyApp(App):
                 self.mine_matrix[y][x].check_mine(None, False)
         self.mine_table.empty()
 
-        #self.mine_table.append_from_list(self.mine_matrix, False)
+        # self.mine_table.append_from_list(self.mine_matrix, False)
         for x in range(0, len(self.mine_matrix[0])):
             row = gui.TableRow()
             for y in range(0, len(self.mine_matrix)):
@@ -268,4 +267,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, multiple_instance=True, address='0.0.0.0', port=0, debug=True, start_browser=True )
+    start(MyApp, multiple_instance=True, address='0.0.0.0', port=0, debug=True, start_browser=True)

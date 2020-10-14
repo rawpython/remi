@@ -24,16 +24,17 @@ class MyApp(App):
         lbl = gui.Label("Close or reload the page, the console thread will stop automatically.")
         wid.append(lbl)
 
-        #add the following 3 lines to your app and the on_window_close method to make the console close automatically
+        # add the following 3 lines to your app and the on_window_close method to make the console close automatically
         tag = gui.Tag(_type='script')
-        tag.add_child("javascript", """window.onunload=function(e){sendCallback('%s','%s');return "close?";};""" % (str(id(self)), "on_window_close")) 
+        tag.add_child("javascript", """window.onunload=function(e){remi.sendCallback('%s','%s');return "close?";};""" % (
+            str(id(self)), "on_window_close"))
         wid.add_child("onunloadevent", tag)
-        
+
         # returning the root widget
         return wid
-        
+
     def on_window_close(self):
-        #here you can handle the unload
+        # here you can handle the unload
         print("app closing")
         self.close()
 

@@ -320,7 +320,7 @@ class TestVideoPlayer(unittest.TestCase):
         
 class TestSvg(unittest.TestCase):
     def test_init(self):
-        widget = gui.Svg(10, 10)
+        widget = gui.Svg(width=10, height=10)
         assertValidHTML(widget.repr())
         
 class TestSvgShape(unittest.TestCase):

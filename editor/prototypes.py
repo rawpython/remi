@@ -55,6 +55,31 @@ class %(classname)s(App):
     
 """
 
+proto_export_app_template = """
+from remi.gui import *
+
+class %(classname)s( %(superclassname)s ):                                                                                                          #cheak:Maybe change class name to name of root container
+
+    def __init__(self, AppInst=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)                                                                                                #cheak:remove Comments
+        self.AppInst = AppInst                                                                                                           #cheak:remove Comments
+        self.constructUI()                                                                                                               #cheak:instead we just call it
+        self.userInit(args, kwargs)                                                                                                      #more. Register events. Add custom widgets. Add css classes etc.
+                                                                                                                                         # pass kwargs to user init in case user needs it.
+
+    def constructUI(self):
+        %(nested_code)s
+        %(events_registration)s
+
+    def userInit(self, *args, **kwargs):
+        self.shownInMenu = 'My Menu Name'
+        self.menuTitle = 'My View Name'
+
+    def updateView(self):
+        # Here you can update the view if it needs updates
+        pass
+"""
+
 proto_widget_allocation = "%(varname)s = %(classname)s()\n        "
 
 proto_attribute_setup = """%(varname)s.attributes.update({%(attr_dict)s})\n        """

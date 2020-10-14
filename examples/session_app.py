@@ -52,7 +52,7 @@ class CookieInterface(gui.Tag, gui.EventSource):
                 var key = decodeURIComponent(aKeys[nIdx]);
                 result[key] = decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null; 
             }
-            sendCallbackParam('%s','%s', result);
+            remi.sendCallbackParam('%s','%s', result);
             """%(self.identifier, self.EVENT_ONCOOKIES))
 
     @gui.decorate_event
