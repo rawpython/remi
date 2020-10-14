@@ -103,6 +103,13 @@ def to_uri(uri_data):
     return ("url('%s')" % uri_data)
 
 
+class CssStyleError(Exception):
+    """
+    Raised when (a combination of) settings will result in invalid/improper CSS
+    """
+    pass
+
+
 class EventSource(object):
     def __init__(self, *args, **kwargs):
         self.setup_event_methods()
@@ -1840,6 +1847,9 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
+        if self.css_width == "auto":
+            if (type(value) == int and value != 0) or value[0] != "0":
+                raise CssStyleError("Do not set column gap in combination with width auto")
         if type(value) == int:
             value = str(value) + 'px'
         self.style['grid-column-gap'] = value
@@ -1850,6 +1860,9 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
+        if self.css_height == "auto":
+            if (type(value) == int and value != 0) or value[0] != "0":
+                raise CssStyleError("Do not set row gap in combination with height auto")
         if type(value) == int:
             value = str(value) + 'px'
         self.style['grid-row-gap'] = value
