@@ -183,7 +183,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def send_message(self, message):
         if not self.handshake_done:
             self._log.warning("ignoring message %s (handshake not done)" % message[:10])
-            return
+            return False
 
         self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
@@ -205,9 +205,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         #self._log.debug('socket status readable=%s writable=%s errors=%s'%((self.request in readable), (self.request in writable), (self.request in error$
         writable = self.request in writable
         if not writable:
-            raise Exception("Websocket is not writable")
-            return
+            return False
         self.request.sendall(out)
+        return True
 
     def handshake(self):
         self._log.debug('handshake')
@@ -465,6 +465,7 @@ class App(BaseHTTPRequestHandler, object):
         self._need_update_flag = False
 
     def websocket_handshake_done(self, ws_instance_to_update):
+        msg = ""
         with self.update_lock:
             msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
         ws_instance_to_update.send_message(msg)
@@ -484,16 +485,21 @@ class App(BaseHTTPRequestHandler, object):
         for ws in list(self.websockets):
             # noinspection PyBroadException
             try:
-                #self._log.debug("sending websocket spontaneous message")
-                ws.send_message(message)
+                if ws.send_message(message):
+                    #if message sent ok, continue with nect client
+                    continue
             except Exception:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
-                try:
-                    self.websockets.remove(ws)
-                except Exception:
-                    pass # happens when there are multiple clients
-                else:
-                    ws.close(terminate_server=False)
+
+            self._log.debug("removing websocket instance, communication error with client")
+            #here arrives if the message was not sent ok, then the client is removed
+            try:
+                self.websockets.remove(ws)
+            except Exception:
+                pass # happens when there are multiple clients
+            else:
+                ws.close(terminate_server=False)
+            
 
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
