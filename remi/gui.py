@@ -22,7 +22,7 @@ import inspect
 try:
     import html
     escape = html.escape
-except ImportError:
+except ImportError :
     import cgi
     escape = cgi.escape
 import mimetypes
@@ -38,7 +38,7 @@ except ImportError:
         from html.parser import HTMLParser
         h = HTMLParser()
         unescape = h.unescape
-    except ImportError:
+    except (ImportError, AttributeError):
         # Python 3.4+
         import html
         unescape = html.unescape
