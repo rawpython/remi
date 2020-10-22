@@ -3640,47 +3640,65 @@ class GenericObject(Widget):
         self.attributes['data'] = filename
 
 
-class FileFolderNavigator(Container):
+class FileFolderNavigator(GridBox):
     """FileFolderNavigator widget."""
 
-    def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines wether it is possible to select multiple items.''', bool, {})
+    def multiple_selection(self): return self._multiple_selection
+    @multiple_selection.setter
+    def multiple_selection(self, value): self._multiple_selection = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual navigator location.''', str, {})
+    def selection_folder(self): return self._selection_folder
+    @selection_folder.setter
+    def selection_folder(self, value): 
+        # fixme: we should use full paths and not all this chdir stuff
+        self.chdir(value)  # move to actual working directory
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines if files are selectable.''', bool, {})
+    def allow_file_selection(self): return self._allow_file_selection
+    @allow_file_selection.setter
+    def allow_file_selection(self, value): self._allow_file_selection = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines if folders are selectable.''', bool, {})
+    def allow_folder_selection(self): return self._allow_folder_selection
+    @allow_folder_selection.setter
+    def allow_folder_selection(self, value): self._allow_folder_selection = value
+
+    def __init__(self, multiple_selection = False, selection_folder = ".", allow_file_selection = True, allow_folder_selection = False, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
-        self.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.style['width'] = '100%'
+
+        self.css_grid_template_columns = "30px auto 30px"
+        self.css_grid_template_rows = "30px auto"
+        self.define_grid([('button_back','url_editor','button_go'), ('items','items','items')])
 
         self.multiple_selection = multiple_selection
         self.allow_file_selection = allow_file_selection
         self.allow_folder_selection = allow_folder_selection
         self.selectionlist = []
         self.currDir = ''
-        self.controlsContainer = Container()
-        self.controlsContainer.set_size('100%', '30px')
-        self.controlsContainer.css_display = 'flex'
-        self.controlsContainer.set_layout_orientation(Container.LAYOUT_HORIZONTAL)
         self.controlBack = Button('Up')
-        self.controlBack.set_size('10%', '100%')
         self.controlBack.onclick.connect(self.dir_go_back)
         self.controlGo = Button('Go >>')
-        self.controlGo.set_size('10%', '100%')
         self.controlGo.onclick.connect(self.dir_go)
         self.pathEditor = TextInput()
-        self.pathEditor.set_size('80%', '100%')
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
-        self.controlsContainer.append(self.controlBack, "button_back")
-        self.controlsContainer.append(self.pathEditor, "url_editor")
-        self.controlsContainer.append(self.controlGo, "button_go")
+        self.append(self.controlBack, "button_back")
+        self.append(self.pathEditor, "url_editor")
+        self.append(self.controlGo, "button_go")
 
-        self.itemContainer = Container(width='100%', height=300)
+        self.itemContainer = Container(width='100%', height='100%')
 
-        self.append(self.controlsContainer, "controls_container")
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
 
         self.folderItems = list()
 
-        # fixme: we should use full paths and not all this chdir stuff
-        self.chdir(selection_folder)  # move to actual working directory
-        self._last_valid_path = selection_folder
+        self.selection_folder = selection_folder
 
     def get_selection_list(self):
         if self.allow_folder_selection and not self.selectionlist:
@@ -3717,16 +3735,15 @@ class FileFolderNavigator(Container):
         # this speeds up the navigation
         self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
-        self.itemContainer = Container(width='100%', height=300)
-        self.itemContainer.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden', 'display': 'block'})
+        self.itemContainer = Container(width='100%', height='100%')
+        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden'})
 
         for i in l:
             full_path = os.path.join(directory, i)
             is_folder = not os.path.isfile(full_path)
             if (not is_folder) and (not self.allow_file_selection):
                 continue
-            fi = FileFolderItem(i, is_folder)
+            fi = FileFolderItem(full_path, i, is_folder)
             fi.onclick.connect(self.on_folder_item_click)  # navigation purpose
             fi.onselection.connect(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
@@ -3756,6 +3773,7 @@ class FileFolderNavigator(Container):
         os.chdir(curpath)  # restore the path
 
     def chdir(self, directory):
+        self._selection_folder = directory
         curpath = os.getcwd()  # backup the path
         log.debug("FileFolderNavigator - chdir: %s" % directory)
         for c in self.folderItems:
@@ -3771,11 +3789,17 @@ class FileFolderNavigator(Container):
         self.currDir = directory
         os.chdir(curpath)  # restore the path
 
+    @decorate_set_on_listener("(self, emitter, selected_item, selection_list)")
+    @decorate_event
     def on_folder_item_selected(self, folderitem):
+        """ This event occurs when an element in the list is selected
+            Returns the newly selected element of type FileFolderItem(or None if it was not selectable) 
+                 and the list of selected elements of type str.
+        """
         if folderitem.isFolder and (not self.allow_folder_selection):
             folderitem.set_selected(False)
             self.on_folder_item_click(folderitem)
-            return
+            return (None, self.selectionlist, )
 
         if not self.multiple_selection:
             self.selectionlist = []
@@ -3789,13 +3813,20 @@ class FileFolderNavigator(Container):
             self.selectionlist.remove(f)
         else:
             self.selectionlist.append(f)
+        return (folderitem, self.selectionlist, )
 
+    @decorate_set_on_listener("(self, emitter, clicked_item)")
+    @decorate_event
     def on_folder_item_click(self, folderitem):
+        """ This event occurs when a folder element is clicked.
+            Returns the clicked element of type FileFolderItem.
+        """
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if not os.path.isfile(f):
             self.chdir(f)
+        return (folderitem, )
 
     def get_selected_filefolders(self):
         return self.selectionlist
@@ -3803,9 +3834,10 @@ class FileFolderNavigator(Container):
 
 class FileFolderItem(Container):
     """FileFolderItem widget for the FileFolderNavigator"""
-
-    def __init__(self, text, is_folder=False, *args, **kwargs):
+    path_and_filename = None #the complete path and filename
+    def __init__(self, path_and_filename, text, is_folder=False, *args, **kwargs):
         super(FileFolderItem, self).__init__(*args, **kwargs)
+        self.path_and_filename = path_and_filename
         self.isFolder = is_folder
         self.icon = Widget(_class='FileFolderItemIcon')
         # the icon click activates the onselection event, that is propagates to registered listener
@@ -3863,7 +3895,7 @@ class FileSelectionDialog(GenericDialog):
         self.css_width = '475px'
         self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
                                                        allow_file_selection,
-                                                       allow_folder_selection)
+                                                       allow_folder_selection, width="100%", height="330px")
         self.add_field('fileFolderNavigator', self.fileFolderNavigator)
         self.confirm_dialog.connect(self.confirm_value)
 

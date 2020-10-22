@@ -256,7 +256,7 @@ class TestFileFolderNavigator(unittest.TestCase):
         
 class TestFileFolderItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.FileFolderItem('test file folder item')
+        widget = gui.FileFolderItem('full path', 'test file folder item')
         assertValidHTML(widget.repr())
         
 class TestFileSelectionDialog(unittest.TestCase):
