@@ -3514,10 +3514,12 @@ class Date(Input):
 
 
 class Datalist(Container):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, options=None, *args, **kwargs):
         super(Datalist, self).__init__(*args, **kwargs)
         self.type = 'datalist'
         self.css_display = 'none'
+        if options:
+            self.append(options)
 
     def append(self, options, key=''):
         if type(options) in (list, tuple, dict):
@@ -3584,20 +3586,20 @@ class SelectionInput(Input):
     @attr_input_type.setter
     def attr_input_type(self, value): self.attributes['type'] = str(value)
 
-    def __init__(self, default_value="", input_type="text", **kwargs):
+    def __init__(self, default_value="", input_type="text", *args, **kwargs):
         """
         Args:
             selection_type (str): text, search, url, tel, email, date, month, week, time, datetime-local, number, range, color. 
             kwargs: See Widget.__init__()
         """
-        super(SelectionInput, self).__init__(input_type, default_value, **kwargs)
+        super(SelectionInput, self).__init__(input_type, default_value, *args, **kwargs)
         
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
             "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
             {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
-    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event_js("""var params={};
             params['value']=this.value;
             remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
@@ -3622,6 +3624,60 @@ class SelectionInput(Input):
 
     def get_datalist_identifier(self):
         return self.attr_datalist_identifier
+
+
+class SelectionInputWidget(Container):
+    datalist = None #the internal Datalist 
+    selection_input = None #the internal selection_input
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the widget.''', str, {})
+    def attr_value(self): return self.selection_input.attr_value
+    @attr_value.setter
+    def attr_value(self, value): self.selection_input.attr_value = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
+    def attr_input_type(self): return self.selection_input.attr_input_type
+    @attr_input_type.setter
+    def attr_input_type(self, value): self.selection_input.attr_input_type = str(value)
+
+    def __init__(self, iterable_of_str=None, default_value="", input_type='text', *args, **kwargs):
+        super(SelectionInputWidget, self).__init__(*args, **kwargs)
+        options = None
+        if iterable_of_str:
+            options = list(map(DatalistItem, iterable_of_str))
+        self.datalist = Datalist(options)
+        self.selection_input = SelectionInput(default_value, input_type, style={'top':'0px', 
+                                                'left':'0px', 'bottom':'0px', 'right':'0px'})
+        self.selection_input.set_datalist_identifier(self.datalist.identifier)
+        self.append([self.datalist, self.selection_input])
+        self.selection_input.oninput.do(self.oninput)
+    
+    def set_value(self, value):
+        """ 
+        Sets the value of the widget
+        Args:
+            value (str): the string value
+        """
+        self.attr_value = value
+
+    def get_value(self):
+        """
+        Returns:
+            str: the actual value
+        """
+        return self.attr_value
+
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def oninput(self, emitter, value):
+        """ 
+        This event occurs when user inputs a new value
+        Returns:
+            value (str): the string value
+        """
+        return (value, )
 
 
 class GenericObject(Widget):
