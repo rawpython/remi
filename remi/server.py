@@ -275,10 +275,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def close(self, terminate_server=True):
         try:
-            self.request.shutdown(socket.SHUT_WR)
+            self.request.setblocking(False)
+            self.request.shutdown(socket.SHUT_RDWR)
             self.finish()
             if terminate_server:
-                self.server.shutdown()
+                self.server.setblocking(False)
+                self.server.shutdown(socket.SHUT_RDWR)
         except Exception:
             self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
 
@@ -500,7 +502,6 @@ class App(BaseHTTPRequestHandler, object):
             else:
                 ws.close(terminate_server=False)
             
-
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
 
