@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setup(
     name="remi",
     description="Python REMote Interface library",
-    use_scm_version=True,
+    use_scm_version={'version_scheme': 'post-release'},
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dddomodossola/remi",
