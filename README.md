@@ -465,7 +465,7 @@ Projects using Remi
 
 [The Python Banyan Framework](https://github.com/MrYsLab/python_banyan)
 
-[LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
+[LightShowPi show manager](https://github.com/Chrispizzi75/ShowManager)
 
 [rElectrum](https://github.com/emanuelelaface/rElectrum): A powerful promising Electrum wallet manager for safe transactions.
 
