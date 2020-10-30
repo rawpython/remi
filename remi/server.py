@@ -28,7 +28,6 @@ import ssl
 import mimetypes
 import webbrowser
 import struct
-import socket
 import base64
 import hashlib
 import sys
