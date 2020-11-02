@@ -463,8 +463,9 @@ class WidgetHelper(gui.HBox):
         self.appInstance = appInstance
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__()
-        self.style.update({'background-color': 'white', 'width': "60px",
-                           "height": "60px", "justify-content": "center", "align-items": "center"})
+        self.style.update({'background-color': 'rgb(250,250,250)', 'width': "auto", 'margin':"2px", 
+                           "height": "60px", "justify-content": "center", "align-items": "center",
+                           'font-size': '12px'})
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon) == gui.Svg:
                 self.icon = widgetClass.icon
@@ -484,7 +485,9 @@ class WidgetHelper(gui.HBox):
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'
         self.icon.attributes['ondragstart'] = "event.preventDefault();"
-        self.append(self.icon)
+        self.append(self.icon, 'icon')
+        self.append(gui.Label(self.widgetClass.__name__), 'label')
+        self.children['label'].style.update({'margin-left':'2px', 'margin-right':'3px'})
 
         self.attributes.update({'draggable': 'true',
                                 'ondragstart': "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));",
