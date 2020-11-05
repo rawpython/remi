@@ -279,8 +279,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             self.request.shutdown(socket.SHUT_RDWR)
             self.finish()
             if terminate_server:
-                self.server.setblocking(False)
-                self.server.shutdown(socket.SHUT_RDWR)
+                self.server.setblocking()
+                self.server.shutdown()
         except Exception:
             self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
 
@@ -708,7 +708,7 @@ class App(BaseHTTPRequestHandler, object):
         """ Called by the server when the App have to be terminated
         """
         self._stop_update_flag = True
-        for ws in self.websockets:
+        for ws in list(self.websockets):
             ws.close()
 
     def onload(self, emitter):
