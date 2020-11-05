@@ -3456,15 +3456,21 @@ class SpinBox(Input):
             _, _, _ = int(value), int(self.attributes['min']), int(self.attributes['max'])
         except:
             _type = float
+
         _value = max(_type(value), _type(self.attributes['min']))
         _value = min(_type(_value), _type(self.attributes['max']))
+        
         self.attributes['value'] = str(_value)
+        
         #this is to force update in case a value out of limits arrived
         # and the limiting ended up with the same previous value stored in self.attributes
         # In this case the limitation gets not updated in browser 
         # (because not triggering is_changed). So the update is forced.
         if _type(value) != _value:
             self.attributes.onchange()
+        else:
+            self.repr()
+            self._set_updated()
 
         return (_value, )
 
