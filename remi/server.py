@@ -279,7 +279,6 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             self.request.shutdown(socket.SHUT_RDWR)
             self.finish()
             if terminate_server:
-                self.server.setblocking()
                 self.server.shutdown()
         except Exception:
             self._log.error("exception in WebSocketsHandler.close method", exc_info=True)
