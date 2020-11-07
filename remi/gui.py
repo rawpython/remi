@@ -313,6 +313,7 @@ class Tag(object):
         self.style = _EventDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
 
         self.ignore_update = False
+        self.refresh_enabled = True
         self.children.onchange.connect(self._need_update)
         self.attributes.onchange.connect(self._need_update)
         self.style.onchange.connect(self._need_update)
@@ -389,7 +390,7 @@ class Tag(object):
             changed_widgets.update(local_changed_widgets)
         return self._backup_repr
 
-    def _need_update(self, emitter=None):
+    def _need_update(self, emitter=None, child_ignore_update=False):
         # if there is an emitter, it means self is the actual changed widget
         if not emitter is None:
             tmp = dict(self.attributes)
@@ -399,10 +400,9 @@ class Tag(object):
                 tmp.pop('style', None)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                              tmp.items())
-            
-        if not self.ignore_update:
+        if self.refresh_enabled:
             if self.get_parent():
-                self.get_parent()._need_update()
+                self.get_parent()._need_update(child_ignore_update = (self.ignore_update or child_ignore_update))
 
     def _ischanged(self):
         return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
@@ -413,9 +413,23 @@ class Tag(object):
         self.style.align_version()
 
     def disable_refresh(self):
-        self.ignore_update = True
+        """ Prevents the parent widgets to be notified about an update. 
+            This is required to improve performances in case of widgets updated 
+                multiple times in a procedure.
+        """
+        self.refresh_enabled = False
 
     def enable_refresh(self):
+        self.refresh_enabled = True
+
+    def disable_update(self):
+        """ Prevents clients updates. Remi will not send websockets update messages.
+            The widgets are however iternally updated. So if the user updates the 
+                webpage, the update is shown.
+        """
+        self.ignore_update = True
+
+    def enable_update(self):
         self.ignore_update = False
 
     def add_class(self, cls):
@@ -2287,9 +2301,9 @@ class TextInput(Widget, _MixinTextualWidget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
-        self.disable_refresh()
+        self.disable_update()
         self.set_value(new_value)
-        self.enable_refresh()
+        self.enable_update()
         return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
@@ -2857,9 +2871,9 @@ class DropDown(Container):
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
-        self.disable_refresh()
+        self.disable_update()
         self.select_by_value(value)
-        self.enable_refresh()
+        self.enable_update()
         return (value, )
 
     @decorate_explicit_alias_for_listener_registration
@@ -3460,7 +3474,9 @@ class SpinBox(Input):
         _value = max(_type(value), _type(self.attributes['min']))
         _value = min(_type(_value), _type(self.attributes['max']))
         
+        self.disable_update()
         self.attributes['value'] = str(_value)
+        self.enable_update()
         
         #this is to force update in case a value out of limits arrived
         # and the limiting ended up with the same previous value stored in self.attributes
@@ -3468,9 +3484,6 @@ class SpinBox(Input):
         # (because not triggering is_changed). So the update is forced.
         if _type(value) != _value:
             self.attributes.onchange()
-        else:
-            self.repr()
-            self._set_updated()
 
         return (_value, )
 
@@ -3643,9 +3656,9 @@ class SelectionInput(Input):
             params['value']=this.value;
             remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def oninput(self, value):
-        self.disable_refresh()
+        self.disable_update()
         self.set_value(value)
-        self.enable_refresh()
+        self.enable_update()
         return (value, )
 
     def set_value(self, value):

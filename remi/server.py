@@ -434,7 +434,15 @@ class App(BaseHTTPRequestHandler, object):
             Useful to schedule tasks. """
         pass
 
-    def _need_update(self, emitter=None):
+    def _need_update(self, emitter=None, child_ignore_update=False):
+        if child_ignore_update:
+            #the widgets tree is processed to make it available for a intentional 
+            # client update and to reset the changed flags of changed widget.
+            # Otherwise it will be updated on next update cycle.
+            changed_widget_dict = {}
+            self.root.repr(changed_widget_dict)
+            return
+
         if self.update_interval == 0:
             #no interval, immadiate update
             self.do_gui_update()
