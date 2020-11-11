@@ -925,7 +925,10 @@ class Editor(App):
 
         self.configure_widget_for_editing(widget)
         #widget.identifier = widget.attributes.get('editor_varname', widget.identifier)
-        key = "root" if parent == self.project else widget.identifier
+        key = widget.identifier
+        if hasattr(widget, 'variable_name'):
+            key = widget.variable_name
+        key = "root" if parent == self.project else key
         if root_tree_node:
             parent.append(widget, key)
             if self.selectedWidget == self.project:

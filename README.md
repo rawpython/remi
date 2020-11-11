@@ -21,9 +21,7 @@ Do you need support?
 
 There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
 <p align="center">
-** <a href="https://remiguieditor.daviderosa.repl.co/">Live Play Graphical GUI Editor</a> **
-- For a comfortable use download it
-</p>
+
 
 Changelog
 ===
@@ -409,18 +407,6 @@ The library itself doesn't implement security strategies, and so it is advised t
 When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
 
 
-Supporting the project
-===
-*Are you able to support the Remi project?*
-
-Are you aware that remi is on Patreon?
-That's a brilliant way to support this project.
-
-**[SUPPORT Remi now](https://patreon.com/remigui)**
-
-Also, a small amount is really welcome.
-
-
 Contributors
 ===
 Thank you for collaborating with us to make Remi better!
@@ -479,7 +465,7 @@ Projects using Remi
 
 [The Python Banyan Framework](https://github.com/MrYsLab/python_banyan)
 
-[LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
+[LightShowPi show manager](https://github.com/Chrispizzi75/ShowManager)
 
 [rElectrum](https://github.com/emanuelelaface/rElectrum): A powerful promising Electrum wallet manager for safe transactions.
 

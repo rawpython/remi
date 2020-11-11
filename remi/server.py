@@ -28,7 +28,6 @@ import ssl
 import mimetypes
 import webbrowser
 import struct
-import socket
 import base64
 import hashlib
 import sys
@@ -52,6 +51,8 @@ import cgi
 import weakref
 
 import zlib
+
+import select
 
 
 def gzip_encode(content):
@@ -174,13 +175,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         except socket.timeout:
             return False
         except Exception:
+            self._log.error('Error managing incoming websocket message', exc_info=True)
             return False
         return True
 
     def send_message(self, message):
         if not self.handshake_done:
             self._log.warning("ignoring message %s (handshake not done)" % message[:10])
-            return
+            return False
 
         self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
@@ -197,7 +199,14 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if not pyLessThan3:
             message = message.encode('utf-8')
         out = out + message
-        self.request.send(out)
+
+        readable, writable, errors = select.select([], [self.request,], [], 0) #last parameter is timeout, when 0 is non blocking
+        #self._log.debug('socket status readable=%s writable=%s errors=%s'%((self.request in readable), (self.request in writable), (self.request in error$
+        writable = self.request in writable
+        if not writable:
+            return False
+        self.request.sendall(out)
+        return True
 
     def handshake(self):
         self._log.debug('handshake')
@@ -265,7 +274,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     def close(self, terminate_server=True):
         try:
-            self.request.shutdown(socket.SHUT_WR)
+            self.request.setblocking(False)
+            self.request.shutdown(socket.SHUT_RDWR)
             self.finish()
             if terminate_server:
                 self.server.shutdown()
@@ -434,7 +444,15 @@ class App(BaseHTTPRequestHandler, object):
             Useful to schedule tasks. """
         pass
 
-    def _need_update(self, emitter=None):
+    def _need_update(self, emitter=None, child_ignore_update=False):
+        if child_ignore_update:
+            #the widgets tree is processed to make it available for a intentional 
+            # client update and to reset the changed flags of changed widget.
+            # Otherwise it will be updated on next update cycle.
+            changed_widget_dict = {}
+            self.root.repr(changed_widget_dict)
+            return
+
         if self.update_interval == 0:
             #no interval, immadiate update
             self.do_gui_update()
@@ -455,6 +473,7 @@ class App(BaseHTTPRequestHandler, object):
         self._need_update_flag = False
 
     def websocket_handshake_done(self, ws_instance_to_update):
+        msg = ""
         with self.update_lock:
             msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
         ws_instance_to_update.send_message(msg)
@@ -474,17 +493,21 @@ class App(BaseHTTPRequestHandler, object):
         for ws in list(self.websockets):
             # noinspection PyBroadException
             try:
-                #self._log.debug("sending websocket spontaneous message")
-                ws.send_message(message)
+                if ws.send_message(message):
+                    #if message sent ok, continue with nect client
+                    continue
             except Exception:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
-                try:
-                    self.websockets.remove(ws)
-                except Exception:
-                    pass # happens when there are multiple clients
-                else:
-                    ws.close(terminate_server=False)
 
+            self._log.debug("removing websocket instance, communication error with client")
+            #here arrives if the message was not sent ok, then the client is removed
+            try:
+                self.websockets.remove(ws)
+            except Exception:
+                pass # happens when there are multiple clients
+            else:
+                ws.close(terminate_server=False)
+            
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
 
@@ -691,7 +714,7 @@ class App(BaseHTTPRequestHandler, object):
         """ Called by the server when the App have to be terminated
         """
         self._stop_update_flag = True
-        for ws in self.websockets:
+        for ws in list(self.websockets):
             ws.close()
 
     def onload(self, emitter):

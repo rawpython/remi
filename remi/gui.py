@@ -22,7 +22,7 @@ import inspect
 try:
     import html
     escape = html.escape
-except ImportError:
+except ImportError :
     import cgi
     escape = cgi.escape
 import mimetypes
@@ -38,7 +38,7 @@ except ImportError:
         from html.parser import HTMLParser
         h = HTMLParser()
         unescape = h.unescape
-    except ImportError:
+    except (ImportError, AttributeError):
         # Python 3.4+
         import html
         unescape = html.unescape
@@ -101,6 +101,13 @@ def to_uri(uri_data):
             str: the input string encased in url('') ie. url('/res:image.png')
     """
     return ("url('%s')" % uri_data)
+
+
+class CssStyleError(Exception):
+    """
+    Raised when (a combination of) settings will result in invalid/improper CSS
+    """
+    pass
 
 
 class EventSource(object):
@@ -306,6 +313,7 @@ class Tag(object):
         self.style = _EventDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
 
         self.ignore_update = False
+        self.refresh_enabled = True
         self.children.onchange.connect(self._need_update)
         self.attributes.onchange.connect(self._need_update)
         self.style.onchange.connect(self._need_update)
@@ -382,7 +390,7 @@ class Tag(object):
             changed_widgets.update(local_changed_widgets)
         return self._backup_repr
 
-    def _need_update(self, emitter=None):
+    def _need_update(self, emitter=None, child_ignore_update=False):
         # if there is an emitter, it means self is the actual changed widget
         if not emitter is None:
             tmp = dict(self.attributes)
@@ -392,10 +400,9 @@ class Tag(object):
                 tmp.pop('style', None)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                              tmp.items())
-            
-        if not self.ignore_update:
+        if self.refresh_enabled:
             if self.get_parent():
-                self.get_parent()._need_update()
+                self.get_parent()._need_update(child_ignore_update = (self.ignore_update or child_ignore_update))
 
     def _ischanged(self):
         return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
@@ -406,9 +413,23 @@ class Tag(object):
         self.style.align_version()
 
     def disable_refresh(self):
-        self.ignore_update = True
+        """ Prevents the parent widgets to be notified about an update. 
+            This is required to improve performances in case of widgets updated 
+                multiple times in a procedure.
+        """
+        self.refresh_enabled = False
 
     def enable_refresh(self):
+        self.refresh_enabled = True
+
+    def disable_update(self):
+        """ Prevents clients updates. Remi will not send websockets update messages.
+            The widgets are however iternally updated. So if the user updates the 
+                webpage, the update is shown.
+        """
+        self.ignore_update = True
+
+    def enable_update(self):
         self.ignore_update = False
 
     def add_class(self, cls):
@@ -1248,6 +1269,39 @@ class Widget(Tag, EventSource):
     def set_on_key_down_listener(self, callback, *userdata):
         self.onkeydown.connect(callback, *userdata)
 
+    def query_client(self, app_instance, attribute_list, style_property_list):
+        """
+            WARNING: this is a new feature, subject to changes.
+            This method allows to query client rendering attributes and style properties of a widget.
+            The user, in order to get back the values must register a listener for the event 'onquery_client_result'.
+            Args:
+                app_instance (App): the app instance
+                attribute_list (list): list of attributes names
+                style_property_list (list): list of style property names
+        """
+        app_instance.execute_javascript("""
+                var params={};
+                %(attributes)s
+                %(style)s
+                remi.sendCallbackParam('%(emitter_identifier)s','%(callback_name)s',params);
+            """ % {
+                    'attributes': ";".join(map(lambda param_name: "params['%(param_name)s']=document.getElementById('%(emitter_identifier)s').%(param_name)s" % {'param_name': param_name, 'emitter_identifier': str(self.identifier)}, attribute_list)),
+                    'style': ";".join(map(lambda param_name: "params['%(param_name)s']=document.getElementById('%(emitter_identifier)s').style.%(param_name)s" % {'param_name': param_name, 'emitter_identifier': str(self.identifier)}, style_property_list)),
+                    'emitter_identifier': str(self.identifier),
+                    'callback_name': 'onquery_client_result'
+                }
+            )
+
+    @decorate_set_on_listener("(self, emitter, values_dictionary)")
+    @decorate_event
+    def onquery_client_result(self, **kwargs):
+        """ WARNING: this is a new feature, subject to changes.
+            This event allows to get back the values fetched by 'query' method.
+            Returns:
+                values_dictionary (dict): a dictionary containing name:value of all the requested parameters
+        """
+        return (kwargs,)
+
 
 class Container(Widget):
     """
@@ -1472,7 +1526,7 @@ class HEAD(Tag):
                                     try{
                                         caretStart = document.activeElement.selectionStart;
                                         caretEnd = document.activeElement.selectionEnd;
-                                    }catch(e){}
+                                    }catch(e){console.debug(e.message);}
                                 }
                                 var index = received_msg.indexOf(',')+1;
                                 var idElem = received_msg.substr(1,index-2);
@@ -1487,6 +1541,7 @@ class HEAD(Tag):
                                     var ns = document.createElementNS("http://www.w3.org/2000/svg",'tmp');
                                     ns.innerHTML = decodeURIComponent(content);
                                     elem.parentElement.replaceChild(ns.firstChild, elem);
+                                    console.debug(e.message);
                                 }
 
                                 var elemToFocus = document.getElementById(focusedElement);
@@ -1495,7 +1550,7 @@ class HEAD(Tag):
                                     try{
                                         elemToFocus = document.getElementById(focusedElement);
                                         if(caretStart>-1 && caretEnd>-1) elemToFocus.setSelectionRange(caretStart, caretEnd);
-                                    }catch(e){}
+                                    }catch(e){console.debug(e.message);}
                                 }
                             }else if( received_msg[0]=='2' ){ /*javascript*/
                                 var content = received_msg.substr(1,received_msg.length-1);
@@ -1839,6 +1894,9 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
+        if self.css_width == "auto":
+            if (type(value) == int and value != 0) or value[0] != "0":
+                raise CssStyleError("Do not set column gap in combination with width auto")
         if type(value) == int:
             value = str(value) + 'px'
         self.style['grid-column-gap'] = value
@@ -1849,6 +1907,9 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
+        if self.css_height == "auto":
+            if (type(value) == int and value != 0) or value[0] != "0":
+                raise CssStyleError("Do not set row gap in combination with height auto")
         if type(value) == int:
             value = str(value) + 'px'
         self.style['grid-row-gap'] = value
@@ -2240,9 +2301,9 @@ class TextInput(Widget, _MixinTextualWidget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
-        self.disable_refresh()
+        self.disable_update()
         self.set_value(new_value)
-        self.enable_refresh()
+        self.enable_update()
         return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
@@ -2810,8 +2871,9 @@ class DropDown(Container):
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
-        log.debug('dropdown. selected %s' % value)
+        self.disable_update()
         self.select_by_value(value)
+        self.enable_update()
         return (value, )
 
     @decorate_explicit_alias_for_listener_registration
@@ -3399,6 +3461,41 @@ class SpinBox(Input):
             "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
             "remi.sendCallbackParam('%(id)s','%(evt)s',params); return true;}" \
             "return false;" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
+        
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def onchange(self, value):
+        _type = int
+        try:
+            _, _, _ = int(value), int(self.attributes['min']), int(self.attributes['max'])
+        except:
+            _type = float
+
+        try:
+            _value = max(_type(value), _type(self.attributes['min']))
+            _value = min(_type(_value), _type(self.attributes['max']))
+
+            self.disable_update()
+            self.attributes['value'] = str(_value)
+            self.enable_update()
+
+            #this is to force update in case a value out of limits arrived
+            # and the limiting ended up with the same previous value stored in self.attributes
+            # In this case the limitation gets not updated in browser 
+            # (because not triggering is_changed). So the update is forced.
+            if _type(value) != _value:
+                self.attributes.onchange()
+        except:
+            #if the value conversion fails the client gui is updated with its previous value
+            _type = int
+            try:
+                _, _, _ = int(self.attributes['value']), int(self.attributes['min']), int(self.attributes['max'])
+            except:
+                _type = float
+            _value = _type(self.attributes['value'])
+            self.attributes.onchange()
+
+        return (_value, )
 
 
 class Slider(Input):
@@ -3479,10 +3576,12 @@ class Date(Input):
 
 
 class Datalist(Container):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, options=None, *args, **kwargs):
         super(Datalist, self).__init__(*args, **kwargs)
         self.type = 'datalist'
         self.css_display = 'none'
+        if options:
+            self.append(options)
 
     def append(self, options, key=''):
         if type(options) in (list, tuple, dict):
@@ -3549,27 +3648,27 @@ class SelectionInput(Input):
     @attr_input_type.setter
     def attr_input_type(self, value): self.attributes['type'] = str(value)
 
-    def __init__(self, default_value="", input_type="text", **kwargs):
+    def __init__(self, default_value="", input_type="text", *args, **kwargs):
         """
         Args:
             selection_type (str): text, search, url, tel, email, date, month, week, time, datetime-local, number, range, color. 
             kwargs: See Widget.__init__()
         """
-        super(SelectionInput, self).__init__(input_type, default_value, **kwargs)
+        super(SelectionInput, self).__init__(input_type, default_value, *args, **kwargs)
         
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
             "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
             {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
-    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event_js("""var params={};
             params['value']=this.value;
             remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def oninput(self, value):
-        self.disable_refresh()
+        self.disable_update()
         self.set_value(value)
-        self.enable_refresh()
+        self.enable_update()
         return (value, )
 
     def set_value(self, value):
@@ -3589,6 +3688,60 @@ class SelectionInput(Input):
         return self.attr_datalist_identifier
 
 
+class SelectionInputWidget(Container):
+    datalist = None #the internal Datalist 
+    selection_input = None #the internal selection_input
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the widget.''', str, {})
+    def attr_value(self): return self.selection_input.attr_value
+    @attr_value.setter
+    def attr_value(self, value): self.selection_input.attr_value = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
+    def attr_input_type(self): return self.selection_input.attr_input_type
+    @attr_input_type.setter
+    def attr_input_type(self, value): self.selection_input.attr_input_type = str(value)
+
+    def __init__(self, iterable_of_str=None, default_value="", input_type='text', *args, **kwargs):
+        super(SelectionInputWidget, self).__init__(*args, **kwargs)
+        options = None
+        if iterable_of_str:
+            options = list(map(DatalistItem, iterable_of_str))
+        self.datalist = Datalist(options)
+        self.selection_input = SelectionInput(default_value, input_type, style={'top':'0px', 
+                                                'left':'0px', 'bottom':'0px', 'right':'0px'})
+        self.selection_input.set_datalist_identifier(self.datalist.identifier)
+        self.append([self.datalist, self.selection_input])
+        self.selection_input.oninput.do(self.oninput)
+    
+    def set_value(self, value):
+        """ 
+        Sets the value of the widget
+        Args:
+            value (str): the string value
+        """
+        self.attr_value = value
+
+    def get_value(self):
+        """
+        Returns:
+            str: the actual value
+        """
+        return self.attr_value
+
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def oninput(self, emitter, value):
+        """ 
+        This event occurs when user inputs a new value
+        Returns:
+            value (str): the string value
+        """
+        return (value, )
+
+
 class GenericObject(Widget):
     """
     GenericObject widget - allows to show embedded object like pdf,swf..
@@ -3605,47 +3758,65 @@ class GenericObject(Widget):
         self.attributes['data'] = filename
 
 
-class FileFolderNavigator(Container):
+class FileFolderNavigator(GridBox):
     """FileFolderNavigator widget."""
 
-    def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines wether it is possible to select multiple items.''', bool, {})
+    def multiple_selection(self): return self._multiple_selection
+    @multiple_selection.setter
+    def multiple_selection(self, value): self._multiple_selection = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual navigator location.''', str, {})
+    def selection_folder(self): return self._selection_folder
+    @selection_folder.setter
+    def selection_folder(self, value): 
+        # fixme: we should use full paths and not all this chdir stuff
+        self.chdir(value)  # move to actual working directory
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines if files are selectable.''', bool, {})
+    def allow_file_selection(self): return self._allow_file_selection
+    @allow_file_selection.setter
+    def allow_file_selection(self, value): self._allow_file_selection = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines if folders are selectable.''', bool, {})
+    def allow_folder_selection(self): return self._allow_folder_selection
+    @allow_folder_selection.setter
+    def allow_folder_selection(self, value): self._allow_folder_selection = value
+
+    def __init__(self, multiple_selection = False, selection_folder = ".", allow_file_selection = True, allow_folder_selection = False, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
-        self.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.style['width'] = '100%'
+
+        self.css_grid_template_columns = "30px auto 30px"
+        self.css_grid_template_rows = "30px auto"
+        self.define_grid([('button_back','url_editor','button_go'), ('items','items','items')])
 
         self.multiple_selection = multiple_selection
         self.allow_file_selection = allow_file_selection
         self.allow_folder_selection = allow_folder_selection
         self.selectionlist = []
         self.currDir = ''
-        self.controlsContainer = Container()
-        self.controlsContainer.set_size('100%', '30px')
-        self.controlsContainer.css_display = 'flex'
-        self.controlsContainer.set_layout_orientation(Container.LAYOUT_HORIZONTAL)
         self.controlBack = Button('Up')
-        self.controlBack.set_size('10%', '100%')
         self.controlBack.onclick.connect(self.dir_go_back)
         self.controlGo = Button('Go >>')
-        self.controlGo.set_size('10%', '100%')
         self.controlGo.onclick.connect(self.dir_go)
         self.pathEditor = TextInput()
-        self.pathEditor.set_size('80%', '100%')
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
-        self.controlsContainer.append(self.controlBack, "button_back")
-        self.controlsContainer.append(self.pathEditor, "url_editor")
-        self.controlsContainer.append(self.controlGo, "button_go")
+        self.append(self.controlBack, "button_back")
+        self.append(self.pathEditor, "url_editor")
+        self.append(self.controlGo, "button_go")
 
-        self.itemContainer = Container(width='100%', height=300)
+        self.itemContainer = Container(width='100%', height='100%')
 
-        self.append(self.controlsContainer, "controls_container")
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
 
         self.folderItems = list()
 
-        # fixme: we should use full paths and not all this chdir stuff
-        self.chdir(selection_folder)  # move to actual working directory
-        self._last_valid_path = selection_folder
+        self.selection_folder = selection_folder
 
     def get_selection_list(self):
         if self.allow_folder_selection and not self.selectionlist:
@@ -3682,16 +3853,15 @@ class FileFolderNavigator(Container):
         # this speeds up the navigation
         self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
-        self.itemContainer = Container(width='100%', height=300)
-        self.itemContainer.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden', 'display': 'block'})
+        self.itemContainer = Container(width='100%', height='100%')
+        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden'})
 
         for i in l:
             full_path = os.path.join(directory, i)
             is_folder = not os.path.isfile(full_path)
             if (not is_folder) and (not self.allow_file_selection):
                 continue
-            fi = FileFolderItem(i, is_folder)
+            fi = FileFolderItem(full_path, i, is_folder)
             fi.onclick.connect(self.on_folder_item_click)  # navigation purpose
             fi.onselection.connect(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
@@ -3721,6 +3891,7 @@ class FileFolderNavigator(Container):
         os.chdir(curpath)  # restore the path
 
     def chdir(self, directory):
+        self._selection_folder = directory
         curpath = os.getcwd()  # backup the path
         log.debug("FileFolderNavigator - chdir: %s" % directory)
         for c in self.folderItems:
@@ -3736,11 +3907,17 @@ class FileFolderNavigator(Container):
         self.currDir = directory
         os.chdir(curpath)  # restore the path
 
+    @decorate_set_on_listener("(self, emitter, selected_item, selection_list)")
+    @decorate_event
     def on_folder_item_selected(self, folderitem):
+        """ This event occurs when an element in the list is selected
+            Returns the newly selected element of type FileFolderItem(or None if it was not selectable) 
+                 and the list of selected elements of type str.
+        """
         if folderitem.isFolder and (not self.allow_folder_selection):
             folderitem.set_selected(False)
             self.on_folder_item_click(folderitem)
-            return
+            return (None, self.selectionlist, )
 
         if not self.multiple_selection:
             self.selectionlist = []
@@ -3754,13 +3931,20 @@ class FileFolderNavigator(Container):
             self.selectionlist.remove(f)
         else:
             self.selectionlist.append(f)
+        return (folderitem, self.selectionlist, )
 
+    @decorate_set_on_listener("(self, emitter, clicked_item)")
+    @decorate_event
     def on_folder_item_click(self, folderitem):
+        """ This event occurs when a folder element is clicked.
+            Returns the clicked element of type FileFolderItem.
+        """
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if not os.path.isfile(f):
             self.chdir(f)
+        return (folderitem, )
 
     def get_selected_filefolders(self):
         return self.selectionlist
@@ -3768,9 +3952,10 @@ class FileFolderNavigator(Container):
 
 class FileFolderItem(Container):
     """FileFolderItem widget for the FileFolderNavigator"""
-
-    def __init__(self, text, is_folder=False, *args, **kwargs):
+    path_and_filename = None #the complete path and filename
+    def __init__(self, path_and_filename, text, is_folder=False, *args, **kwargs):
         super(FileFolderItem, self).__init__(*args, **kwargs)
+        self.path_and_filename = path_and_filename
         self.isFolder = is_folder
         self.icon = Widget(_class='FileFolderItemIcon')
         # the icon click activates the onselection event, that is propagates to registered listener
@@ -3828,7 +4013,7 @@ class FileSelectionDialog(GenericDialog):
         self.css_width = '475px'
         self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
                                                        allow_file_selection,
-                                                       allow_folder_selection)
+                                                       allow_folder_selection, width="100%", height="330px")
         self.add_field('fileFolderNavigator', self.fileFolderNavigator)
         self.confirm_dialog.connect(self.confirm_value)
 
@@ -3964,7 +4149,7 @@ class FileUploader(Container):
     def savepath(self, value): 
         self._savepath = value
 
-    def __init__(self, savepath='./', multiple_selection_allowed=False, *args, **kwargs):
+    def __init__(self, savepath='./', multiple_selection_allowed=False, accepted_files='*.*', *args, **kwargs):
         super(FileUploader, self).__init__(*args, **kwargs)
         self._savepath = savepath
         self._multiple_selection_allowed = multiple_selection_allowed
@@ -3972,7 +4157,7 @@ class FileUploader(Container):
         self.attributes['type'] = 'file'
         if multiple_selection_allowed:
             self.attributes['multiple'] = 'multiple'
-        self.attributes['accept'] = '*.*'
+        self.attributes['accept'] = accepted_files
         self.EVENT_ON_SUCCESS = 'onsuccess'
         self.EVENT_ON_FAILED = 'onfailed'
         self.EVENT_ON_DATA = 'ondata'
@@ -4548,6 +4733,66 @@ class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attr_cy = str(y)
 
 
+class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_cx(self): return self.attributes.get('cx', None)
+    @attr_cx.setter
+    def attr_cx(self, value): self.attributes['cx'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_cy(self): return self.attributes.get('cy', None)
+    @attr_cy.setter
+    def attr_cy(self, value): self.attributes['cy'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_rx(self): return self.attributes.get('rx', None)
+    @attr_rx.setter
+    def attr_rx(self, value): self.attributes['rx'] = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    def attr_ry(self): return self.attributes.get('ry', None)
+    @attr_ry.setter
+    def attr_ry(self, value): self.attributes['ry'] = str(value)
+
+    def __init__(self, x=0, y=0, rx=50, ry=30, *args, **kwargs):
+        """
+        Args:
+            x (float): the x center point of the ellipse
+            y (float): the y center point of the ellipse
+            rx (float): the ellipse radius
+            ry (float): the ellipse radius
+            kwargs: See Widget.__init__()
+        """
+        super(SvgEllipse, self).__init__(*args, **kwargs)
+        self.set_position(x, y)
+        self.set_radius(rx, ry)
+        self.type = 'ellipse'
+
+    def set_radius(self, rx, ry):
+        """Sets the ellipse radius.
+
+        Args:
+            rx (int): the ellipse radius
+            ry (int): the ellipse radius
+        """
+        self.attr_rx = rx
+        self.attr_ry = ry
+
+    def set_position(self, x, y):
+        """Sets the ellipse position.
+
+        Args:
+            x (int): the x coordinate
+            y (int): the y coordinate
+        """
+        self.attr_cx = str(x)
+        self.attr_cy = str(y)
+
+
 class SvgLine(Widget, _MixinSvgStroke):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
@@ -4650,6 +4895,22 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
     @attr_rotate.deleter
     def attr_rotate(self): del self.attributes['rotate'] 
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Description.''', 'DropDown', {'possible_values': ('start', 'middle', 'end')})
+    def attr_text_anchor(self): return self.style.get('text-anchor', None)
+    @attr_text_anchor.setter
+    def attr_text_anchor(self, value): self.style['text-anchor'] = str(value)
+    @attr_text_anchor.deleter
+    def attr_text_anchor(self): del self.style['text-anchor']
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Description.''', 'DropDown', {'possible_values': ('auto', 'text-bottom', 'alphabetic', 'ideographic', 'middle', 'central', 'mathematical', 'hanging', 'text-top')})
+    def attr_dominant_baseline(self): return self.style.get('dominant-baseline', None)
+    @attr_dominant_baseline.setter
+    def attr_dominant_baseline(self, value): self.style['dominant-baseline'] = str(value)
+    @attr_dominant_baseline.deleter
+    def attr_dominant_baseline(self): del self.style['dominant-baseline']
 
     def __init__(self, x=10, y=10, text='svg text', *args, **kwargs):
         super(SvgText, self).__init__(*args, **kwargs)
