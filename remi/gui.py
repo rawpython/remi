@@ -3409,19 +3409,19 @@ class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
@@ -3501,19 +3501,19 @@ class SpinBox(Input):
 class Slider(Input):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
@@ -4335,6 +4335,32 @@ class _MixinSvgStroke():
         self.attr_stroke_width = str(width)
 
 
+class _MixinTransformable():
+    @property
+    @editor_attribute_decorator("Transformation", '''Transform commands (i.e. rotate(45), translate(30,100)).''', str, {})
+    def css_transform(self): return self.style.get('transform', None)
+    @css_transform.setter
+    def css_transform(self, value): self.style['transform'] = str(value)
+    @css_transform.deleter
+    def css_transform(self): del self.style['transform'] 
+
+    @property
+    @editor_attribute_decorator("Transformation", '''Transform origin as percent or absolute x,y pair value or ['center','top','bottom','left','right'] .''', str, {})
+    def css_transform_origin(self): return self.style.get('transform-origin', None)
+    @css_transform_origin.setter
+    def css_transform_origin(self, value): self.style['transform-origin'] = str(value)
+    @css_transform_origin.deleter
+    def css_transform_origin(self): del self.style['transform-origin'] 
+
+    @property
+    @editor_attribute_decorator("Transformation", '''Alters the behaviour of tranform and tranform-origin by defining the transform box.''', 'DropDown', {'possible_values': ('content-box','border-box','fill-box','stroke-box','view-box')})
+    def css_transform_box(self): return self.style.get('transform-box', None)
+    @css_transform_box.setter
+    def css_transform_box(self, value): self.style['transform-box'] = str(value)
+    @css_transform_box.deleter
+    def css_transform_box(self): del self.style['transform-box'] 
+
+
 class _MixinSvgFill():
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Fill color for svg elements.''', 'ColorPicker', {})
@@ -4363,13 +4389,13 @@ class _MixinSvgFill():
 
 class _MixinSvgPosition():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': -65635.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_x(self): return self.attributes.get('x', '0')
     @attr_x.setter
     def attr_x(self, value): self.attributes['x'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': -65635.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_y(self): return self.attributes.get('y', '0')
     @attr_y.setter
     def attr_y(self, value): self.attributes['y'] = str(value)
@@ -4387,13 +4413,13 @@ class _MixinSvgPosition():
 
 class _MixinSvgSize():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_width(self): return self.attributes.get('width', '100')
     @attr_width.setter
     def attr_width(self, value): self.attributes['width'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_height(self): return self.attributes.get('height', '100')
     @attr_height.setter
     def attr_height(self, value): self.attributes['height'] = str(value)
@@ -4609,7 +4635,7 @@ class SvgSubcontainer(Svg, _MixinSvgPosition, _MixinSvgSize):
         _MixinSvgSize.set_size(self, width, height)
 
 
-class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
+class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     """svg group - a non visible container for svg widgets,
         this have to be appended into Svg elements."""
     def __init__(self, *args, **kwargs):
@@ -4617,7 +4643,7 @@ class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
         self.type = 'g'
 
 
-class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill):
+class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Horizontal round corners value.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
@@ -4646,7 +4672,7 @@ class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _M
         self.type = 'rect'
 
 
-class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
+class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
     @property
@@ -4682,21 +4708,21 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
         _MixinSvgSize.set_size(self, w, h)
 
 
-class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_r(self): return self.attributes.get('r', None)
     @attr_r.setter
     def attr_r(self, value): self.attributes['r'] = str(value)
@@ -4733,15 +4759,15 @@ class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attr_cy = str(y)
 
 
-class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
@@ -4753,7 +4779,7 @@ class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
     def attr_rx(self, value): self.attributes['rx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_ry(self): return self.attributes.get('ry', None)
     @attr_ry.setter
     def attr_ry(self, value): self.attributes['ry'] = str(value)
@@ -4793,27 +4819,27 @@ class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attr_cy = str(y)
 
 
-class SvgLine(Widget, _MixinSvgStroke):
+class SvgLine(Widget, _MixinSvgStroke, _MixinTransformable):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
     def attr_x1(self, value): self.attributes['x1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_y1(self): return self.attributes.get('y1', None)
     @attr_y1.setter
     def attr_y1(self, value): self.attributes['y1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_x2(self): return self.attributes.get('x2', None)
     @attr_x2.setter
     def attr_x2(self, value): self.attributes['x2'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_y2(self): return self.attributes.get('y2', None)
     @attr_y2.setter
     def attr_y2(self, value): self.attributes['y2'] = str(value)
@@ -4836,7 +4862,7 @@ class SvgLine(Widget, _MixinSvgStroke):
         self.attr_y2 = y2
 
 
-class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum values count.''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def maxlen(self): return self.__maxlen
@@ -4864,13 +4890,13 @@ class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attributes['points'] += "%s,%s " % (x, y)
 
 
-class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill):
+class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     def __init__(self, _maxlen=None, *args, **kwargs):
         super(SvgPolygon, self).__init__(_maxlen, *args, **kwargs)
         self.type = 'polygon'
 
 
-class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget):
+class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget, _MixinTransformable):
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Length for svg text elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
@@ -4889,7 +4915,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     def attr_lengthAdjust(self): del self.attributes['lengthAdjust'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': -360.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
     def attr_rotate(self): return self.attributes.get('rotate', None)
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
@@ -4919,7 +4945,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
         self.set_text(text)
 
 
-class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Instructions for SvgPath.''', str, {})
     def attr_d(self): return self.attributes.get('d', None)

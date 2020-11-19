@@ -729,7 +729,7 @@ class EditorAttributes(gui.VBox):
         self.infoLabel.style['-webkit-order'] = '0'
 
         self.group_orders = {
-            'Generic': '2', 'WidgetSpecific': '3', 'Geometry': '34', 'Background': '5'}
+            'Generic': '2', 'WidgetSpecific': '3', 'Geometry': '4', 'Background': '5', 'Transformation': '6'}
 
         self.attributesInputs = list()
         # load editable attributes
