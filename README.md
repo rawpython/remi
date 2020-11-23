@@ -352,42 +352,12 @@ Contributors
 ===
 Thank you for collaborating with us to make Remi better!
 
-The real power of opensource is contributors. Please feel free to participate in this project, and consider to add yourself to the following list.
+The real power of opensource is contributors. Please feel free to participate in this project, and consider to add yourself to the [contributors list](docs/contributors).
 Yes, I know that GitHub already provides a list of contributors, but I feel that I must mention who helps.
 
-[Davide Rosa](https://github.com/dddomodossola)
-
-[John Stowers](https://github.com/nzjrs)
-
-[Claudio Cannatà](https://github.com/cyberpro4)
-
-[Sam Pfeiffer](https://github.com/awesomebytes)
-
-[Ken Thompson](https://github.com/KenT2)
-
-[Paarth Tandon](https://github.com/Paarthri)
-
-[Ally Weir](https://github.com/allyjweir)
-
-[Timothy Cyrus](https://github.com/tcyrus)
-
-[John Hunter Bowen](https://github.com/jhb188)
-
-[Martin Spasov](https://github.com/SuburbanFilth)
-
-[Wellington Castello](https://github.com/wcastello)
-
-[PURPORC](https://github.com/PURPORC)
-
-[ttufts](https://github.com/ttufts)
-
-[Chris Braun](https://github.com/cryzed)
-
-[Alan Yorinks](https://github.com/MrYsLab)
-
-[Bernhard E. Reiter](https://github.com/bernhardreiter)
-
-[saewoonam](https://github.com/saewoonam)
+<a href="https://github.com/dddomodossola/remi/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=dddomodossola/remi" >
+</a>
 
 
 Projects using Remi
