@@ -352,7 +352,7 @@ Contributors
 ===
 Thank you for collaborating with us to make Remi better!
 
-The real power of opensource is contributors. Please feel free to participate in this project, and consider to add yourself to the [contributors list](docs/contributors).
+The real power of opensource is contributors. Please feel free to participate in this project, and consider to add yourself to the [contributors list](doc/contributors.md).
 Yes, I know that GitHub already provides a list of contributors, but I feel that I must mention who helps.
 
 <a href="https://github.com/dddomodossola/remi/graphs/contributors">
