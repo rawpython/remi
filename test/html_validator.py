@@ -14,5 +14,5 @@ class SimpleParser(HTMLParser):
 def assertValidHTML(text):
     h = SimpleParser()
     h.feed(text) 
-    # throws expections if invalid.
+    # throws exception if invalid.
     return True
