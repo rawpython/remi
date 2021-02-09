@@ -116,13 +116,15 @@ class EventSource(object):
 
     def setup_event_methods(self):
         for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
+            if not hasattr(method, '__is_event'):
+                continue
+            
             _event_info = None
             if hasattr(method, "_event_info"):
                 _event_info = method._event_info
 
-            if hasattr(method, '__is_event'):
-                e = ClassEventConnector(self, method_name, method)
-                setattr(self, method_name, e)
+            e = ClassEventConnector(self, method_name, method)
+            setattr(self, method_name, e)
 
             if _event_info:
                 getattr(self, method_name)._event_info = _event_info
