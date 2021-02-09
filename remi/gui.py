@@ -115,9 +115,12 @@ class EventSource(object):
         self.setup_event_methods()
 
     def setup_event_methods(self):
-        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
-            if not hasattr(method, '__is_event'):
-                continue
+        def a_method_not_builtin(obj):
+            return (not inspect.isbuiltin(obj)) and inspect.ismethod(obj) and hasattr(obj, '__is_event')
+        for (method_name, method) in inspect.getmembers(self, predicate=a_method_not_builtin):
+            # this is implicit in predicate
+            #if not hasattr(method, '__is_event'):
+            #    continue
             
             _event_info = None
             if hasattr(method, "_event_info"):
