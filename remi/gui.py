@@ -127,10 +127,8 @@ class EventSource(object):
                 _event_info = method._event_info
 
             e = ClassEventConnector(self, method_name, method)
+            e._event_info = _event_info
             setattr(self, method_name, e)
-
-            if _event_info:
-                getattr(self, method_name)._event_info = _event_info
 
 
 class ClassEventConnector(object):
