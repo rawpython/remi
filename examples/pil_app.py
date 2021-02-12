@@ -14,7 +14,7 @@
 
 import time
 import io
-
+import traceback
 import PIL.Image
 
 import remi.gui as gui
