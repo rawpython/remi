@@ -25,4 +25,4 @@ At least :
 * make `url_root` an optional parameter which defaults to `""`
 * test this feature with https/wss
 * continue implementation of some Remi widgets: where hard links are sent to the client (currently done : Image, VideoPlayer).
-* issue with no immediate clean solution: all calls (by default 3) to "/res:" in "style.css" are broken as they are not prefixed with "url_root". We should discuss about that.
+* ~~issue with no immediate clean solution: all calls (by default 3) to "/res:" in "style.css" are broken as they are not prefixed with "url_root". We should discuss about that.~~ Finally fixed by replacing all three absolute imports by relative imports (/res -> ./res) in style.css.
