@@ -8,10 +8,12 @@ To try this feature, you can use apache as frontend webserver (port 80 by defaul
 * install remi from this repo
 * install apache2 and enable mod_rewrite, proxy, proxy_http, proxy_wstunnel (`a2enmod rewrite proxy proxy_http proxy_wstunnel` on linux)
 * write the following rules into your apache virtualhost, replace "foo" with your "url_root" (see 000-default.conf):
-        RewriteEngine On
-        RewriteCond %{HTTP:Upgrade} =websocket [NC]
-        RewriteRule /foo(.*)    ws://127.0.0.1:8080/$1 [P,L]
-        RewriteCond %{HTTP:Upgrade} !=websocket [NC]
-        RewriteRule /foo(.*)    http://127.0.0.1:8080/$1 [P,L]
+```
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule /foo(.*)    ws://127.0.0.1:8080/$1 [P,L]
+RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+RewriteRule /foo(.*)    http://127.0.0.1:8080/$1 [P,L]
+```
 * set url_root in your remi script (see url_root_test.py for example)
 * restart apache, launch remi, use your browser to reach http://localhost/foo (note we use the default port 80 of apache frontend)
