@@ -769,7 +769,7 @@ class Editor(App):
 
         lbl = gui.Label("Snap grid", width=100)
         self.spin_grid_size = gui.SpinBox('15', '1', '100', width=50)
-        self.spin_grid_size.set_on_change_listener(self.on_snap_grid_size_change)
+        self.spin_grid_size.onchange.do(self.on_snap_grid_size_change)
 
         grid_size = gui.HBox(children=[lbl, self.spin_grid_size], style={
                              'outline': '1px solid gray', 'margin': '2px', 'margin-left': '10px'})

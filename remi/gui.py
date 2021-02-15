@@ -137,19 +137,21 @@ class ClassEventConnector(object):
         by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
         and after that the listener method is called too.
     """
+    userdata = None
+    kwuserdata = None
+    callback = None
     def __init__(self, event_source_instance, event_name, event_method_bound):
         self.event_source_instance = event_source_instance
         self.event_name = event_name
         self.event_method_bound = event_method_bound
-        self.callback = None
-        self.userdata = ()
-        self.kwuserdata = {}
         self.connect = self.do  # for compatibility reasons
 
     def do(self, callback, *userdata, **kwuserdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
         """
+        self.userdata = userdata
+        self.kwuserdata = kwuserdata
 
         if hasattr(self.event_method_bound, '_js_code'):
             js_stop_propagation = kwuserdata.pop('js_stop_propagation', False)
@@ -160,16 +162,17 @@ class ClassEventConnector(object):
                 ("event.preventDefault();" if js_prevent_default else "")
                 
         self.callback = callback
-        if userdata:
-            self.userdata = userdata
-        if kwuserdata:
-            self.kwuserdata = kwuserdata
 
     def __call__(self, *args, **kwargs):
         # here the event method gets called
         callback_params = self.event_method_bound(*args, **kwargs)
         if not self.callback:
             return callback_params
+
+        if not self.userdata:
+            self.userdata = ()
+        if not self.kwuserdata:
+            self.kwuserdata = {}
         if not callback_params:
             callback_params = self.userdata
         else:
@@ -216,14 +219,6 @@ def decorate_set_on_listener(prototype):
         return method
 
     return add_annotation
-
-
-def decorate_explicit_alias_for_listener_registration(method):
-    method.__doc__ = """ Registers the listener
-                         For backward compatibility
-                         Suggested new dialect event.connect(callback, *userdata)
-                     """
-    return method
 
 
 def editor_attribute_decorator(group, description, _type, additional_data):
@@ -1200,77 +1195,6 @@ class Widget(Tag, EventSource):
         """
         return (key, keycode, ctrl, shift, alt)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_focus_listener(self, callback, *userdata):
-        self.onfocus.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_blur_listener(self, callback, *userdata):
-        self.onblur.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_click_listener(self, callback, *userdata):
-        self.onclick.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_dblclick_listener(self, callback, *userdata):
-        self.ondblclick.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_contextmenu_listener(self, callback, *userdata):
-        self.oncontextmenu.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mousedown_listener(self, callback, *userdata):
-        self.onmousedown.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mouseup_listener(self, callback, *userdata):
-        self.onmouseup.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mouseout_listener(self, callback, *userdata):
-        self.onmouseout.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mouseleave_listener(self, callback, *userdata):
-        self.onmouseleave.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mousemove_listener(self, callback, *userdata):
-        self.onmousemove.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchmove_listener(self, callback, *userdata):
-        self.ontouchmove.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchstart_listener(self, callback, *userdata):
-        self.ontouchstart.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchend_listener(self, callback, *userdata):
-        self.ontouchend.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchenter_listener(self, callback, *userdata):
-        self.ontouchenter.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchleave_listener(self, callback, *userdata):
-        self.ontouchleave.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchcancel_listener(self, callback, *userdata):
-        self.ontouchcancel.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_up_listener(self, callback, *userdata):
-        self.onkeyup.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_down_listener(self, callback, *userdata):
-        self.onkeydown.connect(callback, *userdata)
 
     def query_client(self, app_instance, attribute_list, style_property_list):
         """
@@ -2339,18 +2263,6 @@ class TextInput(Widget, _MixinTextualWidget):
         """
         return (new_value, keycode)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_up_listener(self, callback, *userdata):
-        self.onkeyup.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_down_listener(self, callback, *userdata):
-        self.onkeydown.connect(callback, *userdata)
-
 
 class Label(Widget, _MixinTextualWidget):
     """ Non editable text label widget. Set its content by means of set_text function, and retrieve its content with the
@@ -2546,14 +2458,6 @@ class GenericDialog(Container):
     def hide(self):
         self._base_app_instance.set_root_widget(self._old_root_widget)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_confirm_dialog_listener(self, callback, *userdata):
-        self.confirm_dialog.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_cancel_dialog_listener(self, callback, *userdata):
-        self.cancel_dialog.connect(callback, *userdata)
-
 
 class InputDialog(GenericDialog):
     """Input Dialog widget. It can be used to query simple and short textual input to the user.
@@ -2595,10 +2499,6 @@ class InputDialog(GenericDialog):
     def confirm_value(self, widget):
         """Event called pressing on OK button."""
         return (self.inputText.get_text(),)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_confirm_value_listener(self, callback, *userdata):
-        self.confirm_value.connect(callback, *userdata)
 
 
 class ListView(Container):
@@ -2734,10 +2634,6 @@ class ListView(Container):
                 self._selected_key = k
                 self._selected_item = item
                 self._selected_item.attributes['selected'] = True
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_selection_listener(self, callback, *userdata):
-        self.onselection.connect(callback, *userdata)
 
 
 class ListItem(Widget, _MixinTextualWidget):
@@ -2879,10 +2775,6 @@ class DropDown(Container):
         self.enable_update()
         return (value, )
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
-
 
 class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
@@ -3017,10 +2909,6 @@ class Table(Container):
     @decorate_event
     def on_table_row_click(self, row, item):
         return (row, item)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_table_row_click_listener(self, callback, *userdata):
-        self.on_table_row_click.connect(callback, *userdata)
 
 
 class TableWidget(Table):
@@ -3170,10 +3058,6 @@ class TableWidget(Table):
         """
         return (item, new_value, row, column)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_item_changed_listener(self, callback, *userdata):
-        self.on_item_changed.connect(callback, *userdata)
-
 
 class TableRow(Container):
     """
@@ -3214,10 +3098,6 @@ class TableRow(Container):
         """
         return (item, )
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_row_item_click_listener(self, callback, *userdata):
-        self.on_row_item_click.connect(callback, *userdata)
-
 
 class TableEditableItem(Container, _MixinTextualWidget):
     """item widget for the TableRow."""
@@ -3241,10 +3121,6 @@ class TableEditableItem(Container, _MixinTextualWidget):
     @decorate_event
     def onchange(self, emitter, new_value):
         return (new_value, )
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
 
 
 class TableItem(Container, _MixinTextualWidget):
@@ -3318,10 +3194,6 @@ class Input(Widget):
             except KeyError:
                 pass
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
-
 
 class CheckBoxLabel(HBox):
 
@@ -3357,10 +3229,6 @@ class CheckBoxLabel(HBox):
     @decorate_event
     def onchange(self, widget, value):
         return (value, )
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
 
     def get_text(self):
         return self._label.get_text()
@@ -3550,10 +3418,6 @@ class Slider(Input):
     @decorate_event
     def oninput(self, value):
         return (value, )
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_oninput_listener(self, callback, *userdata):
-        self.oninput.connect(callback, *userdata)
 
 
 class ColorPicker(Input):
@@ -3995,14 +3859,6 @@ class FileFolderItem(Container):
     def get_text(self):
         return self.children['text'].get_text()
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_click_listener(self, callback, *userdata):
-        self.onclick.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_selection_listener(self, callback, *userdata):
-        self.onselection.connect(callback, *userdata)
-
 
 class FileSelectionDialog(GenericDialog):
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
@@ -4029,10 +3885,6 @@ class FileSelectionDialog(GenericDialog):
         self.hide()
         params = (self.fileFolderNavigator.get_selection_list(),)
         return params
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_confirm_value_listener(self, callback, *userdata):
-        self.confirm_value.connect(callback, *userdata)
 
 
 class MenuBar(Container):
@@ -4189,18 +4041,6 @@ class FileUploader(Container):
             f.write(filedata)
         return (filedata, filename)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_success_listener(self, callback, *userdata):
-        self.onsuccess.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_failed_listener(self, callback, *userdata):
-        self.onfailed.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_data_listener(self, callback, *userdata):
-        self.ondata.connect(callback, *userdata)
-
 
 class FileDownloader(Container, _MixinTextualWidget):
     """FileDownloader widget. Allows to start a file download."""
@@ -4304,10 +4144,6 @@ class VideoPlayer(Widget):
     def onended(self):
         """Called when the media has been played and reached the end."""
         return ()
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_ended_listener(self, callback, *userdata):
-        self.onended.connect(callback, *userdata)
 
 
 class _MixinSvgStroke():
