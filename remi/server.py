@@ -123,11 +123,12 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
 
     magic = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
-    def __init__(self, headers, *args, **kwargs):
+    def __init__(self, headers, request, client_address, server, *args, **kwargs):
         self.headers = headers
+        self.server = server
         self.handshake_done = False
         self._log = logging.getLogger('remi.server.ws')
-        socketserver.StreamRequestHandler.__init__(self, *args, **kwargs)
+        socketserver.StreamRequestHandler.__init__(self, request, client_address, server, *args, **kwargs)
 
     def setup(self):
         socketserver.StreamRequestHandler.setup(self)
@@ -200,7 +201,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             message = message.encode('utf-8')
         out = out + message
 
-        readable, writable, errors = select.select([], [self.request,], [], 0) #last parameter is timeout, when 0 is non blocking
+        readable, writable, errors = select.select([], [self.request,], [], self.server.websocket_timeout_timer_ms) #last parameter is timeout, when 0 is non blocking
         #self._log.debug('socket status readable=%s writable=%s errors=%s'%((self.request in readable), (self.request in writable), (self.request in error$
         writable = self.request in writable
         if not writable:
