@@ -229,10 +229,8 @@ def editor_attribute_decorator(group, description, _type, additional_data):
 class _EventDictionary(dict, EventSource):
     """This dictionary allows to be notified if its content is changed.
     """
-
+    changed = False
     def __init__(self, *args, **kwargs):
-        self.__version__ = 0
-        self.__lastversion__ = 0
         super(_EventDictionary, self).__init__(*args, **kwargs)
         EventSource.__init__(self, *args, **kwargs)
 
@@ -269,16 +267,16 @@ class _EventDictionary(dict, EventSource):
         return ret
 
     def ischanged(self):
-        return self.__version__ != self.__lastversion__
+        return self.changed
 
     def align_version(self):
-        self.__lastversion__ = self.__version__
+        self.changed = False
 
     @decorate_event
     def onchange(self):
         """Called on content change.
         """
-        self.__version__ += 1
+        self.changed = True
         return ()
 
 
@@ -401,7 +399,7 @@ class Tag(object):
                 self.get_parent()._need_update(child_ignore_update = (self.ignore_update or child_ignore_update))
 
     def _ischanged(self):
-        return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
+        return self.children.changed or self.attributes.changed or self.style.changed
 
     def _set_updated(self):
         self.children.align_version()
