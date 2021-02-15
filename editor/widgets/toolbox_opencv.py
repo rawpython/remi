@@ -1048,6 +1048,63 @@ class OpencvFindContours(OpencvImage):
         return (self.contours, self.hierarchy)
 
 
+class OpencvMatchTemplate(OpencvImage):
+    """ OpencvMatchTemplate widget.
+        Receives an image on on_new_image_listener and a template on on_template_listener.
+        Returns the template matching position on on_matching_success.
+        The event on_new_image can be connected to other Opencv widgets for further processing
+    """
+    icon = None
+
+    matching_methods = {'TM_CCOEFF':cv2.TM_CCOEFF, 'TM_CCOEFF_NORMED':cv2.TM_CCOEFF_NORMED, 'TM_CCORR':cv2.TM_CCORR, 'TM_CCORR_NORMED':cv2.TM_CCORR_NORMED, 'TM_SQDIFF':cv2.TM_SQDIFF, 'TM_SQDIFF_NORMED':cv2.TM_SQDIFF_NORMED}
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The template matching method', 'DropDown', {'possible_values': matching_methods.keys()})
+    def matching_method(self): 
+        return self.__matching_method
+    @matching_method.setter
+    def matching_method(self, v): 
+        self.__matching_method = v
+        self.on_new_image_listener(self.image_source)
+
+    template_source = None
+
+    def __init__(self, method=cv2.TM_CCORR_NORMED, *args, **kwargs):
+        super(OpencvMatchTemplate, self).__init__("", *args, **kwargs)
+        self.__matching_method = method
+
+    def on_new_image_listener(self, emitter):
+        try:
+            self.image_source = emitter
+            method = OpencvMatchTemplate.matching_methods[self.matching_method] if type(self.matching_method) == str else self.matching_method
+            res = cv2.matchTemplate(emitter.img, self.template_source.img, method)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+            top_left = max_loc
+            w, h = self.template_source.img.shape[::-1]
+            # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+            if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+                top_left = min_loc
+            bottom_right = (top_left[0] + w, top_left[1] + h)
+            
+            img = emitter.img.copy()
+            cv2.rectangle(img, top_left, bottom_right, 255, 2)
+
+            self.set_image_data(img)
+
+            self.on_matching_success(top_left, bottom_right)
+        except Exception:
+            print(traceback.format_exc())
+
+    def on_template_listener(self, emitter):
+        self.template_source = emitter
+        if hasattr(self, "image_source"):
+            self.on_new_image_listener(self.image_source)
+
+    @gui.decorate_event
+    def on_matching_success(self, top_left, bottom_right):
+        return (top_left, bottom_right)
+
+
 class OpencvInRangeGrayscale(OpencvImage):
     """ OpencvInRangeGrayscale thresholding widget.
         Receives an image on on_new_image_listener.
