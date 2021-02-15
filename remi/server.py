@@ -321,6 +321,7 @@ class App(BaseHTTPRequestHandler, object):
         self._app_args = app_args
         self.root = None
         self._log = logging.getLogger('remi.request')
+        self.url_root=self._app_args.get("url_root","")
         super(App, self).__init__(request, client_address, server)
 
     def _get_list_from_app_args(self, name):
@@ -368,7 +369,7 @@ class App(BaseHTTPRequestHandler, object):
             
             head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
-            head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
+            head.add_child('internal_css', "<link href='%s/res:style.css' rel='stylesheet' />\n"%(self.url_root))
 
             body = gui.BODY()
             body.add_class('remi-main')
@@ -610,6 +611,9 @@ class App(BaseHTTPRequestHandler, object):
 
         if do_process:
             path = str(unquote(self.path))
+            # remove the url_root from the url
+            if path[0:len(self.url_root)] == self.url_root:
+                path=path[len(self.url_root):]
             # noinspection PyBroadException
             try:
                 self._instance()

@@ -1345,7 +1345,7 @@ class HEAD(Tag):
                 rel (str): leave it unchanged (standard "icon")
         """
         mimetype, encoding = mimetypes.guess_type(filename)
-        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, filename, mimetype))
+        self.add_child("favicon", '<link rel="%s" href="%s%s" type="%s" />'%(rel, url_root, filename, mimetype))
 
     def set_icon_data(self, base64_data, mimetype="image/png", rel="icon"):
         """ Allows to define an icon for the App
@@ -1355,7 +1355,7 @@ class HEAD(Tag):
                 mimetype (str): mimetype of the image ("image/png" or "image/x-icon"...)
                 rel (str): leave it unchanged (standard "icon")
         """
-        self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, base64_data, mimetype))
+        self.add_child("favicon", '<link rel="%s" href="%s%s" type="%s" />'%(rel, url_root, base64_data, mimetype))
 
     def set_internal_js(self, app_identifier, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
         self.add_child('internal_js',
@@ -1406,7 +1406,7 @@ class HEAD(Tag):
 
                     var self = this;
                     try{
-                        this._ws = new WebSocket(ws_wss + '://%(host)s/');
+                        this._ws = new WebSocket(ws_wss + '://%(host)s%(url_root)s/');
                         console.debug('opening websocket');
 
                         this._ws.onopen = function(evt){
@@ -1587,7 +1587,7 @@ class HEAD(Tag):
                 };
 
                 Remi.prototype.uploadFile = function(widgetID, eventSuccess, eventFail, eventData, file){
-                    var url = '/';
+                    var url = '/%(url_root)s';
                     var xhr = new XMLHttpRequest();
                     var fd = new FormData();
                     xhr.open('POST', url, true);
@@ -1623,6 +1623,7 @@ class HEAD(Tag):
                 window.remi = new Remi();
 
                 </script>""" % {'host':net_interface_ip,
+                                'url_root':url_root,
                                 'max_pending_messages':pending_messages_queue_length,
                                 'messaging_timeout':websocket_timeout_timer_ms,
                                 'emitter_identifier':app_identifier,
@@ -2817,7 +2818,7 @@ class Image(Widget):
     @editor_attribute_decorator("WidgetSpecific", '''Image data or url''', 'base64_image', {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
-    def attr_src(self, value): self.attributes['src'] = str(value)
+    def attr_src(self, value): self.attributes['src'] = url_root+str(value)
     @attr_src.deleter
     def attr_src(self): del self.attributes['src']
 
@@ -2829,14 +2830,14 @@ class Image(Widget):
         """
         super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
-        self.attributes['src'] = image
+        self.attributes['src'] = url_root+image
 
     def set_image(self, image):
         """
         Args:
             image (str): an url to an image or a base64 data string
         """
-        self.attributes['src'] = image
+        self.attributes['src'] = url_root+image
 
 
 class Table(Container):
@@ -3826,7 +3827,7 @@ class FileFolderItem(Container):
             self.icon.onclick.connect(self.onclick)
         else:
             self.icon.onclick.connect(self.onselection)
-        icon_file = '/res:folder.png' if is_folder else '/res:file.png'
+        icon_file = url_root+'/res:folder.png' if is_folder else url_root+'/res:file.png'
         self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.onclick.connect(self.onselection)
@@ -4083,7 +4084,7 @@ class VideoPlayer(Widget):
     @editor_attribute_decorator("WidgetSpecific", '''Video url''', str, {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
-    def attr_src(self, value): self.attributes['src'] = str(value)
+    def attr_src(self, value): self.attributes['src'] = url_root+str(value)
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Video poster img''', 'base64_image', {})
@@ -4112,7 +4113,7 @@ class VideoPlayer(Widget):
     def __init__(self, video='', poster=None, autoplay=False, loop=False, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
         self.type = 'video'
-        self.attributes['src'] = video
+        self.attributes['src'] = url_root+video
         self.attributes['preload'] = 'auto'
         self.attributes['controls'] = None
         self.attributes['poster'] = poster
@@ -4522,7 +4523,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     @editor_attribute_decorator("WidgetSpecific", '''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
     def image_data(self): return self.attributes.get('xlink:href', '')
     @image_data.setter
-    def image_data(self, value): self.attributes['xlink:href'] = str(value)
+    def image_data(self, value): self.attributes['xlink:href'] = url_root+str(value)
     @image_data.deleter
     def image_data(self): del self.attributes['xlink:href'] 
 
@@ -4538,7 +4539,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
         """
         super(SvgImage, self).__init__(*args, **kwargs)
         self.type = 'image'
-        self.image_data = image_data
+        self.image_data = url_root+image_data
         self.set_position(x, y)
         _MixinSvgSize.set_size(self, w, h)
 
