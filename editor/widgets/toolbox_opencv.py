@@ -1051,7 +1051,7 @@ class OpencvFindContours(OpencvImage):
 class OpencvMatchTemplate(OpencvImage):
     """ OpencvMatchTemplate widget.
         Receives an image on on_new_image_listener and a template on on_template_listener.
-        Returns the template matching position on on_matching_success.
+        Returns the template matching position and size of matching rectangle on on_matching_success.
         The event on_new_image can be connected to other Opencv widgets for further processing
     """
     icon = None
@@ -1091,7 +1091,7 @@ class OpencvMatchTemplate(OpencvImage):
 
             self.set_image_data(img)
 
-            self.on_matching_success(top_left, bottom_right)
+            self.on_matching_success(top_left[0], top_left[1], w, h)
         except Exception:
             print(traceback.format_exc())
 
@@ -1100,9 +1100,10 @@ class OpencvMatchTemplate(OpencvImage):
         if hasattr(self, "image_source"):
             self.on_new_image_listener(self.image_source)
 
+    @gui.decorate_set_on_listener("(self, emitter, x, y, w, h)")
     @gui.decorate_event
-    def on_matching_success(self, top_left, bottom_right):
-        return (top_left, bottom_right)
+    def on_matching_success(self, x, y, w, h):
+        return (x, y, w, h)
 
 
 class OpencvInRangeGrayscale(OpencvImage):
