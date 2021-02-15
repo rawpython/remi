@@ -7,7 +7,7 @@ To try this feature, you can use apache as frontend webserver (port 80 by defaul
 
 * install remi from this repo
 * install apache2 and enable mod_rewrite, proxy, proxy_http, proxy_wstunnel (`a2enmod rewrite proxy proxy_http proxy_wstunnel` on linux)
-* write the following rules into your apache virtualhost, replace "foo" with your "url_root" (see 000-default.conf):
+* write the following rules at the end of your apache virtualhost, replace "foo" with your "url_root" (see 000-default.conf):
 ```
 RewriteEngine On
 RewriteCond %{HTTP:Upgrade} =websocket [NC]
