@@ -1,8 +1,8 @@
-# Description
+# DESCRIPTION
 This is development fork of [Remi GUI](https://github.com/dddomodossola/remi). It aims at adding the "url_root" feature in remi, see [here](https://github.com/dddomodossola/remi/issues/430), with the branch of the same name.
 The main usage of this feature is to access remi instance (or even multiple simultaneous remi instances) from one single port on a server, i.e port 80 or 443. To specify the remi instance you want to reach from the client, use "url_root" : myserver.com/\<url_root\>
 
-# Howto
+# HOWTO
 To try this feature, you can use apache as frontend webserver (port 80 by default), then write some rules (rewrite) to forward traffic on remi server (port 8080 for example). Below is a sample installation/configuration steps.
 
 * install remi from this repo
@@ -17,3 +17,11 @@ RewriteRule /foo(.*)    http://127.0.0.1:8080/$1 [P,L]
 ```
 * set url_root in your remi script (see url_root_test.py for example)
 * restart apache, launch remi, use your browser to reach http://localhost/foo (note we use the default port 80 of apache frontend)
+
+# TODO
+At least :
+
+* move `url_root` to the right place inside remi (note that this variable should also be accessible from `gui.py`)
+* make `url_root` an optional parameter which defaults to `""`
+* test this feature with https/wss
+* continue implementation of some Remi widgets: where hard links are sent to the client (currently done : Image, VideoPlayer).
