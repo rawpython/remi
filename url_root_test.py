@@ -40,6 +40,7 @@ class MyApp(App):
         wid.append(bt)
         wid.append(gui.Image("/res:folder.png"))
         # returning the root widget
+        self.page.children["head"].set_icon_file("/res:folder.png")
         return wid
 
     # listener function

@@ -3967,7 +3967,7 @@ class FileFolderItem(Container):
             self.icon.onclick.connect(self.onclick)
         else:
             self.icon.onclick.connect(self.onselection)
-        icon_file = '/res:folder.png' if is_folder else '/res:file.png'
+        icon_file = url_root+'/res:folder.png' if is_folder else url_root+'/res:file.png'
         self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.onclick.connect(self.onselection)
@@ -4691,7 +4691,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     @editor_attribute_decorator("WidgetSpecific", '''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
     def image_data(self): return self.attributes.get('xlink:href', '')
     @image_data.setter
-    def image_data(self, value): self.attributes['xlink:href'] = str(value)
+    def image_data(self, value): self.attributes['xlink:href'] = url_root+str(value)
     @image_data.deleter
     def image_data(self): del self.attributes['xlink:href'] 
 
@@ -4707,7 +4707,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
         """
         super(SvgImage, self).__init__(*args, **kwargs)
         self.type = 'image'
-        self.image_data = image_data
+        self.image_data = url_root+image_data
         self.set_position(x, y)
         _MixinSvgSize.set_size(self, w, h)
 

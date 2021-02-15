@@ -22,7 +22,8 @@ RewriteRule /foo(.*)    http://127.0.0.1:8080/$1 [P,L]
 At least :
 
 * move `url_root` to the right place inside remi (note that this variable should also be accessible from `gui.py`)
-* make `url_root` an optional parameter which defaults to `""`
+* ~~make `url_root` an optional parameter which defaults to `""`~~ Currently done in `class App[...]`.
 * test this feature with https/wss
-* continue implementation of some Remi widgets: where hard links are sent to the client (currently done : Image, VideoPlayer).
+* continue implementation of some Remi widgets: where hard links are sent to the client (currently done : Image, VideoPlayer, SvgImage, FileFolderItem).
+* For `Image`, `VideoPlayer`, `SvgImage` widgets, setters were modified to unconditionally prefix the input src url with `url_root`. This will cause problem for embedding contents from external server/website.
 * ~~issue with no immediate clean solution: all calls (by default 3) to "/res:" in "style.css" are broken as they are not prefixed with "url_root". We should discuss about that.~~ Finally fixed by replacing all three absolute imports by relative imports (/res -> ./res) in style.css.
