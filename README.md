@@ -24,6 +24,6 @@ At least :
 * move `url_root` to the right place inside remi (note that this variable should also be accessible from `gui.py`)
 * ~~make `url_root` an optional parameter which defaults to `""`~~ Currently done in `class App[...]`.
 * test this feature with https/wss
-* continue implementation of some Remi widgets: where hard links are sent to the client (currently done : Image, VideoPlayer, SvgImage, FileFolderItem).
-* For `Image`, `VideoPlayer`, `SvgImage` widgets, setters were modified to unconditionally prefix the input src url with `url_root`. This will cause problem for embedding contents from external server/website.
+* ~~continue implementation of some Remi widgets: where hard links are sent to the client (currently done : Image, VideoPlayer, SvgImage, FileFolderItem)~~ Everything seems to be ok, please just confirm.
+* ~~For `Image`, `VideoPlayer`, `SvgImage` widgets, setters were modified to unconditionally prefix the input src url with `url_root`. This will cause problem for embedding contents from external server/website.~~ Solved by searching the string "://" in the `Image`, `VideoPlayer` and `SvgImage` widgets image/video source: if present don't append the `url_root` prefix, append it otherwise.
 * ~~issue with no immediate clean solution: all calls (by default 3) to "/res:" in "style.css" are broken as they are not prefixed with "url_root". We should discuss about that.~~ Finally fixed by replacing all three absolute imports by relative imports (/res -> ./res) in style.css.
