@@ -718,7 +718,8 @@ class Editor(App):
             drag_helper.update_position()
 
     def main(self):
-
+        import time
+        t= time.time()
         #custom css
         my_css_head = """
             <link href='/editor_resources:style.css' rel='stylesheet' />
@@ -865,7 +866,7 @@ class Editor(App):
 
         self.projectPathFilename = ''
         self.editCuttedWidget = None  # cut operation, contains the cutted tag
-
+        print(">>>>>>>>>>>>startup time:", time.time()-t)
         # returning the root widget
         return self.mainContainer
 

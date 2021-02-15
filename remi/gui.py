@@ -116,7 +116,7 @@ class EventSource(object):
 
     def setup_event_methods(self):
         def a_method_not_builtin(obj):
-            return (not inspect.isbuiltin(obj)) and inspect.ismethod(obj) and hasattr(obj, '__is_event')
+            return hasattr(obj, '__is_event')
         for (method_name, method) in inspect.getmembers(self, predicate=a_method_not_builtin):
             # this is implicit in predicate
             #if not hasattr(method, '__is_event'):
@@ -213,9 +213,7 @@ def decorate_set_on_listener(prototype):
     """
     # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(method):
-        method._event_info = {}
-        method._event_info['name'] = method.__name__
-        method._event_info['prototype'] = prototype
+        method._event_info = {'name':method.__name__, 'prototype':prototype}
         return method
 
     return add_annotation
