@@ -44,7 +44,7 @@ except ImportError:
         unescape = html.unescape
 
 from .server import runtimeInstances
-
+url_root=""
 
 log = logging.getLogger('remi.gui')
 
