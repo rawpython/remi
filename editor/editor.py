@@ -710,6 +710,7 @@ class Editor(App):
     EVENT_ONDROPPPED = "on_dropped"
 
     selectedWidget = None
+    additional_widgets_loaded = False
 
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
@@ -1181,6 +1182,12 @@ class Editor(App):
         error_dialog.children["message"].style['white-space'] = 'pre'
         error_dialog.cancel.style['display'] = 'none'
         error_dialog.show(self)
+
+    def onload(self, emitter):
+        if not self.additional_widgets_loaded:
+            print("loading additional widgets")
+            self.additional_widgets_loaded = True
+            self.widgetsCollection.load_additional_widgets()
 
 
 def on_dropped(self, left, top):

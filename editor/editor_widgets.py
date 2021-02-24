@@ -647,7 +647,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.SvgImage)
         self.add_widget_to_collection(gui.SvgGroup)
 
-        self.load_additional_widgets()
+        #self.load_additional_widgets()
 
     def load_additional_widgets(self):
         try:
