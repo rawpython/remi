@@ -90,6 +90,7 @@ class OpencvImage(gui.Image, OpencvWidget):
         if self.app_instance==None:
             self.app_instance = self.search_app_instance(self)
             if self.app_instance==None:
+                self.attributes['src'] = "/%s/get_image_data?index=00"%self.identifier #gui.load_resource(self.filename)
                 return
         self.app_instance.execute_javascript("""
             url = '/%(id)s/get_image_data?index=%(frame_index)s';

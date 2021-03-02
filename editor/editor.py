@@ -447,7 +447,7 @@ class Project(gui.Container):
             if type(y) == property and not getattr(widget, x) is None:
                 if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
                     _value = getattr(widget, x)
-                    if type(_value) == str:
+                    if type(_value) == type('') or type(_value) == type(u''):
                         _value = '"%s"' % _value
                     code_nested += prototypes.proto_property_setup % {
                         'varname': widgetVarName, 'property': x, 'value': _value}
