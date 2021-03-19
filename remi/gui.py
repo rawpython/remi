@@ -1667,7 +1667,7 @@ class HEAD(Tag):
                 };
 
                 Remi.prototype.uploadFile = function(widgetID, eventSuccess, eventFail, eventData, file){
-                    var url = '/%(url_root)s';
+                    var url = './%(url_root)s';
                     var xhr = new XMLHttpRequest();
                     var fd = new FormData();
                     xhr.open('POST', url, true);
