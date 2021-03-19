@@ -44,7 +44,7 @@ except ImportError:
         unescape = html.unescape
 
 from .server import runtimeInstances
-
+url_root=""
 
 log = logging.getLogger('remi.gui')
 
@@ -1587,7 +1587,7 @@ class HEAD(Tag):
                 };
 
                 Remi.prototype.uploadFile = function(widgetID, eventSuccess, eventFail, eventData, file){
-                    var url = '/%(url_root)s';
+                    var url = './%(url_root)s';
                     var xhr = new XMLHttpRequest();
                     var fd = new FormData();
                     xhr.open('POST', url, true);
@@ -2818,7 +2818,7 @@ class Image(Widget):
     @editor_attribute_decorator("WidgetSpecific", '''Image data or url''', 'base64_image', {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
-    def attr_src(self, value): self.attributes['src'] = url_root+str(value)
+    def attr_src(self, value): self.attributes['src'] = str(value) if "://" in value else url_root+str(value)
     @attr_src.deleter
     def attr_src(self): del self.attributes['src']
 
@@ -2830,14 +2830,14 @@ class Image(Widget):
         """
         super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
-        self.attributes['src'] = url_root+image
+        self.attributes['src'] = str(image) if "://" in image else url_root+str(image)
 
     def set_image(self, image):
         """
         Args:
             image (str): an url to an image or a base64 data string
         """
-        self.attributes['src'] = url_root+image
+        self.attributes['src'] = str(image) if "://" in image else url_root+str(image)
 
 
 class Table(Container):
@@ -4084,7 +4084,7 @@ class VideoPlayer(Widget):
     @editor_attribute_decorator("WidgetSpecific", '''Video url''', str, {})
     def attr_src(self): return self.attributes.get('src', '')
     @attr_src.setter
-    def attr_src(self, value): self.attributes['src'] = url_root+str(value)
+    def attr_src(self, value): self.attributes['src'] = str(value) if "://" in value else url_root+str(value)
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Video poster img''', 'base64_image', {})
@@ -4113,7 +4113,7 @@ class VideoPlayer(Widget):
     def __init__(self, video='', poster=None, autoplay=False, loop=False, *args, **kwargs):
         super(VideoPlayer, self).__init__(*args, **kwargs)
         self.type = 'video'
-        self.attributes['src'] = url_root+video
+        self.attributes['src'] = str(video) if "://" in video else url_root+str(video)
         self.attributes['preload'] = 'auto'
         self.attributes['controls'] = None
         self.attributes['poster'] = poster
@@ -4523,7 +4523,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     @editor_attribute_decorator("WidgetSpecific", '''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
     def image_data(self): return self.attributes.get('xlink:href', '')
     @image_data.setter
-    def image_data(self, value): self.attributes['xlink:href'] = url_root+str(value)
+    def image_data(self, value): self.attributes['xlink:href'] = str(value) if "://" in value else url_root+str(value)
     @image_data.deleter
     def image_data(self): del self.attributes['xlink:href'] 
 
@@ -4539,7 +4539,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
         """
         super(SvgImage, self).__init__(*args, **kwargs)
         self.type = 'image'
-        self.image_data = url_root+image_data
+        self.image_data = image_data if "://" in image_data else url_root+image_data
         self.set_position(x, y)
         _MixinSvgSize.set_size(self, w, h)
 
