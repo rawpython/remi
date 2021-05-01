@@ -2101,7 +2101,7 @@ class TabBox(Container):
     @decorate_set_on_listener("(self, emitter, key)")
     @decorate_event
     def on_tab_selection(self, emitter, key):
-        print(str(key))
+        #print(str(key))
         for k in self.children.keys():
             w = self.children[k]
             if w is self.container_tab_titles:
