@@ -842,7 +842,7 @@ class Server(object):
             try:
                 import android
                 android.webbrowser.open(self._base_address)
-            except ImportError:
+            except (ImportError, AttributeError):
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
                     webbrowser.get('windows-default').open(self._base_address)
