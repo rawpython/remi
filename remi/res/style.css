@@ -395,18 +395,18 @@ body.remi-main > div {
 .remi-main .MenuBar {
     border-bottom: 1px solid rgba(0, 0, 0, .26);
 }
-.remi-main .Menu > .MenuItem:hover {
+.remi-main .Menu > .MenuItem:focus-within {
     background: rgb(2, 70, 147);
     box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
 }
-.remi-main .MenuItem .MenuItem:hover {
+.remi-main .MenuItem .MenuItem:focus-within {
     background: rgba(4, 90, 188, 0.4);
 }
 .remi-main .Menu::after {
     content: "";
     clear: both;
 }
-.remi-main .MenuItem:hover > .Menu {
+.remi-main .MenuItem:focus-within > .Menu {
     display: block;
 }
 .remi-main input.file {

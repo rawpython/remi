@@ -3986,6 +3986,8 @@ class MenuItem(Container, _MixinTextualWidget):
         self.type = 'li'
         self.set_text(text)
 
+        self.attributes['tabindex'] = '0'
+
     def append(self, value, key=''):
 
         return self.sub_container.append(value, key=key)
