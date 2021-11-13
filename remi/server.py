@@ -418,10 +418,11 @@ class App(BaseHTTPRequestHandler, object):
             self.update_interval = client.update_interval
             self._need_update_flag = client._need_update_flag
             if hasattr(client, '_update_thread'):
-                self._update_thread = client._update_thread
-                
-        net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
-        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
+                self._update_thread = client._update_thread          
+        if self.proxy:
+            net_interface_ip = "%s/proxy/%s/"%(self.headers.get('Host',failobj="%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1])),self.server.server_address[1])
+        else:        
+            net_interface_ip = self.headers.get('Host', failobj="%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         self.page.children['head'].set_internal_js(str(id(self)), net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
 
