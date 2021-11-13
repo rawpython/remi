@@ -163,6 +163,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except ValueError:
                 # socket was closed, just return without errors
                 return False
+            if length is None:
+                return False
+            if len(length) < 2:
+                return False
             length = self.bytetonum(length[1]) & 127
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
