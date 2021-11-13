@@ -426,7 +426,8 @@ class App(BaseHTTPRequestHandler, object):
         if self.proxy:
             net_interface_ip = "%s/proxy/%s/"%(self.headers.get('Host',failobj="%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1])),self.server.server_address[1])
         else:        
-            net_interface_ip = self.headers.get('Host', failobj="%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
+            net_interface_ip = self.headers.get('Host', failobj="%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
+        websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         self.page.children['head'].set_internal_js(str(id(self)), net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
 
