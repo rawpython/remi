@@ -318,6 +318,10 @@ class App(BaseHTTPRequestHandler, object):
     re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
 
     def __init__(self, request, client_address, server, **app_args):
+        try:
+            self.proxy
+        except:
+            self.proxy = False
         self._app_args = app_args
         self.root = None
         self._log = logging.getLogger('remi.request')
@@ -368,7 +372,12 @@ class App(BaseHTTPRequestHandler, object):
             
             head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
-            head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
+            if self.proxy:
+                res = f"/proxy/{self.server.server_address[1]}/res:"
+            else:
+                res = "/res:"
+
+            head.add_child('internal_css', f"<link href='{res}style.css' rel='stylesheet' />\n")
 
             body = gui.BODY()
             body.add_class('remi-main')
@@ -673,6 +682,9 @@ class App(BaseHTTPRequestHandler, object):
             self.end_headers()
             with open(filename, 'rb') as f:
                 content = f.read()
+                if '/res:' in filename and filename.endswith(".css"):
+                    if self.proxy:
+                        content = str.encode(content.decode().replace("/res:",f"/proxy/{self.server.server_address[1]}/res:"))
                 self.wfile.write(content)
         elif attr_call:
             with self.update_lock:
