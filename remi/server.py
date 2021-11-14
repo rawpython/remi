@@ -163,6 +163,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except ValueError:
                 # socket was closed, just return without errors
                 return False
+            except ConnectionResetError:
+               return False
             if length is None:
                 return False
             if len(length) < 2:
