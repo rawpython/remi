@@ -19,6 +19,8 @@ import functools
 import threading
 import collections
 import inspect
+
+from zmq import proxy
 try:
     import html
     escape = html.escape
@@ -102,6 +104,17 @@ def to_uri(uri_data):
     """
     return ("url('%s')" % uri_data)
 
+class Scene(object):
+    """gui contructor helper"""
+    def __init__(self, proxy=None):
+        self.proxy = proxy
+    def add(self, *args, **kwargs):
+        """add a new gui object"""
+        class_name = kwargs["class_name"]
+        del kwargs["class_name"]
+        if self.proxy is not None:
+            kwargs['proxy'] = self.proxy
+        return class_name(*args,**kwargs)
 
 class CssStyleError(Exception):
     """
@@ -294,6 +307,11 @@ class Tag(object):
            _class (str): CSS class or '' (defaults to Class.__name__)
            id (str): the unique identifier for the class instance, useful for public API definition.
         """
+        if 'proxy' in kwargs:
+            self.proxy = kwargs['proxy']
+            # print(self.proxy)
+        else:
+            self.proxy = None
         if attributes is None:
             attributes = {}
         self._parent = None
@@ -2893,7 +2911,10 @@ class Image(Widget):
         """
         super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
-        self.attributes['src'] = image
+        if self.proxy is not None:
+            self.attributes['src'] = image.replace("/res:",f"/proxy/{self.proxy['port']}/res:")
+        else:
+            self.attributes['src'] = image
 
     def set_image(self, image):
         """
@@ -3788,7 +3809,10 @@ class FileFolderNavigator(GridBox):
             is_folder = not os.path.isfile(full_path)
             if (not is_folder) and (not self.allow_file_selection):
                 continue
-            fi = FileFolderItem(full_path, i, is_folder)
+            if self.proxy is not None:
+                fi = FileFolderItem(full_path, i, is_folder, proxy=self.proxy)
+            else:
+                fi = FileFolderItem(full_path, i, is_folder)
             fi.onclick.connect(self.on_folder_item_click)  # navigation purpose
             fi.onselection.connect(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
@@ -3890,7 +3914,10 @@ class FileFolderItem(Container):
             self.icon.onclick.connect(self.onclick)
         else:
             self.icon.onclick.connect(self.onselection)
-        icon_file = '/res:folder.png' if is_folder else '/res:file.png'
+        if self.proxy is not None:
+            icon_file = f'/proxy/{self.proxy["port"]}/res:folder.png' if is_folder else f'/proxy/{self.proxy["port"]}/res:file.png'
+        else:
+            icon_file = '/res:folder.png' if is_folder else '/res:file.png'
         self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.onclick.connect(self.onselection)
@@ -3930,9 +3957,14 @@ class FileSelectionDialog(GenericDialog):
         super(FileSelectionDialog, self).__init__(title, message, **kwargs)
 
         self.css_width = '475px'
-        self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
-                                                       allow_file_selection,
-                                                       allow_folder_selection, width="100%", height="330px")
+        if self.proxy is not None:
+            self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
+                                                        allow_file_selection,
+                                                        allow_folder_selection, width="100%", height="330px", proxy=self.proxy)
+        else:
+            self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
+                                                        allow_file_selection,
+                                                        allow_folder_selection, width="100%", height="330px")
         self.add_field('fileFolderNavigator', self.fileFolderNavigator)
         self.confirm_dialog.connect(self.confirm_value)
 
