@@ -314,6 +314,11 @@ Here is an example about this [standalone_app.py](https://github.com/dddomodosso
 
 **Be aware that PyWebView uses qt, gtk and so on to create the window. An outdated version of these libraries can cause UI problems. If you experience UI issues, update these libraries, or better avoid standalone execution.**
 
+Using Remi with Jupyter Lab
+===
+
+* you need to install jupyter lab, ipywidgets and jupyter-proxy-server
+* see the notebooks in the coresponding directory
 
 Authentication
 ===
