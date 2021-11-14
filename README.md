@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/dddomodossola/remi.svg?branch=master)](https://travis-ci.com/dddomodossola/remi)
+pip install --upgrade git+https://github.com/gbrault/remi.git
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/logo.png" width="430">
