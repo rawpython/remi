@@ -1,5 +1,6 @@
+```bash
 pip install --upgrade git+https://github.com/gbrault/remi.git
-
+```
 <p align="center">
     <img src="https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/logo.png" width="430">
 </p>
