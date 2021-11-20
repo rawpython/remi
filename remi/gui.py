@@ -116,6 +116,7 @@ class Scene(object):
         if self.proxy is not None:
             kwargs['proxy'] = self.proxy
         return class_name(*args,**kwargs)
+   @staticmethod
    def proxy(url, proxy_):
         if proxy_ is not None:
             x = re.search(r"(\/[^:]*\:)",url)
