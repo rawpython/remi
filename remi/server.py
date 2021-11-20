@@ -696,9 +696,13 @@ class App(BaseHTTPRequestHandler, object):
             self.end_headers()
             with open(filename, 'rb') as f:
                 content = f.read()
-                if '/res:' in func and filename.endswith(".css"):
+                x = re.search(r"(\/[^:]*\:)",url)
+                tag_ = ''
+                if len(x.groups())!=0:
+                    tag_ = x.groups()[0]
+                if len(tag_) > 0 and tag_ in func and filename.endswith(".css"):
                     if self.proxy:
-                        content = str.encode(content.decode().replace("/res:",f"/proxy/{self.server.server_address[1]}/res:"))
+                        content = str.encode(content.decode().replace(f"{tag_}",f"/proxy/{self.server.server_address[1]}/{tag}"))
                 self.wfile.write(content)
         elif attr_call:
             with self.update_lock:
