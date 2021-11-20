@@ -328,17 +328,22 @@ class App(BaseHTTPRequestHandler, object):
             self.proxy
         except:
             self.proxy = False
+        try:
+            self.gui
+        except:
+            from .gui import Gui
+            self.gui = Gui()
         self._app_args = app_args
         self.root = None
         self._log = logging.getLogger('remi.request')
         super(App, self).__init__(request, client_address, server)
 
-    def set_proxy(self, url, proxy_):
-        if proxy_ is not None:
+    def set_proxy(self, url):
+        if self.proxy is not None:
             x = re.search(r"(\/[^:]*\:)",url)
             if len(x.groups())!=0:
                tag = x.groups()[0]
-               return  url.replace(f"{tag}",f"/proxy/{self.proxy_['port']}{tag}"
+               return  url.replace(f"{tag}",f"/proxy/{self.server.server_port}{tag}")
         else:
             return url
 
@@ -382,16 +387,14 @@ class App(BaseHTTPRequestHandler, object):
         #if the client instance doesn't exist
         if not(self.session in clients):
             self.update_interval = self.server.update_interval
-
-            from remi import gui
             
-            head = gui.HEAD(self.server.title)
+            head = self.gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
-            res = self.set_proxy("/res:", self.proxy)
+            res = self.set_proxy("/res:")
 
             head.add_child('internal_css', f"<link href='{res}style.css' rel='stylesheet' />\n")
 
-            body = gui.BODY()
+            body = self.gui.BODY()
             body.add_class('remi-main')
             body.onload.connect(self.onload)
             body.ononline.connect(self.ononline)
@@ -399,7 +402,7 @@ class App(BaseHTTPRequestHandler, object):
             body.onpageshow.connect(self.onpageshow)
             body.onresize.connect(self.onresize)
 
-            self.page = gui.HTML()
+            self.page = self.gui.HTML()
             self.page.add_child('head', head)
             self.page.add_child('body', body)
 
@@ -696,13 +699,13 @@ class App(BaseHTTPRequestHandler, object):
             self.end_headers()
             with open(filename, 'rb') as f:
                 content = f.read()
-                x = re.search(r"(\/[^:]*\:)",url)
+                x = re.search(r"(\/[^:]*\:)",func)
                 tag_ = ''
                 if len(x.groups())!=0:
                     tag_ = x.groups()[0]
                 if len(tag_) > 0 and tag_ in func and filename.endswith(".css"):
                     if self.proxy:
-                        content = str.encode(content.decode().replace(f"{tag_}",f"/proxy/{self.server.server_address[1]}/{tag}"))
+                        content = str.encode(content.decode().replace(f"{tag_}",f"/proxy/{self.server.server_address[1]}{tag_}"))
                 self.wfile.write(content)
         elif attr_call:
             with self.update_lock:
