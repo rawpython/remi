@@ -3921,10 +3921,9 @@ class FileFolderItem(Container):
             self.icon.onclick.connect(self.onclick)
         else:
             self.icon.onclick.connect(self.onselection)
-        if self.proxy is not None:
-            icon_file = f'/proxy/{self.proxy["port"]}/res:folder.png' if is_folder else f'/proxy/{self.proxy["port"]}/res:file.png'
-        else:
-            icon_file = '/res:folder.png' if is_folder else '/res:file.png'
+        icon_file = '/res:folder.png' if is_folder else '/res:file.png'
+        icon_file = Scene.proxy(icon_file, self.proxy)                                   
+            
         self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.onclick.connect(self.onselection)
