@@ -19,6 +19,7 @@ import functools
 import threading
 import collections
 import inspect
+import re
 
 from zmq import proxy
 try:
@@ -115,6 +116,14 @@ class Scene(object):
         if self.proxy is not None:
             kwargs['proxy'] = self.proxy
         return class_name(*args,**kwargs)
+   def proxy(url, proxy_):
+        if proxy_ is not None:
+            x = re.search(r"(\/[^:]*\:)",url)
+            if len(x.groups())!=0:
+               tag = x.groups()[0]
+               return  url.replace(f"{tag}",f"/proxy/{self.proxy_['port']}{tag}"
+        else:
+            return url      
 
 class CssStyleError(Exception):
     """
@@ -2911,10 +2920,7 @@ class Image(Widget):
         """
         super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
-        if self.proxy is not None:
-            self.attributes['src'] = image.replace("/res:",f"/proxy/{self.proxy['port']}/res:")
-        else:
-            self.attributes['src'] = image
+        self.attributes['src'] = Scene.proxy(image, self.proxy)
 
     def set_image(self, image):
         """
