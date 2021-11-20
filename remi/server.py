@@ -387,10 +387,7 @@ class App(BaseHTTPRequestHandler, object):
             
             head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
-            if self.proxy:
-                res = f"/proxy/{self.server.server_address[1]}/res:"
-            else:
-                res = "/res:"
+            res = self.set_proxy("/res:", self.proxy)
 
             head.add_child('internal_css', f"<link href='{res}style.css' rel='stylesheet' />\n")
 
