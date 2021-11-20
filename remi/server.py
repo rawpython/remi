@@ -333,6 +333,15 @@ class App(BaseHTTPRequestHandler, object):
         self._log = logging.getLogger('remi.request')
         super(App, self).__init__(request, client_address, server)
 
+    def set_proxy(self, url, proxy_):
+        if proxy_ is not None:
+            x = re.search(r"(\/[^:]*\:)",url)
+            if len(x.groups())!=0:
+               tag = x.groups()[0]
+               return  url.replace(f"{tag}",f"/proxy/{self.proxy_['port']}{tag}"
+        else:
+            return url
+
     def _get_list_from_app_args(self, name):
         try:
             v = self._app_args[name]
