@@ -388,13 +388,15 @@ class App(BaseHTTPRequestHandler, object):
         if not(self.session in clients):
             self.update_interval = self.server.update_interval
             
-            head = self.gui.HEAD(self.server.title)
+            from remi import gui
+
+            head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
             res = self.set_proxy("/res:")
 
             head.add_child('internal_css', f"<link href='{res}style.css' rel='stylesheet' />\n")
 
-            body = self.gui.BODY()
+            body = gui.BODY()
             body.add_class('remi-main')
             body.onload.connect(self.onload)
             body.ononline.connect(self.ononline)
@@ -402,7 +404,7 @@ class App(BaseHTTPRequestHandler, object):
             body.onpageshow.connect(self.onpageshow)
             body.onresize.connect(self.onresize)
 
-            self.page = self.gui.HTML()
+            self.page = gui.HTML()
             self.page.add_child('head', head)
             self.page.add_child('body', body)
 
