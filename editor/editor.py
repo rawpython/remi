@@ -222,10 +222,11 @@ class SvgDraggableCircleResizeRadius(gui.SvgRectangle, DraggableItem):
 class ResizeHelper(gui.Widget, DraggableItem):
 
     def __init__(self, app_instance, **kwargs):
+        from remi.server import _proxy
         super(ResizeHelper, self).__init__(**kwargs)
         DraggableItem.__init__(self, app_instance, **kwargs)
         self.style['float'] = 'none'
-        self.style['background-image'] = "url('/editor_resources:resize.png')"
+        self.style['background-image'] = f"url({_proxy.set_url('/editor_resources:resize.png')})"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left'] = '0px'
@@ -270,10 +271,11 @@ class ResizeHelper(gui.Widget, DraggableItem):
 class DragHelper(gui.Widget, DraggableItem):
 
     def __init__(self, app_instance, **kwargs):
+        from remi.server import _proxy
         super(DragHelper, self).__init__(**kwargs)
         DraggableItem.__init__(self, app_instance, **kwargs)
         self.style['float'] = 'none'
-        self.style['background-image'] = "url('/editor_resources:drag.png')"
+        self.style['background-image'] = f"url('{_proxy.set_url('/editor_resources:drag.png')}')"
         self.style['background-color'] = "rgba(255,255,255,0.0)"
         self.style['position'] = 'absolute'
         self.style['left'] = '0px'
@@ -321,12 +323,13 @@ class Project(gui.Container):
     """
 
     def __init__(self, **kwargs):
+        from remi.server import _proxy
         super(Project, self).__init__(**kwargs)
         self.variable_name = 'App'# + str(id(self)) 
         self.style.update({'position': 'relative',
                            'overflow': 'auto',
                            'background-color': 'rgb(250,248,240)',
-                           'background-image': "url('/editor_resources:background.png')"})
+                           'background-image': f"url('{_proxy.set_url('/editor_resources:background.png')}')"})
         self.attr_editor_newclass = True
 
     def load(self, ifile, configuration):
@@ -722,11 +725,12 @@ class Editor(App):
             drag_helper.update_position()
 
     def main(self):
+        from remi.server import _proxy
         import time
         t= time.time()
         #custom css
-        my_css_head = """
-            <link href='/editor_resources:style.css' rel='stylesheet' />
+        my_css_head = f"""
+            <link href='{_proxy.set_url('/editor_resources:style.css')}' rel='stylesheet' />
             """
         self.page.children['head'].add_child('mycss', my_css_head)
 
@@ -787,7 +791,7 @@ class Editor(App):
             width='100%', height='100%', margin='0px 0px')
         self.toolbar.style['border-bottom'] = '1px solid rgba(0,0,0,.12)'
         self.toolbar.add_command(
-            '/editor_resources:delete.png', self.toolbar_delete_clicked, 'Delete Widget')
+           '/editor_resources:delete.png', self.toolbar_delete_clicked, 'Delete Widget')
         self.toolbar.add_command(
             '/editor_resources:cut.png', self.menu_cut_selection_clicked, 'Cut Widget')
         self.toolbar.add_command(
