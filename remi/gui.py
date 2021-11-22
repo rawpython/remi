@@ -92,6 +92,7 @@ def load_resource(filename):
 
 
 def to_uri(uri_data):
+    from .server import _proxy
     """ Convenient function to encase the resource filename or data in url('') keyword
 
         Args:
@@ -100,7 +101,7 @@ def to_uri(uri_data):
         Returns:
             str: the input string encased in url('') ie. url('/res:image.png')
     """
-    return ("url('%s')" % uri_data)
+    return (f"url('{_proxy.set_url(uri_data)}')")
 
 
 class CssStyleError(Exception):
@@ -1358,6 +1359,8 @@ class HEAD(Tag):
         self.add_child("favicon", '<link rel="%s" href="%s" type="%s" />'%(rel, base64_data, mimetype))
 
     def set_internal_js(self, app_identifier, net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms):
+        from .server import _proxy
+        net_interface_ip = net_interface_ip+_proxy.get_url()
         self.add_child('internal_js',
                 """
                 <script>
@@ -1575,7 +1578,7 @@ class HEAD(Tag):
                 };
 
                 Remi.prototype._checkTimeout = function(){
-                    if(this._pendingSendMessages.length > 0)
+                    if (!(typeof this._pendingSendMessages === 'undefined') && (this._pendingSendMessages.length > 0))
                         this._renewConnection();
                 };
 
@@ -2886,6 +2889,7 @@ class Image(Widget):
     def attr_src(self): del self.attributes['src']
 
     def __init__(self, image='', *args, **kwargs):
+        from .server import _proxy
         """
         Args:
             image (str): an url to an image or a base64 data string
@@ -2893,14 +2897,15 @@ class Image(Widget):
         """
         super(Image, self).__init__(*args, **kwargs)
         self.type = 'img'
-        self.attributes['src'] = image
+        self.attributes['src'] = _proxy.set_url(image)
 
     def set_image(self, image):
+        from .server import _proxy
         """
         Args:
             image (str): an url to an image or a base64 data string
         """
-        self.attributes['src'] = image
+        self.attributes['src'] = _proxy.set_url(image)
 
 
 class Table(Container):
@@ -3879,8 +3884,10 @@ class FileFolderNavigator(GridBox):
 
 class FileFolderItem(Container):
     """FileFolderItem widget for the FileFolderNavigator"""
+    from .server import _proxy
     path_and_filename = None #the complete path and filename
     def __init__(self, path_and_filename, text, is_folder=False, *args, **kwargs):
+        from .server import _proxy
         super(FileFolderItem, self).__init__(*args, **kwargs)
         self.path_and_filename = path_and_filename
         self.isFolder = is_folder
@@ -3891,6 +3898,7 @@ class FileFolderItem(Container):
         else:
             self.icon.onclick.connect(self.onselection)
         icon_file = '/res:folder.png' if is_folder else '/res:file.png'
+        icon_file = _proxy.set_url(icon_file)
         self.icon.css_background_image = "url('%s')" % icon_file
         self.label = Label(text)
         self.label.onclick.connect(self.onselection)
