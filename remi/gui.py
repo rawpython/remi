@@ -3992,6 +3992,12 @@ class MenuItem(Container, _MixinTextualWidget):
 
         return self.sub_container.append(value, key=key)
 
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("remi.sendCallback('%(emitter_identifier)s','%(event_name)s');document.activeElement.blur();")
+    def onclick(self):
+        """Called when the Widget gets clicked by the user with the left mouse button."""
+        return ()
+
 
 class TreeView(Container):
     """TreeView widget can contain TreeItem."""
