@@ -4184,9 +4184,10 @@ class VideoPlayer(Widget):
     def attr_type(self, value): self.attributes['type'] = str(value).lower()
 
     def __init__(self, video='', poster=None, autoplay=False, loop=False, *args, **kwargs):
+        from remi.server import _proxy
         super(VideoPlayer, self).__init__(*args, **kwargs)
         self.type = 'video'
-        self.attributes['src'] = video
+        self.attributes['src'] = _proxy.set_url(video)
         self.attributes['preload'] = 'auto'
         self.attributes['controls'] = None
         self.attributes['poster'] = poster
