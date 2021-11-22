@@ -62,6 +62,7 @@ def gzip_encode(content):
 
 clients = {}
 runtimeInstances = weakref.WeakValueDictionary()
+_proxy = {}
 
 pyLessThan3 = sys.version_info < (3,)
 
@@ -69,7 +70,6 @@ pyLessThan3 = sys.version_info < (3,)
 _MSG_ACK = '3'
 _MSG_JS = '2'
 _MSG_UPDATE = '1'
-
 
 def to_websocket(data):
     # encoding end decoding utility function
@@ -337,6 +337,7 @@ class App(BaseHTTPRequestHandler, object):
     def _instance(self):
         global clients
         global runtimeInstances
+        global _proxy
         """
         This method is used to get the Application instance previously created
         managing on this, it is possible to switch to "single instance for
@@ -368,7 +369,7 @@ class App(BaseHTTPRequestHandler, object):
             
             head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
-            head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
+            head.add_child('internal_css', f"<link href='{self._proxy.set_url('/res:style.css')}' rel='stylesheet' />\n")
 
             body = gui.BODY()
             body.add_class('remi-main')
@@ -410,7 +411,8 @@ class App(BaseHTTPRequestHandler, object):
             self._need_update_flag = client._need_update_flag
             if hasattr(client, '_update_thread'):
                 self._update_thread = client._update_thread
-                
+
+        _proxy = self._proxy                
         net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
@@ -673,6 +675,10 @@ class App(BaseHTTPRequestHandler, object):
             self.end_headers()
             with open(filename, 'rb') as f:
                 content = f.read()
+                x = re.search(r"(\/[^:]*\:)",func)
+                if len(x.groups())!=0 and filename.endswith(".css"):
+                    tag = x.groups()[0]
+                    content =  content.decode().replace(f"{tag}",f"{self._proxy.get_url()}{tag}").encode()
                 self.wfile.write(content)
         elif attr_call:
             with self.update_lock:
@@ -777,13 +783,27 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
             self.socket = ssl.wrap_socket(self.socket, keyfile=self.keyfile, certfile=self.certfile, server_side=True, ssl_version=self.ssl_version, do_handshake_on_connect=True)
 
 
+class Proxy:
+    @staticmethod
+    def set_url(url):
+        return url
+    @staticmethod
+    def get_url():
+        return ""      
+
 class Server(object):
     # noinspection PyShadowingNames
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=0, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, 
-                 certfile=None, keyfile=None, ssl_version=None,  userdata=()):
+                 certfile=None, keyfile=None, ssl_version=None,  userdata=(), proxy=None):
+        global _proxy
 
+        if proxy == None:
+            proxy = Proxy
+        _proxy = proxy
+        self._proxy = proxy
+        gui_class._proxy = proxy
         self._gui = gui_class
         self._title = title or gui_class.__name__
         self._sserver = None
@@ -881,14 +901,15 @@ class Server(object):
         for client in clients.values():
             client.on_close()
 
-
 class StandaloneServer(Server):
     def __init__(self, gui_class, title='', width=800, height=600, resizable=True, fullscreen=False, start=True,
-                 userdata=()):
+                 userdata=(), proxy=None):
+        if proxy == None:
+            proxy = Proxy
         Server.__init__(self, gui_class, title=title, start=False, address='127.0.0.1', port=0, username=None,
                         password=None,
                         multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=False,
-                        websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, userdata=userdata)
+                        websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000, userdata=userdata, proxy=proxy)
 
         self._application_conf = {'width': width, 'height': height, 'resizable': resizable, 'fullscreen': fullscreen}
 
@@ -907,7 +928,6 @@ class StandaloneServer(Server):
             webview.create_window(self.title, self.address, **self._application_conf)
             webview.start()
             Server.stop(self)
-
 
 def start(main_gui_class, **kwargs):
     """This method starts the webserver with a specific App subclass."""
