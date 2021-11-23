@@ -34,10 +34,12 @@ class MyApp(Editor):
         super(MyApp, self).__init__(*args,)
             
     def _net_interface_ip(self):
+        # used for the ws(s) address
         ip = super()._net_interface_ip()
         return ip + f"/proxy/{remiport}"
     
     def _overload(self, data, **kwargs):
+        # every content sent back to a client needs /res: to be overloaded and replaced by /proxy/8085/res: (holds for editor_resources and the like)
         if "filename" in kwargs:
             filename = kwargs['filename']
         else:
@@ -53,7 +55,7 @@ class MyApp(Editor):
  
 ```
 
-* add the proxy on the start
+* start as usual
 
 ```python
 myRemi = Thread(target=start, 
@@ -63,8 +65,7 @@ myRemi = Thread(target=start,
                                  'multiple_instance':True,
                                  'enable_file_cache':True, 
                                  'update_interval':0.5, 
-                                 'start_browser':False,
-                                 'proxy':Proxy})
+                                 'start_browser':False})
 ```
 If the proxy kwarg is not provided, remi behaves as legacy
 
