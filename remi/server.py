@@ -681,7 +681,7 @@ class App(BaseHTTPRequestHandler, object):
                 page_content = self.page.repr()
 
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
-            self.wfile.write(encode_text(overload(page_content, filename="internal")))
+            self.wfile.write(encode_text(self._overload(page_content, filename="internal")))
             
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
@@ -696,7 +696,7 @@ class App(BaseHTTPRequestHandler, object):
             self.end_headers()
             with open(filename, 'rb') as f:
                 content = f.read()
-                self.wfile.write(overload(content, filename=filename))
+                self.wfile.write(self._overload(content, filename=filename))
         elif attr_call:
             with self.update_lock:
                 param_dict = parse_qs(urlparse(func).query)
@@ -724,9 +724,9 @@ class App(BaseHTTPRequestHandler, object):
                 self.send_header(k, headers[k])
             self.end_headers()
             try:
-                self.wfile.write(overload(content, filename="internal"))
+                self.wfile.write(self._overload(content, filename="internal"))
             except TypeError:
-                self.wfile.write(overload(encode_text(content), filename="internal"))
+                self.wfile.write(self._overload(encode_text(content), filename="internal"))
 
     def close(self):
         """ Command to initiate an App to close
