@@ -67,7 +67,7 @@ myRemi = Thread(target=start,
                                  'update_interval':0.5, 
                                  'start_browser':False})
 ```
-If the proxy kwarg is not provided, remi behaves as legacy
+If no overload provided, remi behaves as legacy
 
 ## Disclaimer
 
