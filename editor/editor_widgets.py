@@ -685,7 +685,6 @@ class EditorAttributesGroup(gui.VBox):
     """
 
     def __init__(self, title, **kwargs):
-        from remi.server import _proxy
         super(EditorAttributesGroup, self).__init__(**kwargs)
         self.add_class('.RaisedFrame')
         #self.style['display'] = 'block'
@@ -696,7 +695,7 @@ class EditorAttributesGroup(gui.VBox):
         self.title = gui.Label(title, width='100%')
         self.title.add_class("Title")
         self.title.style.update({'text-indent': '25px',
-                                 'background-image': f"url({_proxy.set_url('/editor_resources:minus.png')})",
+                                 'background-image': "url('/editor_resources:minus.png')",
                                  'background-repeat': 'no-repeat',
                                  'background-position': '5px',
                                  'border-top': '3px solid lightgray'})
@@ -705,9 +704,8 @@ class EditorAttributesGroup(gui.VBox):
         super(EditorAttributesGroup, self).append(self.container)
 
     def openClose(self, widget):
-        from remi.server import _proxy
         self.opened = not self.opened
-        backgroundImage = f"url({_proxy.set_url('/editor_resources:minus.png')})" if self.opened else f"url({_proxy.set_url('/editor_resources:plus.png')})"
+        backgroundImage = "url('/editor_resources:minus.png')" if self.opened else "url('/editor_resources:plus.png')"
         self.title.style['background-image'] = backgroundImage
         self.container.css_display = 'flex' if self.opened else 'none'
 
@@ -1092,7 +1090,6 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
     inputWidget = None
 
     def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
-        from remi.server import _proxy
         super(EditorAttributeInputUrl, self).__init__(widget, attributeName,
                                                       propertyDef, attributeDict, appInstance, *args, **kwargs)
         self.inputWidget = gui.TextInput(width="100%", height="100%")
@@ -1101,7 +1098,7 @@ class EditorAttributeInputUrl(EditorAttributeInputBase):
 
         self.btFileFolderSelection = gui.Widget(width='100%', height='100%')
         self.btFileFolderSelection.style.update({'background-repeat': 'no-repeat',
-                                                 'background-image': f"url({_proxy.set_url('/res:folder.png')})",
+                                                 'background-image': "url('/res:folder.png')",
                                                  'background-color': 'transparent'})
         self.btFileFolderSelection.onclick.do(
             self.on_file_selection_bt_pressed)
