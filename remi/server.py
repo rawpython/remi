@@ -663,7 +663,7 @@ class App(BaseHTTPRequestHandler, object):
     def _process_all(self, func, **kwargs):
         self._log.debug('get: %s' % func)
         if 'overload' not in kwargs:
-            overload = self._callback
+            overload = self._overload
         else:
             overload = kwargs['overload']
 
