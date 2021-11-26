@@ -6,6 +6,9 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+package-lock.json
+package.json
+node_modules
 .ipynb_checkpoints/
 venv/
 .Python

@@ -662,11 +662,6 @@ class App(BaseHTTPRequestHandler, object):
 
     def _process_all(self, func, **kwargs):
         self._log.debug('get: %s' % func)
-        if 'overload' not in kwargs:
-            overload = self._overload
-        else:
-            overload = kwargs['overload']
-
         static_file = self.re_static_file.match(func)
         attr_call = self.re_attr_call.match(func)
 
