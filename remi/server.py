@@ -128,6 +128,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.server = server
         self.handshake_done = False
         self._log = logging.getLogger('remi.server.ws')
+        #self._log.setLevel(logging.DEBUG)
         socketserver.StreamRequestHandler.__init__(self, request, client_address, server, *args, **kwargs)
 
     def setup(self):
@@ -163,6 +164,10 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             except ValueError:
                 # socket was closed, just return without errors
                 return False
+            if length is None:
+                return False
+            if len(length) < 2:
+                return False
             length = self.bytetonum(length[1]) & 127
             if length == 126:
                 length = struct.unpack('>H', self.rfile.read(2))[0]
@@ -172,6 +177,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             decoded = ''
             for char in self.rfile.read(length):
                 decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
+            self._log.debug('read_message: %s...' % (decoded[:10]))
             self.on_message(from_websocket(decoded))
         except socket.timeout:
             return False
@@ -184,6 +190,9 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if not self.handshake_done:
             self._log.warning("ignoring message %s (handshake not done)" % message[:10])
             return False
+        
+        if message[0] == "2":
+            i = 0
 
         self._log.debug('send_message: %s... -> %s' % (message[:10], self.client_address))
         out = bytearray()
@@ -411,11 +420,13 @@ class App(BaseHTTPRequestHandler, object):
             if hasattr(client, '_update_thread'):
                 self._update_thread = client._update_thread
                 
-        net_interface_ip = self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
+        net_interface_ip = self._net_interface_ip()
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         self.page.children['head'].set_internal_js(str(id(self)), net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
 
+    def _net_interface_ip(self):
+        return self.headers.get('Host', "%s:%s"%(self.connection.getsockname()[0],self.server.server_address[1]))
     def main(self, *_):
         """ Subclasses of App class *must* declare a main function
             that will be the entry point of the application.
@@ -470,13 +481,13 @@ class App(BaseHTTPRequestHandler, object):
             for widget in changed_widget_dict.keys():
                 html = changed_widget_dict[widget]
                 __id = str(widget.identifier)
-                self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(html))
+                self._send_spontaneous_websocket_message(_MSG_UPDATE + __id + ',' + to_websocket(self._overload(html, filename="internal")))
         self._need_update_flag = False
 
     def websocket_handshake_done(self, ws_instance_to_update):
         msg = ""
         with self.update_lock:
-            msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
+            msg = "0" + self.root.identifier + ',' + to_websocket(self._overload(self.page.children['body'].innerHTML({}), filename="internal"))
         ws_instance_to_update.send_message(msg)
 
     def set_root_widget(self, widget):
@@ -487,7 +498,7 @@ class App(BaseHTTPRequestHandler, object):
         self.root._parent = self
         self.root.enable_refresh()
 
-        msg = "0" + self.root.identifier + ',' + to_websocket(self.page.children['body'].innerHTML({}))
+        msg = "0" + self.root.identifier + ',' + to_websocket(self._overload(self.page.children['body'].innerHTML({}), filename="internal"))
         self._send_spontaneous_websocket_message(msg)
         
     def _send_spontaneous_websocket_message(self, message):
@@ -495,7 +506,7 @@ class App(BaseHTTPRequestHandler, object):
             # noinspection PyBroadException
             try:
                 if ws.send_message(message):
-                    #if message sent ok, continue with nect client
+                    #if message sent ok, continue with next client
                     continue
             except Exception:
                 self._log.error("sending websocket spontaneous message", exc_info=True)
@@ -623,6 +634,15 @@ class App(BaseHTTPRequestHandler, object):
             except Exception:
                 self._log.error('error processing GET request', exc_info=True)
 
+    def all_paths(self):
+        paths = {'res': os.path.join(os.path.dirname(__file__), "res")}
+        static_paths = self._app_args.get('static_file_path', {})
+        if not type(static_paths)==dict:
+            self._log.error("App's parameter static_file_path must be a Dictionary.", exc_info=False)
+            static_paths = {}
+        paths.update(static_paths)
+        return paths
+
     def _get_static_file(self, filename):
         filename = filename.replace("..", "") #avoid backdirs
         __i = filename.find(':')
@@ -631,19 +651,17 @@ class App(BaseHTTPRequestHandler, object):
         key = filename[:__i]
         path = filename[__i+1:]
         key = key.replace("/","")
-        paths = {'res': os.path.join(os.path.dirname(__file__), "res")}
-        static_paths = self._app_args.get('static_file_path', {})
-        if not type(static_paths)==dict:
-            self._log.error("App's parameter static_file_path must be a Dictionary.", exc_info=False)
-            static_paths = {}
-        paths.update(static_paths)
+        paths = self.all_paths()
         if not key in paths:
             return None
         return os.path.join(paths[key], path)
+    
+    def _overload(self, data, **kwargs):
+        """Used to overload the content before sent back to client"""
+        return data
 
-    def _process_all(self, func):
+    def _process_all(self, func, **kwargs):
         self._log.debug('get: %s' % func)
-
         static_file = self.re_static_file.match(func)
         attr_call = self.re_attr_call.match(func)
 
@@ -658,7 +676,7 @@ class App(BaseHTTPRequestHandler, object):
                 page_content = self.page.repr()
 
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
-            self.wfile.write(encode_text(page_content))
+            self.wfile.write(encode_text(self._overload(page_content, filename="internal")))
             
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
@@ -673,7 +691,7 @@ class App(BaseHTTPRequestHandler, object):
             self.end_headers()
             with open(filename, 'rb') as f:
                 content = f.read()
-                self.wfile.write(content)
+                self.wfile.write(self._overload(content, filename=filename))
         elif attr_call:
             with self.update_lock:
                 param_dict = parse_qs(urlparse(func).query)
@@ -701,9 +719,9 @@ class App(BaseHTTPRequestHandler, object):
                 self.send_header(k, headers[k])
             self.end_headers()
             try:
-                self.wfile.write(content)
+                self.wfile.write(self._overload(content, filename="internal"))
             except TypeError:
-                self.wfile.write(encode_text(content))
+                self.wfile.write(self._overload(encode_text(content), filename="internal"))
 
     def close(self):
         """ Command to initiate an App to close
@@ -842,7 +860,7 @@ class Server(object):
             try:
                 import android
                 android.webbrowser.open(self._base_address)
-            except (ImportError, AttributeError):
+            except ImportError:
                 # use default browser instead of always forcing IE on Windows
                 if os.name == 'nt':
                     webbrowser.get('windows-default').open(self._base_address)
