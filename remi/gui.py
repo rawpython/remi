@@ -4798,7 +4798,7 @@ class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
 
 
 class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
-    def __init__(self, _maxlen=None, *args, **kwargs):
+    def __init__(self, _maxlen=1000, *args, **kwargs):
         super(SvgPolygon, self).__init__(_maxlen, *args, **kwargs)
         self.type = 'polygon'
 
