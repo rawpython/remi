@@ -2017,7 +2017,7 @@ class AsciiContainer(Container):
                 widget_key = column.strip()
                 widget_width = float(len(column))
                 
-                if not widget_key in self.widget_layout_map.keys():
+                if not widget_key in list(self.widget_layout_map.keys()):
                     #width is calculated in percent
                     # height is instead initialized at 1 and incremented by 1 each row the key is present
                     # at the end of algorithm the height will be converted in percent
@@ -2044,7 +2044,7 @@ class AsciiContainer(Container):
         return key
 
     def set_widget_layout(self, widget_key):
-        if not ((widget_key in self.children.keys() and (widget_key in self.widget_layout_map.keys()))):
+        if not ((widget_key in list(self.children.keys()) and (widget_key in list(self.widget_layout_map.keys())))):
             return
         self.children[widget_key].css_position = 'absolute'
         self.children[widget_key].set_size(self.widget_layout_map[widget_key]['width'], self.widget_layout_map[widget_key]['height'])
