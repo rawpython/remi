@@ -14,18 +14,21 @@ This allows you to access your interface locally and remotely.
 </p>
 
 
-<p align="center" style="white-space:pre">
 Proud to be sponsored by
-<a href="https://www.simracingstudio.com/" style="font-size:25px">
+===
+<p align="center">
+<a href="https://www.simracingstudio.com/" style="font-size:25px" >
 <img src="https://static.wixstatic.com/media/092827_44a73f6751144b85af49c280304c9f25~mv2.png/v1/crop/x_0,y_37,w_4349,h_2313/fill/w_155,h_83,al_c,q_85,usm_0.66_1.00_0.01/srs-logo-whitebackground-slogan.webp" width="250">
 </a>
-<a href="https://github.com/PySimpleGUI" style="font-size:25px">
+<p>
+<p align="center">
+<a href="https://github.com/PySimpleGUI" style="font-size:25px;right:0px;">
 <img src="https://raw.githubusercontent.com/PySimpleGUI/PySimpleGUI/master/images/for_readme/Logo%20with%20text%20for%20GitHub%20Top.png" width="200">
 </a>
-</p>
-
+<p>
 
 Do you need support?
+===
 <p align="center">
 <a href="https://www.reddit.com/r/RemiGUI" style="font-size:25px">Reddit - (subreddit RemiGUI)</a>
 </p>
