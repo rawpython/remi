@@ -2066,9 +2066,15 @@ class TabBox(Container):
         self.tab_keys_ordered_list = []
 
     def resize_tab_titles(self):
-        tab_w = 100.0 / len(self.container_tab_titles.children.values())
+        nch=len(self.container_tab_titles.children.values())
+        # the rounding errors of "%.1f" add upt to more than 100.0%  (e.g. at 7 tabs) , so be more precise here
+        tab_w = 1000.0 // nch  /10
         for l in self.container_tab_titles.children.values():
             l.set_size("%.1f%%" % tab_w, "auto")
+        # and make last tab consume the rounding rest, looks better
+        last_tab_w=100.0-tab_w*(nch-1)
+        l.set_size("%.1f%%" % last_tab_w, "auto")
+        
 
     def append(self, widget, key=''):
         """ Adds a new tab.
@@ -2101,7 +2107,7 @@ class TabBox(Container):
     @decorate_set_on_listener("(self, emitter, key)")
     @decorate_event
     def on_tab_selection(self, emitter, key):
-        print(str(key))
+        #print(str(key))
         for k in self.children.keys():
             w = self.children[k]
             if w is self.container_tab_titles:
