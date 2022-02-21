@@ -159,25 +159,31 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
     def read_next_message(self):
         # noinspection PyBroadException
         try:
-            try:
-                length = self.rfile.read(2)
-            except ValueError:
-                # socket was closed, just return without errors
-                return False
-            if length is None:
-                return False
-            if len(length) < 2:
-                return False
-            length = self.bytetonum(length[1]) & 127
-            if length == 126:
-                length = struct.unpack('>H', self.rfile.read(2))[0]
-            elif length == 127:
-                length = struct.unpack('>Q', self.rfile.read(8))[0]
-            masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
             decoded = ''
-            for char in self.rfile.read(length):
-                decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-            self._log.debug('read_message: %s...' % (decoded[:10]))
+            fin = 0
+            while fin == 0:
+                head = None
+                try:
+                    head = self.rfile.read(2)
+                except ValueError:
+                    # socket was closed, just return without errors
+                    return False
+                if head is None:
+                    return False
+                if len(head) < 2:
+                    return False
+                opcode = head[0] & 0b1111
+                fin = head[0] >> 7 & 1
+                length = self.bytetonum(head[1]) & 127
+                if length == 126:
+                    length = struct.unpack('>H', self.rfile.read(2))[0]
+                elif length == 127:
+                    length = struct.unpack('>Q', self.rfile.read(8))[0]
+                masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
+                
+                for char in self.rfile.read(length):
+                    decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
+                self._log.debug('read_message: %s...' % (decoded[:10]))
             self.on_message(from_websocket(decoded))
         except socket.timeout:
             return False
