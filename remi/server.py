@@ -301,6 +301,11 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                             callback(**param_dict)
                     else:
                         raise Exception('unrecognized websocket command: ' + chunks[0])
+                elif chunks[0] == 'connected':
+                    # ignore, no processing necessary
+                    pass
+                else:
+                    raise Exception('unrecognized websocket command: ' + chunks[0])
 
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
