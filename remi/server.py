@@ -130,6 +130,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self._log = logging.getLogger('remi.server.ws')
         #self._log.setLevel(logging.DEBUG)
         socketserver.StreamRequestHandler.__init__(self, request, client_address, server, *args, **kwargs)
+        self.frames = []
+        self.message_length = None
 
     def setup(self):
         socketserver.StreamRequestHandler.setup(self)
@@ -174,11 +176,30 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
             elif length == 127:
                 length = struct.unpack('>Q', self.rfile.read(8))[0]
             masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
-            decoded = ''
+            frame = ''
             for char in self.rfile.read(length):
-                decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
-            self._log.debug('read_message: %s...' % (decoded[:10]))
-            self.on_message(from_websocket(decoded))
+                frame += chr(self.bytetonum(char) ^ masks[len(frame) % 4])
+            self._log.debug('read_message: %s...' % (frame[:10]))
+
+            d = re.search(r"length=\(([0-9]*)\)", frame)
+            if d == None:
+                # rest of message
+                self.frames.append(frame)
+                partial_message = "".join(self.frames)
+                if len(partial_message) == self.message_length:
+                    self.on_message(from_websocket(partial_message))
+                    self.frames = []
+                    self.message_length = 0
+            else:
+                # start of message
+                self.frames = []
+                self.message_length = int(d.group(1))
+                frame = frame[len(d.group(0)):]
+                if self.message_length == len(frame):
+                    self.on_message(from_websocket(frame))
+                else:
+                    self.frames.append(frame)
+
         except socket.timeout:
             return False
         except Exception:

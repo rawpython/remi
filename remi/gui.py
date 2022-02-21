@@ -1404,7 +1404,7 @@ class HEAD(Tag):
 
                         this._ws.onopen = function(evt){
                             if(self._ws.readyState == 1){
-                                self._ws.send('connected');
+                                self._ws.send('length=(9)connected');
 
                                 try {
                                     document.getElementById("loading").style.display = 'none';
@@ -1538,6 +1538,7 @@ class HEAD(Tag):
                     var paramStr = '';
                     if(params!==null) paramStr=this._paramPacketize(params);
                     var message = encodeURIComponent(unescape('callback' + '/' + widgetID+'/'+functionName + '/' + paramStr));
+                    message = "length=(" + message.length +")" + message;
                     this._pendingSendMessages.push(message);
                     if( this._pendingSendMessages.length < %(max_pending_messages)s ){
                         if (this._ws !== null && this._ws.readyState == 1)
