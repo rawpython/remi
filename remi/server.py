@@ -299,6 +299,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                         callback = get_method_by_name(runtimeInstances[widget_id], function_name)
                         if callback is not None:
                             callback(**param_dict)
+                    else:
+                        raise Exception('unrecognized websocket command: ' + chunks[0])
 
             except Exception:
                 self._log.error('error parsing websocket', exc_info=True)
