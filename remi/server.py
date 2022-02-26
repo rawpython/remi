@@ -174,15 +174,27 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
                     return False
                 opcode = head[0] & 0b1111
                 fin = head[0] >> 7 & 1
+                is_masked = head[1] >> 7 & 1
                 length = self.bytetonum(head[1]) & 127
+
                 if length == 126:
                     length = struct.unpack('>H', self.rfile.read(2))[0]
                 elif length == 127:
                     length = struct.unpack('>Q', self.rfile.read(8))[0]
-                masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
-                
+
+                masks = []
+                if is_masked:
+                    masks = [self.bytetonum(byte) for byte in self.rfile.read(4)]
+
+                frame_data = ''
                 for char in self.rfile.read(length):
-                    decoded += chr(self.bytetonum(char) ^ masks[len(decoded) % 4])
+                    if is_masked:
+                        next_data = chr(self.bytetonum(char) ^ masks[len(frame_data) % 4])
+                        frame_data += next_data
+                    else:
+                        frame_data += chr(self.bytetonum(char))
+
+                decoded += frame_data
                 self._log.debug('read_message: %s...' % (decoded[:10]))
             self.on_message(from_websocket(decoded))
         except socket.timeout:
