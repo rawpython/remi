@@ -27,6 +27,7 @@ except ImportError:
 
 import threading
 import traceback
+import time
 
 if remi.server.pyLessThan3:
     import imp
@@ -319,6 +320,7 @@ class Project(gui.Container):
         This class loads and save the project file, 
         and also compiles a project in python code.
     """
+    lastUpdateTime = 0
 
     def __init__(self, **kwargs):
         super(Project, self).__init__(**kwargs)
@@ -329,7 +331,14 @@ class Project(gui.Container):
                            'background-image': "url('/editor_resources:background.png')"})
         self.attr_editor_newclass = True
 
+    def shouldUpdate(self, filePathName):
+        #returns True if project file changed externally
+        if os.stat(filePathName).st_mtime > self.lastUpdateTime:
+            return True
+        return False
+
     def load(self, ifile, configuration):
+        self.lastUpdateTime = os.stat(ifile).st_mtime
         self.ifile = ifile
 
         _module = load_source(self.ifile)
@@ -665,6 +674,7 @@ class Project(gui.Container):
             self.prepare_path_to_this_widget(child)
 
     def save(self, save_path_filename, configuration):
+
         compiled_code = ''
         code_classes = ''
 
@@ -705,12 +715,16 @@ class Project(gui.Container):
             f.write(compiled_code)
             f.close()
 
+        self.lastUpdateTime = os.stat(save_path_filename).st_mtime
+
 
 class Editor(App):
     EVENT_ONDROPPPED = "on_dropped"
 
     selectedWidget = None
     additional_widgets_loaded = False
+
+    projectPathFilename = None
 
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
@@ -720,6 +734,11 @@ class Editor(App):
     def idle(self):
         for drag_helper in self.drag_helpers:
             drag_helper.update_position()
+
+        if self.projectPathFilename != None and len(self.projectPathFilename) > 0:
+            if self.project.shouldUpdate(self.projectPathFilename):
+                print("Project changed externally - RELOADING PROJECT")
+                self.reload_project()
 
     def main(self):
         import time
@@ -1018,6 +1037,17 @@ class Editor(App):
             drag_helper.setup(None, None)
         if 'root' in self.project.children.keys():
             self.project.remove_child(self.project.children['root'])
+
+    def reload_project(self):
+        self.menu_new_clicked(None)
+        try:
+            widgetTree = self.project.load(
+                self.projectPathFilename, self.projectConfiguration)
+            if widgetTree != None:
+                    self.add_widget_to_editor(widgetTree)
+        except Exception:
+            self.show_error_dialog("ERROR: Unable to load the project",
+                                    "There were an error during project load: %s" % traceback.format_exc())
 
     def on_open_dialog_confirm(self, widget, filelist):
         if len(filelist):
