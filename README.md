@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/dddomodossola/remi.svg?branch=master)](https://travis-ci.com/dddomodossola/remi)
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/dddomodossola/remi/master/remi/res/logo.png" width="430">
+    <img src="https://raw.githubusercontent.com/rawpython/remi/master/remi/res/logo.png" width="430">
 </p>
 
 <h2 align="center" style="font-weight:bolder">
@@ -34,7 +34,7 @@ Do you need support?
 </p>
 
 
-There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
+There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/rawpython/remi/tree/master/editor) subfolder to download your copy.
 
 <a href="https://vimeo.com/517626422" style="font-size:25px">A demostrative video from the great REVVEN labs</a>
 
@@ -48,7 +48,7 @@ For a **stable** version:
 pip install remi
 ```
 
-For the most updated **experimental** version [Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
+For the most updated **experimental** version [Download](https://github.com/rawpython/remi/archive/master.zip) or check out Remi from git and install
 
 ```
 python setup.py install
@@ -56,10 +56,10 @@ python setup.py install
 or install directly using pip
 
 ```
-pip install git+https://github.com/dddomodossola/remi.git
+pip install git+https://github.com/rawpython/remi.git
 ```
 
-Then start the test script (download it from github https://github.com/dddomodossola/remi/blob/master/examples/widgets_overview_app.py):
+Then start the test script (download it from github https://github.com/rawpython/remi/blob/master/examples/widgets_overview_app.py):
 ```
 python widgets_overview_app.py
 ```
@@ -70,7 +70,7 @@ Remi
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png" title="Widgets overview">
+    <img src="https://raw.githubusercontent.com/rawpython/remi/development/remi/res/screenshot.png" title="Widgets overview">
 </p>
 
 Remi enables developers to create platform independent GUI with Python. The entire GUI is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a web server that will be accessible on your network.
@@ -324,7 +324,7 @@ I suggest using the browser as a standard interface window.
 
 However, you can avoid using the browser.
 This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview).
-Here is an example about this [standalone_app.py](https://github.com/dddomodossola/remi/blob/development/examples/standalone_app.py).
+Here is an example about this [standalone_app.py](https://github.com/rawpython/remi/blob/development/examples/standalone_app.py).
 
 **Be aware that PyWebView uses qt, gtk and so on to create the window. An outdated version of these libraries can cause UI problems. If you experience UI issues, update these libraries, or better avoid standalone execution.**
 
@@ -364,18 +364,6 @@ Remi should be intended as a standard desktop GUI framework.
 The library itself doesn't implement security strategies, and so it is advised to not expose its access to unsafe public networks.
 
 When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
-
-
-Contributors
-===
-Thank you for collaborating with us to make Remi better!
-
-The real power of opensource is contributors. Please feel free to participate in this project, and consider to add yourself to the [contributors list](doc/contributors.md).
-Yes, I know that GitHub already provides a list of contributors, but I feel that I must mention who helps.
-
-<a href="https://github.com/dddomodossola/remi/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=dddomodossola/remi" >
-</a>
 
 
 Projects using Remi
