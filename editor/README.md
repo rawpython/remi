@@ -11,6 +11,20 @@ What is Remi?
 RemI is a easy to use GUI library for Python. It shows in web browser and is accessible remotely. This removes platform-specific dependencies and lets you easily develop cross-platform applications in Python!
 [More info at https://github.com/rawpython/remi](https://github.com/rawpython/remi)
 
+
+**Editor Tutorial Videos**
+<table>
+    <tr>
+        <td>
+            0 - Simple Hello World<br>
+            Here is shown how to create a simple Hello World application.
+        </td>
+        <td>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/2gWkRuj_CyQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </td>
+    </tr>
+</table>
+
 ![Alt text](https://raw.githubusercontent.com/rawpython/remi/master/editor/res/preview.png "Editor window")
 
 The **editor_app** allows you to graphically design your gui interface in an easy to use environment.
