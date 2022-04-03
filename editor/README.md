@@ -20,7 +20,7 @@ RemI is a easy to use GUI library for Python. It shows in web browser and is acc
             Here is shown how to create a simple Hello World application.
         </td>
         <td>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/2gWkRuj_CyQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            https://youtu.be/2gWkRuj_CyQ
         </td>
     </tr>
 </table>
