@@ -342,7 +342,7 @@ class App(BaseHTTPRequestHandler, object):
     """
 
     re_static_file = re.compile(r"^([\/]*[\w\d]+:[-_. $@?#£'%=()\/\[\]!+°§^,\w\d]+)") #https://regex101.com/r/uK1sX1/6
-    re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}(\w|\.)+\&{0,1})*$")
+    re_attr_call = re.compile(r"^/*(\w+)\/(\w+)\?{0,1}(\w*\={1}([^&])+\&{0,1})*$") #https://regex101.com/r/UTJB6N/1
 
     def __init__(self, request, client_address, server, **app_args):
         self._app_args = app_args
