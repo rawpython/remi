@@ -65,17 +65,24 @@ class InstancesTree(gui.TreeView):
 class InstancesWidget(gui.VBox):
     def __init__(self, **kwargs):
         super(InstancesWidget, self).__init__(**kwargs)
-        self.titleLabel = gui.Label('Instances list', width='100%')
+        self.titleLabel = gui.Label('Instances list', width='100%', height=20)
         self.titleLabel.add_class("DialogTitle")
         self.style['align-items'] = 'flex-start'
-        self.treeView = InstancesTree()
+        
+        self.container = gui.VBox(width="100%", height="calc(100% - 20px)")
+        self.container.css_align_items = 'flex-start'
+        self.container.css_justify_content = 'flex-start'
+        self.container.css_overflow = 'auto'
 
-        self.append([self.titleLabel, self.treeView])
+        self.treeView = InstancesTree()
+        self.container.append(self.treeView)
+
+        self.append([self.titleLabel, self.container])
 
         self.titleLabel.style['order'] = '-1'
         self.titleLabel.style['-webkit-order'] = '-1'
-        self.treeView.style['order'] = '0'
-        self.treeView.style['-webkit-order'] = '0'
+        self.container.style['order'] = '0'
+        self.container.style['-webkit-order'] = '0'
 
     def update(self, editorProject, selectedNode):
         self.treeView.empty()
@@ -88,10 +95,11 @@ class InstancesWidget(gui.VBox):
         self.treeView.select_instance(self.treeView, selectedNode)
 
 
-class ToolBar(gui.Container):
+class ToolBar(gui.HBox):
     def __init__(self, **kwargs):
         super(ToolBar, self).__init__(**kwargs)
-        self.set_layout_orientation(gui.Container.LAYOUT_HORIZONTAL)
+        self.css_align_items = 'center'
+        self.css_justify_content = 'flex-start'
         self.style['background-color'] = 'white'
 
     def add_command(self, imagePath, callback, title):
@@ -139,6 +147,8 @@ class SignalConnection(gui.HBox):
         self.label = gui.Label(eventConnectionFuncName, width='32%')
         self.label.style.update({'float': 'left', 'font-size': '10px',
                                  'overflow': 'hidden', 'outline': '1px solid lightgray'})
+
+        self.label_do = gui.Label(".do ->", style={'white-space':'nowrap'})
 
         self.dropdownListeners = gui.DropDown(width='32%', height='100%')
         self.dropdownListeners.onchange.do(self.on_listener_selection)
@@ -188,7 +198,7 @@ class SignalConnection(gui.HBox):
                 print(dir(eventConnectionFunc.callback))
                 self.disconnect()
 
-        self.append([self.label, self.dropdownListeners, self.dropdownMethods])
+        self.append([self.label, self.label_do, self.dropdownListeners, self.dropdownMethods])
 
     def on_listener_selection(self, widget, dropDownValue):
         self.dropdownMethods.empty()
@@ -463,8 +473,9 @@ class WidgetHelper(gui.HBox):
         self.appInstance = appInstance
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__()
-        self.style.update({'background-color': 'white', 'width': "60px",
-                           "height": "60px", "justify-content": "center", "align-items": "center"})
+        self.style.update({'background-color': 'rgb(250,250,250)', 'width': "auto", 'margin':"2px", 
+                           "height": "60px", "justify-content": "center", "align-items": "center",
+                           'font-size': '12px'})
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon) == gui.Svg:
                 self.icon = widgetClass.icon
@@ -484,7 +495,9 @@ class WidgetHelper(gui.HBox):
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'
         self.icon.attributes['ondragstart'] = "event.preventDefault();"
-        self.append(self.icon)
+        self.append(self.icon, 'icon')
+        self.append(gui.Label(self.widgetClass.__name__), 'label')
+        self.children['label'].style.update({'margin-left':'2px', 'margin-right':'3px'})
 
         self.attributes.update({'draggable': 'true',
                                 'ondragstart': "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));",
@@ -560,9 +573,9 @@ class WidgetCollection(gui.Container):
     def __init__(self, appInstance, **kwargs):
         self.appInstance = appInstance
         super(WidgetCollection, self).__init__(**kwargs)
-        self.lblTitle = gui.Label("Widgets Toolbox")
+        self.lblTitle = gui.Label("Widgets Toolbox", height=20)
         self.lblTitle.add_class("DialogTitle")
-        self.widgetsContainer = gui.HBox(width='100%', height='85%')
+        self.widgetsContainer = gui.HBox(width='100%', height='calc(100% - 20px)')
         self.widgetsContainer.style.update({'overflow-y': 'scroll',
                                             'overflow-x': 'hidden',
                                             'align-items': 'flex-start',
@@ -609,6 +622,8 @@ class WidgetCollection(gui.Container):
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.Progress, value=0, _max=100, width='130px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        self.add_widget_to_collection(gui.FileFolderNavigator, width=100, height=100, style = {
+                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
         #self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={
         #                              'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px', style={
@@ -632,7 +647,7 @@ class WidgetCollection(gui.Container):
         self.add_widget_to_collection(gui.SvgImage)
         self.add_widget_to_collection(gui.SvgGroup)
 
-        self.load_additional_widgets()
+        #self.load_additional_widgets()
 
     def load_additional_widgets(self):
         try:
@@ -712,23 +727,30 @@ class EditorAttributes(gui.VBox):
         #self.style['overflow-y'] = 'scroll'
         self.style['justify-content'] = 'flex-start'
         self.style['-webkit-justify-content'] = 'flex-start'
-        self.titleLabel = gui.Label('Attributes editor', width='100%')
+        self.titleLabel = gui.Label('Attributes editor', width='100%', height=20)
         self.titleLabel.add_class("DialogTitle")
-        self.infoLabel = gui.Label('Selected widget: None')
+        self.infoLabel = gui.Label('Selected widget: None', height=25)
         self.infoLabel.style['font-weight'] = 'bold'
-        self.append([self.titleLabel, self.infoLabel])
+        
+        self.attributes_groups_container = gui.VBox(width="100%", height="calc(100% - 45px)")
+        self.attributes_groups_container.css_overflow = 'auto'
+        self.attributes_groups_container.css_align_items = "flex-start"
+        self.attributes_groups_container.css_justify_content = "flex-start"
+        
+        self.append([self.titleLabel, self.infoLabel, self.attributes_groups_container])
 
         self.titleLabel.style['order'] = '-1'
         self.titleLabel.style['-webkit-order'] = '-1'
         self.infoLabel.style['order'] = '0'
         self.infoLabel.style['-webkit-order'] = '0'
+        self.attributes_groups_container.style['order'] = '1'
+        self.attributes_groups_container.style['-webkit-order'] = '1'
 
         self.group_orders = {
-            'Generic': '2', 'WidgetSpecific': '3', 'Geometry': '34', 'Background': '5'}
+            'Generic': '2', 'WidgetSpecific': '3', 'Geometry': '4', 'Background': '5', 'Transformation': '6'}
 
         self.attributesInputs = list()
         # load editable attributes
-        self.append(self.titleLabel)
         self.attributeGroups = {}
 
     def update_widget(self):
@@ -752,11 +774,11 @@ class EditorAttributes(gui.VBox):
         self.infoLabel.set_text("Selected widget: %s" % widget.variable_name)
 
         for w in self.attributeGroups.values():
-            self.remove_child(w)
+            self.attributes_groups_container.remove_child(w)
 
         for w in self.attributesInputs:
             if w.attributeDict['group'] in self.attributeGroups:
-                self.attributeGroups[w.attributeDict['group']].remove_child(w)
+                self.attributeGroups[w.attributeDict['group']].attributes_groups_container.remove_child(w)
 
         index = 100
         default_width = "100%"
@@ -836,7 +858,7 @@ class EditorAttributes(gui.VBox):
                         self.attributesInputs.append(attributeEditor)
 
         for w in self.attributeGroups.values():
-            self.append(w)
+            self.attributes_groups_container.append(w)
 
 
 # widget that allows to edit a specific html and css attributes

@@ -145,7 +145,7 @@ class MyApp(App):
         self.minecount = 0  # mine number in the map
         self.flagcount = 0  # flag placed by the players
 
-        self.link = gui.Link("https://github.com/dddomodossola/remi",
+        self.link = gui.Link("https://github.com/rawpython/remi",
                              "This is an example of REMI gui library.")
         self.link.set_size(1000, 20)
         self.link.style['margin'] = '10px'

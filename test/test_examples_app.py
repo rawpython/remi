@@ -232,8 +232,8 @@ class TestOncloseWindowApp(unittest.TestCase):
 class TestPageInternalsApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import page_internals_app
-        cls.AppClass = page_internals_app.MyApp
+        import template_advanced_app
+        cls.AppClass = template_advanced_app.MyApp
 
     def setUp(self):
         self.AppClass.log_request = (lambda x,y:None)

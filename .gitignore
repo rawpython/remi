@@ -6,6 +6,11 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+package-lock.json
+package.json
+node_modules
+.ipynb_checkpoints/
+venv/
 .Python
 env/
 build/
@@ -22,6 +27,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.vscode
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

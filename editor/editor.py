@@ -27,6 +27,7 @@ except ImportError:
 
 import threading
 import traceback
+import time
 
 if remi.server.pyLessThan3:
     import imp
@@ -77,9 +78,9 @@ class DraggableItem(gui.EventSource):
 
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.app_instance.project.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=False)
-        self.app_instance.project.onmouseup.do(self.stop_drag, js_prevent_default=True, js_stop_propagation=False)
-        self.app_instance.project.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.mainContainer.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.mainContainer.onmouseup.do(self.stop_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.mainContainer.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True, js_stop_propagation=False)
         self.origin_x = -1
         self.origin_y = -1
 
@@ -87,6 +88,9 @@ class DraggableItem(gui.EventSource):
     def stop_drag(self, emitter, x, y):
         self.active = False
         self.update_position()
+        self.app_instance.mainContainer.onmousemove.do(None, js_prevent_default=False, js_stop_propagation=True)
+        self.app_instance.mainContainer.onmouseup.do(None, js_prevent_default=False, js_stop_propagation=True)
+        self.app_instance.mainContainer.onmouseleave.do(None, 0, 0, js_prevent_default=False, js_stop_propagation=True)
         return ()
 
     def on_drag(self, emitter, x, y):
@@ -316,6 +320,7 @@ class Project(gui.Container):
         This class loads and save the project file, 
         and also compiles a project in python code.
     """
+    lastUpdateTime = 0
 
     def __init__(self, **kwargs):
         super(Project, self).__init__(**kwargs)
@@ -326,7 +331,14 @@ class Project(gui.Container):
                            'background-image': "url('/editor_resources:background.png')"})
         self.attr_editor_newclass = True
 
+    def shouldUpdate(self, filePathName):
+        #returns True if project file changed externally
+        if os.stat(filePathName).st_mtime > self.lastUpdateTime:
+            return True
+        return False
+
     def load(self, ifile, configuration):
+        self.lastUpdateTime = os.stat(ifile).st_mtime
         self.ifile = ifile
 
         _module = load_source(self.ifile)
@@ -444,7 +456,7 @@ class Project(gui.Container):
             if type(y) == property and not getattr(widget, x) is None:
                 if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
                     _value = getattr(widget, x)
-                    if type(_value) == str:
+                    if type(_value) == type('') or type(_value) == type(u''):
                         _value = '"%s"' % _value
                     code_nested += prototypes.proto_property_setup % {
                         'varname': widgetVarName, 'property': x, 'value': _value}
@@ -668,6 +680,7 @@ class Project(gui.Container):
         return [content, headers] 
 
     def save(self, save_path_filename, configuration):
+
         compiled_code = ''
         code_classes = ''
 
@@ -710,11 +723,16 @@ class Project(gui.Container):
         """
         return compiled_code
 
+        self.lastUpdateTime = os.stat(save_path_filename).st_mtime
+
 
 class Editor(App):
     EVENT_ONDROPPPED = "on_dropped"
 
     selectedWidget = None
+    additional_widgets_loaded = False
+
+    projectPathFilename = None
 
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
@@ -725,18 +743,45 @@ class Editor(App):
         for drag_helper in self.drag_helpers:
             drag_helper.update_position()
 
-    def main(self):
+        if self.projectPathFilename != None and len(self.projectPathFilename) > 0:
+            if self.project.shouldUpdate(self.projectPathFilename):
+                print("Project changed externally - RELOADING PROJECT")
+                self.reload_project()
 
+    def main(self):
+        import time
+        t= time.time()
         #custom css
         my_css_head = """
             <link href='/editor_resources:style.css' rel='stylesheet' />
             """
         self.page.children['head'].add_child('mycss', my_css_head)
 
-        self.mainContainer = gui.Container(width='100%', height='100%', layout_orientation=gui.Container.LAYOUT_VERTICAL, style={
-                                           'background-color': 'white', 'border': 'none', 'overflow': 'hidden'})
+        self.mainContainer = gui.GridBox(width='100%', height='100%') 
+        self.mainContainer.set_from_asciiart("""
+            | menubar  | menubar                     | instances  |
+            | toolbox  | toolbar                     | instances  |
+            | toolbox  | project                     | instances  |
+            | toolbox  | project                     | instances  |
+            | toolbox  | project                     | instances  |
+            | toolbox  | project                     | instances  |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | project                     | properties |
+            | toolbox  | signals                     | properties |
+            | toolbox  | signals                     | properties |
+            | toolbox  | signals                     | properties |
+            | toolbox  | signals                     | properties |
+            | toolbox  | signals                     | properties |
+            """, 0, 0)
 
-        menubar = gui.MenuBar(height='4%')
+        menubar = gui.MenuBar(width='100%', height='100%')
         menu = gui.Menu(width='100%', height='100%')
         menu.style['z-index'] = '1'
         m1 = gui.MenuItem('File', width=150, height='100%')
@@ -765,7 +810,7 @@ class Editor(App):
         menubar.append(menu)
 
         self.toolbar = editor_widgets.ToolBar(
-            width='100%', height='30px', margin='0px 0px')
+            width='100%', height='100%', margin='0px 0px')
         self.toolbar.style['border-bottom'] = '1px solid rgba(0,0,0,.12)'
         self.toolbar.add_command(
             '/editor_resources:delete.png', self.toolbar_delete_clicked, 'Delete Widget')
@@ -775,8 +820,8 @@ class Editor(App):
             '/editor_resources:paste.png', self.menu_paste_selection_clicked, 'Paste Widget')
 
         lbl = gui.Label("Snap grid", width=100)
-        self.spin_grid_size = gui.SpinBox('15', '1', '100', width=50)
-        self.spin_grid_size.set_on_change_listener(self.on_snap_grid_size_change)
+        self.spin_grid_size = gui.SpinBox('15', '1', '100', width=50, height="100%")
+        self.spin_grid_size.onchange.do(self.on_snap_grid_size_change)
 
         grid_size = gui.HBox(children=[lbl, self.spin_grid_size], style={
                              'outline': '1px solid gray', 'margin': '2px', 'margin-left': '10px'})
@@ -803,52 +848,31 @@ class Editor(App):
         m3.onclick.do(self.menu_project_config_clicked)
         m4.onclick.do(self.menu_became_a_sponsor)
 
-        self.subContainer = gui.HBox(
-            width='100%', height='96%', layout_orientation=gui.Container.LAYOUT_HORIZONTAL)
-        self.subContainer.style.update({'position': 'relative',
-                                        'overflow': 'hidden',
-                                        'align-items': 'stretch'})
-
         # here are contained the widgets
         self.widgetsCollection = editor_widgets.WidgetCollection(
-            self, width='100%', height='50%')
+            self, width='100%', height='100%')
 
         self.projectConfiguration = editor_widgets.ProjectConfigurationDialog(
             'Project Configuration', 'Write here the configuration for your project.')
 
-        self.attributeEditor = editor_widgets.EditorAttributes(
-            self, width='100%')
-        self.attributeEditor.style['overflow'] = 'hide'
         self.signalConnectionManager = editor_widgets.SignalConnectionManager(
-            width='100%', height='50%', style={'order': '1'})
+            width='100%', height='100%', style={'order': '1'})
 
-        self.mainContainer.append([menubar, self.subContainer])
+        self.mainContainer.append( 
+            {'toolbox': self.widgetsCollection, 'signals': self.signalConnectionManager, 'menubar':menubar})
 
-        self.subContainerLeft = gui.VBox(width='20%', height='100%')
-        self.subContainerLeft.style['position'] = 'relative'
-        self.subContainerLeft.style['left'] = '0px'
-        self.widgetsCollection.style['order'] = '0'
-        self.subContainerLeft.append(
-            {'widgets_collection': self.widgetsCollection, 'signal_manager': self.signalConnectionManager})
-        self.subContainerLeft.add_class('RaisedFrame')
-
-        self.centralContainer = gui.VBox(width='56%', height='100%')
-        self.centralContainer.append(self.toolbar)
-
-        self.subContainerRight = gui.Container(width='24%', height='100%')
-        self.subContainerRight.style.update(
-            {'position': 'absolute', 'right': '0px', 'overflow-y': 'auto', 'overflow-x': 'hidden'})
-        self.subContainerRight.add_class('RaisedFrame')
+        self.mainContainer.append(self.toolbar,'toolbar')
 
         self.instancesWidget = editor_widgets.InstancesWidget(width='100%')
         self.instancesWidget.treeView.on_tree_item_selected.do(
             self.on_instances_widget_selection)
 
-        self.subContainerRight.append(
-            {'instances_widget': self.instancesWidget, 'attributes_editor': self.attributeEditor})
+        self.attributeEditor = editor_widgets.EditorAttributes(
+            self, width='100%', height="100%")
+        self.attributeEditor.style['overflow'] = 'auto'
 
-        self.subContainer.append(
-            [self.subContainerLeft, self.centralContainer, self.subContainerRight])
+        self.mainContainer.append(
+            {'instances': self.instancesWidget, 'properties': self.attributeEditor})
 
         self.drag_helpers = [ResizeHelper(self, width=16, height=16),
                              DragHelper(self, width=15, height=15),
@@ -872,7 +896,7 @@ class Editor(App):
 
         self.projectPathFilename = ''
         self.editCuttedWidget = None  # cut operation, contains the cutted tag
-
+        print(">>>>>>>>>>>>startup time:", time.time()-t)
         # returning the root widget
         return self.mainContainer
 
@@ -883,7 +907,7 @@ class Editor(App):
 
     def on_drag_resize_end(self, emitter):
         self.selectedWidget.__dict__[
-            'attributes_editor'].set_widget(self.selectedWidget)
+            'properties'].set_widget(self.selectedWidget)
 
     def configure_widget_for_editing(self, widget):
         """ A widget have to be added to the editor, it is configured here in order to be conformant 
@@ -932,7 +956,10 @@ class Editor(App):
 
         self.configure_widget_for_editing(widget)
         #widget.identifier = widget.attributes.get('editor_varname', widget.identifier)
-        key = "root" if parent == self.project else widget.identifier
+        key = widget.identifier
+        if hasattr(widget, 'variable_name'):
+            key = widget.variable_name
+        key = "root" if parent == self.project else key
         if root_tree_node:
             parent.append(widget, key)
             if self.selectedWidget == self.project:
@@ -954,11 +981,11 @@ class Editor(App):
         t = time.time()
 
         if issubclass(widget.__class__, gui.Container) or widget == None:
-            self.subContainerLeft.append(
-                self.widgetsCollection, 'widgets_collection')
+            self.mainContainer.append(
+                self.widgetsCollection, 'toolbox')
         else:
-            self.subContainerLeft.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container" %
-                                                   widget.__class__.__name__), 'widgets_collection')
+            self.mainContainer.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container" %
+                                                   widget.__class__.__name__), 'toolbox')
 
         if self.selectedWidget == widget or widget == self.project:
             self.selectedWidget = widget
@@ -971,13 +998,13 @@ class Editor(App):
         #    self.selectedWidget.__dict__['signal_manager'] = editor_widgets.SignalConnectionManager(width='100%', height='50%', style={'order':'1'})
         self.signalConnectionManager.update(self.selectedWidget, self.project)
         #self.subContainerLeft.append(self.selectedWidget.__dict__['signal_manager'], 'signal_manager')
-        if self.selectedWidget.__dict__.get('attributes_editor', None) is None:
-            self.selectedWidget.__dict__['attributes_editor'] = editor_widgets.EditorAttributes(
-                self, width='100%', style={'overflow': 'hide'})
+        if self.selectedWidget.__dict__.get('properties', None) is None:
+            self.selectedWidget.__dict__['properties'] = editor_widgets.EditorAttributes(
+                self, width='100%', height='100%', style={'overflow': 'auto'})
             self.selectedWidget.__dict__[
-                'attributes_editor'].set_widget(self.selectedWidget)
-        self.subContainerRight.append(self.selectedWidget.__dict__[
-                                      'attributes_editor'], 'attributes_editor')
+                'properties'].set_widget(self.selectedWidget)
+        self.mainContainer.append(self.selectedWidget.__dict__[
+                                      'properties'], 'properties')
 
         parent = self.selectedWidget.get_parent()
         for drag_helper in self.drag_helpers:
@@ -1008,7 +1035,7 @@ class Editor(App):
                 
                 return false;""" % {'evt': self.EVENT_ONDROPPPED}
         self.project.onkeydown.do(self.onkeydown)
-        self.centralContainer.append(self.project, 'project')
+        self.mainContainer.append(self.project, 'project')
         self.project.style['position'] = 'relative'
         self.tabindex = 0  # incremental number to allow widgets selection
         self.selectedWidget = None
@@ -1017,6 +1044,17 @@ class Editor(App):
             drag_helper.setup(None, None)
         if 'root' in self.project.children.keys():
             self.project.remove_child(self.project.children['root'])
+
+    def reload_project(self):
+        self.menu_new_clicked(None)
+        try:
+            widgetTree = self.project.load(
+                self.projectPathFilename, self.projectConfiguration)
+            if widgetTree != None:
+                    self.add_widget_to_editor(widgetTree)
+        except Exception:
+            self.show_error_dialog("ERROR: Unable to load the project",
+                                    "There were an error during project load: %s" % traceback.format_exc())
 
     def on_open_dialog_confirm(self, widget, filelist):
         if len(filelist):
@@ -1188,6 +1226,12 @@ class Editor(App):
         error_dialog.children["message"].style['white-space'] = 'pre'
         error_dialog.cancel.style['display'] = 'none'
         error_dialog.show(self)
+
+    def onload(self, emitter):
+        if not self.additional_widgets_loaded:
+            print("loading additional widgets")
+            self.additional_widgets_loaded = True
+            self.widgetsCollection.load_additional_widgets()
 
 
 def on_dropped(self, left, top):

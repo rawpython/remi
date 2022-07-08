@@ -155,8 +155,8 @@ class multiscreen(App):
         
         #Add the menuContainer to the baseContainer and define the listeners for the menu elements
         baseContainer.append(menuContainer,'menuContainer')
-        baseContainer.children['menuContainer'].children['btnScreen2'].set_on_click_listener(self.onclick_btnScreen2)
-        baseContainer.children['menuContainer'].children['btnScreen1'].set_on_click_listener(self.onclick_btnScreen1)
+        baseContainer.children['menuContainer'].children['btnScreen2'].onclick.do(self.onclick_btnScreen2)
+        baseContainer.children['menuContainer'].children['btnScreen1'].onclick.do(self.onclick_btnScreen1)
         
         #The contentContainer 
         contentContainer = Container()
@@ -189,7 +189,7 @@ class multiscreen(App):
 
         #Define the listeners for GUI elements which are contained in the content Widgets
         #We can't define it in the Widget classes because the listeners wouldn't have access to other GUI elements outside the Widget
-        self.screen2.children['btnsend'].set_on_click_listener(self.send_text_to_screen1)
+        self.screen2.children['btnsend'].onclick.do(self.send_text_to_screen1)
         
         #Add the contentContainer to the baseContainer
         baseContainer.append(contentContainer,'contentContainer')

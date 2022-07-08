@@ -90,6 +90,7 @@ class OpencvImage(gui.Image, OpencvWidget):
         if self.app_instance==None:
             self.app_instance = self.search_app_instance(self)
             if self.app_instance==None:
+                self.attributes['src'] = "/%s/get_image_data?index=00"%self.identifier #gui.load_resource(self.filename)
                 return
         self.app_instance.execute_javascript("""
             url = '/%(id)s/get_image_data?index=%(frame_index)s';
@@ -449,7 +450,7 @@ class OpencvCvtColor(OpencvImage):
     """
     icon = "data:image/png;base64,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"
 
-    cvt_types = {'COLOR_BGR2HSV':cv2.COLOR_BGR2HSV,'COLOR_HSV2BGR':cv2.COLOR_HSV2BGR, 'COLOR_RGB2BGR':cv2.COLOR_RGB2BGR, 'COLOR_RGB2GRAY':cv2.COLOR_RGB2GRAY, 'COLOR_BGR2GRAY':cv2.COLOR_BGR2GRAY, 'COLOR_RGB2HSV':cv2.COLOR_RGB2HSV}
+    cvt_types = {'COLOR_BGR2HSV':cv2.COLOR_BGR2HSV,'COLOR_HSV2BGR':cv2.COLOR_HSV2BGR, 'COLOR_RGB2BGR':cv2.COLOR_RGB2BGR, 'COLOR_RGB2GRAY':cv2.COLOR_RGB2GRAY, 'COLOR_BGR2GRAY':cv2.COLOR_BGR2GRAY, 'COLOR_RGB2HSV':cv2.COLOR_RGB2HSV, 'COLOR_GRAY2BGR':cv2.COLOR_GRAY2BGR, 'COLOR_GRAY2RGB':cv2.COLOR_GRAY2RGB}
     @property
     @gui.editor_attribute_decorator('WidgetSpecific','The conversion constant code', 'DropDown', {'possible_values': cvt_types.keys()})
     def conversion_code(self): 
@@ -1046,6 +1047,76 @@ class OpencvFindContours(OpencvImage):
     @gui.decorate_event
     def on_new_contours_result(self):
         return (self.contours, self.hierarchy)
+
+
+class OpencvMatchTemplate(OpencvImage):
+    """ OpencvMatchTemplate widget.
+        Receives an image on on_new_image_listener and a template on on_template_listener.
+        Returns the template matching position and size of matching rectangle on on_matching_success.
+        The event on_new_image can be connected to other Opencv widgets for further processing
+    """
+    icon = None
+
+    matching_methods = {'TM_CCOEFF':cv2.TM_CCOEFF, 'TM_CCOEFF_NORMED':cv2.TM_CCOEFF_NORMED, 'TM_CCORR':cv2.TM_CCORR, 'TM_CCORR_NORMED':cv2.TM_CCORR_NORMED, 'TM_SQDIFF':cv2.TM_SQDIFF, 'TM_SQDIFF_NORMED':cv2.TM_SQDIFF_NORMED}
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','The template matching method', 'DropDown', {'possible_values': matching_methods.keys()})
+    def matching_method(self): 
+        return self.__matching_method
+    @matching_method.setter
+    def matching_method(self, v): 
+        self.__matching_method = v
+        self.on_new_image_listener(self.image_source)
+
+    @property
+    @gui.editor_attribute_decorator('WidgetSpecific','When true, the source image is shown with a rectangle in case of matching.', bool, {})
+    def show_result_rectangle(self): 
+        return self.__show_result_rectangle
+    @show_result_rectangle.setter
+    def show_result_rectangle(self, v): 
+        self.__show_result_rectangle = v
+        self.on_new_image_listener(self.image_source)
+
+    template_source = None
+
+    def __init__(self, method=cv2.TM_CCORR_NORMED, *args, **kwargs):
+        super(OpencvMatchTemplate, self).__init__("", *args, **kwargs)
+        self.__matching_method = method
+        self.__show_result_rectangle = True
+
+    def on_new_image_listener(self, emitter):
+        try:
+            self.image_source = emitter
+            method = OpencvMatchTemplate.matching_methods[self.matching_method] if type(self.matching_method) == str else self.matching_method
+            res = cv2.matchTemplate(emitter.img, self.template_source.img, method)
+            
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+            top_left = max_loc
+            w, h = self.template_source.img.shape[::-1]
+            # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+            if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+                top_left = min_loc
+            bottom_right = (top_left[0] + w, top_left[1] + h)
+            
+            if bool(self.show_result_rectangle):
+                img = emitter.img.copy()
+                cv2.rectangle(img, top_left, bottom_right, 255, 2)
+                self.set_image_data(img)
+            else:
+                self.set_image_data(res)
+            self.on_matching_success(top_left[0], top_left[1], w, h)
+        except Exception:
+            print(traceback.format_exc())
+
+    def on_template_listener(self, emitter):
+        self.template_source = emitter
+        if hasattr(self, "image_source"):
+            self.on_new_image_listener(self.image_source)
+
+    @gui.decorate_set_on_listener("(self, emitter, x, y, w, h)")
+    @gui.decorate_event
+    def on_matching_success(self, x, y, w, h):
+        return (x, y, w, h)
 
 
 class OpencvInRangeGrayscale(OpencvImage):

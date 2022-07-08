@@ -22,7 +22,7 @@ import inspect
 try:
     import html
     escape = html.escape
-except ImportError:
+except ImportError :
     import cgi
     escape = cgi.escape
 import mimetypes
@@ -38,7 +38,7 @@ except ImportError:
         from html.parser import HTMLParser
         h = HTMLParser()
         unescape = h.unescape
-    except ImportError:
+    except (ImportError, AttributeError):
         # Python 3.4+
         import html
         unescape = html.unescape
@@ -103,22 +103,32 @@ def to_uri(uri_data):
     return ("url('%s')" % uri_data)
 
 
+class CssStyleError(Exception):
+    """
+    Raised when (a combination of) settings will result in invalid/improper CSS
+    """
+    pass
+
+
 class EventSource(object):
     def __init__(self, *args, **kwargs):
         self.setup_event_methods()
 
     def setup_event_methods(self):
-        for (method_name, method) in inspect.getmembers(self, predicate=inspect.ismethod):
+        def a_method_not_builtin(obj):
+            return hasattr(obj, '__is_event')
+        for (method_name, method) in inspect.getmembers(self, predicate=a_method_not_builtin):
+            # this is implicit in predicate
+            #if not hasattr(method, '__is_event'):
+            #    continue
+            
             _event_info = None
             if hasattr(method, "_event_info"):
                 _event_info = method._event_info
 
-            if hasattr(method, '__is_event'):
-                e = ClassEventConnector(self, method_name, method)
-                setattr(self, method_name, e)
-
-            if _event_info:
-                getattr(self, method_name)._event_info = _event_info
+            e = ClassEventConnector(self, method_name, method)
+            e._event_info = _event_info
+            setattr(self, method_name, e)
 
 
 class ClassEventConnector(object):
@@ -127,19 +137,21 @@ class ClassEventConnector(object):
         by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
         and after that the listener method is called too.
     """
+    userdata = None
+    kwuserdata = None
+    callback = None
     def __init__(self, event_source_instance, event_name, event_method_bound):
         self.event_source_instance = event_source_instance
         self.event_name = event_name
         self.event_method_bound = event_method_bound
-        self.callback = None
-        self.userdata = ()
-        self.kwuserdata = {}
         self.connect = self.do  # for compatibility reasons
 
     def do(self, callback, *userdata, **kwuserdata):
         """ The callback and userdata gets stored, and if there is some javascript to add
             the js code is appended as attribute for the event source
         """
+        self.userdata = userdata
+        self.kwuserdata = kwuserdata
 
         if hasattr(self.event_method_bound, '_js_code'):
             js_stop_propagation = kwuserdata.pop('js_stop_propagation', False)
@@ -150,16 +162,17 @@ class ClassEventConnector(object):
                 ("event.preventDefault();" if js_prevent_default else "")
                 
         self.callback = callback
-        if userdata:
-            self.userdata = userdata
-        if kwuserdata:
-            self.kwuserdata = kwuserdata
 
     def __call__(self, *args, **kwargs):
         # here the event method gets called
         callback_params = self.event_method_bound(*args, **kwargs)
         if not self.callback:
             return callback_params
+
+        if not self.userdata:
+            self.userdata = ()
+        if not self.kwuserdata:
+            self.kwuserdata = {}
         if not callback_params:
             callback_params = self.userdata
         else:
@@ -200,20 +213,10 @@ def decorate_set_on_listener(prototype):
     """
     # noinspection PyDictCreation,PyProtectedMember
     def add_annotation(method):
-        method._event_info = {}
-        method._event_info['name'] = method.__name__
-        method._event_info['prototype'] = prototype
+        method._event_info = {'name':method.__name__, 'prototype':prototype}
         return method
 
     return add_annotation
-
-
-def decorate_explicit_alias_for_listener_registration(method):
-    method.__doc__ = """ Registers the listener
-                         For backward compatibility
-                         Suggested new dialect event.connect(callback, *userdata)
-                     """
-    return method
 
 
 def editor_attribute_decorator(group, description, _type, additional_data):
@@ -226,10 +229,8 @@ def editor_attribute_decorator(group, description, _type, additional_data):
 class _EventDictionary(dict, EventSource):
     """This dictionary allows to be notified if its content is changed.
     """
-
+    changed = False
     def __init__(self, *args, **kwargs):
-        self.__version__ = 0
-        self.__lastversion__ = 0
         super(_EventDictionary, self).__init__(*args, **kwargs)
         EventSource.__init__(self, *args, **kwargs)
 
@@ -266,16 +267,16 @@ class _EventDictionary(dict, EventSource):
         return ret
 
     def ischanged(self):
-        return self.__version__ != self.__lastversion__
+        return self.changed
 
     def align_version(self):
-        self.__lastversion__ = self.__version__
+        self.changed = False
 
     @decorate_event
     def onchange(self):
         """Called on content change.
         """
-        self.__version__ += 1
+        self.changed = True
         return ()
 
 
@@ -306,6 +307,7 @@ class Tag(object):
         self.style = _EventDictionary()  # used by Widget, but instantiated here to make gui_updater simpler
 
         self.ignore_update = False
+        self.refresh_enabled = True
         self.children.onchange.connect(self._need_update)
         self.attributes.onchange.connect(self._need_update)
         self.style.onchange.connect(self._need_update)
@@ -382,7 +384,7 @@ class Tag(object):
             changed_widgets.update(local_changed_widgets)
         return self._backup_repr
 
-    def _need_update(self, emitter=None):
+    def _need_update(self, emitter=None, child_ignore_update=False):
         # if there is an emitter, it means self is the actual changed widget
         if not emitter is None:
             tmp = dict(self.attributes)
@@ -392,13 +394,12 @@ class Tag(object):
                 tmp.pop('style', None)
             self._repr_attributes = ' '.join('%s="%s"' % (k, v) if v is not None else k for k, v in
                                              tmp.items())
-            
-        if not self.ignore_update:
+        if self.refresh_enabled:
             if self.get_parent():
-                self.get_parent()._need_update()
+                self.get_parent()._need_update(child_ignore_update = (self.ignore_update or child_ignore_update))
 
     def _ischanged(self):
-        return self.children.ischanged() or self.attributes.ischanged() or self.style.ischanged()
+        return self.children.changed or self.attributes.changed or self.style.changed
 
     def _set_updated(self):
         self.children.align_version()
@@ -406,9 +407,23 @@ class Tag(object):
         self.style.align_version()
 
     def disable_refresh(self):
-        self.ignore_update = True
+        """ Prevents the parent widgets to be notified about an update. 
+            This is required to improve performances in case of widgets updated 
+                multiple times in a procedure.
+        """
+        self.refresh_enabled = False
 
     def enable_refresh(self):
+        self.refresh_enabled = True
+
+    def disable_update(self):
+        """ Prevents clients updates. Remi will not send websockets update messages.
+            The widgets are however iternally updated. So if the user updates the 
+                webpage, the update is shown.
+        """
+        self.ignore_update = True
+
+    def enable_update(self):
         self.ignore_update = False
 
     def add_class(self, cls):
@@ -1176,77 +1191,39 @@ class Widget(Tag, EventSource):
         """
         return (key, keycode, ctrl, shift, alt)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_focus_listener(self, callback, *userdata):
-        self.onfocus.connect(callback, *userdata)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_blur_listener(self, callback, *userdata):
-        self.onblur.connect(callback, *userdata)
+    def query_client(self, app_instance, attribute_list, style_property_list):
+        """
+            WARNING: this is a new feature, subject to changes.
+            This method allows to query client rendering attributes and style properties of a widget.
+            The user, in order to get back the values must register a listener for the event 'onquery_client_result'.
+            Args:
+                app_instance (App): the app instance
+                attribute_list (list): list of attributes names
+                style_property_list (list): list of style property names
+        """
+        app_instance.execute_javascript("""
+                var params={};
+                %(attributes)s
+                %(style)s
+                remi.sendCallbackParam('%(emitter_identifier)s','%(callback_name)s',params);
+            """ % {
+                    'attributes': ";".join(map(lambda param_name: "params['%(param_name)s']=document.getElementById('%(emitter_identifier)s').%(param_name)s" % {'param_name': param_name, 'emitter_identifier': str(self.identifier)}, attribute_list)),
+                    'style': ";".join(map(lambda param_name: "params['%(param_name)s']=document.getElementById('%(emitter_identifier)s').style.%(param_name)s" % {'param_name': param_name, 'emitter_identifier': str(self.identifier)}, style_property_list)),
+                    'emitter_identifier': str(self.identifier),
+                    'callback_name': 'onquery_client_result'
+                }
+            )
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_click_listener(self, callback, *userdata):
-        self.onclick.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_dblclick_listener(self, callback, *userdata):
-        self.ondblclick.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_contextmenu_listener(self, callback, *userdata):
-        self.oncontextmenu.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mousedown_listener(self, callback, *userdata):
-        self.onmousedown.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mouseup_listener(self, callback, *userdata):
-        self.onmouseup.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mouseout_listener(self, callback, *userdata):
-        self.onmouseout.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mouseleave_listener(self, callback, *userdata):
-        self.onmouseleave.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_mousemove_listener(self, callback, *userdata):
-        self.onmousemove.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchmove_listener(self, callback, *userdata):
-        self.ontouchmove.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchstart_listener(self, callback, *userdata):
-        self.ontouchstart.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchend_listener(self, callback, *userdata):
-        self.ontouchend.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchenter_listener(self, callback, *userdata):
-        self.ontouchenter.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchleave_listener(self, callback, *userdata):
-        self.ontouchleave.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_touchcancel_listener(self, callback, *userdata):
-        self.ontouchcancel.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_up_listener(self, callback, *userdata):
-        self.onkeyup.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_down_listener(self, callback, *userdata):
-        self.onkeydown.connect(callback, *userdata)
+    @decorate_set_on_listener("(self, emitter, values_dictionary)")
+    @decorate_event
+    def onquery_client_result(self, **kwargs):
+        """ WARNING: this is a new feature, subject to changes.
+            This event allows to get back the values fetched by 'query' method.
+            Returns:
+                values_dictionary (dict): a dictionary containing name:value of all the requested parameters
+        """
+        return (kwargs,)
 
 
 class Container(Widget):
@@ -1399,14 +1376,7 @@ class HEAD(Tag):
                 // characters than they actually were
                 Remi.prototype._byteLength = function(str) {
                     // returns the byte length of an utf8 string
-                    var s = str.length;
-                    for (var i=str.length-1; i>=0; i--) {
-                        var code = str.charCodeAt(i);
-                        if (code > 0x7f && code <= 0x7ff) s++;
-                        else if (code > 0x7ff && code <= 0xffff) s+=2;
-                        if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
-                    }
-                    return s;
+                    return str.length;
                 };
 
                 Remi.prototype._paramPacketize = function (ps){
@@ -1840,6 +1810,9 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
+        if self.css_width == "auto":
+            if (type(value) == int and value != 0) or value[0] != "0":
+                raise CssStyleError("Do not set column gap in combination with width auto")
         if type(value) == int:
             value = str(value) + 'px'
         self.style['grid-column-gap'] = value
@@ -1850,6 +1823,9 @@ class GridBox(Container):
         Args:
             value (int or str): gap value (i.e. 10 or "10px")
         """
+        if self.css_height == "auto":
+            if (type(value) == int and value != 0) or value[0] != "0":
+                raise CssStyleError("Do not set row gap in combination with height auto")
         if type(value) == int:
             value = str(value) + 'px'
         self.style['grid-row-gap'] = value
@@ -2005,6 +1981,77 @@ class VBox(HBox):
         self.css_flex_direction = 'column'
 
 
+class AsciiContainer(Container):
+    widget_layout_map = None
+
+    def __init__(self, *args, **kwargs):
+        Container.__init__(self, *args, **kwargs)
+        self.css_position = 'relative'
+        
+    def set_from_asciiart(self, asciipattern, gap_horizontal=0, gap_vertical=0):
+        """
+            asciipattern (str): a multiline string representing the layout
+                | widget1               |
+                | widget1               |
+                | widget2 | widget3     |
+            gap_horizontal (int): a percent value
+            gap_vertical (int): a percent value
+        """
+        pattern_rows = asciipattern.split('\n')
+        # remove empty rows
+        for r in pattern_rows[:]:
+            if len(r.replace(" ", "")) < 1:
+                pattern_rows.remove(r)
+
+        layout_height_in_chars = len(pattern_rows)
+        self.widget_layout_map = {}
+        row_index = 0
+        for row in pattern_rows:
+            row = row.strip()
+            row_width = len(row) - row.count('|') #the row width is calculated without pipes
+            row = row[1:-1] #removing |pipes at beginning and end
+            columns = row.split('|')
+
+            left_value = 0
+            for column in columns:
+                widget_key = column.strip()
+                widget_width = float(len(column))
+                
+                if not widget_key in list(self.widget_layout_map.keys()):
+                    #width is calculated in percent
+                    # height is instead initialized at 1 and incremented by 1 each row the key is present
+                    # at the end of algorithm the height will be converted in percent
+                    self.widget_layout_map[widget_key] = { 'width': "%.2f%%"%float(widget_width / (row_width) * 100.0 - gap_horizontal), 
+                                            'height':1, 
+                                            'top':"%.2f%%"%float(row_index / (layout_height_in_chars) * 100.0 + (gap_vertical/2.0)), 
+                                            'left':"%.2f%%"%float(left_value / (row_width) * 100.0 + (gap_horizontal/2.0))}
+                else:
+                    self.widget_layout_map[widget_key]['height'] += 1
+                
+                left_value += widget_width
+            row_index += 1
+
+        #converting height values in percent string
+        for key in self.widget_layout_map.keys():
+            self.widget_layout_map[key]['height'] = "%.2f%%"%float(self.widget_layout_map[key]['height'] / (layout_height_in_chars) * 100.0 - gap_vertical) 
+
+        for key in self.widget_layout_map.keys():
+            self.set_widget_layout(key)
+
+    def append(self, widget, key=''):
+        key = Container.append(self, widget, key)
+        self.set_widget_layout(key)
+        return key
+
+    def set_widget_layout(self, widget_key):
+        if not ((widget_key in list(self.children.keys()) and (widget_key in list(self.widget_layout_map.keys())))):
+            return
+        self.children[widget_key].css_position = 'absolute'
+        self.children[widget_key].set_size(self.widget_layout_map[widget_key]['width'], self.widget_layout_map[widget_key]['height'])
+        self.children[widget_key].css_left = self.widget_layout_map[widget_key]['left']
+        self.children[widget_key].css_top = self.widget_layout_map[widget_key]['top']
+
+
 class TabBox(Container):
     """ A multipage container.
         Add a tab by doing an append. ie. tabbox.append( widget, "Tab Name" )
@@ -2019,9 +2066,15 @@ class TabBox(Container):
         self.tab_keys_ordered_list = []
 
     def resize_tab_titles(self):
-        tab_w = 100.0 / len(self.container_tab_titles.children.values())
+        nch=len(self.container_tab_titles.children.values())
+        # the rounding errors of "%.1f" add upt to more than 100.0%  (e.g. at 7 tabs) , so be more precise here
+        tab_w = 1000.0 // nch  /10
         for l in self.container_tab_titles.children.values():
             l.set_size("%.1f%%" % tab_w, "auto")
+        # and make last tab consume the rounding rest, looks better
+        last_tab_w=100.0-tab_w*(nch-1)
+        l.set_size("%.1f%%" % last_tab_w, "auto")
+        
 
     def append(self, widget, key=''):
         """ Adds a new tab.
@@ -2054,7 +2107,7 @@ class TabBox(Container):
     @decorate_set_on_listener("(self, emitter, key)")
     @decorate_event
     def on_tab_selection(self, emitter, key):
-        print(str(key))
+        #print(str(key))
         for k in self.children.keys():
             w = self.children[k]
             if w is self.container_tab_titles:
@@ -2241,9 +2294,9 @@ class TextInput(Widget, _MixinTextualWidget):
         Args:
             new_value (str): the new string content of the TextInput.
         """
-        self.disable_refresh()
+        self.disable_update()
         self.set_value(new_value)
-        self.enable_refresh()
+        self.enable_update()
         return (new_value, )
 
     @decorate_set_on_listener("(self, emitter, new_value, keycode)")
@@ -2275,18 +2328,6 @@ class TextInput(Widget, _MixinTextualWidget):
             keycode (str): the numeric char code
         """
         return (new_value, keycode)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_up_listener(self, callback, *userdata):
-        self.onkeyup.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_key_down_listener(self, callback, *userdata):
-        self.onkeydown.connect(callback, *userdata)
 
 
 class Label(Widget, _MixinTextualWidget):
@@ -2483,14 +2524,6 @@ class GenericDialog(Container):
     def hide(self):
         self._base_app_instance.set_root_widget(self._old_root_widget)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_confirm_dialog_listener(self, callback, *userdata):
-        self.confirm_dialog.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_cancel_dialog_listener(self, callback, *userdata):
-        self.cancel_dialog.connect(callback, *userdata)
-
 
 class InputDialog(GenericDialog):
     """Input Dialog widget. It can be used to query simple and short textual input to the user.
@@ -2532,10 +2565,6 @@ class InputDialog(GenericDialog):
     def confirm_value(self, widget):
         """Event called pressing on OK button."""
         return (self.inputText.get_text(),)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_confirm_value_listener(self, callback, *userdata):
-        self.confirm_value.connect(callback, *userdata)
 
 
 class ListView(Container):
@@ -2672,10 +2701,6 @@ class ListView(Container):
                 self._selected_item = item
                 self._selected_item.attributes['selected'] = True
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_selection_listener(self, callback, *userdata):
-        self.onselection.connect(callback, *userdata)
-
 
 class ListItem(Widget, _MixinTextualWidget):
     """List item widget for the ListView.
@@ -2811,14 +2836,10 @@ class DropDown(Container):
     def onchange(self, value):
         """Called when a new DropDownItem gets selected.
         """
-        self.disable_refresh()
+        self.disable_update()
         self.select_by_value(value)
-        self.enable_refresh()
+        self.enable_update()
         return (value, )
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
 
 
 class DropDownItem(Widget, _MixinTextualWidget):
@@ -2954,10 +2975,6 @@ class Table(Container):
     @decorate_event
     def on_table_row_click(self, row, item):
         return (row, item)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_table_row_click_listener(self, callback, *userdata):
-        self.on_table_row_click.connect(callback, *userdata)
 
 
 class TableWidget(Table):
@@ -3107,10 +3124,6 @@ class TableWidget(Table):
         """
         return (item, new_value, row, column)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_item_changed_listener(self, callback, *userdata):
-        self.on_item_changed.connect(callback, *userdata)
-
 
 class TableRow(Container):
     """
@@ -3151,10 +3164,6 @@ class TableRow(Container):
         """
         return (item, )
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_row_item_click_listener(self, callback, *userdata):
-        self.on_row_item_click.connect(callback, *userdata)
-
 
 class TableEditableItem(Container, _MixinTextualWidget):
     """item widget for the TableRow."""
@@ -3178,10 +3187,6 @@ class TableEditableItem(Container, _MixinTextualWidget):
     @decorate_event
     def onchange(self, emitter, new_value):
         return (new_value, )
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
 
 
 class TableItem(Container, _MixinTextualWidget):
@@ -3255,10 +3260,6 @@ class Input(Widget):
             except KeyError:
                 pass
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
-
 
 class CheckBoxLabel(HBox):
 
@@ -3294,10 +3295,6 @@ class CheckBoxLabel(HBox):
     @decorate_event
     def onchange(self, widget, value):
         return (value, )
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_change_listener(self, callback, *userdata):
-        self.onchange.connect(callback, *userdata)
 
     def get_text(self):
         return self._label.get_text()
@@ -3349,19 +3346,19 @@ class SpinBox(Input):
     """spin box widget useful as numeric input field implements the onchange event.
     """
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the spin box.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the spin box.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the spin box.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
@@ -3410,14 +3407,29 @@ class SpinBox(Input):
             _, _, _ = int(value), int(self.attributes['min']), int(self.attributes['max'])
         except:
             _type = float
-        _value = max(_type(value), _type(self.attributes['min']))
-        _value = min(_type(_value), _type(self.attributes['max']))
-        self.attributes['value'] = str(_value)
-        #this is to force update in case a value out of limits arrived
-        # and the limiting ended up with the same previous value stored in self.attributes
-        # In this case the limitation gets not updated in browser 
-        # (because not triggering is_changed). So the update is forced.
-        if _type(value) != _value:
+
+        try:
+            _value = max(_type(value), _type(self.attributes['min']))
+            _value = min(_type(_value), _type(self.attributes['max']))
+
+            self.disable_update()
+            self.attributes['value'] = str(_value)
+            self.enable_update()
+
+            #this is to force update in case a value out of limits arrived
+            # and the limiting ended up with the same previous value stored in self.attributes
+            # In this case the limitation gets not updated in browser 
+            # (because not triggering is_changed). So the update is forced.
+            if _type(value) != _value:
+                self.attributes.onchange()
+        except:
+            #if the value conversion fails the client gui is updated with its previous value
+            _type = int
+            try:
+                _, _, _ = int(self.attributes['value']), int(self.attributes['min']), int(self.attributes['max'])
+            except:
+                _type = float
+            _value = _type(self.attributes['value'])
             self.attributes.onchange()
 
         return (_value, )
@@ -3426,19 +3438,19 @@ class SpinBox(Input):
 class Slider(Input):
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the Slider.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_value(self): return self.attributes.get('value', '0')
     @attr_value.setter
     def attr_value(self, value): self.attributes['value'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the minimum value for the Slider.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_min(self): return self.attributes.get('min', '0')
     @attr_min.setter
     def attr_min(self, value): self.attributes['min'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the maximum value for the Slider.''', float, {'possible_values': '', 'min': -65535, 'max': 65535, 'default': 0, 'step': 1})
     def attr_max(self): return self.attributes.get('max', '65535')
     @attr_max.setter
     def attr_max(self, value): self.attributes['max'] = str(value)
@@ -3473,10 +3485,6 @@ class Slider(Input):
     def oninput(self, value):
         return (value, )
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_oninput_listener(self, callback, *userdata):
-        self.oninput.connect(callback, *userdata)
-
 
 class ColorPicker(Input):
 
@@ -3501,10 +3509,12 @@ class Date(Input):
 
 
 class Datalist(Container):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, options=None, *args, **kwargs):
         super(Datalist, self).__init__(*args, **kwargs)
         self.type = 'datalist'
         self.css_display = 'none'
+        if options:
+            self.append(options)
 
     def append(self, options, key=''):
         if type(options) in (list, tuple, dict):
@@ -3571,27 +3581,27 @@ class SelectionInput(Input):
     @attr_input_type.setter
     def attr_input_type(self, value): self.attributes['type'] = str(value)
 
-    def __init__(self, default_value="", input_type="text", **kwargs):
+    def __init__(self, default_value="", input_type="text", *args, **kwargs):
         """
         Args:
             selection_type (str): text, search, url, tel, email, date, month, week, time, datetime-local, number, range, color. 
             kwargs: See Widget.__init__()
         """
-        super(SelectionInput, self).__init__(input_type, default_value, **kwargs)
+        super(SelectionInput, self).__init__(input_type, default_value, *args, **kwargs)
         
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
             "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
             {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
-    @decorate_set_on_listener("(self, emitter, x, y)")
+    @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event_js("""var params={};
             params['value']=this.value;
             remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def oninput(self, value):
-        self.disable_refresh()
+        self.disable_update()
         self.set_value(value)
-        self.enable_refresh()
+        self.enable_update()
         return (value, )
 
     def set_value(self, value):
@@ -3611,6 +3621,60 @@ class SelectionInput(Input):
         return self.attr_datalist_identifier
 
 
+class SelectionInputWidget(Container):
+    datalist = None #the internal Datalist 
+    selection_input = None #the internal selection_input
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual value for the widget.''', str, {})
+    def attr_value(self): return self.selection_input.attr_value
+    @attr_value.setter
+    def attr_value(self, value): self.selection_input.attr_value = str(value)
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the view type.''', 'DropDown', {'possible_values': ('text', 'search', 'url', 'tel', 'email', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color')})
+    def attr_input_type(self): return self.selection_input.attr_input_type
+    @attr_input_type.setter
+    def attr_input_type(self, value): self.selection_input.attr_input_type = str(value)
+
+    def __init__(self, iterable_of_str=None, default_value="", input_type='text', *args, **kwargs):
+        super(SelectionInputWidget, self).__init__(*args, **kwargs)
+        options = None
+        if iterable_of_str:
+            options = list(map(DatalistItem, iterable_of_str))
+        self.datalist = Datalist(options)
+        self.selection_input = SelectionInput(default_value, input_type, style={'top':'0px', 
+                                                'left':'0px', 'bottom':'0px', 'right':'0px'})
+        self.selection_input.set_datalist_identifier(self.datalist.identifier)
+        self.append([self.datalist, self.selection_input])
+        self.selection_input.oninput.do(self.oninput)
+    
+    def set_value(self, value):
+        """ 
+        Sets the value of the widget
+        Args:
+            value (str): the string value
+        """
+        self.attr_value = value
+
+    def get_value(self):
+        """
+        Returns:
+            str: the actual value
+        """
+        return self.attr_value
+
+    @decorate_set_on_listener("(self, emitter, value)")
+    @decorate_event
+    def oninput(self, emitter, value):
+        """ 
+        This event occurs when user inputs a new value
+        Returns:
+            value (str): the string value
+        """
+        return (value, )
+
+
 class GenericObject(Widget):
     """
     GenericObject widget - allows to show embedded object like pdf,swf..
@@ -3627,47 +3691,65 @@ class GenericObject(Widget):
         self.attributes['data'] = filename
 
 
-class FileFolderNavigator(Container):
+class FileFolderNavigator(GridBox):
     """FileFolderNavigator widget."""
 
-    def __init__(self, multiple_selection, selection_folder, allow_file_selection, allow_folder_selection, **kwargs):
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines wether it is possible to select multiple items.''', bool, {})
+    def multiple_selection(self): return self._multiple_selection
+    @multiple_selection.setter
+    def multiple_selection(self, value): self._multiple_selection = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines the actual navigator location.''', str, {})
+    def selection_folder(self): return self._selection_folder
+    @selection_folder.setter
+    def selection_folder(self, value): 
+        # fixme: we should use full paths and not all this chdir stuff
+        self.chdir(value)  # move to actual working directory
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines if files are selectable.''', bool, {})
+    def allow_file_selection(self): return self._allow_file_selection
+    @allow_file_selection.setter
+    def allow_file_selection(self, value): self._allow_file_selection = value
+
+    @property
+    @editor_attribute_decorator("WidgetSpecific", '''Defines if folders are selectable.''', bool, {})
+    def allow_folder_selection(self): return self._allow_folder_selection
+    @allow_folder_selection.setter
+    def allow_folder_selection(self, value): self._allow_folder_selection = value
+
+    def __init__(self, multiple_selection = False, selection_folder = ".", allow_file_selection = True, allow_folder_selection = False, **kwargs):
         super(FileFolderNavigator, self).__init__(**kwargs)
-        self.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.style['width'] = '100%'
+
+        self.css_grid_template_columns = "30px auto 30px"
+        self.css_grid_template_rows = "30px auto"
+        self.define_grid([('button_back','url_editor','button_go'), ('items','items','items')])
 
         self.multiple_selection = multiple_selection
         self.allow_file_selection = allow_file_selection
         self.allow_folder_selection = allow_folder_selection
         self.selectionlist = []
         self.currDir = ''
-        self.controlsContainer = Container()
-        self.controlsContainer.set_size('100%', '30px')
-        self.controlsContainer.css_display = 'flex'
-        self.controlsContainer.set_layout_orientation(Container.LAYOUT_HORIZONTAL)
         self.controlBack = Button('Up')
-        self.controlBack.set_size('10%', '100%')
         self.controlBack.onclick.connect(self.dir_go_back)
         self.controlGo = Button('Go >>')
-        self.controlGo.set_size('10%', '100%')
         self.controlGo.onclick.connect(self.dir_go)
         self.pathEditor = TextInput()
-        self.pathEditor.set_size('80%', '100%')
         self.pathEditor.style['resize'] = 'none'
         self.pathEditor.attributes['rows'] = '1'
-        self.controlsContainer.append(self.controlBack, "button_back")
-        self.controlsContainer.append(self.pathEditor, "url_editor")
-        self.controlsContainer.append(self.controlGo, "button_go")
+        self.append(self.controlBack, "button_back")
+        self.append(self.pathEditor, "url_editor")
+        self.append(self.controlGo, "button_go")
 
-        self.itemContainer = Container(width='100%', height=300)
+        self.itemContainer = Container(width='100%', height='100%')
 
-        self.append(self.controlsContainer, "controls_container")
         self.append(self.itemContainer, key='items')  # defined key as this is replaced later
 
         self.folderItems = list()
 
-        # fixme: we should use full paths and not all this chdir stuff
-        self.chdir(selection_folder)  # move to actual working directory
-        self._last_valid_path = selection_folder
+        self.selection_folder = selection_folder
 
     def get_selection_list(self):
         if self.allow_folder_selection and not self.selectionlist:
@@ -3704,16 +3786,15 @@ class FileFolderNavigator(Container):
         # this speeds up the navigation
         self.remove_child(self.itemContainer)
         # creation of a new instance of a itemContainer
-        self.itemContainer = Container(width='100%', height=300)
-        self.itemContainer.set_layout_orientation(Container.LAYOUT_VERTICAL)
-        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden', 'display': 'block'})
+        self.itemContainer = Container(width='100%', height='100%')
+        self.itemContainer.style.update({'overflow-y': 'scroll', 'overflow-x': 'hidden'})
 
         for i in l:
             full_path = os.path.join(directory, i)
             is_folder = not os.path.isfile(full_path)
             if (not is_folder) and (not self.allow_file_selection):
                 continue
-            fi = FileFolderItem(i, is_folder)
+            fi = FileFolderItem(full_path, i, is_folder)
             fi.onclick.connect(self.on_folder_item_click)  # navigation purpose
             fi.onselection.connect(self.on_folder_item_selected)  # selection purpose
             self.folderItems.append(fi)
@@ -3743,6 +3824,7 @@ class FileFolderNavigator(Container):
         os.chdir(curpath)  # restore the path
 
     def chdir(self, directory):
+        self._selection_folder = directory
         curpath = os.getcwd()  # backup the path
         log.debug("FileFolderNavigator - chdir: %s" % directory)
         for c in self.folderItems:
@@ -3758,11 +3840,17 @@ class FileFolderNavigator(Container):
         self.currDir = directory
         os.chdir(curpath)  # restore the path
 
+    @decorate_set_on_listener("(self, emitter, selected_item, selection_list)")
+    @decorate_event
     def on_folder_item_selected(self, folderitem):
+        """ This event occurs when an element in the list is selected
+            Returns the newly selected element of type FileFolderItem(or None if it was not selectable) 
+                 and the list of selected elements of type str.
+        """
         if folderitem.isFolder and (not self.allow_folder_selection):
             folderitem.set_selected(False)
             self.on_folder_item_click(folderitem)
-            return
+            return (None, self.selectionlist, )
 
         if not self.multiple_selection:
             self.selectionlist = []
@@ -3776,13 +3864,20 @@ class FileFolderNavigator(Container):
             self.selectionlist.remove(f)
         else:
             self.selectionlist.append(f)
+        return (folderitem, self.selectionlist, )
 
+    @decorate_set_on_listener("(self, emitter, clicked_item)")
+    @decorate_event
     def on_folder_item_click(self, folderitem):
+        """ This event occurs when a folder element is clicked.
+            Returns the clicked element of type FileFolderItem.
+        """
         log.debug("FileFolderNavigator - on_folder_item_dblclick")
         # when an item is clicked two time
         f = os.path.join(self.pathEditor.get_text(), folderitem.get_text())
         if not os.path.isfile(f):
             self.chdir(f)
+        return (folderitem, )
 
     def get_selected_filefolders(self):
         return self.selectionlist
@@ -3790,9 +3885,10 @@ class FileFolderNavigator(Container):
 
 class FileFolderItem(Container):
     """FileFolderItem widget for the FileFolderNavigator"""
-
-    def __init__(self, text, is_folder=False, *args, **kwargs):
+    path_and_filename = None #the complete path and filename
+    def __init__(self, path_and_filename, text, is_folder=False, *args, **kwargs):
         super(FileFolderItem, self).__init__(*args, **kwargs)
+        self.path_and_filename = path_and_filename
         self.isFolder = is_folder
         self.icon = Widget(_class='FileFolderItemIcon')
         # the icon click activates the onselection event, that is propagates to registered listener
@@ -3829,14 +3925,6 @@ class FileFolderItem(Container):
     def get_text(self):
         return self.children['text'].get_text()
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_click_listener(self, callback, *userdata):
-        self.onclick.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_selection_listener(self, callback, *userdata):
-        self.onselection.connect(callback, *userdata)
-
 
 class FileSelectionDialog(GenericDialog):
     """file selection dialog, it opens a new webpage allows the OK/CANCEL functionality
@@ -3850,7 +3938,7 @@ class FileSelectionDialog(GenericDialog):
         self.css_width = '475px'
         self.fileFolderNavigator = FileFolderNavigator(multiple_selection, selection_folder,
                                                        allow_file_selection,
-                                                       allow_folder_selection)
+                                                       allow_folder_selection, width="100%", height="330px")
         self.add_field('fileFolderNavigator', self.fileFolderNavigator)
         self.confirm_dialog.connect(self.confirm_value)
 
@@ -3863,10 +3951,6 @@ class FileSelectionDialog(GenericDialog):
         self.hide()
         params = (self.fileFolderNavigator.get_selection_list(),)
         return params
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_confirm_value_listener(self, callback, *userdata):
-        self.confirm_value.connect(callback, *userdata)
 
 
 class MenuBar(Container):
@@ -3908,9 +3992,17 @@ class MenuItem(Container, _MixinTextualWidget):
         self.type = 'li'
         self.set_text(text)
 
+        self.attributes['tabindex'] = '0'
+
     def append(self, value, key=''):
 
         return self.sub_container.append(value, key=key)
+
+    @decorate_set_on_listener("(self, emitter)")
+    @decorate_event_js("remi.sendCallback('%(emitter_identifier)s','%(event_name)s');document.activeElement.blur();")
+    def onclick(self):
+        """Called when the Widget gets clicked by the user with the left mouse button."""
+        return ()
 
 
 class TreeView(Container):
@@ -4023,18 +4115,6 @@ class FileUploader(Container):
             f.write(filedata)
         return (filedata, filename)
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_success_listener(self, callback, *userdata):
-        self.onsuccess.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_failed_listener(self, callback, *userdata):
-        self.onfailed.connect(callback, *userdata)
-
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_data_listener(self, callback, *userdata):
-        self.ondata.connect(callback, *userdata)
-
 
 class FileDownloader(Container, _MixinTextualWidget):
     """FileDownloader widget. Allows to start a file download."""
@@ -4139,10 +4219,6 @@ class VideoPlayer(Widget):
         """Called when the media has been played and reached the end."""
         return ()
 
-    @decorate_explicit_alias_for_listener_registration
-    def set_on_ended_listener(self, callback, *userdata):
-        self.onended.connect(callback, *userdata)
-
 
 class _MixinSvgStroke():
     @property
@@ -4170,6 +4246,32 @@ class _MixinSvgStroke():
         """
         self.attr_stroke = color
         self.attr_stroke_width = str(width)
+
+
+class _MixinTransformable():
+    @property
+    @editor_attribute_decorator("Transformation", '''Transform commands (i.e. rotate(45), translate(30,100)).''', str, {})
+    def css_transform(self): return self.style.get('transform', None)
+    @css_transform.setter
+    def css_transform(self, value): self.style['transform'] = str(value)
+    @css_transform.deleter
+    def css_transform(self): del self.style['transform'] 
+
+    @property
+    @editor_attribute_decorator("Transformation", '''Transform origin as percent or absolute x,y pair value or ['center','top','bottom','left','right'] .''', str, {})
+    def css_transform_origin(self): return self.style.get('transform-origin', None)
+    @css_transform_origin.setter
+    def css_transform_origin(self, value): self.style['transform-origin'] = str(value)
+    @css_transform_origin.deleter
+    def css_transform_origin(self): del self.style['transform-origin'] 
+
+    @property
+    @editor_attribute_decorator("Transformation", '''Alters the behaviour of tranform and tranform-origin by defining the transform box.''', 'DropDown', {'possible_values': ('content-box','border-box','fill-box','stroke-box','view-box')})
+    def css_transform_box(self): return self.style.get('transform-box', None)
+    @css_transform_box.setter
+    def css_transform_box(self, value): self.style['transform-box'] = str(value)
+    @css_transform_box.deleter
+    def css_transform_box(self): del self.style['transform-box'] 
 
 
 class _MixinSvgFill():
@@ -4200,13 +4302,13 @@ class _MixinSvgFill():
 
 class _MixinSvgPosition():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': -65635.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_x(self): return self.attributes.get('x', '0')
     @attr_x.setter
     def attr_x(self, value): self.attributes['x'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for Svg element.''', float, {'possible_values': '', 'min': -65635.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_y(self): return self.attributes.get('y', '0')
     @attr_y.setter
     def attr_y(self, value): self.attributes['y'] = str(value)
@@ -4224,13 +4326,13 @@ class _MixinSvgPosition():
 
 class _MixinSvgSize():
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Width for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_width(self): return self.attributes.get('width', '100')
     @attr_width.setter
     def attr_width(self, value): self.attributes['width'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Height for Svg element.''', float, {'possible_values': '', 'min': 0.0, 'max': 65635.0, 'default': 1.0, 'step': 0.1})
     def attr_height(self): return self.attributes.get('height', '100')
     @attr_height.setter
     def attr_height(self, value): self.attributes['height'] = str(value)
@@ -4446,7 +4548,7 @@ class SvgSubcontainer(Svg, _MixinSvgPosition, _MixinSvgSize):
         _MixinSvgSize.set_size(self, width, height)
 
 
-class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
+class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     """svg group - a non visible container for svg widgets,
         this have to be appended into Svg elements."""
     def __init__(self, *args, **kwargs):
@@ -4454,7 +4556,7 @@ class SvgGroup(Container, _MixinSvgStroke, _MixinSvgFill):
         self.type = 'g'
 
 
-class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill):
+class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Horizontal round corners value.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
@@ -4483,7 +4585,7 @@ class SvgRectangle(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinSvgStroke, _M
         self.type = 'rect'
 
 
-class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
+class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     """svg image - a raster image element for svg graphics,
         this have to be appended into Svg elements."""
     @property
@@ -4519,21 +4621,21 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize):
         _MixinSvgSize.set_size(self, w, h)
 
 
-class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Center coordinate for SvgCircle.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgCircle.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_r(self): return self.attributes.get('r', None)
     @attr_r.setter
     def attr_r(self, value): self.attributes['r'] = str(value)
@@ -4570,15 +4672,15 @@ class SvgCircle(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attr_cy = str(y)
 
 
-class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
     def attr_cx(self, value): self.attributes['cx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Coordinate for SvgEllipse.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
     def attr_cy(self, value): self.attributes['cy'] = str(value)
@@ -4590,7 +4692,7 @@ class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
     def attr_rx(self, value): self.attributes['rx'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''Radius of SvgEllipse.''', float, {'possible_values': '', 'min': 0.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_ry(self): return self.attributes.get('ry', None)
     @attr_ry.setter
     def attr_ry(self, value): self.attributes['ry'] = str(value)
@@ -4630,27 +4732,27 @@ class SvgEllipse(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attr_cy = str(y)
 
 
-class SvgLine(Widget, _MixinSvgStroke):
+class SvgLine(Widget, _MixinSvgStroke, _MixinTransformable):
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
     def attr_x1(self, value): self.attributes['x1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P1 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_y1(self): return self.attributes.get('y1', None)
     @attr_y1.setter
     def attr_y1(self, value): self.attributes['y1'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_x2(self): return self.attributes.get('x2', None)
     @attr_x2.setter
     def attr_x2(self, value): self.attributes['x2'] = str(value)
 
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific",'''P2 coordinate for SvgLine.''', float, {'possible_values': '', 'min': -65535.0, 'max': 65535.0, 'default': 1.0, 'step': 0.1})
     def attr_y2(self): return self.attributes.get('y2', None)
     @attr_y2.setter
     def attr_y2(self, value): self.attributes['y2'] = str(value)
@@ -4673,7 +4775,7 @@ class SvgLine(Widget, _MixinSvgStroke):
         self.attr_y2 = y2
 
 
-class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
     @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum values count.''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def maxlen(self): return self.__maxlen
@@ -4701,13 +4803,13 @@ class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill):
         self.attributes['points'] += "%s,%s " % (x, y)
 
 
-class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill):
-    def __init__(self, _maxlen=None, *args, **kwargs):
+class SvgPolygon(SvgPolyline, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
+    def __init__(self, _maxlen=1000, *args, **kwargs):
         super(SvgPolygon, self).__init__(_maxlen, *args, **kwargs)
         self.type = 'polygon'
 
 
-class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget):
+class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinTextualWidget, _MixinTransformable):
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Length for svg text elements.''', int, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
@@ -4726,7 +4828,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     def attr_lengthAdjust(self): del self.attributes['lengthAdjust'] 
 
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
+    @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': -360.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
     def attr_rotate(self): return self.attributes.get('rotate', None)
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
@@ -4756,7 +4858,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
         self.set_text(text)
 
 
-class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill):
+class SvgPath(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Instructions for SvgPath.''', str, {})
     def attr_d(self): return self.attributes.get('d', None)

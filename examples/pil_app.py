@@ -14,34 +14,67 @@
 
 import time
 import io
-
+import traceback
 import PIL.Image
 
 import remi.gui as gui
 from remi import start, App
+import remi
 
 
 class PILImageViewverWidget(gui.Image):
-    def __init__(self, pil_image=None, **kwargs):
+    def __init__(self, filename=None, **kwargs):
+        self.app_instance = None
         super(PILImageViewverWidget, self).__init__("/res:logo.png", **kwargs)
+        self.frame_index = 0
         self._buf = None
+        if filename:
+            self.load(filename)
 
     def load(self, file_path_name):
         pil_image = PIL.Image.open(file_path_name)
         self._buf = io.BytesIO()
         pil_image.save(self._buf, format='png')
+
         self.refresh()
 
-    def refresh(self):
-        i = int(time.time() * 1e6)
-        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self), i)
-
-    def get_image_data(self, update_index):
-        if self._buf is None:
+    def search_app_instance(self, node):
+        if issubclass(node.__class__, remi.server.App):
+            return node
+        if not hasattr(node, "get_parent"):
             return None
-        self._buf.seek(0)
-        headers = {'Content-type': 'image/png'}
-        return [self._buf.read(), headers]
+        return self.search_app_instance(node.get_parent()) 
+
+    def refresh(self, *args):
+        if self.app_instance==None:
+            self.app_instance = self.search_app_instance(self)
+            if self.app_instance==None:
+                return
+        self.frame_index = self.frame_index + 1
+        self.app_instance.execute_javascript("""
+            url = '/%(id)s/get_image_data?index=%(frame_index)s';
+            
+            xhr = null;
+            xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'blob'
+            xhr.onload = function(e){
+                urlCreator = window.URL || window.webkitURL;
+                urlCreator.revokeObjectURL(document.getElementById('%(id)s').src);
+                imageUrl = urlCreator.createObjectURL(this.response);
+                document.getElementById('%(id)s').src = imageUrl;
+            }
+            xhr.send();
+            """ % {'id': id(self), 'frame_index':self.frame_index})
+
+    def get_image_data(self, index=0):
+        try:
+            self._buf.seek(0)
+            headers = {'Content-type': 'image/png'}
+            return [self._buf.read(), headers]
+        except:
+            print(traceback.format_exc())
+        return None, None
 
 
 class MyApp(App):

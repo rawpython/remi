@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/dddomodossola/remi.svg?branch=master)](https://travis-ci.com/dddomodossola/remi)
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/logo.png" width="430">
+    <img src="https://raw.githubusercontent.com/rawpython/remi/master/remi/res/logo.png" width="430">
 </p>
 
 <h2 align="center" style="font-weight:bolder">
@@ -13,75 +13,32 @@ Remi is a GUI library for Python applications that gets rendered in web browsers
 This allows you to access your interface locally and remotely.
 </p>
 
+
+Proud to be sponsored by
+===
+<p align="center">
+<a href="https://www.simracingstudio.com/" style="font-size:25px" >
+<img src="https://static.wixstatic.com/media/092827_44a73f6751144b85af49c280304c9f25~mv2.png/v1/crop/x_0,y_37,w_4349,h_2313/fill/w_155,h_83,al_c,q_85,usm_0.66_1.00_0.01/srs-logo-whitebackground-slogan.webp" width="250">
+</a>
+<p>
+<p align="center">
+<a href="https://github.com/PySimpleGUI" style="font-size:25px;right:0px;">
+<img src="https://raw.githubusercontent.com/PySimpleGUI/PySimpleGUI/master/images/for_readme/Logo%20with%20text%20for%20GitHub%20Top.png" width="200">
+</a>
+<p>
+
 Do you need support?
+===
 <p align="center">
 <a href="https://www.reddit.com/r/RemiGUI" style="font-size:25px">Reddit - (subreddit RemiGUI)</a>
 </p>
 
 
-There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/dddomodossola/remi/tree/master/editor) subfolder to download your copy.
+There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/rawpython/remi/tree/master/editor) subfolder to download your copy.
+
+<a href="https://vimeo.com/517626422" style="font-size:25px">A demostrative video from the great REVVEN labs</a>
+
 <p align="center">
-** <a href="https://remiguieditor.daviderosa.repl.co/">Live Play Graphical GUI Editor</a> **
-- For a comfortable use download it
-</p>
-
-Changelog
-===
-*2019 December 26*
-
-Since now remi is adopting class properties to setup css style and html attributes to make the applicable properties explicit.
-This means that for example, to change a widget background you can now do:
-
-```python
-    mywidget.css_background_color = 'green'
-```
-
-The old method to setup style and attributes is still accepted:
-
-```python
-    mywidget.style['background-color'] = 'green'
-```
-
-
-*2019 November 21*
-
-Widget class has no more **append** method. This means it cannot be used as a Container.
-Use the new class Container as a generic container instead.
-This allows higher code consistency.
-
-
-*2019 April 1*
-
-Event listener registration can now be done by the **do** instruction instead of **connect** (that stays available for compatibility reasons).
-i.e. 
-```python
-mybutton.onclick.do(myevent_listener)
-```
-
-*Older changes*
-
-The current branch includes improvements about resource files handling. 
-App constructor accepts **static_file_path** parameter. Its value have to be a dictionary, where elements represents named resources paths.
-
-i.e.
-```python
-super(MyApp, self).__init__(*args, static_file_path = {'my_resources':'./files/resources/', 'my_other_res':'./other/'})
-```
-To address a specific resource, the user have to specify the resource folder key, prepending it to the filename in the format **'/key:'**
-i.e.
-```python
-my_widget.attributes['background-image'] = "url('/my_resources:image.png')"
-```
-Subfolders are accepted, and so:
-```python
-my_widget.attributes['background-image'] = "url('/my_resources:subfolder/other_subfolder/image.png')"
-```
-
-The event TextInput.onenter is no longer supported.
-
-The events TextInput.onkeydown and TextInput.onkeyup are now different, and require a different listener format. There is an additional parameter keycode.
-
-The TextInput.onchange event now occurs also in case of Enter key pressed, if TextInput is single_line.
 
 
 Getting Started
@@ -91,7 +48,7 @@ For a **stable** version:
 pip install remi
 ```
 
-For the most updated **experimental** version [Download](https://github.com/dddomodossola/remi/archive/master.zip) or check out Remi from git and install
+For the most updated **experimental** version [Download](https://github.com/rawpython/remi/archive/master.zip) or check out Remi from git and install
 
 ```
 python setup.py install
@@ -99,10 +56,10 @@ python setup.py install
 or install directly using pip
 
 ```
-pip install git+https://github.com/dddomodossola/remi.git
+pip install git+https://github.com/rawpython/remi.git
 ```
 
-Then start the test script (download it from github https://github.com/dddomodossola/remi/blob/master/examples/widgets_overview_app.py):
+Then start the test script (download it from github https://github.com/rawpython/remi/blob/master/examples/widgets_overview_app.py):
 ```
 python widgets_overview_app.py
 ```
@@ -113,7 +70,7 @@ Remi
 Platform independent Python GUI library. In less than 100 Kbytes of source code, perfect for your diet.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/dddomodossola/remi/development/remi/res/screenshot.png" title="Widgets overview">
+    <img src="https://raw.githubusercontent.com/rawpython/remi/development/remi/res/screenshot.png" title="Widgets overview">
 </p>
 
 Remi enables developers to create platform independent GUI with Python. The entire GUI is rendered in your browser. **No HTML** is required, Remi automatically translates your Python code into HTML. When your app starts, it starts a web server that will be accessible on your network.
@@ -367,7 +324,7 @@ I suggest using the browser as a standard interface window.
 
 However, you can avoid using the browser.
 This can be simply obtained joining REMI and [PyWebView](https://github.com/r0x0r/pywebview).
-Here is an example about this [standalone_app.py](https://github.com/dddomodossola/remi/blob/development/examples/standalone_app.py).
+Here is an example about this [standalone_app.py](https://github.com/rawpython/remi/blob/development/examples/standalone_app.py).
 
 **Be aware that PyWebView uses qt, gtk and so on to create the window. An outdated version of these libraries can cause UI problems. If you experience UI issues, update these libraries, or better avoid standalone execution.**
 
@@ -409,48 +366,6 @@ The library itself doesn't implement security strategies, and so it is advised t
 When loading data from external sources, consider protecting the application from potential javascript injection before displaying the content directly.
 
 
-Contributors
-===
-Thank you for collaborating with us to make Remi better!
-
-The real power of opensource is contributors. Please feel free to participate in this project, and consider to add yourself to the following list.
-Yes, I know that GitHub already provides a list of contributors, but I feel that I must mention who helps.
-
-[Davide Rosa](https://github.com/dddomodossola)
-
-[John Stowers](https://github.com/nzjrs)
-
-[Claudio Cannatà](https://github.com/cyberpro4)
-
-[Sam Pfeiffer](https://github.com/awesomebytes)
-
-[Ken Thompson](https://github.com/KenT2)
-
-[Paarth Tandon](https://github.com/Paarthri)
-
-[Ally Weir](https://github.com/allyjweir)
-
-[Timothy Cyrus](https://github.com/tcyrus)
-
-[John Hunter Bowen](https://github.com/jhb188)
-
-[Martin Spasov](https://github.com/SuburbanFilth)
-
-[Wellington Castello](https://github.com/wcastello)
-
-[PURPORC](https://github.com/PURPORC)
-
-[ttufts](https://github.com/ttufts)
-
-[Chris Braun](https://github.com/cryzed)
-
-[Alan Yorinks](https://github.com/MrYsLab)
-
-[Bernhard E. Reiter](https://github.com/bernhardreiter)
-
-[saewoonam](https://github.com/saewoonam)
-
-
 Projects using Remi
 ===
 [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI): Launched in 2018 Actively developed and supported. Supports tkinter, Qt, WxPython, Remi (in browser). Create custom layout GUI's simply. Python 2.7 & 3 Support. 100+ Demo programs & Cookbook for rapid start. Extensive documentation.
@@ -467,7 +382,7 @@ Projects using Remi
 
 [The Python Banyan Framework](https://github.com/MrYsLab/python_banyan)
 
-[LightShowPi show manager](https://bitbucket.org/chrispizzi75/lightshowpishowmanager)
+[LightShowPi show manager](https://github.com/Chrispizzi75/ShowManager)
 
 [rElectrum](https://github.com/emanuelelaface/rElectrum): A powerful promising Electrum wallet manager for safe transactions.
 

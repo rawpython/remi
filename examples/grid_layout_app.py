@@ -43,7 +43,6 @@ class MyApp(App):
         
         text = gui.TextInput()
 
-        
         main_container.set_from_asciiart("""
             |label |button                      |
             |label |text                        |

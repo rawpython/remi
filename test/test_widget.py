@@ -62,7 +62,7 @@ class TestTabBox(unittest.TestCase):
     def test_init(self):
         w = gui.TabBox()
         l = gui.Label('testTabBox_label')
-        w.add_tab(l, name='testtabbox', tab_cb=None) 
+        w.add_tab(l, key='testtabbox', callback=None) 
         self.assertIn('testTabBox_label',w.repr())
         assertValidHTML(w.repr())
         
@@ -256,7 +256,7 @@ class TestFileFolderNavigator(unittest.TestCase):
         
 class TestFileFolderItem(unittest.TestCase):
     def test_init(self):
-        widget = gui.FileFolderItem('test file folder item')
+        widget = gui.FileFolderItem('full path', 'test file folder item')
         assertValidHTML(widget.repr())
         
 class TestFileSelectionDialog(unittest.TestCase):
@@ -323,14 +323,14 @@ class TestSvg(unittest.TestCase):
         widget = gui.Svg(width=10, height=10)
         assertValidHTML(widget.repr())
         
-class TestSvgShape(unittest.TestCase):
+class TestSvgSubcontainer(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgShape(10, 10)
+        widget = gui.SvgSubcontainer(0, 0, 100, 100)
         assertValidHTML(widget.repr())
         
 class TestSvgGroup(unittest.TestCase):
     def test_init(self):
-        widget = gui.SvgGroup(10, 10)
+        widget = gui.SvgGroup()
         assertValidHTML(widget.repr())
         
 class TestSvgRectangle(unittest.TestCase):
