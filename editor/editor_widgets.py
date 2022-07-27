@@ -429,6 +429,7 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
 
     def on_enter_key_pressed(self, widget, value, keycode):
         if keycode == "13":
+            self.get_field('filename').set_value(value)
             self.confirm_value(None)
 
     @gui.decorate_event
