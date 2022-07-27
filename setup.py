@@ -27,5 +27,5 @@ try:
 except:
     del params['setup_requires']
     params['use_scm_version'] = False
-    params['version'] = '2022.03.07'
+    params['version'] = '2022.7.27'
     setup(**params)
