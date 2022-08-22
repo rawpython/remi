@@ -300,6 +300,7 @@ The style attributes can be altered in this way:
 The assignment of a new attribute automatically creates it.
 
 For a reference list of HTML attributes, you can refer to https://www.w3schools.com/tags/ref_attributes.asp
+https://www.scaler.com/topics/attributes-in-html/
 
 For a reference list of style attributes, you can refer to https://www.w3schools.com/cssref/default.asp
 
