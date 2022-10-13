@@ -36,7 +36,7 @@ Do you need support?
 
 There is also a **drag n drop GUI Editor**. Look at the [Editor](https://github.com/rawpython/remi/tree/master/editor) subfolder to download your copy.
 
-<a href="https://vimeo.com/517626422" style="font-size:25px">A demostrative video from the great REVVEN labs</a>
+<a href="https://vimeo.com/517626422" style="font-size:25px">A demonstrative video from the great REVVEN labs</a>
 
 <p align="center">
 
