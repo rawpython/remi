@@ -82,17 +82,20 @@ class Output():
     def get_value(self):
         return self.value
 
+    def set_value(self, value):
+        self.value = value
+
     def link(self, input):
         self.destination = input
         
 
-class Element():
+class Subprocess():
     name = None
     inputs = None
     outputs = None
 
     def decorate_process(output_list):
-        """ setup a method as a process Element """
+        """ setup a method as a process Subprocess """
         """
             input parameters can be obtained by introspection
             outputs values (return values) are to be described with decorator
@@ -112,13 +115,13 @@ class Element():
             self.inputs[io.name] = io
         else:
             self.outputs[io.name] = io
-
+    
     @decorate_process([])
     def do(self):
         return True, 28
 
 
-class InputWidget(Input, gui.SvgSubcontainer, MixinPositionSize):
+class InputView(Input, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     def __init__(self, name, *args, **kwargs):
@@ -147,7 +150,7 @@ class InputWidget(Input, gui.SvgSubcontainer, MixinPositionSize):
         return ()
 
 
-class OutputWidget(Output, gui.SvgSubcontainer, MixinPositionSize):
+class OutputView(Output, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     def __init__(self, name, *args, **kwargs):
@@ -170,6 +173,15 @@ class OutputWidget(Output, gui.SvgSubcontainer, MixinPositionSize):
         if self.placeholder:
             self.placeholder.set_size(width, height)
         return super().set_size(width, height)
+
+    def set_value(self, value):
+        if type(value) == bool:
+            self.label.set_fill('white')
+            self.placeholder.set_fill('blue' if value else 'BLACK')
+        else:
+            self.label.set_text(self.name + " : " + str(value))
+
+        Output.set_value(self, value)
 
     @gui.decorate_event
     def onpositionchanged(self):
@@ -249,7 +261,7 @@ class Link(gui.SvgPolyline):
         self.add_coord(xdestination, ydestination)
 
 
-class ElementWidget(Element, gui.SvgSubcontainer, MoveableWidget):
+class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
 
     label = None
     outline = None
@@ -257,7 +269,7 @@ class ElementWidget(Element, gui.SvgSubcontainer, MoveableWidget):
     def __init__(self, name, container, x, y, w, h, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, x, y, w, h, *args, **kwargs)
         MoveableWidget.__init__(self, container, *args, **kwargs)
-        Element.__init__(self, name)
+        Subprocess.__init__(self, name)
 
         self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
         self.outline.set_fill('white')
@@ -269,17 +281,17 @@ class ElementWidget(Element, gui.SvgSubcontainer, MoveableWidget):
         self.label.attr_dominant_baseline = 'hanging'
         self.append(self.label)
 
-        #for all the outputs defined by decorator on Element.do
+        #for all the outputs defined by decorator on Subprocess.do
         #   add the related Outputs
         for o in self.do._outputs:
-            self.add_io_widget(OutputWidget(o))
+            self.add_io_widget(OutputView(o))
 
         signature = inspect.signature(self.do)
         for arg in signature.parameters:
-            self.add_io_widget(InputWidget(arg))
+            self.add_io_widget(InputView(arg))
 
     def add_io_widget(self, widget):
-        Element.add_io(self, widget)
+        Subprocess.add_io(self, widget)
         self.append(widget)
         widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
         widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
@@ -311,12 +323,43 @@ class ElementWidget(Element, gui.SvgSubcontainer, MoveableWidget):
         return super().set_position(x, y)
 
 
-class ProcessContainer(gui.Svg):
+class Process():
+    subprocesses = None
+    def __init__(self):
+        self.subprocesses = {}
+
+    def add_subprocess(self, subprocess):
+        self.subprocesses[subprocess.name] = subprocess
+
+    def do(self):
+        for subprocesses in self.subprocesses.values():
+            parameters = {}
+            all_inputs_connected = True
+            for IN in subprocesses.inputs.values():
+                if IN.source == None:
+                    all_inputs_connected = False
+                    continue
+                parameters[IN.name] = IN.get_value()
+            
+            if not all_inputs_connected:
+                return
+            output_results = subprocesses.do(**parameters)
+            i = 0
+            for OUT in subprocesses.outputs.values():
+                if type(output_results) in (tuple, list):
+                    OUT.set_value(output_results[i])
+                else:
+                    OUT.set_value(output_results)
+                i += 1
+
+
+class ProcessView(gui.Svg, Process):
     selected_input = None
     selected_output = None
 
     def __init__(self, *args, **kwargs):
         gui.Svg.__init__(self, *args, **kwargs)
+        Process.__init__(self)
         self.css_border_color = 'black'
         self.css_border_width = '1'
         self.css_border_style = 'solid'
@@ -325,14 +368,14 @@ class ProcessContainer(gui.Svg):
     def onselection_start(self, emitter, x, y):
         self.selected_input = self.selected_output = None
         print("selection start: ", type(emitter))
-        if type(emitter) == InputWidget:
+        if type(emitter) == InputView:
             self.selected_input = emitter
         else:
             self.selected_output = emitter
 
     def onselection_end(self, emitter, x, y):
         print("selection end: ", type(emitter))
-        if type(emitter) == InputWidget:
+        if type(emitter) == InputView:
             self.selected_input = emitter
         else:
             self.selected_output = emitter
@@ -341,73 +384,77 @@ class ProcessContainer(gui.Svg):
             link = Link(self.selected_output, self.selected_input)
             self.append(link)
 
+    def add_subprocess(self, subprocess):
+        self.append(subprocess)
+        Process.add_subprocess(self, subprocess)
 
-class BOOL(ElementWidget):
-    actual_value = False
 
+class BOOL(SubprocessView):
     def __init__(self, name, initial_value, *args, **kwargs):
-        ElementWidget.__init__(self, name, *args, **kwargs)
-        self.actual_value = initial_value
-        self.outputs['OUT'].label.set_fill('white')
-        self.outputs['OUT'].placeholder.set_fill('blue' if self.actual_value else 'BLACK')
+        SubprocessView.__init__(self, name, *args, **kwargs)
+        self.outputs['OUT'].set_value(initial_value)
 
-    @Element.decorate_process(['OUT'])
+    @Subprocess.decorate_process(['OUT'])
     def do(self):
-        OUT = self.actual_value
+        OUT = self.outputs['OUT'].get_value()
         return OUT
 
-class NOT(ElementWidget):
-    @Element.decorate_process(['OUT'])
+class NOT(SubprocessView):
+    @Subprocess.decorate_process(['OUT'])
     def do(self, IN):
         OUT = not IN
         return OUT
 
-class AND(ElementWidget):
-    @Element.decorate_process(['OUT'])
+class AND(SubprocessView):
+    @Subprocess.decorate_process(['OUT'])
     def do(self, IN1, IN2):
         OUT = IN1 and IN2
         return OUT
 
-class OR(ElementWidget):
-    @Element.decorate_process(['OUT'])
+class OR(SubprocessView):
+    @Subprocess.decorate_process(['OUT'])
     def do(self, IN1, IN2):
         OUT = IN1 and IN2
         return OUT
 
 
 class MyApp(App):
+    process = None
+
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(MyApp, self).__init__(*args, static_file_path=res_path)
 
     def idle(self):
-        pass
+        if self.process is None:
+            return
+        self.process.do()
 
     def main(self):
         self.main_container = gui.VBox(width=800, height=800, margin='0px auto')
         
-        self.process_container = ProcessContainer(width=600, height=600)
-        self.main_container.append(self.process_container)
+        self.process = ProcessView(width=600, height=600)
+        self.main_container.append(self.process)
         
         y = 10
-        m = BOOL("BOOL", False, self.process_container, 100, y, 200, 100)
-        self.process_container.append(m)
+        m = BOOL("BOOL", False, self.process, 100, y, 200, 100)
+        self.process.add_subprocess(m)
 
         y += 110
-        m = BOOL("BOOL 2", True, self.process_container, 100, y, 200, 100)
-        self.process_container.append(m)
+        m = BOOL("BOOL 2", True, self.process, 100, y, 200, 100)
+        self.process.add_subprocess(m)
 
         y += 110
-        m = NOT("NOT 0", self.process_container, 100, y, 200, 100)
-        self.process_container.append(m)
+        m = NOT("NOT 0", self.process, 100, y, 200, 100)
+        self.process.add_subprocess(m)
 
         y += 110
-        m = AND("AND", self.process_container, 100, y, 200, 100)
-        self.process_container.append(m)
+        m = AND("AND", self.process, 100, y, 200, 100)
+        self.process.add_subprocess(m)
 
         y += 110
-        m = OR("OR", self.process_container, 100, y, 200, 100)
-        self.process_container.append(m)
+        m = OR("OR", self.process, 100, y, 200, 100)
+        self.process.add_subprocess(m)
 
         # returning the root widget
         return self.main_container
