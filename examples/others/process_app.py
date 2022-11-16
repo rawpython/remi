@@ -68,6 +68,9 @@ class Input():
     def link(self, output):
         self.source = output
 
+    def is_linked(self):
+        return self.source != None
+
 
 class Output():
     name = None
@@ -87,6 +90,9 @@ class Output():
 
     def link(self, input):
         self.destination = input
+
+    def is_linked(self):
+        return self.destination != None
         
 
 class Subprocess():
@@ -381,6 +387,8 @@ class ProcessView(gui.Svg, Process):
             self.selected_output = emitter
 
         if self.selected_input != None and self.selected_output != None:
+            if self.selected_input.is_linked():
+                return
             link = Link(self.selected_output, self.selected_input)
             self.append(link)
 
