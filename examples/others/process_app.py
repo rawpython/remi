@@ -16,6 +16,7 @@ import remi.gui as gui
 import remi.server
 from remi import start, App
 import os #for path handling
+import inspect
 
 
 class MixinPositionSize():
@@ -89,16 +90,32 @@ class Element():
     name = None
     inputs = None
     outputs = None
+
+    def decorate_process(output_list):
+        """ setup a method as a process Element """
+        """
+            input parameters can be obtained by introspection
+            outputs values (return values) are to be described with decorator
+        """
+        def add_annotation(method):
+            setattr(method, "_outputs", output_list)
+            return method
+        return add_annotation
+
     def __init__(self, name):
         self.name = name
-        self.inputs = []
-        self.outputs = []
+        self.inputs = {}
+        self.outputs = {}
 
     def add_io(self, io):
         if issubclass(type(io), Input):
-            self.inputs.append(io)
+            self.inputs[io.name] = io
         else:
-            self.outputs.append(io)
+            self.outputs[io.name] = io
+
+    @decorate_process([])
+    def do(self):
+        return True, 28
 
 
 class InputWidget(Input, gui.SvgSubcontainer, MixinPositionSize):
@@ -110,7 +127,7 @@ class InputWidget(Input, gui.SvgSubcontainer, MixinPositionSize):
         gui.SvgSubcontainer.__init__(self, 0, 0, width, height, *args, **kwargs)
         self.placeholder = gui.SvgRectangle(0, 0, width, height)
         self.placeholder.set_stroke(1, 'black')
-        self.placeholder.set_fill("white")
+        self.placeholder.set_fill("lightgray")
         self.append(self.placeholder)
 
         self.label = gui.SvgText("0%", "50%", name)
@@ -139,7 +156,7 @@ class OutputWidget(Output, gui.SvgSubcontainer, MixinPositionSize):
         gui.SvgSubcontainer.__init__(self, 0, 0, width, height, *args, **kwargs)
         self.placeholder = gui.SvgRectangle(0, 0, width, height)
         self.placeholder.set_stroke(1, 'black')
-        self.placeholder.set_fill("white")
+        self.placeholder.set_fill("lightgray")
         self.append(self.placeholder)
 
         self.label = gui.SvgText("100%", "50%", name)
@@ -242,8 +259,8 @@ class ElementWidget(Element, gui.SvgSubcontainer, MoveableWidget):
         MoveableWidget.__init__(self, container, *args, **kwargs)
         Element.__init__(self, name)
 
-        self.outline = gui.SvgRectangle(0, 0, w, h)
-        self.outline.set_fill('lightyellow')
+        self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
+        self.outline.set_fill('white')
         self.outline.set_stroke(2, 'black')
         self.append(self.outline)
 
@@ -252,31 +269,44 @@ class ElementWidget(Element, gui.SvgSubcontainer, MoveableWidget):
         self.label.attr_dominant_baseline = 'hanging'
         self.append(self.label)
 
+        #for all the outputs defined by decorator on Element.do
+        #   add the related Outputs
+        for o in self.do._outputs:
+            self.add_io_widget(OutputWidget(o))
+
+        signature = inspect.signature(self.do)
+        for arg in signature.parameters:
+            self.add_io_widget(InputWidget(arg))
+
     def add_io_widget(self, widget):
         Element.add_io(self, widget)
         self.append(widget)
         widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
         widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
 
-        w, h = self.get_size()
         w_width, w_height = widget.get_size()
+        w, h = self.get_size()
+        h = w_height * (max(len(self.outputs), len(self.inputs))+2)
+        gui._MixinSvgSize.set_size(self, w, h)
 
         i = 1
-        for inp in self.inputs:
+        for inp in self.inputs.values():
+            w_width, w_height = inp.get_size()
             inp.set_position(0, (h/(len(self.inputs)+1))*i-w_height/2.0)
             i += 1
 
         i = 1
-        for o in self.outputs:
+        for o in self.outputs.values():
+            w_width, w_height = o.get_size()
             o.set_position(w - w_width, (h/(len(self.outputs)+1))*i-w_height/2.0)
             i += 1
 
     def set_position(self, x, y):
         if self.inputs != None:
-            for inp in self.inputs:
+            for inp in self.inputs.values():
                 inp.onpositionchanged()
 
-            for o in self.outputs:
+            for o in self.outputs.values():
                 o.onpositionchanged()
         return super().set_position(x, y)
 
@@ -312,6 +342,39 @@ class ProcessContainer(gui.Svg):
             self.append(link)
 
 
+class BOOL(ElementWidget):
+    actual_value = False
+
+    def __init__(self, name, initial_value, *args, **kwargs):
+        ElementWidget.__init__(self, name, *args, **kwargs)
+        self.actual_value = initial_value
+        self.outputs['OUT'].label.set_fill('white')
+        self.outputs['OUT'].placeholder.set_fill('blue' if self.actual_value else 'BLACK')
+
+    @Element.decorate_process(['OUT'])
+    def do(self):
+        OUT = self.actual_value
+        return OUT
+
+class NOT(ElementWidget):
+    @Element.decorate_process(['OUT'])
+    def do(self, IN):
+        OUT = not IN
+        return OUT
+
+class AND(ElementWidget):
+    @Element.decorate_process(['OUT'])
+    def do(self, IN1, IN2):
+        OUT = IN1 and IN2
+        return OUT
+
+class OR(ElementWidget):
+    @Element.decorate_process(['OUT'])
+    def do(self, IN1, IN2):
+        OUT = IN1 and IN2
+        return OUT
+
+
 class MyApp(App):
     def __init__(self, *args):
         res_path = os.path.join(os.path.dirname(__file__), 'res')
@@ -326,16 +389,24 @@ class MyApp(App):
         self.process_container = ProcessContainer(width=600, height=600)
         self.main_container.append(self.process_container)
         
-        m = ElementWidget("Element widget 0", self.process_container, 100, 100, 200, 100)
-        m.add_io_widget(InputWidget("input0"))
-        m.add_io_widget(OutputWidget("output0"))
-        m.add_io_widget(OutputWidget("output1"))
+        y = 10
+        m = BOOL("BOOL", False, self.process_container, 100, y, 200, 100)
         self.process_container.append(m)
 
-        m = ElementWidget("Element widget 1", self.process_container, 100, 100, 200, 100)
-        m.add_io_widget(InputWidget("input0"))
-        m.add_io_widget(InputWidget("input1"))
-        m.add_io_widget(OutputWidget("output0"))
+        y += 110
+        m = BOOL("BOOL 2", True, self.process_container, 100, y, 200, 100)
+        self.process_container.append(m)
+
+        y += 110
+        m = NOT("NOT 0", self.process_container, 100, y, 200, 100)
+        self.process_container.append(m)
+
+        y += 110
+        m = AND("AND", self.process_container, 100, y, 200, 100)
+        self.process_container.append(m)
+
+        y += 110
+        m = OR("OR", self.process_container, 100, y, 200, 100)
         self.process_container.append(m)
 
         # returning the root widget
