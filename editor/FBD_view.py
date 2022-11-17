@@ -19,7 +19,7 @@ import os #for path handling
 import inspect
 import time
 from editor_widgets import *
-
+import FBD_model
 
 class MixinPositionSize():
     def get_position(self):
@@ -55,80 +55,6 @@ class MoveableWidget(gui.EventSource, MixinPositionSize):
         return (x, y)
 
 
-class Input():
-    name = None
-    typ = None
-    source = None #has to be an Output
-
-    def __init__(self, name, typ = None):
-        self.name = name
-        self.typ = typ
-
-    def get_value(self):
-        return self.source.get_value()
-    
-    def link(self, output):
-        self.source = output
-
-    def is_linked(self):
-        return self.source != None
-
-
-class Output():
-    name = None
-    typ = None
-    destination = None #has to be an Input
-    value = None
-
-    def __init__(self, name, typ = None):
-        self.name = name
-        self.typ = typ
-
-    def get_value(self):
-        return self.value
-
-    def set_value(self, value):
-        self.value = value
-
-    def link(self, input):
-        self.destination = input
-
-    def is_linked(self):
-        return self.destination != None
-        
-
-class Subprocess():
-    name = None
-    inputs = None
-    outputs = None
-
-    def decorate_process(output_list):
-        """ setup a method as a process Subprocess """
-        """
-            input parameters can be obtained by introspection
-            outputs values (return values) are to be described with decorator
-        """
-        def add_annotation(method):
-            setattr(method, "_outputs", output_list)
-            return method
-        return add_annotation
-
-    def __init__(self, name):
-        self.name = name
-        self.inputs = {}
-        self.outputs = {}
-
-    def add_io(self, io):
-        if issubclass(type(io), Input):
-            self.inputs[io.name] = io
-        else:
-            self.outputs[io.name] = io
-    
-    @decorate_process([])
-    def do(self):
-        return True, 28
-
-
 class SvgTitle(gui.Widget, gui._MixinTextualWidget):
     def __init__(self, text='svg text', *args, **kwargs):
         super(SvgTitle, self).__init__(*args, **kwargs)
@@ -136,7 +62,7 @@ class SvgTitle(gui.Widget, gui._MixinTextualWidget):
         self.set_text(text)
 
 
-class InputView(Input, gui.SvgSubcontainer, MixinPositionSize):
+class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     def __init__(self, name, *args, **kwargs):
@@ -153,7 +79,7 @@ class InputView(Input, gui.SvgSubcontainer, MixinPositionSize):
         self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
-        Input.__init__(self, name, "")
+        FBD_model.Input.__init__(self, name, "")
 
     def set_size(self, width, height):
         if self.placeholder:
@@ -165,7 +91,7 @@ class InputView(Input, gui.SvgSubcontainer, MixinPositionSize):
         return ()
 
 
-class OutputView(Output, gui.SvgSubcontainer, MixinPositionSize):
+class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     def __init__(self, name, *args, **kwargs):
@@ -182,7 +108,7 @@ class OutputView(Output, gui.SvgSubcontainer, MixinPositionSize):
         self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
-        Output.__init__(self, name, "")
+        FBD_model.Output.__init__(self, name, "")
 
     def set_size(self, width, height):
         if self.placeholder:
@@ -200,37 +126,44 @@ class OutputView(Output, gui.SvgSubcontainer, MixinPositionSize):
 
         self.label.attr_title = str(value)
 
-        Output.set_value(self, value)
+        FBD_model.Output.set_value(self, value)
 
     @gui.decorate_event
     def onpositionchanged(self):
         return ()
 
 
-class Link(gui.SvgPolyline):
-    source = None
-    destination = None
+class LinkView(gui.SvgPolyline, FBD_model.Link):
     def __init__(self, source_widget, destination_widget, *args, **kwargs):
         gui.SvgPolyline.__init__(self, 2, *args, **kwargs)
+        FBD_model.Link.__init__(source_widget, destination_widget)
         self.set_stroke(1, 'black')
         self.set_fill('transparent')
         self.attributes['stroke-dasharray'] = "4 2"
-        self.source = source_widget
-        self.source.onpositionchanged.do(self.update_path)
-        self.destination = destination_widget
-        self.destination.onpositionchanged.do(self.update_path)
-
-        self.source.destinaton = self.destination
-        self.destination.source = self.source
         self.update_path()
+
+        self.unlink_bt = gui.SvgSubcontainer(0,0,0,0)
+        line = gui.SvgLine(0,0,"100%","100%")
+        line.set_stroke(1, 'red')
+        self.unlink_bt.append(line)
+        line = gui.SvgLine("100%", 0, 0, "100%")
+        line.set_stroke(1, 'red')
+        self.unlink_bt.append(line)
+        self.get_parent().append(self.unlink_bt)
+        self.unlink_bt.onclick.do(self.unlink)
+
+    def unlink(self, emitter):
+        self.get_parent().remove_child(self.unlink_bt)
+        self.get_parent().remove_child(self)
+        FBD_model.Link.unlink()
 
     def update_path(self, emitter=None):
         self.attributes['points'] = ''
 
         x,y = self.source.get_position()
         w,h = self.source.get_size()
-        xsource_parent, ysource_parent = self.source._parent.get_position()
-        wsource_parent, hsource_parent = self.source._parent.get_size()
+        xsource_parent, ysource_parent = self.source.get_parent().get_position()
+        wsource_parent, hsource_parent = self.source.get_parent().get_size()
 
         xsource = xsource_parent + wsource_parent
         ysource = ysource_parent + y + h/2.0
@@ -238,8 +171,8 @@ class Link(gui.SvgPolyline):
 
         x,y = self.destination.get_position()
         w,h = self.destination.get_size()
-        xdestination_parent, ydestination_parent = self.destination._parent.get_position()
-        wdestination_parent, hdestination_parent = self.destination._parent.get_size()
+        xdestination_parent, ydestination_parent = self.destination.get_parent().get_position()
+        wdestination_parent, hdestination_parent = self.destination.get_parent().get_size()
 
         xdestination = xdestination_parent
         ydestination = ydestination_parent + y + h/2.0
@@ -280,7 +213,7 @@ class Link(gui.SvgPolyline):
         self.add_coord(xdestination, ydestination)
 
 
-class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
+class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
     label = None
     label_font_size = 12
@@ -291,7 +224,7 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
     io_left_right_offset = 10
 
     def __init__(self, name, container, x = 10, y = 10, *args, **kwargs):
-        Subprocess.__init__(self, name)
+        FBD_model.FunctionBlock.__init__(self, name)
         gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
         MoveableWidget.__init__(self, container, *args, **kwargs)
 
@@ -306,7 +239,7 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
-        #for all the outputs defined by decorator on Subprocess.do
+        #for all the outputs defined by decorator on FunctionBlock.do
         #   add the related Outputs
         for o in self.do._outputs:
             self.add_io_widget(OutputView(o))
@@ -337,7 +270,7 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
         widget.label.css_font_size = gui.to_pix(self.io_font_size)
         widget.set_size(len(widget.name) * self.io_font_size, self.io_font_size)
 
-        Subprocess.add_io(self, widget)
+        FBD_model.FunctionBlock.add_io(self, widget)
         self.append(widget)
         widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
         widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
@@ -374,45 +307,13 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
         self.adjust_geometry()
 
 
-class Process():
-    subprocesses = None
-    def __init__(self):
-        self.subprocesses = {}
-
-    def add_subprocess(self, subprocess):
-        self.subprocesses[subprocess.name] = subprocess
-
-    def do(self):
-        for subprocesses in self.subprocesses.values():
-            parameters = {}
-            all_inputs_connected = True
-            for IN in subprocesses.inputs.values():
-                if IN.source == None:
-                    all_inputs_connected = False
-                    continue
-                parameters[IN.name] = IN.get_value()
-            
-            if not all_inputs_connected:
-                continue
-            output_results = subprocesses.do(**parameters)
-            if output_results is None:
-                continue
-            i = 0
-            for OUT in subprocesses.outputs.values():
-                if type(output_results) in (tuple, list):
-                    OUT.set_value(output_results[i])
-                else:
-                    OUT.set_value(output_results)
-                i += 1
-
-
-class ProcessView(gui.Svg, Process):
+class ProcessView(gui.Svg, FBD_model.Process):
     selected_input = None
     selected_output = None
 
     def __init__(self, *args, **kwargs):
         gui.Svg.__init__(self, *args, **kwargs)
-        Process.__init__(self)
+        FBD_model.Process.__init__(self)
         self.css_border_color = 'black'
         self.css_border_width = '1'
         self.css_border_style = 'solid'
@@ -436,146 +337,162 @@ class ProcessView(gui.Svg, Process):
         if self.selected_input != None and self.selected_output != None:
             if self.selected_input.is_linked():
                 return
-            link = Link(self.selected_output, self.selected_input)
+            link = LinkView(self.selected_output, self.selected_input)
             self.append(link)
 
-    def add_subprocess(self, subprocess):
-        subprocess.onclick.do(self.onsubprocess_clicked)
-        self.append(subprocess)
-        Process.add_subprocess(self, subprocess)
+    def add_function_block(self, function_block):
+        function_block.onclick.do(self.onfunction_block_clicked)
+        self.append(function_block, function_block.name)
+        FBD_model.Process.add_function_block(self, function_block)
 
     @gui.decorate_event
-    def onsubprocess_clicked(self, subprocess):
-        return (subprocess,)
+    def onfunction_block_clicked(self, function_block):
+        return (function_block,)
 
 
-class STRING(SubprocessView):
-    @property
-    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual value''', str, {})
-    def value(self): 
-        if len(self.outputs) < 1:
-            return ""
-        return self.outputs['OUT'].get_value()
-    @value.setter
-    def value(self, value): self.outputs['OUT'].set_value(value)
+class FBToolbox(gui.Container):
+    def __init__(self, appInstance, **kwargs):
+        self.appInstance = appInstance
+        super(FBToolbox, self).__init__(**kwargs)
+        self.lblTitle = gui.Label("Widgets Toolbox", height=20)
+        self.lblTitle.add_class("DialogTitle")
+        self.widgetsContainer = gui.HBox(width='100%', height='calc(100% - 20px)')
+        self.widgetsContainer.style.update({'overflow-y': 'scroll',
+                                            'overflow-x': 'hidden',
+                                            'align-items': 'flex-start',
+                                            'flex-wrap': 'wrap',
+                                            'background-color': 'white'})
 
-    def __init__(self, name, *args, **kwargs):
-        SubprocessView.__init__(self, name, *args, **kwargs)
-        self.outputs['OUT'].set_value("A STRING VALUE")
+        self.append([self.lblTitle, self.widgetsContainer])
 
-    @Subprocess.decorate_process(['OUT'])
-    def do(self):
-        OUT = self.outputs['OUT'].get_value()
-        return OUT
+        import FBD_library
+        # load all widgets
+        self.add_widget_to_collection(FBD_library.BOOL)
+        self.add_widget_to_collection(FBD_library.NOT)
+        self.add_widget_to_collection(FBD_library.AND)
+        self.add_widget_to_collection(FBD_library.OR)
+        self.add_widget_to_collection(FBD_library.XOR)
+        self.add_widget_to_collection(FBD_library.PULSAR)
+        self.add_widget_to_collection(FBD_library.STRING)
+        self.add_widget_to_collection(FBD_library.STRING_SWAP_CASE)
+        self.add_widget_to_collection(FBD_library.RISING_EDGE)
+        
+    def add_widget_to_collection(self, functionBlockClass, group='standard_tools', **kwargs_to_widget):
+        # create an helper that will be created on click
+        # the helper have to search for function that have 'return' annotation 'event_listener_setter'
+        if group not in self.widgetsContainer.children.keys():
+            self.widgetsContainer.append(EditorAttributesGroup(group), group)
+            self.widgetsContainer.children[group].style['width'] = "100%"
 
-class STRING_SWAP_CASE(SubprocessView):
-    def __init__(self, name, *args, **kwargs):
-        SubprocessView.__init__(self, name, *args, **kwargs)
+        helper = FBHelper(
+            self.appInstance, functionBlockClass, **kwargs_to_widget)
+        helper.attributes['title'] = functionBlockClass.__doc__
+        #self.widgetsContainer.append( helper )
+        self.widgetsContainer.children[group].append(helper)
 
-    @Subprocess.decorate_process(['OUT'])
-    def do(self, EN, IN):
-        if not EN:
+
+class FBHelper(gui.HBox):
+    """ Allocates the Widget to which it refers,
+        interfacing to the user in order to obtain the necessary attribute values
+        obtains the constructor parameters, asks for them in a dialog
+        puts the values in an attribute called constructor
+    """
+
+    def __init__(self, appInstance, functionBlockClass, **kwargs_to_widget):
+        self.kwargs_to_widget = kwargs_to_widget
+        self.appInstance = appInstance
+        self.functionBlockClass = functionBlockClass
+        super(FBHelper, self).__init__()
+        self.style.update({'background-color': 'rgb(250,250,250)', 'width': "auto", 'margin':"2px", 
+                           "height": "60px", "justify-content": "center", "align-items": "center",
+                           'font-size': '12px'})
+        if hasattr(functionBlockClass, "icon"):
+            if type(functionBlockClass.icon) == gui.Svg:
+                self.icon = functionBlockClass.icon
+            elif functionBlockClass.icon == None:
+                self.icon = default_icon(self.functionBlockClass.__name__)
+            else:
+                icon_file = functionBlockClass.icon
+                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+        else:
+            icon_file = '/editor_resources:widget_%s.png' % self.functionBlockClass.__name__
+            if os.path.exists(self.appInstance._get_static_file(icon_file)): 
+                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            else:
+                self.icon = default_icon(self.functionBlockClass.__name__)
+
+        self.icon.style['max-width'] = '100%'
+        self.icon.style['image-rendering'] = 'auto'
+        self.icon.attributes['draggable'] = 'false'
+        self.icon.attributes['ondragstart'] = "event.preventDefault();"
+        self.append(self.icon, 'icon')
+        self.append(gui.Label(self.functionBlockClass.__name__), 'label')
+        self.children['label'].style.update({'margin-left':'2px', 'margin-right':'3px'})
+
+        self.attributes.update({'draggable': 'true',
+                                'ondragstart': "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));",
+                                'ondragover': "event.preventDefault();",
+                                'ondrop': "event.preventDefault();return false;"})
+
+        # this dictionary will contain optional style attributes that have to be added to the widget once created
+        self.optional_style_dict = {}
+
+        self.onclick.do(self.create_instance)
+
+    def build_widget_name_list_from_tree(self, node):
+        if not issubclass(type(node), FBD_model.FunctionBlock) and not issubclass(type(node), ProcessView):
             return
-        OUT = IN.swapcase()
-        return OUT
+        if issubclass(type(node), FBD_model.FunctionBlock):
+            self.varname_list.append(node.name)
+        for child in node.children.values():
+            self.build_widget_name_list_from_tree(child)
 
-class BOOL(SubprocessView):
-    @property
-    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual value''', bool, {})
-    def value(self): 
-        if len(self.outputs) < 1:
-            return False
-        return self.outputs['OUT'].get_value()
-    @value.setter
-    def value(self, value): self.outputs['OUT'].set_value(value)
+    def build_widget_used_keys_list_from_tree(self, node):
+        if not issubclass(type(node), FBD_model.FunctionBlock) and not issubclass(type(node), ProcessView):
+            return
+        self.used_keys_list.extend(list(node.children.keys()))
+        for child in node.children.values():
+            self.build_widget_used_keys_list_from_tree(child)
 
-    def __init__(self, name, *args, **kwargs):
-        SubprocessView.__init__(self, name, *args, **kwargs)
-        self.outputs['OUT'].set_value(False)
+    def on_dropped(self, left, top):
+        self.optional_style_dict['left'] = gui.to_pix(left)
+        self.optional_style_dict['top'] = gui.to_pix(top)
+        self.create_instance(None)
 
-    @Subprocess.decorate_process(['OUT'])
-    def do(self):
-        OUT = self.outputs['OUT'].get_value()
-        return OUT
+    def create_instance(self, widget):
+        """ Here the widget is allocated
+        """
+        self.varname_list = []
+        self.build_widget_name_list_from_tree(self.appInstance.process)
+        self.used_keys_list = []
+        self.build_widget_used_keys_list_from_tree(self.appInstance.process)
+        print("-------------used keys:" + str(self.used_keys_list))
+        variableName = ''
+        for i in range(0, 1000):  # reasonably no more than 1000 widget instances in a project
+            variableName = self.functionBlockClass.__name__.lower() + str(i)
+            if not variableName in self.varname_list and not variableName in self.used_keys_list:
+                break
 
-class RISING_EDGE(SubprocessView):
-    previous_value = None
+        """
+        if re.match('(^[a-zA-Z][a-zA-Z0-9_]*)|(^[_][a-zA-Z0-9_]+)', variableName) == None:
+            self.errorDialog = gui.GenericDialog("Error", "Please type a valid variable name.", width=350,height=120)
+            self.errorDialog.show(self.appInstance)
+            return
 
-    @Subprocess.decorate_process(['OUT'])
-    def do(self, IN):
-        OUT = (self.previous_value != IN) and IN
-        self.previous_value = IN
-        return OUT
+        if variableName in self.varname_list:
+            self.errorDialog = gui.GenericDialog("Error", "The typed variable name is already used. Please specify a new name.", width=350,height=150)
+            self.errorDialog.show(self.appInstance)
+            return
+        """
+        # here we create and decorate the widget
+        function_block = self.functionBlockClass(variableName, self.appInstance.process, **self.kwargs_to_widget)
+        function_block.attr_editor_newclass = False
 
-class NOT(SubprocessView):
-    @Subprocess.decorate_process(['OUT'])
-    def do(self, IN):
-        OUT = not IN
-        return OUT
+        for key in self.optional_style_dict:
+            function_block.style[key] = self.optional_style_dict[key]
+        self.optional_style_dict = {}
 
-class AND(SubprocessView):
-    @Subprocess.decorate_process(['OUT'])
-    def do(self, IN1, IN2):
-        OUT = IN1 and IN2
-        return OUT
-
-class OR(SubprocessView):
-    @Subprocess.decorate_process(['OUT'])
-    def do(self, IN1, IN2):
-        OUT = IN1 or IN2
-        return OUT
-
-class XOR(SubprocessView):
-    @Subprocess.decorate_process(['OUT'])
-    def do(self, IN1, IN2):
-        OUT = IN1 != IN2
-        return OUT
-
-class PULSAR(SubprocessView):
-    ton = 1000
-    toff = 1000
-    tstart = 0
-    def __init__(self, name, *args, **kwargs):
-        SubprocessView.__init__(self, name, *args, **kwargs)
-        self.outputs['OUT'].set_value(False)
-        self.tstart = time.time()
-
-    @Subprocess.decorate_process(['OUT'])
-    def do(self):
-        OUT = (int((time.time() - self.tstart)*1000) % (self.ton + self.toff)) < self.ton
-        return OUT
-
-
-class Toolbox(gui.VBox):
-    process_view = None
-
-    index_added_tool = 0
-
-    def __init__(self, process_view, *args, **kwargs):
-        gui.VBox.__init__(self, *args, **kwargs)
-        self.process_view = process_view
-        self.append(gui.Label("Toolbox", width="100%", height="auto", style={'outline':'1px solid black'}))
-
-        self.container = gui.VBox(width="100%", height="auto", style={'outline':'1px solid black'})
-        self.container.css_justify_content = 'flex-start'
-        self.container.style['row-gap'] = '10px'
-        self.append(self.container)
-
-        self.css_justify_content = 'flex-start'
-
-    def add_tool(self, tool_class):
-        tool_class_widget = gui.Label(tool_class.__name__, style={'outline':'1px solid black'})
-        tool_class_widget.tool_class = tool_class 
-        tool_class_widget.onclick.do(self.on_tool_selected)
-        tool_class_widget.style['cursor'] = 'pointer'
-        self.container.append(tool_class_widget)
-
-    def on_tool_selected(self, tool_class_widget):
-        tool_class = tool_class_widget.tool_class
-        tool_instance = tool_class(tool_class.__name__ , self.process_view)
-        tool_instance.set_name(tool_instance.name + "_" + str(self.index_added_tool)) 
-        self.index_added_tool += 1
-        self.process_view.add_subprocess(tool_instance)
+        self.appInstance.add_function_block_to_editor(function_block)
 
 
 class MyApp(App):
@@ -602,50 +519,22 @@ class MyApp(App):
         )
 
         self.process = ProcessView(width=600, height=600)
-        self.process.onsubprocess_clicked.do(self.onprocessview_subprocess_clicked)
+        self.process.onfunction_block_clicked.do(self.onprocessview_function_block_clicked)
         self.attributes_editor = EditorAttributes(self)
-        self.toolbox = Toolbox(self.process)
-        self.toolbox.add_tool(BOOL)
-        self.toolbox.add_tool(NOT)
-        self.toolbox.add_tool(AND)
-        self.toolbox.add_tool(OR)
-        self.toolbox.add_tool(XOR)
-        self.toolbox.add_tool(PULSAR)
-        self.toolbox.add_tool(STRING)
-        self.toolbox.add_tool(STRING_SWAP_CASE)
-        self.toolbox.add_tool(RISING_EDGE)
+        self.toolbox = FBToolbox(self)
         
         self.main_container.append(self.toolbox, 'toolbox')
         self.main_container.append(self.process, 'process_view')
         self.main_container.append(self.attributes_editor, 'attributes')
         
-        """
-        y = 10
-        m = BOOL("BOOL", False, self.process, 100, y)
-        self.process.add_subprocess(m)
-
-        y += 110
-        m = BOOL("BOOL 2", True, self.process, 100, y)
-        self.process.add_subprocess(m)
-
-        y += 110
-        m = NOT("NOT 0", self.process, 100, y)
-        self.process.add_subprocess(m)
-
-        y += 110
-        m = AND("AND", self.process, 100, y)
-        self.process.add_subprocess(m)
-
-        y += 110
-        m = OR("OR", self.process, 100, y)
-        self.process.add_subprocess(m)
-        """
-
         # returning the root widget
         return self.main_container
 
-    def onprocessview_subprocess_clicked(self, emitter, subprocess):
-        self.attributes_editor.set_widget(subprocess)
+    def onprocessview_function_block_clicked(self, emitter, function_block):
+        self.attributes_editor.set_widget(function_block)
+
+    def add_function_block_to_editor(self, function_block):
+        self.process.add_function_block(function_block)
 
     
 if __name__ == "__main__":
