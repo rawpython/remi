@@ -18,6 +18,7 @@ from remi import start, App
 import os #for path handling
 import inspect
 import time
+from editor_widgets import *
 
 
 class MixinPositionSize():
@@ -439,11 +440,25 @@ class ProcessView(gui.Svg, Process):
             self.append(link)
 
     def add_subprocess(self, subprocess):
+        subprocess.onclick.do(self.onsubprocess_clicked)
         self.append(subprocess)
         Process.add_subprocess(self, subprocess)
 
+    @gui.decorate_event
+    def onsubprocess_clicked(self, subprocess):
+        return (subprocess,)
+
 
 class STRING(SubprocessView):
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual value''', str, {})
+    def value(self): 
+        if len(self.outputs) < 1:
+            return ""
+        return self.outputs['OUT'].get_value()
+    @value.setter
+    def value(self, value): self.outputs['OUT'].set_value(value)
+
     def __init__(self, name, *args, **kwargs):
         SubprocessView.__init__(self, name, *args, **kwargs)
         self.outputs['OUT'].set_value("A STRING VALUE")
@@ -465,6 +480,15 @@ class STRING_SWAP_CASE(SubprocessView):
         return OUT
 
 class BOOL(SubprocessView):
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual value''', bool, {})
+    def value(self): 
+        if len(self.outputs) < 1:
+            return False
+        return self.outputs['OUT'].get_value()
+    @value.setter
+    def value(self, value): self.outputs['OUT'].set_value(value)
+
     def __init__(self, name, *args, **kwargs):
         SubprocessView.__init__(self, name, *args, **kwargs)
         self.outputs['OUT'].set_value(False)
@@ -556,10 +580,13 @@ class Toolbox(gui.VBox):
 
 class MyApp(App):
     process = None
+    toolbox = None
+    attributes_editor = None
 
     def __init__(self, *args):
-        res_path = os.path.join(os.path.dirname(__file__), 'res')
-        super(MyApp, self).__init__(*args, static_file_path=res_path)
+        editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
+        super(MyApp, self).__init__(
+            *args, static_file_path={'editor_resources': editor_res_path})
 
     def idle(self):
         if self.process is None:
@@ -567,14 +594,16 @@ class MyApp(App):
         self.process.do()
 
     def main(self):
-        self.main_container = gui.AsciiContainer(width=800, height=800, margin='0px auto')
+        self.main_container = gui.AsciiContainer(width="100%", height="100%", margin='0px auto')
         self.main_container.set_from_asciiart(
             """
-            |toolbox|process_view               |
+            |toolbox|process_view               |attributes|
             """, 0, 0
         )
 
         self.process = ProcessView(width=600, height=600)
+        self.process.onsubprocess_clicked.do(self.onprocessview_subprocess_clicked)
+        self.attributes_editor = EditorAttributes(self)
         self.toolbox = Toolbox(self.process)
         self.toolbox.add_tool(BOOL)
         self.toolbox.add_tool(NOT)
@@ -588,6 +617,7 @@ class MyApp(App):
         
         self.main_container.append(self.toolbox, 'toolbox')
         self.main_container.append(self.process, 'process_view')
+        self.main_container.append(self.attributes_editor, 'attributes')
         
         """
         y = 10
@@ -614,6 +644,8 @@ class MyApp(App):
         # returning the root widget
         return self.main_container
 
+    def onprocessview_subprocess_clicked(self, emitter, subprocess):
+        self.attributes_editor.set_widget(subprocess)
 
     
 if __name__ == "__main__":

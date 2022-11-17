@@ -779,7 +779,7 @@ class EditorAttributes(gui.VBox):
 
         for w in self.attributesInputs:
             if w.attributeDict['group'] in self.attributeGroups:
-                self.attributeGroups[w.attributeDict['group']].attributes_groups_container.remove_child(w)
+                self.attributeGroups[w.attributeDict['group']].remove_child(w)
 
         index = 100
         default_width = "100%"
