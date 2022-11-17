@@ -17,6 +17,7 @@ import remi.server
 from remi import start, App
 import os #for path handling
 import inspect
+import time
 
 
 class MixinPositionSize():
@@ -127,21 +128,28 @@ class Subprocess():
         return True, 28
 
 
+class SvgTitle(gui.Widget, gui._MixinTextualWidget):
+    def __init__(self, text='svg text', *args, **kwargs):
+        super(SvgTitle, self).__init__(*args, **kwargs)
+        self.type = 'title'
+        self.set_text(text)
+
+
 class InputView(Input, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     def __init__(self, name, *args, **kwargs):
-        width = 10 * len(name)
-        height = 20
-        gui.SvgSubcontainer.__init__(self, 0, 0, width, height, *args, **kwargs)
-        self.placeholder = gui.SvgRectangle(0, 0, width, height)
+        gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
+        self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
         self.placeholder.set_stroke(1, 'black')
         self.placeholder.set_fill("lightgray")
+        self.placeholder.style['cursor'] = 'pointer'
         self.append(self.placeholder)
 
         self.label = gui.SvgText("0%", "50%", name)
         self.label.attr_dominant_baseline = 'middle'
         self.label.attr_text_anchor = "start"
+        self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
         Input.__init__(self, name, "")
@@ -149,7 +157,7 @@ class InputView(Input, gui.SvgSubcontainer, MixinPositionSize):
     def set_size(self, width, height):
         if self.placeholder:
             self.placeholder.set_size(width, height)
-        return super().set_size(width, height)
+        return gui._MixinSvgSize.set_size(self, width, height)
 
     @gui.decorate_event
     def onpositionchanged(self):
@@ -160,17 +168,17 @@ class OutputView(Output, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     def __init__(self, name, *args, **kwargs):
-        width = 10 * len(name)
-        height = 20
-        gui.SvgSubcontainer.__init__(self, 0, 0, width, height, *args, **kwargs)
-        self.placeholder = gui.SvgRectangle(0, 0, width, height)
+        gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
+        self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
         self.placeholder.set_stroke(1, 'black')
         self.placeholder.set_fill("lightgray")
+        self.placeholder.style['cursor'] = 'pointer'
         self.append(self.placeholder)
 
         self.label = gui.SvgText("100%", "50%", name)
         self.label.attr_dominant_baseline = 'middle'
         self.label.attr_text_anchor = "end"
+        self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
         Output.__init__(self, name, "")
@@ -178,14 +186,18 @@ class OutputView(Output, gui.SvgSubcontainer, MixinPositionSize):
     def set_size(self, width, height):
         if self.placeholder:
             self.placeholder.set_size(width, height)
-        return super().set_size(width, height)
+        return gui._MixinSvgSize.set_size(self, width, height)
 
     def set_value(self, value):
+        if value == self.value:
+            return
         if type(value) == bool:
             self.label.set_fill('white')
             self.placeholder.set_fill('blue' if value else 'BLACK')
-        else:
-            self.label.set_text(self.name + " : " + str(value))
+        
+        self.append(SvgTitle(str(value)), "title")
+
+        self.label.attr_title = str(value)
 
         Output.set_value(self, value)
 
@@ -217,7 +229,7 @@ class Link(gui.SvgPolyline):
         x,y = self.source.get_position()
         w,h = self.source.get_size()
         xsource_parent, ysource_parent = self.source._parent.get_position()
-        wsource_parent, hsource_parent = self.destination._parent.get_size()
+        wsource_parent, hsource_parent = self.source._parent.get_size()
 
         xsource = xsource_parent + wsource_parent
         ysource = ysource_parent + y + h/2.0
@@ -270,12 +282,17 @@ class Link(gui.SvgPolyline):
 class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
 
     label = None
+    label_font_size = 12
+
     outline = None
 
-    def __init__(self, name, container, x, y, w, h, *args, **kwargs):
-        gui.SvgSubcontainer.__init__(self, x, y, w, h, *args, **kwargs)
-        MoveableWidget.__init__(self, container, *args, **kwargs)
+    io_font_size = 12
+    io_left_right_offset = 10
+
+    def __init__(self, name, container, x = 10, y = 10, *args, **kwargs):
         Subprocess.__init__(self, name)
+        gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
+        MoveableWidget.__init__(self, container, *args, **kwargs)
 
         self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
         self.outline.set_fill('white')
@@ -285,6 +302,7 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
         self.label = gui.SvgText("50%", 0, self.name)
         self.label.attr_text_anchor = "middle"
         self.label.attr_dominant_baseline = 'hanging'
+        self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
         #for all the outputs defined by decorator on Subprocess.do
@@ -296,27 +314,48 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
         for arg in signature.parameters:
             self.add_io_widget(InputView(arg))
 
+    def calc_height(self):
+        inputs_count = 0 if self.inputs == None else len(self.inputs)
+        outputs_count = 0 if self.outputs == None else len(self.outputs)
+        return self.label_font_size + (max(outputs_count, inputs_count)+2) * self.io_font_size
+
+    def calc_width(self):
+        max_name_len_input = 0
+        if self.inputs != None:
+            for inp in self.inputs.values():
+                max_name_len_input = max(max_name_len_input, len(inp.name))
+
+        max_name_len_output = 0
+        if self.outputs != None:
+            for o in self.outputs.values():
+                max_name_len_output = max(max_name_len_output, len(o.name))
+
+        return max((len(self.name) * self.label_font_size), (max(max_name_len_input, max_name_len_output)*self.io_font_size) * 2) + self.io_left_right_offset
+
     def add_io_widget(self, widget):
+        widget.label.css_font_size = gui.to_pix(self.io_font_size)
+        widget.set_size(len(widget.name) * self.io_font_size, self.io_font_size)
+
         Subprocess.add_io(self, widget)
         self.append(widget)
         widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
         widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
 
-        w_width, w_height = widget.get_size()
+        self.adjust_geometry()
+
+    def adjust_geometry(self):
+        gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
         w, h = self.get_size()
-        h = w_height * (max(len(self.outputs), len(self.inputs))+2)
-        gui._MixinSvgSize.set_size(self, w, h)
 
         i = 1
         for inp in self.inputs.values():
-            w_width, w_height = inp.get_size()
-            inp.set_position(0, (h/(len(self.inputs)+1))*i-w_height/2.0)
+            inp.set_position(0, self.label_font_size + self.io_font_size*i)
             i += 1
 
         i = 1
         for o in self.outputs.values():
-            w_width, w_height = o.get_size()
-            o.set_position(w - w_width, (h/(len(self.outputs)+1))*i-w_height/2.0)
+            ow, oh = o.get_size()
+            o.set_position(w - ow, self.label_font_size + self.io_font_size*i)
             i += 1
 
     def set_position(self, x, y):
@@ -327,6 +366,11 @@ class SubprocessView(Subprocess, gui.SvgSubcontainer, MoveableWidget):
             for o in self.outputs.values():
                 o.onpositionchanged()
         return super().set_position(x, y)
+
+    def set_name(self, name):
+        self.name = name
+        self.label.set_text(name)
+        self.adjust_geometry()
 
 
 class Process():
@@ -348,8 +392,10 @@ class Process():
                 parameters[IN.name] = IN.get_value()
             
             if not all_inputs_connected:
-                return
+                continue
             output_results = subprocesses.do(**parameters)
+            if output_results is None:
+                continue
             i = 0
             for OUT in subprocesses.outputs.values():
                 if type(output_results) in (tuple, list):
@@ -397,14 +443,44 @@ class ProcessView(gui.Svg, Process):
         Process.add_subprocess(self, subprocess)
 
 
-class BOOL(SubprocessView):
-    def __init__(self, name, initial_value, *args, **kwargs):
+class STRING(SubprocessView):
+    def __init__(self, name, *args, **kwargs):
         SubprocessView.__init__(self, name, *args, **kwargs)
-        self.outputs['OUT'].set_value(initial_value)
+        self.outputs['OUT'].set_value("A STRING VALUE")
 
     @Subprocess.decorate_process(['OUT'])
     def do(self):
         OUT = self.outputs['OUT'].get_value()
+        return OUT
+
+class STRING_SWAP_CASE(SubprocessView):
+    def __init__(self, name, *args, **kwargs):
+        SubprocessView.__init__(self, name, *args, **kwargs)
+
+    @Subprocess.decorate_process(['OUT'])
+    def do(self, EN, IN):
+        if not EN:
+            return
+        OUT = IN.swapcase()
+        return OUT
+
+class BOOL(SubprocessView):
+    def __init__(self, name, *args, **kwargs):
+        SubprocessView.__init__(self, name, *args, **kwargs)
+        self.outputs['OUT'].set_value(False)
+
+    @Subprocess.decorate_process(['OUT'])
+    def do(self):
+        OUT = self.outputs['OUT'].get_value()
+        return OUT
+
+class RISING_EDGE(SubprocessView):
+    previous_value = None
+
+    @Subprocess.decorate_process(['OUT'])
+    def do(self, IN):
+        OUT = (self.previous_value != IN) and IN
+        self.previous_value = IN
         return OUT
 
 class NOT(SubprocessView):
@@ -422,8 +498,60 @@ class AND(SubprocessView):
 class OR(SubprocessView):
     @Subprocess.decorate_process(['OUT'])
     def do(self, IN1, IN2):
-        OUT = IN1 and IN2
+        OUT = IN1 or IN2
         return OUT
+
+class XOR(SubprocessView):
+    @Subprocess.decorate_process(['OUT'])
+    def do(self, IN1, IN2):
+        OUT = IN1 != IN2
+        return OUT
+
+class PULSAR(SubprocessView):
+    ton = 1000
+    toff = 1000
+    tstart = 0
+    def __init__(self, name, *args, **kwargs):
+        SubprocessView.__init__(self, name, *args, **kwargs)
+        self.outputs['OUT'].set_value(False)
+        self.tstart = time.time()
+
+    @Subprocess.decorate_process(['OUT'])
+    def do(self):
+        OUT = (int((time.time() - self.tstart)*1000) % (self.ton + self.toff)) < self.ton
+        return OUT
+
+
+class Toolbox(gui.VBox):
+    process_view = None
+
+    index_added_tool = 0
+
+    def __init__(self, process_view, *args, **kwargs):
+        gui.VBox.__init__(self, *args, **kwargs)
+        self.process_view = process_view
+        self.append(gui.Label("Toolbox", width="100%", height="auto", style={'outline':'1px solid black'}))
+
+        self.container = gui.VBox(width="100%", height="auto", style={'outline':'1px solid black'})
+        self.container.css_justify_content = 'flex-start'
+        self.container.style['row-gap'] = '10px'
+        self.append(self.container)
+
+        self.css_justify_content = 'flex-start'
+
+    def add_tool(self, tool_class):
+        tool_class_widget = gui.Label(tool_class.__name__, style={'outline':'1px solid black'})
+        tool_class_widget.tool_class = tool_class 
+        tool_class_widget.onclick.do(self.on_tool_selected)
+        tool_class_widget.style['cursor'] = 'pointer'
+        self.container.append(tool_class_widget)
+
+    def on_tool_selected(self, tool_class_widget):
+        tool_class = tool_class_widget.tool_class
+        tool_instance = tool_class(tool_class.__name__ , self.process_view)
+        tool_instance.set_name(tool_instance.name + "_" + str(self.index_added_tool)) 
+        self.index_added_tool += 1
+        self.process_view.add_subprocess(tool_instance)
 
 
 class MyApp(App):
@@ -439,30 +567,49 @@ class MyApp(App):
         self.process.do()
 
     def main(self):
-        self.main_container = gui.VBox(width=800, height=800, margin='0px auto')
-        
+        self.main_container = gui.AsciiContainer(width=800, height=800, margin='0px auto')
+        self.main_container.set_from_asciiart(
+            """
+            |toolbox|process_view               |
+            """, 0, 0
+        )
+
         self.process = ProcessView(width=600, height=600)
-        self.main_container.append(self.process)
+        self.toolbox = Toolbox(self.process)
+        self.toolbox.add_tool(BOOL)
+        self.toolbox.add_tool(NOT)
+        self.toolbox.add_tool(AND)
+        self.toolbox.add_tool(OR)
+        self.toolbox.add_tool(XOR)
+        self.toolbox.add_tool(PULSAR)
+        self.toolbox.add_tool(STRING)
+        self.toolbox.add_tool(STRING_SWAP_CASE)
+        self.toolbox.add_tool(RISING_EDGE)
         
+        self.main_container.append(self.toolbox, 'toolbox')
+        self.main_container.append(self.process, 'process_view')
+        
+        """
         y = 10
-        m = BOOL("BOOL", False, self.process, 100, y, 200, 100)
+        m = BOOL("BOOL", False, self.process, 100, y)
         self.process.add_subprocess(m)
 
         y += 110
-        m = BOOL("BOOL 2", True, self.process, 100, y, 200, 100)
+        m = BOOL("BOOL 2", True, self.process, 100, y)
         self.process.add_subprocess(m)
 
         y += 110
-        m = NOT("NOT 0", self.process, 100, y, 200, 100)
+        m = NOT("NOT 0", self.process, 100, y)
         self.process.add_subprocess(m)
 
         y += 110
-        m = AND("AND", self.process, 100, y, 200, 100)
+        m = AND("AND", self.process, 100, y)
         self.process.add_subprocess(m)
 
         y += 110
-        m = OR("OR", self.process, 100, y, 200, 100)
+        m = OR("OR", self.process, 100, y)
         self.process.add_subprocess(m)
+        """
 
         # returning the root widget
         return self.main_container
