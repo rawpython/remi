@@ -85,13 +85,10 @@ class Link():
     destination = None
     def __init__(self, source_widget, destination_widget):
         self.source = source_widget
-        self.source.onpositionchanged.do(self.update_path)
         self.destination = destination_widget
-        self.destination.onpositionchanged.do(self.update_path)
 
         self.source.destinaton = self.destination
         self.destination.source = self.source
-        self.update_path()
 
     def unlink(self):
         self.get_parent().remove_child(self.unlink_bt)

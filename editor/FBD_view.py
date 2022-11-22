@@ -133,29 +133,37 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
         return ()
 
 
+class Unlink(gui.SvgSubcontainer):
+    def __init__(self, x=0, y=0, w=10, h=10, *args, **kwargs):
+        gui.SvgSubcontainer.__init__(self, x, y, w, h, *args, **kwargs)
+        line = gui.SvgLine(0,0,"100%","100%")
+        line.set_stroke(2, 'red')
+        self.append(line)
+        line = gui.SvgLine("100%", 0, 0, "100%")
+        line.set_stroke(2, 'red')
+        self.append(line)
+
+
 class LinkView(gui.SvgPolyline, FBD_model.Link):
+    bt_unlink = None
     def __init__(self, source_widget, destination_widget, *args, **kwargs):
         gui.SvgPolyline.__init__(self, 2, *args, **kwargs)
-        FBD_model.Link.__init__(source_widget, destination_widget)
+        FBD_model.Link.__init__(self, source_widget, destination_widget)
         self.set_stroke(1, 'black')
         self.set_fill('transparent')
         self.attributes['stroke-dasharray'] = "4 2"
+        self.source.onpositionchanged.do(self.update_path)
+        self.destination.onpositionchanged.do(self.update_path)
         self.update_path()
 
-        self.unlink_bt = gui.SvgSubcontainer(0,0,0,0)
-        line = gui.SvgLine(0,0,"100%","100%")
-        line.set_stroke(1, 'red')
-        self.unlink_bt.append(line)
-        line = gui.SvgLine("100%", 0, 0, "100%")
-        line.set_stroke(1, 'red')
-        self.unlink_bt.append(line)
-        self.get_parent().append(self.unlink_bt)
-        self.unlink_bt.onclick.do(self.unlink)
+    def set_unlink_button(self, bt_unlink):
+        self.bt_unlink = bt_unlink
+        self.bt_unlink.onclick.do(self.unlink)
 
     def unlink(self, emitter):
-        self.get_parent().remove_child(self.unlink_bt)
+        self.get_parent().remove_child(self.bt_unlink)
         self.get_parent().remove_child(self)
-        FBD_model.Link.unlink()
+        FBD_model.Link.unlink(self)
 
     def update_path(self, emitter=None):
         self.attributes['points'] = ''
@@ -211,7 +219,8 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
             self.add_coord(xdestination - (xdestination-xsource)/2.0, ydestination)
 
         self.add_coord(xdestination, ydestination)
-
+        if self.bt_unlink != None:
+            self.bt_unlink.set_position(xdestination - offset / 2.0, ydestination)
 
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
@@ -322,14 +331,14 @@ class ProcessView(gui.Svg, FBD_model.Process):
     def onselection_start(self, emitter, x, y):
         self.selected_input = self.selected_output = None
         print("selection start: ", type(emitter))
-        if type(emitter) == InputView:
+        if issubclass(type(emitter), FBD_model.Input):
             self.selected_input = emitter
         else:
             self.selected_output = emitter
 
     def onselection_end(self, emitter, x, y):
         print("selection end: ", type(emitter))
-        if type(emitter) == InputView:
+        if issubclass(type(emitter), FBD_model.Input):
             self.selected_input = emitter
         else:
             self.selected_output = emitter
@@ -339,6 +348,9 @@ class ProcessView(gui.Svg, FBD_model.Process):
                 return
             link = LinkView(self.selected_output, self.selected_input)
             self.append(link)
+            bt_unlink = Unlink()
+            self.append(bt_unlink)
+            link.set_unlink_button(bt_unlink)
 
     def add_function_block(self, function_block):
         function_block.onclick.do(self.onfunction_block_clicked)
