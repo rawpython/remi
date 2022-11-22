@@ -302,6 +302,7 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
         self.onselection_start = self.container.onselection_start
         self.onselection_end = self.container.onselection_end
 
+        """
         for (method_name, method) in inspect.getmembers(self.reference_object, inspect.ismethod):
             #try:
                 #c = types.new_class(method_name, (FunctionBlockView,))
@@ -318,7 +319,7 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
             if issubclass(type(_class), gui.ClassEventConnector):
                 #self.append(ObjectBlockView(evt, self))
                 self.add_fb_view(ObjectFunctionBlockView(evt, evt, "do", evt.event_method_bound.__name__ + ".do", self))
-         
+        """
         self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
 
     def calc_height(self):
@@ -372,6 +373,19 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
         self.name = name
         self.label.set_text(name)
         self.adjust_geometry()
+
+
+class TextInputAdapter(ObjectBlockView):
+    def __init__(self, obj, container, x = 10, y = 10, *args, **kwargs):
+        ObjectBlockView.__init__(self, obj, container, x = 10, y = 10, *args, **kwargs)
+        
+        txt = gui.TextInput()
+        ofbv = ObjectFunctionBlockView(self.reference_object, txt.get_value, "get_value", "get_value", self)
+        ofbv.add_io_widget(OutputView("Value"))
+        self.add_fb_view(ofbv)
+
+        ofbv = ObjectFunctionBlockView(self.reference_object, txt.set_value, "set_value", "set_value", self)
+        self.add_fb_view(ofbv)
 
 
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
@@ -485,8 +499,6 @@ class ObjectFunctionBlockView(FunctionBlockView):
     method = None
     method_name = None
 
-    processed_outputs = False
-
     def __init__(self, obj, method, method_name, name, container, x = 10, y = 10, *args, **kwargs):
         self.reference_object = obj
         self.method = method
@@ -528,6 +540,7 @@ class ObjectFunctionBlockView(FunctionBlockView):
         del kwargs['EN']
 
         output = getattr(self.reference_object, self.method_name)(*args, **kwargs)
+        """ #this is to populate outputs automatically
         if self.processed_outputs == False:
             if not output is None:
                 self.add_io_widget(OutputView('OUT' + str(0)))
@@ -539,6 +552,7 @@ class ObjectFunctionBlockView(FunctionBlockView):
                             i += 1
         
         self.processed_outputs = True
+        """
         return output
 
 
@@ -767,7 +781,7 @@ class MyApp(App):
         self.attributes_editor = EditorAttributes(self)
         self.toolbox = FBToolbox(self)
 
-        self.process.add_object_block(ObjectBlockView(gui.TextInput(), self.process))
+        self.process.add_object_block(TextInputAdapter(gui.TextInput(), self.process))
         
         self.main_container.append(self.toolbox, 'toolbox')
         self.main_container.append(self.process, 'process_view')
