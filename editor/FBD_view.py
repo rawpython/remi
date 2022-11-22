@@ -41,6 +41,7 @@ class MoveableWidget(gui.EventSource, MixinPositionSize):
     def start_drag(self, emitter, x, y):
         self.active = True
         self.container.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
+        self.onmousemove.do(None, js_stop_propagation=False, js_prevent_default=True)
         self.container.onmouseup.do(self.stop_drag)
         self.container.onmouseleave.do(self.stop_drag, 0, 0)
 
@@ -66,21 +67,46 @@ class SvgTitle(gui.Widget, gui._MixinTextualWidget):
 class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
+    previous_value = None
+
     def __init__(self, name, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
         self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
-        self.placeholder.set_stroke(1, 'black')
-        self.placeholder.set_fill("lightgray")
-        self.placeholder.style['cursor'] = 'pointer'
         self.append(self.placeholder)
 
         self.label = gui.SvgText("0%", "50%", name)
-        self.label.attr_dominant_baseline = 'middle'
-        self.label.attr_text_anchor = "start"
-        self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
         FBD_model.Input.__init__(self, name, *args, **kwargs)
+        self.set_default_look()
+
+    def set_default_look(self):
+        self.placeholder.set_stroke(1, 'black')
+        self.placeholder.set_fill("lightgray")
+        self.placeholder.style['cursor'] = 'pointer'
+
+        self.label.attr_dominant_baseline = 'middle'
+        self.label.attr_text_anchor = "start"
+        self.label.style['cursor'] = 'pointer'
+        self.label.set_fill('black')
+
+    def unlink(self):
+        ret = super().unlink()
+        self.set_default_look()
+        return ret
+
+    def get_value(self):
+        v = FBD_model.Input.get_value(self)
+
+        if self.is_linked() or self.has_default():
+            if self.previous_value != v:
+                if type(v) == bool:
+                    self.label.set_fill('white')
+                    self.placeholder.set_fill('blue' if v else 'BLACK')
+                self.append(SvgTitle(str(v)), "title")
+                self.previous_value = v
+
+        return v
 
     def set_size(self, width, height):
         if self.placeholder:
@@ -317,9 +343,12 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
         self.append(fb_view_instance)
         for fb in self.FBs.values():
             fb.adjust_geometry()
+            fb.on_drag.do(lambda emitter, x, y:self.adjust_geometry())
         self.adjust_geometry()
 
     def adjust_geometry(self):
+        for fb in self.FBs.values():
+            fb.adjust_geometry()
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
 
     def set_position(self, x, y):
@@ -327,7 +356,7 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
             fb.adjust_geometry()
         #w, h = self.get_size()
         #self.attr_viewBox = "%s %s %s %s"%(x, y, x+w, y+h)
-        return super().set_position(x, y)
+        return gui.SvgSubcontainer.set_position(self, x, y)
 
     def set_name(self, name):
         self.name = name
@@ -491,6 +520,7 @@ class ObjectFunctionBlockView(FunctionBlockView):
                         for o in output:
                             self.add_io_widget(OutputView('OUT' + str(i)))
                             i += 1
+        
         self.processed_outputs = True
         return output
 
