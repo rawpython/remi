@@ -91,8 +91,10 @@ class Link():
         self.destination.source = self.source
 
     def unlink(self):
-        self.get_parent().remove_child(self.unlink_bt)
+        self.get_parent().remove_child(self.bt_unlink)
         self.get_parent().remove_child(self)
+        self.source.unlink()
+        self.destination.unlink()
 
 
 class Process():

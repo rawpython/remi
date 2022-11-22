@@ -143,6 +143,11 @@ class Unlink(gui.SvgSubcontainer):
         line.set_stroke(2, 'red')
         self.append(line)
 
+    def get_size(self):
+        """ Returns the rectangle size.
+        """
+        return float(self.attr_width), float(self.attr_height)
+
 
 class LinkView(gui.SvgPolyline, FBD_model.Link):
     bt_unlink = None
@@ -159,6 +164,7 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
     def set_unlink_button(self, bt_unlink):
         self.bt_unlink = bt_unlink
         self.bt_unlink.onclick.do(self.unlink)
+        self.update_path()
 
     def unlink(self, emitter):
         self.get_parent().remove_child(self.bt_unlink)
@@ -220,7 +226,10 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
 
         self.add_coord(xdestination, ydestination)
         if self.bt_unlink != None:
-            self.bt_unlink.set_position(xdestination - offset / 2.0, ydestination)
+
+            w, h = self.bt_unlink.get_size()
+            self.bt_unlink.set_position(xdestination - offset / 2.0 - w/2, ydestination -h/2)
+
 
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
@@ -256,6 +265,8 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         signature = inspect.signature(self.do)
         for arg in signature.parameters:
             self.add_io_widget(InputView(arg))
+
+        self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
 
     def calc_height(self):
         inputs_count = 0 if self.inputs == None else len(self.inputs)
@@ -293,12 +304,14 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         i = 1
         for inp in self.inputs.values():
             inp.set_position(0, self.label_font_size + self.io_font_size*i)
+            inp.onpositionchanged()
             i += 1
 
         i = 1
         for o in self.outputs.values():
             ow, oh = o.get_size()
             o.set_position(w - ow, self.label_font_size + self.io_font_size*i)
+            o.onpositionchanged()
             i += 1
 
     def set_position(self, x, y):

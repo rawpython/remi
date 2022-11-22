@@ -16,7 +16,7 @@ class STRING(FBD_view.FunctionBlockView):
     def value(self, value): self.outputs['OUT'].set_value(value)
 
     def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockViewFunctionBlockView.__init__(self, name, *args, **kwargs)
+        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
         self.outputs['OUT'].set_value("A STRING VALUE")
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
@@ -88,8 +88,23 @@ class XOR(FBD_view.FunctionBlockView):
         return OUT
 
 class PULSAR(FBD_view.FunctionBlockView):
-    ton = 1000
-    toff = 1000
+    _ton = 1000
+    _toff = 1000
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual TON value''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def ton(self): 
+        return self._ton
+    @ton.setter
+    def ton(self, value): self._ton = value
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual TOFF value''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def toff(self): 
+        return self._toff
+    @toff.setter
+    def toff(self, value): self._toff = value
+
     tstart = 0
     def __init__(self, name, *args, **kwargs):
         FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
