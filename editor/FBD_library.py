@@ -4,6 +4,16 @@ import FBD_model
 import remi
 import remi.gui as gui
 import time
+import inspect
+import types
+
+
+class PRINT(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process([])
+    def do(self, IN, EN = True):
+        if not EN:
+            return
+        print(IN)
 
 class STRING(FBD_view.FunctionBlockView):
     @property
@@ -25,9 +35,6 @@ class STRING(FBD_view.FunctionBlockView):
         return OUT
 
 class STRING_SWAP_CASE(FBD_view.FunctionBlockView):
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
-
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
     def do(self, IN, EN = True):
         if not EN:

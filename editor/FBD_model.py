@@ -2,16 +2,23 @@ import inspect
 
 class Input():
     name = None
+    default = None
     typ = None
     source = None #has to be an Output
 
-    def __init__(self, name, typ = None):
+    def __init__(self, name, default = inspect.Parameter.empty, typ = None):
         self.name = name
+        self.default = default
         self.typ = typ
 
     def get_value(self):
+        if not self.is_linked():
+            return self.default
         return self.source.get_value()
     
+    def has_default(self):
+        return not (self.default == inspect.Parameter.empty)
+
     def link(self, output):
         self.source = output
 
@@ -46,6 +53,15 @@ class Output():
 
     def unlink(self):
         self.link(None)
+
+
+class ObjectBlock():
+    name = None
+    FBs = None #this is the list of member functions
+
+    def __init__(self, name):
+        self.name = name
+        self.FBs = {}
 
 
 class FunctionBlock():
@@ -99,24 +115,33 @@ class Link():
 
 class Process():
     function_blocks = None
+    object_blocks = None
+
     def __init__(self):
         self.function_blocks = {}
+        self.object_blocks = {}
 
     def add_function_block(self, function_block):
         self.function_blocks[function_block.name] = function_block
 
+    def add_object_block(self, object_block):
+        self.object_blocks[object_block.name] = object_block
+
     def do(self):
-        for function_block in self.function_blocks.values():
+        sub_function_blocks = []
+        for object_block in self.object_blocks.values():
+            for function_block in object_block.FBs.values():
+                sub_function_blocks.append(function_block)
+
+        for function_block in (*self.function_blocks.values(), *sub_function_blocks):
             parameters = {}
             all_inputs_connected = True
 
-            function_block_default_inputs = inspect.signature(function_block.do).parameters
-            
             for IN in function_block.inputs.values():
-                if (not IN.is_linked()) and function_block_default_inputs[IN.name].default == inspect.Parameter.empty:
+                if (not IN.is_linked()) and (not IN.has_default()):
                     all_inputs_connected = False
                     continue
-                parameters[IN.name] = IN.get_value() if IN.is_linked() else function_block_default_inputs[IN.name].default
+                parameters[IN.name] = IN.get_value()
             
             if not all_inputs_connected:
                 continue
@@ -130,3 +155,4 @@ class Process():
                 else:
                     OUT.set_value(output_results)
                 i += 1
+

@@ -20,6 +20,7 @@ import inspect
 import time
 from editor_widgets import *
 import FBD_model
+import types
 
 class MixinPositionSize():
     def get_position(self):
@@ -79,7 +80,7 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
         self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
-        FBD_model.Input.__init__(self, name, "")
+        FBD_model.Input.__init__(self, name, *args, **kwargs)
 
     def set_size(self, width, height):
         if self.placeholder:
@@ -108,7 +109,7 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
         self.label.style['cursor'] = 'pointer'
         self.append(self.label)
 
-        FBD_model.Output.__init__(self, name, "")
+        FBD_model.Output.__init__(self, name, *args, **kwargs)
 
     def set_size(self, width, height):
         if self.placeholder:
@@ -151,7 +152,9 @@ class Unlink(gui.SvgSubcontainer):
 
 class LinkView(gui.SvgPolyline, FBD_model.Link):
     bt_unlink = None
-    def __init__(self, source_widget, destination_widget, *args, **kwargs):
+    container = None
+    def __init__(self, source_widget, destination_widget, container, *args, **kwargs):
+        self.container = container
         gui.SvgPolyline.__init__(self, 2, *args, **kwargs)
         FBD_model.Link.__init__(self, source_widget, destination_widget)
         self.set_stroke(1, 'black')
@@ -171,25 +174,37 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         self.get_parent().remove_child(self)
         FBD_model.Link.unlink(self)
 
+    def get_absolute_node_position(self, node):
+        np = node.get_parent()
+        if np == self.container:
+            return node.get_position()
+        
+        x, y = node.get_position()
+        xs, ys = self.get_absolute_node_position(np)
+        return x+xs, y+ys
+
     def update_path(self, emitter=None):
         self.attributes['points'] = ''
 
-        x,y = self.source.get_position()
+        xsource,ysource = self.get_absolute_node_position( self.source )
         w,h = self.source.get_size()
-        xsource_parent, ysource_parent = self.source.get_parent().get_position()
+        xsource += w
+        ysource += h/2
+        xsource_parent, ysource_parent = self.get_absolute_node_position(self.source.get_parent())
         wsource_parent, hsource_parent = self.source.get_parent().get_size()
 
-        xsource = xsource_parent + wsource_parent
-        ysource = ysource_parent + y + h/2.0
+        #xsource = xsource_parent + wsource_parent
+        #ysource = ysource_parent + y + h/2.0
         self.add_coord(xsource, ysource)
 
-        x,y = self.destination.get_position()
+        x,y = self.get_absolute_node_position( self.destination )
         w,h = self.destination.get_size()
-        xdestination_parent, ydestination_parent = self.destination.get_parent().get_position()
+        xdestination_parent, ydestination_parent = self.get_absolute_node_position(self.destination.get_parent())
         wdestination_parent, hdestination_parent = self.destination.get_parent().get_size()
 
-        xdestination = xdestination_parent
-        ydestination = ydestination_parent + y + h/2.0
+        xdestination, ydestination = self.get_absolute_node_position( self.destination )
+        ydestination +=  + h/2.0
+        #ydestination = ydestination_parent + y + h/2.0
 
         offset = 10
 
@@ -231,6 +246,95 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
             self.bt_unlink.set_position(xdestination - offset / 2.0 - w/2, ydestination -h/2)
 
 
+class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget):
+
+    label = None
+    label_font_size = 12
+
+    outline = None
+
+    reference_object = None
+
+    def __init__(self, obj, container, x = 10, y = 10, *args, **kwargs):
+        name = obj.__class__.__name__
+        self.reference_object = obj
+        FBD_model.ObjectBlock.__init__(self, name)
+        gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
+        MoveableWidget.__init__(self, container, *args, **kwargs)
+
+        self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
+        self.outline.set_fill('white')
+        self.outline.set_stroke(2, 'orange')
+        self.append(self.outline)
+
+        self.label = gui.SvgText("50%", 0, self.name)
+        self.label.attr_text_anchor = "middle"
+        self.label.attr_dominant_baseline = 'hanging'
+        self.label.css_font_size = gui.to_pix(self.label_font_size)
+        self.append(self.label)
+
+        self.onselection_start = self.container.onselection_start
+        self.onselection_end = self.container.onselection_end
+
+        for (method_name, method) in inspect.getmembers(self.reference_object, inspect.ismethod):
+            #try:
+                #c = types.new_class(method_name, (FunctionBlockView,))
+                #setattr(c, "do", types.MethodType(getattr(self.reference_object, method_name), c))
+                #c.do.__dict__['_outputs'] = []
+                #FBD_model.FunctionBlock.decorate_process(['OUT'])(c.do)
+                #self.add_fb_view(c(method_name, container))
+            self.add_fb_view(ObjectFunctionBlockView(self.reference_object, method, method_name, method_name, self))
+            #except:
+            #    pass
+            
+        self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
+
+    def calc_height(self):
+        xmax = ymax = 0
+        if not self.FBs is None:
+            for fb in self.FBs.values():
+                x, y = fb.get_position()
+                w, h = fb.get_size()
+                xmax = max(xmax, x+w)
+                ymax = max(ymax, y+h)
+
+        return self.label_font_size + ymax
+
+    def calc_width(self):
+        xmax = ymax = 0
+        if not self.FBs is None:
+            for fb in self.FBs.values():
+                x, y = fb.get_position()
+                w, h = fb.get_size()
+                xmax = max(xmax, x+w)
+                ymax = max(ymax, y+h)
+
+        return max((len(self.name) * self.label_font_size), xmax)
+
+    def add_fb_view(self, fb_view_instance):
+        self.FBs[fb_view_instance.name] = fb_view_instance
+
+        self.append(fb_view_instance)
+        for fb in self.FBs.values():
+            fb.adjust_geometry()
+        self.adjust_geometry()
+
+    def adjust_geometry(self):
+        gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
+
+    def set_position(self, x, y):
+        for fb in self.FBs.values():
+            fb.adjust_geometry()
+        #w, h = self.get_size()
+        #self.attr_viewBox = "%s %s %s %s"%(x, y, x+w, y+h)
+        return super().set_position(x, y)
+
+    def set_name(self, name):
+        self.name = name
+        self.label.set_text(name)
+        self.adjust_geometry()
+
+
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
     label = None
@@ -259,12 +363,13 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 
         #for all the outputs defined by decorator on FunctionBlock.do
         #   add the related Outputs
-        for o in self.do._outputs:
-            self.add_io_widget(OutputView(o))
+        if hasattr(self.do, "_outputs"):
+            for o in self.do._outputs:
+                self.add_io_widget(OutputView(o))
 
         signature = inspect.signature(self.do)
         for arg in signature.parameters:
-            self.add_io_widget(InputView(arg))
+            self.add_io_widget(InputView(arg, default = signature.parameters[arg].default))
 
         self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
 
@@ -329,6 +434,67 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.adjust_geometry()
 
 
+class ObjectFunctionBlockView(FunctionBlockView):
+    reference_object = None
+    method = None
+    method_name = None
+
+    processed_outputs = False
+
+    def __init__(self, obj, method, method_name, name, container, x = 10, y = 10, *args, **kwargs):
+        self.reference_object = obj
+        self.method = method
+        self.method_name = method_name
+        FBD_model.FunctionBlock.__init__(self, name)
+        gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
+        MoveableWidget.__init__(self, container, *args, **kwargs)
+
+        self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
+        self.outline.set_fill('white')
+        self.outline.set_stroke(2, 'black')
+        self.append(self.outline)
+
+        self.label = gui.SvgText("50%", 0, self.name)
+        self.label.attr_text_anchor = "middle"
+        self.label.attr_dominant_baseline = 'hanging'
+        self.label.css_font_size = gui.to_pix(self.label_font_size)
+        self.append(self.label)
+
+        #for all the outputs defined by decorator on FunctionBlock.do
+        #   add the related Outputs
+        #if hasattr(self.do, "_outputs"):
+        #    for o in self.do._outputs:
+        #        self.add_io_widget(OutputView(o))
+
+        signature = inspect.signature(getattr(self.reference_object, self.method_name))
+        for arg in signature.parameters:
+            self.add_io_widget(InputView(arg, default=signature.parameters[arg].default))
+        self.add_io_widget(InputView('EN', default=False))
+
+        #self.do = getattr(self.reference_object, self.method_name)
+
+        self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
+
+    def do(self, *args, **kwargs):
+        if kwargs.get('EN') != None:
+            if kwargs['EN'] == False:
+                return
+        del kwargs['EN']
+
+        output = getattr(self.reference_object, self.method_name)(*args, **kwargs)
+        if self.processed_outputs == False:
+            if not output is None:
+                self.add_io_widget(OutputView('OUT' + str(0)))
+                if type(output) in (tuple,):
+                    if len(output) > 1: 
+                        i = 1
+                        for o in output:
+                            self.add_io_widget(OutputView('OUT' + str(i)))
+                            i += 1
+        self.processed_outputs = True
+        return output
+
+
 class ProcessView(gui.Svg, FBD_model.Process):
     selected_input = None
     selected_output = None
@@ -359,7 +525,7 @@ class ProcessView(gui.Svg, FBD_model.Process):
         if self.selected_input != None and self.selected_output != None:
             if self.selected_input.is_linked():
                 return
-            link = LinkView(self.selected_output, self.selected_input)
+            link = LinkView(self.selected_output, self.selected_input, self)
             self.append(link)
             bt_unlink = Unlink()
             self.append(bt_unlink)
@@ -369,6 +535,11 @@ class ProcessView(gui.Svg, FBD_model.Process):
         function_block.onclick.do(self.onfunction_block_clicked)
         self.append(function_block, function_block.name)
         FBD_model.Process.add_function_block(self, function_block)
+
+    def add_object_block(self, object_block):
+        object_block.onclick.do(self.onfunction_block_clicked)
+        self.append(object_block, object_block.name)
+        FBD_model.Process.add_object_block(self, object_block)
 
     @gui.decorate_event
     def onfunction_block_clicked(self, function_block):
@@ -401,6 +572,7 @@ class FBToolbox(gui.Container):
         self.add_widget_to_collection(FBD_library.STRING)
         self.add_widget_to_collection(FBD_library.STRING_SWAP_CASE)
         self.add_widget_to_collection(FBD_library.RISING_EDGE)
+        self.add_widget_to_collection(FBD_library.PRINT)
         
     def add_widget_to_collection(self, functionBlockClass, group='standard_tools', **kwargs_to_widget):
         # create an helper that will be created on click
@@ -547,6 +719,8 @@ class MyApp(App):
         self.process.onfunction_block_clicked.do(self.onprocessview_function_block_clicked)
         self.attributes_editor = EditorAttributes(self)
         self.toolbox = FBToolbox(self)
+
+        self.process.add_object_block(ObjectBlockView(gui.TextInput(), self.process))
         
         self.main_container.append(self.toolbox, 'toolbox')
         self.main_container.append(self.process, 'process_view')
