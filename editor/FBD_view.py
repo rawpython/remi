@@ -343,17 +343,21 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
         self.append(fb_view_instance)
         for fb in self.FBs.values():
             fb.adjust_geometry()
-            fb.on_drag.do(lambda emitter, x, y:self.adjust_geometry())
+            fb.on_drag.do(self.onfunction_block_position_changed)
+        self.adjust_geometry()
+
+    def onfunction_block_position_changed(self, emitter, x, y):
+        emitter.adjust_geometry()
         self.adjust_geometry()
 
     def adjust_geometry(self):
-        for fb in self.FBs.values():
-            fb.adjust_geometry()
+        #for fb in self.FBs.values():
+        #    fb.adjust_geometry()
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
 
     def set_position(self, x, y):
         for fb in self.FBs.values():
-            fb.adjust_geometry()
+            fb.onposition_changed()
         #w, h = self.get_size()
         #self.attr_viewBox = "%s %s %s %s"%(x, y, x+w, y+h)
         return gui.SvgSubcontainer.set_position(self, x, y)
@@ -430,6 +434,13 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
 
         self.adjust_geometry()
+
+    def onposition_changed(self):
+        for inp in self.inputs.values():
+            inp.onpositionchanged()
+
+        for o in self.outputs.values():
+            o.onpositionchanged()
 
     def adjust_geometry(self):
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
