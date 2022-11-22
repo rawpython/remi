@@ -312,7 +312,13 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
             self.add_fb_view(ObjectFunctionBlockView(self.reference_object, method, method_name, method_name, self))
             #except:
             #    pass
-            
+        
+        for (class_name, _class) in inspect.getmembers(self.reference_object):
+            evt = getattr(self.reference_object, class_name)
+            if issubclass(type(_class), gui.ClassEventConnector):
+                #self.append(ObjectBlockView(evt, self))
+                self.add_fb_view(ObjectFunctionBlockView(evt, evt, "do", evt.event_method_bound.__name__ + ".do", self))
+         
         self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
 
     def calc_height(self):
