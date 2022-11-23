@@ -161,8 +161,13 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
 
 
 class Unlink(gui.SvgSubcontainer):
-    def __init__(self, x=0, y=0, w=10, h=10, *args, **kwargs):
+    def __init__(self, x=0, y=0, w=15, h=15, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, x, y, w, h, *args, **kwargs)
+        self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
+        self.outline.set_fill('white')
+        self.outline.set_stroke(1, 'black')
+        self.append(self.outline)
+        
         line = gui.SvgLine(0,0,"100%","100%")
         line.set_stroke(2, 'red')
         self.append(line)
@@ -188,6 +193,12 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         self.attributes['stroke-dasharray'] = "4 2"
         self.source.onpositionchanged.do(self.update_path)
         self.destination.onpositionchanged.do(self.update_path)
+
+        #this is to prevent stopping elements drag when moving over a link
+        self.style['pointer-events'] = 'none' 
+        self.onmousemove.do(None, js_stop_propagation=False, js_prevent_default=True)
+        self.onmouseleave.do(None, js_stop_propagation=False, js_prevent_default=True)
+
         self.update_path()
 
     def set_unlink_button(self, bt_unlink):
@@ -232,7 +243,7 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         ydestination +=  + h/2.0
         #ydestination = ydestination_parent + y + h/2.0
 
-        offset = 10
+        offset = 20
 
         if xdestination - xsource < offset*2:
             self.maxlen = 6
