@@ -113,7 +113,7 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
 
     def set_size(self, width, height):
         if self.placeholder:
-            self.placeholder.set_size(width, height)
+            gui._MixinSvgSize.set_size(self.placeholder, width, height)
         return gui._MixinSvgSize.set_size(self, width, height)
 
     @gui.decorate_event
@@ -153,7 +153,7 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
 
     def unlink(self, destination = None):
         if not destination is None:
-            destination.link = None
+            destination.link_view = None
         FBD_model.Output.unlink(self, destination)
 
     def set_size(self, width, height):
@@ -177,7 +177,7 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
     @gui.decorate_event
     def onpositionchanged(self):
         for destination in self.destinations:
-            destination.link.update_path()
+            destination.link_view.update_path()
         return ()
 
 
@@ -188,29 +188,34 @@ class InputEvent(InputView):
     def __init__(self, name, event_callback, *args, **kwargs):
         self.event_callback = event_callback
         gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
+
         self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
+        self.append(self.placeholder)
+
+        self.label = gui.SvgText("0%", "50%", name)
+        self.append(self.label)
+
+        FBD_model.Input.__init__(self, name, *args, **kwargs)
+        self.set_default_look()
+
+    def set_default_look(self):
         self.placeholder.set_stroke(1, 'black')
         self.placeholder.set_fill("orange")
         self.placeholder.style['cursor'] = 'pointer'
-        self.append(self.placeholder)
 
-        self.label = gui.SvgText("100%", "50%", name)
         self.label.attr_dominant_baseline = 'middle'
-        self.label.attr_text_anchor = "end"
+        self.label.attr_text_anchor = "start"
         self.label.style['cursor'] = 'pointer'
-        self.append(self.label)
-
-        FBD_model.Output.__init__(self, name, *args, **kwargs)
 
     def link(self, source, link_view):
         if not issubclass(type(source), OutputEvent):
             return
         self.placeholder.set_fill('green')
-        FBD_model.InputView.link(self, source, link_view)
+        InputView.link(self, source, link_view)
 
     def unlink(self, destination = None):
         self.placeholder.set_fill('orange')
-        FBD_model.InputView.unlink(self)
+        InputView.unlink(self)
 
 
 class OutputEvent(OutputView):
@@ -243,7 +248,7 @@ class OutputEvent(OutputView):
 
     def unlink(self, destination = None):
         self.placeholder.set_fill('orange')
-        gui.ClassEventConnector.do(self, None)
+        gui.ClassEventConnector.do(self.event_connector, None)
         FBD_model.Output.unlink(self, destination)
 
 
@@ -536,6 +541,8 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     io_font_size = 12
     io_left_right_offset = 10
 
+    input_event = None
+
     def __init__(self, name, container, x = 10, y = 10, *args, **kwargs):
         FBD_model.FunctionBlock.__init__(self, name)
         gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
@@ -546,12 +553,22 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.outline.set_stroke(2, 'black')
         self.append(self.outline)
 
-        self.label = gui.SvgText("50%", 0, self.name)
-        self.label.attr_text_anchor = "middle"
-        self.label.attr_dominant_baseline = 'hanging'
-        self.label.css_font_size = gui.to_pix(self.label_font_size)
-        self.append(self.label)
+        self.input_event = InputEvent(self.name, self.do)
+        self.input_event.label.attr_text_anchor = "middle"
+        #self.input_event.label.attr_dominant_baseline = 'hanging'
+        self.input_event.label.css_font_size = gui.to_pix(self.io_font_size)
+        self.input_event.label.attr_x = "50%"
+        self.input_event.label.attr_y = "50%"
+        self.input_event.set_size(len(self.input_event.name) * self.io_font_size, self.io_font_size)
+        self.input_event.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+        self.input_event.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
+        self.append(self.input_event)
 
+        self.populate_io()
+
+        self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
+
+    def populate_io(self):
         #for all the outputs defined by decorator on FunctionBlock.do
         #   add the related Outputs
         if hasattr(self.do, "_outputs"):
@@ -561,8 +578,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         signature = inspect.signature(self.do)
         for arg in signature.parameters:
             self.add_io_widget(InputView(arg, default = signature.parameters[arg].default))
-
-        self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
 
     def calc_height(self):
         inputs_count = 0 if self.inputs == None else len(self.inputs)
@@ -604,6 +619,10 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
         w, h = self.get_size()
 
+        if not self.input_event is None:
+            iew, ieh = self.input_event.get_size()
+            self.input_event.set_position((w-iew)/2, 0)
+
         i = 1
         for inp in self.inputs.values():
             inp.set_position(0, self.label_font_size + self.io_font_size*i)
@@ -641,41 +660,26 @@ class ObjectFunctionBlockView(FunctionBlockView):
         self.reference_object = obj
         self.method = method
         self.method_name = method_name
-        FBD_model.FunctionBlock.__init__(self, name)
-        gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
-        MoveableWidget.__init__(self, container, *args, **kwargs)
-
-        self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
-        self.outline.set_fill('white')
-        self.outline.set_stroke(2, 'black')
-        self.append(self.outline)
-
-        self.label = gui.SvgText("50%", 0, self.name)
-        self.label.attr_text_anchor = "middle"
-        self.label.attr_dominant_baseline = 'hanging'
-        self.label.css_font_size = gui.to_pix(self.label_font_size)
-        self.append(self.label)
-
+        FunctionBlockView.__init__(self, name, container, x, y, *args, **kwargs)
+        
         #for all the outputs defined by decorator on FunctionBlock.do
         #   add the related Outputs
         #if hasattr(self.do, "_outputs"):
         #    for o in self.do._outputs:
         #        self.add_io_widget(OutputView(o))
 
+    def populate_io(self):
         signature = inspect.signature(getattr(self.reference_object, self.method_name))
         for arg in signature.parameters:
             self.add_io_widget(InputView(arg, default=signature.parameters[arg].default))
         self.add_io_widget(InputView('EN', default=False))
 
-        #self.do = getattr(self.reference_object, self.method_name)
-
-        self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
-
     def do(self, *args, **kwargs):
         if kwargs.get('EN') != None:
             if kwargs['EN'] == False:
                 return
-        del kwargs['EN']
+        if 'EN' in kwargs:
+            del kwargs['EN']
 
         output = getattr(self.reference_object, self.method_name)(*args, **kwargs)
         """ #this is to populate outputs automatically
@@ -724,7 +728,7 @@ class ProcessView(gui.Svg, FBD_model.Process):
         if self.selected_input != None and self.selected_output != None:
             if self.selected_input.is_linked():
                 return
-        self.selected_output.link(self.selected_input, self)
+            self.selected_output.link(self.selected_input, self)
 
     def add_function_block(self, function_block):
         function_block.onclick.do(self.onfunction_block_clicked)
