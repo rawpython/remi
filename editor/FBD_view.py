@@ -68,7 +68,7 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     previous_value = None
-
+    link = None
     def __init__(self, name, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
         self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
@@ -91,9 +91,8 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
         self.label.set_fill('black')
 
     def unlink(self):
-        ret = super().unlink()
+        FBD_model.Input.unlink(self)
         self.set_default_look()
-        return ret
 
     def get_value(self):
         v = FBD_model.Input.get_value(self)
@@ -115,6 +114,8 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
 
     @gui.decorate_event
     def onpositionchanged(self):
+        if not self.link is None:
+            self.link.update_path()
         return ()
 
 
@@ -137,6 +138,21 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
 
         FBD_model.Output.__init__(self, name, *args, **kwargs)
 
+    def link(self, destination, container):
+        link = LinkView(self, destination, container)
+        container.append(link)
+        bt_unlink = Unlink()
+        container.append(bt_unlink)
+        link.set_unlink_button(bt_unlink)
+
+        destination.link = link
+        FBD_model.Output.link(self, destination)
+
+    def unlink(self, destination = None):
+        if not destination is None:
+            destination.link = None
+        FBD_model.Output.unlink(self, destination)
+
     def set_size(self, width, height):
         if self.placeholder:
             self.placeholder.set_size(width, height)
@@ -157,6 +173,8 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
 
     @gui.decorate_event
     def onpositionchanged(self):
+        for destination in self.destinations:
+            destination.link.update_path()
         return ()
 
 
@@ -191,8 +209,6 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         self.set_stroke(1, 'black')
         self.set_fill('transparent')
         self.attributes['stroke-dasharray'] = "4 2"
-        self.source.onpositionchanged.do(self.update_path)
-        self.destination.onpositionchanged.do(self.update_path)
 
         #this is to prevent stopping elements drag when moving over a link
         self.style['pointer-events'] = 'none' 
@@ -597,11 +613,7 @@ class ProcessView(gui.Svg, FBD_model.Process):
         if self.selected_input != None and self.selected_output != None:
             if self.selected_input.is_linked():
                 return
-            link = LinkView(self.selected_output, self.selected_input, self)
-            self.append(link)
-            bt_unlink = Unlink()
-            self.append(bt_unlink)
-            link.set_unlink_button(bt_unlink)
+        self.selected_output.link(self.selected_input, self)
 
     def add_function_block(self, function_block):
         function_block.onclick.do(self.onfunction_block_clicked)

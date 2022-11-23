@@ -26,18 +26,19 @@ class Input():
         return self.source != None
 
     def unlink(self):
-        self.link(None)
+        Input.link(self, None)
 
 
 class Output():
     name = None
     typ = None
-    destination = None #has to be an Input
+    destinations = None #has to be an Input
     value = None
 
     def __init__(self, name, typ = None):
         self.name = name
         self.typ = typ
+        self.destinations = []
 
     def get_value(self):
         return self.value
@@ -45,14 +46,17 @@ class Output():
     def set_value(self, value):
         self.value = value
 
-    def link(self, input):
-        self.destination = input
+    def link(self, destination):
+        self.destinations.append(destination)
 
     def is_linked(self):
-        return self.destination != None
+        return len(self.destinations) > 0
 
-    def unlink(self):
-        self.link(None)
+    def unlink(self, destination = None):
+        if not destination is None:
+            self.destinations.remove(destination)
+            return
+        self.destinations = []
 
 
 class ObjectBlock():
@@ -107,9 +111,7 @@ class Link():
         self.destination.source = self.source
 
     def unlink(self):
-        self.get_parent().remove_child(self.bt_unlink)
-        self.get_parent().remove_child(self)
-        self.source.unlink()
+        self.source.unlink(self.destination)
         self.destination.unlink()
 
 
