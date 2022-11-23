@@ -20,6 +20,8 @@ class Input():
         return not (self.default == inspect.Parameter.empty)
 
     def link(self, output):
+        if not issubclass(type(output), Output):
+            return
         self.source = output
 
     def is_linked(self):
@@ -47,6 +49,8 @@ class Output():
         self.value = value
 
     def link(self, destination):
+        if not issubclass(type(destination), Input):
+            return
         self.destinations.append(destination)
 
     def is_linked(self):
@@ -63,9 +67,20 @@ class ObjectBlock():
     name = None
     FBs = None #this is the list of member functions
 
+    inputs = None
+    outputs = None
+
     def __init__(self, name):
         self.name = name
         self.FBs = {}
+        self.inputs = {}
+        self.outputs = {}
+
+    def add_io(self, io):
+        if issubclass(type(io), Input):
+            self.inputs[io.name] = io
+        else:
+            self.outputs[io.name] = io
 
 
 class FunctionBlock():
@@ -97,7 +112,7 @@ class FunctionBlock():
     
     @decorate_process([])
     def do(self):
-        return True, 28
+        return None
 
 
 class Link():
@@ -106,9 +121,6 @@ class Link():
     def __init__(self, source_widget, destination_widget):
         self.source = source_widget
         self.destination = destination_widget
-
-        self.source.destinaton = self.destination
-        self.destination.source = self.source
 
     def unlink(self):
         self.source.unlink(self.destination)

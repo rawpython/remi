@@ -68,7 +68,7 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
     placeholder = None
     label = None
     previous_value = None
-    link = None
+    link_view = None
     def __init__(self, name, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
         self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
@@ -89,6 +89,10 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
         self.label.attr_text_anchor = "start"
         self.label.style['cursor'] = 'pointer'
         self.label.set_fill('black')
+
+    def link(self, source, link_view):
+        FBD_model.Input.link(self, source)
+        self.link_view = link_view
 
     def unlink(self):
         FBD_model.Input.unlink(self)
@@ -114,8 +118,8 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
 
     @gui.decorate_event
     def onpositionchanged(self):
-        if not self.link is None:
-            self.link.update_path()
+        if not self.link_view is None:
+            self.link_view.update_path()
         return ()
 
 
@@ -139,14 +143,13 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
         FBD_model.Output.__init__(self, name, *args, **kwargs)
 
     def link(self, destination, container):
-        link = LinkView(self, destination, container)
-        container.append(link)
+        link_view = LinkView(self, destination, container)
+        container.append(link_view)
         bt_unlink = Unlink()
         container.append(bt_unlink)
-        link.set_unlink_button(bt_unlink)
-
-        destination.link = link
+        link_view.set_unlink_button(bt_unlink)
         FBD_model.Output.link(self, destination)
+        destination.link(self, link_view)
 
     def unlink(self, destination = None):
         if not destination is None:
@@ -176,6 +179,72 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
         for destination in self.destinations:
             destination.link.update_path()
         return ()
+
+
+class InputEvent(InputView):
+    placeholder = None
+    label = None
+    event_callback = None
+    def __init__(self, name, event_callback, *args, **kwargs):
+        self.event_callback = event_callback
+        gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
+        self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
+        self.placeholder.set_stroke(1, 'black')
+        self.placeholder.set_fill("orange")
+        self.placeholder.style['cursor'] = 'pointer'
+        self.append(self.placeholder)
+
+        self.label = gui.SvgText("100%", "50%", name)
+        self.label.attr_dominant_baseline = 'middle'
+        self.label.attr_text_anchor = "end"
+        self.label.style['cursor'] = 'pointer'
+        self.append(self.label)
+
+        FBD_model.Output.__init__(self, name, *args, **kwargs)
+
+    def link(self, source, link_view):
+        if not issubclass(type(source), OutputEvent):
+            return
+        self.placeholder.set_fill('green')
+        FBD_model.InputView.link(self, source, link_view)
+
+    def unlink(self, destination = None):
+        self.placeholder.set_fill('orange')
+        FBD_model.InputView.unlink(self)
+
+
+class OutputEvent(OutputView):
+    placeholder = None
+    label = None
+    event_connector = None
+    def __init__(self, name, event_connector, *args, **kwargs):
+        self.event_connector = event_connector
+        gui.SvgSubcontainer.__init__(self, 0, 0, 0, 0, *args, **kwargs)
+        self.placeholder = gui.SvgRectangle(0, 0, 0, 0)
+        self.placeholder.set_stroke(1, 'black')
+        self.placeholder.set_fill("orange")
+        self.placeholder.style['cursor'] = 'pointer'
+        self.append(self.placeholder)
+
+        self.label = gui.SvgText("100%", "50%", name)
+        self.label.attr_dominant_baseline = 'middle'
+        self.label.attr_text_anchor = "end"
+        self.label.style['cursor'] = 'pointer'
+        self.append(self.label)
+
+        FBD_model.Output.__init__(self, name, *args, **kwargs)
+
+    def link(self, destination, container):
+        if not issubclass(type(destination), InputEvent):
+            return
+        self.placeholder.set_fill('green')
+        gui.ClassEventConnector.do(self.event_connector, destination.event_callback)
+        OutputView.link(self, destination, container)
+
+    def unlink(self, destination = None):
+        self.placeholder.set_fill('orange')
+        gui.ClassEventConnector.do(self, None)
+        FBD_model.Output.unlink(self, destination)
 
 
 class Unlink(gui.SvgSubcontainer):
@@ -308,6 +377,9 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
 
     reference_object = None
 
+    io_font_size = 12
+    io_left_right_offset = 10
+
     def __init__(self, obj, container, x = 10, y = 10, *args, **kwargs):
         name = obj.__class__.__name__
         self.reference_object = obj
@@ -380,18 +452,48 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
             fb.on_drag.do(self.onfunction_block_position_changed)
         self.adjust_geometry()
 
+    def add_io_widget(self, widget):
+        widget.label.css_font_size = gui.to_pix(self.io_font_size)
+        widget.set_size(len(widget.name) * self.io_font_size, self.io_font_size)
+
+        FBD_model.FunctionBlock.add_io(self, widget)
+        self.append(widget)
+        widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+        widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
+
+        self.adjust_geometry()
+
     def onfunction_block_position_changed(self, emitter, x, y):
         emitter.adjust_geometry()
         self.adjust_geometry()
 
     def adjust_geometry(self):
-        #for fb in self.FBs.values():
-        #    fb.adjust_geometry()
+        w, h = self.get_size()
+
+        i = 1
+        for inp in self.inputs.values():
+            inp.set_position(0, self.label_font_size + self.io_font_size*i)
+            inp.onpositionchanged()
+            i += 1
+
+        i = 1
+        for o in self.outputs.values():
+            ow, oh = o.get_size()
+            o.set_position(w - ow, self.label_font_size + self.io_font_size*i)
+            o.onpositionchanged()
+            i += 1
+
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
 
     def set_position(self, x, y):
         for fb in self.FBs.values():
             fb.onposition_changed()
+
+        for inp in self.inputs.values():
+            inp.onpositionchanged()
+
+        for o in self.outputs.values():
+            o.onpositionchanged()
         #w, h = self.get_size()
         #self.attr_viewBox = "%s %s %s %s"%(x, y, x+w, y+h)
         return gui.SvgSubcontainer.set_position(self, x, y)
@@ -413,6 +515,15 @@ class TextInputAdapter(ObjectBlockView):
 
         ofbv = ObjectFunctionBlockView(self.reference_object, txt.set_value, "set_value", "set_value", self)
         self.add_fb_view(ofbv)
+
+        ie = InputEvent("onclicked", self.callback_test)
+        self.add_io_widget(ie)
+
+        oe = OutputEvent("onclick", self.onclick)
+        self.add_io_widget(oe)
+
+    def callback_test(self, emitter):
+        self.outline.set_stroke(2, 'red')
 
 
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
