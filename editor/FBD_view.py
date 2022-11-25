@@ -446,7 +446,7 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
                 xmax = max(xmax, x+w)
                 ymax = max(ymax, y+h)
 
-        return max((len(self.name) * self.label_font_size), xmax)
+        return max((len(self.name) * self.label_font_size*0.6), xmax)
 
     def add_fb_view(self, fb_view_instance):
         self.FBs[fb_view_instance.name] = fb_view_instance
@@ -605,11 +605,11 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
             for o in self.outputs.values():
                 max_name_len_output = max(max_name_len_output, len(o.name))
 
-        return max((len(self.name) * self.label_font_size), (max(max_name_len_input, max_name_len_output)*self.io_font_size) * 2) + self.io_left_right_offset
+        return max((len(self.name) * self.label_font_size*0.6), (max(max_name_len_input, max_name_len_output)*self.io_font_size*0.6) * 2) + self.io_left_right_offset
 
     def add_io_widget(self, widget):
         widget.label.css_font_size = gui.to_pix(self.io_font_size)
-        widget.set_size(len(widget.name) * self.io_font_size, self.io_font_size)
+        widget.set_size(len(widget.name) * self.io_font_size*0.6, self.io_font_size)
 
         FBD_model.FunctionBlock.add_io(self, widget)
         self.append(widget)
@@ -708,6 +708,8 @@ class ProcessView(gui.Svg, FBD_model.Process):
     selected_input = None
     selected_output = None
 
+    selected_function_block = None
+
     def __init__(self, *args, **kwargs):
         gui.Svg.__init__(self, *args, **kwargs)
         FBD_model.Process.__init__(self)
@@ -748,6 +750,10 @@ class ProcessView(gui.Svg, FBD_model.Process):
 
     @gui.decorate_event
     def onfunction_block_clicked(self, function_block):
+        if not self.selected_function_block is None:
+            self.selected_function_block.label.css_font_weight = "normal"
+        self.selected_function_block = function_block
+        self.selected_function_block.label.css_font_weight = "bolder"
         return (function_block,)
 
 
