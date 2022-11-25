@@ -521,12 +521,14 @@ class TextInputAdapter(ObjectBlockView):
         ofbv = ObjectFunctionBlockView(self.reference_object, txt.set_value, "set_value", "set_value", self)
         self.add_fb_view(ofbv)
 
+        """
         ie = InputEvent("onclicked", self.callback_test)
         self.add_io_widget(ie)
 
         oe = OutputEvent("onclick", self.onclick)
         self.add_io_widget(oe)
-
+        """
+        
     def callback_test(self, emitter):
         self.outline.set_stroke(2, 'red')
 
@@ -541,8 +543,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     io_font_size = 12
     io_left_right_offset = 10
 
-    input_event = None
-
     def __init__(self, name, container, x = 10, y = 10, *args, **kwargs):
         FBD_model.FunctionBlock.__init__(self, name)
         gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
@@ -553,16 +553,11 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.outline.set_stroke(2, 'black')
         self.append(self.outline)
 
-        self.input_event = InputEvent(self.name, self.do)
-        self.input_event.label.attr_text_anchor = "middle"
-        #self.input_event.label.attr_dominant_baseline = 'hanging'
-        self.input_event.label.css_font_size = gui.to_pix(self.io_font_size)
-        self.input_event.label.attr_x = "50%"
-        self.input_event.label.attr_y = "50%"
-        self.input_event.set_size(len(self.input_event.name) * self.io_font_size, self.io_font_size)
-        self.input_event.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
-        self.input_event.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
-        self.append(self.input_event)
+        self.label = gui.SvgText("50%", 0, self.name)
+        self.label.attr_text_anchor = "middle"
+        self.label.attr_dominant_baseline = 'hanging'
+        self.label.css_font_size = gui.to_pix(self.label_font_size)
+        self.append(self.label)
 
         self.populate_io()
 
@@ -618,10 +613,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     def adjust_geometry(self):
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
         w, h = self.get_size()
-
-        if not self.input_event is None:
-            iew, ieh = self.input_event.get_size()
-            self.input_event.set_position((w-iew)/2, 0)
 
         i = 1
         for inp in self.inputs.values():
