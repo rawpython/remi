@@ -528,7 +528,7 @@ class TextInputAdapter(ObjectBlockView):
         oe = OutputEvent("onclick", self.onclick)
         self.add_io_widget(oe)
         """
-        
+
     def callback_test(self, emitter):
         self.outline.set_stroke(2, 'red')
 
@@ -536,6 +536,7 @@ class TextInputAdapter(ObjectBlockView):
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
     label = None
+    label_priority = None
     label_font_size = 12
 
     outline = None
@@ -543,8 +544,10 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     io_font_size = 12
     io_left_right_offset = 10
 
-    def __init__(self, name, container, x = 10, y = 10, *args, **kwargs):
-        FBD_model.FunctionBlock.__init__(self, name)
+    execution_priority = 0
+
+    def __init__(self, name, container, x = 10, y = 10, execution_priority = 0, *args, **kwargs):
+        FBD_model.FunctionBlock.__init__(self, name, execution_priority)
         gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
         MoveableWidget.__init__(self, container, *args, **kwargs)
 
@@ -559,9 +562,21 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
+        self.label_priority = gui.SvgText("100%", 0, str(self.execution_priority))
+        self.label_priority.attr_text_anchor = "end"
+        self.label_priority.attr_dominant_baseline = 'hanging'
+        self.label_priority.set_fill("red")
+        self.label_priority.css_font_size = gui.to_pix(self.label_font_size)
+        self.append(self.label_priority)
+
         self.populate_io()
 
         self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
+
+    def set_execution_priority(self, execution_priority):
+        if not self.label_priority is None:
+            self.label_priority.set_text(str(self.execution_priority))
+        FBD_model.FunctionBlock.set_execution_priority(self, execution_priority)
 
     def populate_io(self):
         #for all the outputs defined by decorator on FunctionBlock.do

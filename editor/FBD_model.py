@@ -20,8 +20,6 @@ class Input():
         return not (self.default == inspect.Parameter.empty)
 
     def link(self, output):
-        if not issubclass(type(output), Output):
-            return
         self.source = output
 
     def is_linked(self):
@@ -88,6 +86,8 @@ class FunctionBlock():
     inputs = None
     outputs = None
 
+    execution_priority = 0
+
     def decorate_process(output_list):
         """ setup a method as a process FunctionBlock """
         """
@@ -99,10 +99,14 @@ class FunctionBlock():
             return method
         return add_annotation
 
-    def __init__(self, name):
+    def __init__(self, name, execution_priority = 0):
         self.name = name
+        self.set_execution_priority(execution_priority)
         self.inputs = {}
         self.outputs = {}
+
+    def set_execution_priority(self, execution_priority):
+        self.execution_priority = execution_priority
 
     def add_io(self, io):
         if issubclass(type(io), Input):
@@ -147,9 +151,13 @@ class Process():
             for function_block in object_block.FBs.values():
                 sub_function_blocks.append(function_block)
 
+        execution_priority = 0
         for function_block in (*self.function_blocks.values(), *sub_function_blocks):
             parameters = {}
             all_inputs_connected = True
+
+            function_block.set_execution_priority(execution_priority)
+            execution_priority += 1
 
             for IN in function_block.inputs.values():
                 if (not IN.is_linked()) and (not IN.has_default()):
