@@ -382,14 +382,11 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
 
     reference_object = None
 
-    io_font_size = 12
-    io_left_right_offset = 10
-
     def __init__(self, obj, container, x = 10, y = 10, *args, **kwargs):
         name = obj.__class__.__name__
         self.reference_object = obj
         FBD_model.ObjectBlock.__init__(self, name)
-        gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
+        gui.SvgSubcontainer.__init__(self, x, y, 0, 0, *args, **kwargs)
         MoveableWidget.__init__(self, container, *args, **kwargs)
 
         self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
@@ -403,9 +400,6 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
-        self.onselection_start = self.container.onselection_start
-        self.onselection_end = self.container.onselection_end
-
         """
         for (method_name, method) in inspect.getmembers(self.reference_object, inspect.ismethod):
             #try:
@@ -413,8 +407,8 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
                 #setattr(c, "do", types.MethodType(getattr(self.reference_object, method_name), c))
                 #c.do.__dict__['_outputs'] = []
                 #FBD_model.FunctionBlock.decorate_process(['OUT'])(c.do)
-                #self.add_fb_view(c(method_name, container))
-            self.add_fb_view(ObjectFunctionBlockView(self.reference_object, method, method_name, method_name, self))
+                #self.add_function_block_view(c(method_name, container))
+            self.add_function_block_view(ObjectFunctionBlockView(self.reference_object, method, method_name, method_name, self))
             #except:
             #    pass
         
@@ -422,14 +416,15 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
             evt = getattr(self.reference_object, class_name)
             if issubclass(type(_class), gui.ClassEventConnector):
                 #self.append(ObjectBlockView(evt, self))
-                self.add_fb_view(ObjectFunctionBlockView(evt, evt, "do", evt.event_method_bound.__name__ + ".do", self))
+                self.add_function_block_view(ObjectFunctionBlockView(evt, evt, "do", evt.event_method_bound.__name__ + ".do", self))
         """
         self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
+        self.adjust_geometry()
 
     def calc_height(self):
         xmax = ymax = 0
-        if not self.FBs is None:
-            for fb in self.FBs.values():
+        for fb in self.children.values():
+            if issubclass(type(fb), FunctionBlockView):
                 x, y = fb.get_position()
                 w, h = fb.get_size()
                 xmax = max(xmax, x+w)
@@ -439,8 +434,8 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
 
     def calc_width(self):
         xmax = ymax = 0
-        if not self.FBs is None:
-            for fb in self.FBs.values():
+        for fb in self.children.values():
+            if issubclass(type(fb), FunctionBlockView):
                 x, y = fb.get_position()
                 w, h = fb.get_size()
                 xmax = max(xmax, x+w)
@@ -448,24 +443,12 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
 
         return max((len(self.name) * self.label_font_size*0.6), xmax)
 
-    def add_fb_view(self, fb_view_instance):
-        self.FBs[fb_view_instance.name] = fb_view_instance
-
-        self.append(fb_view_instance)
-        for fb in self.FBs.values():
-            fb.adjust_geometry()
-            fb.on_drag.do(self.onfunction_block_position_changed)
-        self.adjust_geometry()
-
-    def add_io_widget(self, widget):
-        widget.label.css_font_size = gui.to_pix(self.io_font_size)
-        widget.set_size(len(widget.name) * self.io_font_size, self.io_font_size)
-
-        FBD_model.FunctionBlock.add_io(self, widget)
-        self.append(widget)
-        widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
-        widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
-
+    def add_function_block_view(self, fb_view_instance):
+        self.container.add_function_block(fb_view_instance)
+        for fb in self.children.values():
+            if issubclass(type(fb), FunctionBlockView):
+                fb.adjust_geometry()
+                fb.on_drag.do(self.onfunction_block_position_changed)
         self.adjust_geometry()
 
     def onfunction_block_position_changed(self, emitter, x, y):
@@ -473,34 +456,13 @@ class ObjectBlockView(FBD_model.ObjectBlock, gui.SvgSubcontainer, MoveableWidget
         self.adjust_geometry()
 
     def adjust_geometry(self):
-        w, h = self.get_size()
-
-        i = 1
-        for inp in self.inputs.values():
-            inp.set_position(0, self.label_font_size + self.io_font_size*i)
-            inp.onpositionchanged()
-            i += 1
-
-        i = 1
-        for o in self.outputs.values():
-            ow, oh = o.get_size()
-            o.set_position(w - ow, self.label_font_size + self.io_font_size*i)
-            o.onpositionchanged()
-            i += 1
-
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
 
     def set_position(self, x, y):
-        for fb in self.FBs.values():
-            fb.onposition_changed()
+        for fb in self.children.values():
+            if issubclass(type(fb), FunctionBlockView):
+                fb.onposition_changed()
 
-        for inp in self.inputs.values():
-            inp.onpositionchanged()
-
-        for o in self.outputs.values():
-            o.onpositionchanged()
-        #w, h = self.get_size()
-        #self.attr_viewBox = "%s %s %s %s"%(x, y, x+w, y+h)
         return gui.SvgSubcontainer.set_position(self, x, y)
 
     def set_name(self, name):
@@ -514,12 +476,12 @@ class TextInputAdapter(ObjectBlockView):
         ObjectBlockView.__init__(self, obj, container, x = 10, y = 10, *args, **kwargs)
         
         txt = gui.TextInput()
-        ofbv = ObjectFunctionBlockView(self.reference_object, txt.get_value, "get_value", "get_value", self)
+        ofbv = ObjectFunctionBlockView(self.reference_object, txt.get_value, "get_value", "get_value", self.container)
         ofbv.add_io_widget(OutputView("Value"))
-        self.add_fb_view(ofbv)
+        self.add_function_block_view(ofbv)
 
-        ofbv = ObjectFunctionBlockView(self.reference_object, txt.set_value, "set_value", "set_value", self)
-        self.add_fb_view(ofbv)
+        ofbv = ObjectFunctionBlockView(self.reference_object, txt.set_value, "set_value", "set_value", self.container)
+        self.add_function_block_view(ofbv)
 
         """
         ie = InputEvent("onclicked", self.callback_test)

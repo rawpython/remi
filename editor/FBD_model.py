@@ -63,22 +63,9 @@ class Output():
 
 class ObjectBlock():
     name = None
-    FBs = None #this is the list of member functions
-
-    inputs = None
-    outputs = None
 
     def __init__(self, name):
         self.name = name
-        self.FBs = {}
-        self.inputs = {}
-        self.outputs = {}
-
-    def add_io(self, io):
-        if issubclass(type(io), Input):
-            self.inputs[io.name] = io
-        else:
-            self.outputs[io.name] = io
 
 
 class FunctionBlock():
@@ -146,13 +133,8 @@ class Process():
         self.object_blocks[object_block.name] = object_block
 
     def do(self):
-        sub_function_blocks = []
-        for object_block in self.object_blocks.values():
-            for function_block in object_block.FBs.values():
-                sub_function_blocks.append(function_block)
-
         execution_priority = 0
-        for function_block in (*self.function_blocks.values(), *sub_function_blocks):
+        for function_block in self.function_blocks.values():
             parameters = {}
             all_inputs_connected = True
 
