@@ -187,18 +187,18 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
 
 
 class UnlinkButton(gui.SvgSubcontainer):
-    def __init__(self, x=0, y=0, w=15, h=15, *args, **kwargs):
+    def __init__(self, x=0, y=0, w=12, h=12, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, x, y, w, h, *args, **kwargs)
         self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
-        self.outline.set_fill('white')
-        self.outline.set_stroke(1, 'black')
+        self.outline.set_fill('red')
+        self.outline.set_stroke(1, 'darkred')
         self.append(self.outline)
         
-        line = gui.SvgLine(0,0,"100%","100%")
-        line.set_stroke(2, 'red')
+        line = gui.SvgLine("20%","20%","80%","80%")
+        line.set_stroke(2, 'white')
         self.append(line)
-        line = gui.SvgLine("100%", 0, 0, "100%")
-        line.set_stroke(2, 'red')
+        line = gui.SvgLine("80%", "20%", "20%", "80%")
+        line.set_stroke(2, 'white')
         self.append(line)
 
     def get_size(self):
@@ -450,9 +450,11 @@ class ProcessView(gui.Svg, FBD_model.Process):
         gui.Svg.__init__(self, *args, **kwargs)
         FBD_model.Process.__init__(self)
         self.css_border_color = 'black'
-        self.css_border_width = '1'
+        self.css_border_width = '0px'
         self.css_border_style = 'solid'
-        self.style['background-color'] = 'lightyellow'
+        #self.style['background-color'] = 'lightyellow'
+        self.css_background_color = 'rgb(250,248,240)'
+        self.css_background_image = "url('/editor_resources:background.png')"
 
     def onselection_start(self, emitter, x, y):
         self.selected_input = self.selected_output = None
