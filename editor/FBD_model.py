@@ -61,13 +61,6 @@ class Output():
         self.destinations = []
 
 
-class ObjectBlock():
-    name = None
-
-    def __init__(self, name):
-        self.name = name
-
-
 class FunctionBlock():
     name = None
     inputs = None
@@ -120,17 +113,12 @@ class Link():
 
 class Process():
     function_blocks = None
-    object_blocks = None
 
     def __init__(self):
         self.function_blocks = {}
-        self.object_blocks = {}
 
     def add_function_block(self, function_block):
         self.function_blocks[function_block.name] = function_block
-
-    def add_object_block(self, object_block):
-        self.object_blocks[object_block.name] = object_block
 
     def do(self):
         execution_priority = 0
