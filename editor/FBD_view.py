@@ -477,21 +477,64 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.adjust_geometry()
 
 
+"""
+    Bisogna gestire
+        nome processo
+        tipo di esecuzione
+        parametri in input e output
+        vedere i processi a più alto livello come function blocks
+        entrare in un function block e comporlo come un processo
+
+"""
+
 class ProcessView(gui.Svg, FBD_model.Process):
+    name = None
+
     selected_input = None
     selected_output = None
 
     selected_function_block = None
 
-    def __init__(self, *args, **kwargs):
+    label = None
+    label_font_size = 18
+
+    process_outputs_fb = None #this is required to route result values outside of Process
+    process_inputs_fb = None #this is required to route parameters inside the Process
+
+    def __init__(self, name, *args, **kwargs):
+        self.name = name
         gui.Svg.__init__(self, *args, **kwargs)
         FBD_model.Process.__init__(self)
+        
         self.css_border_color = 'black'
         self.css_border_width = '0px'
         self.css_border_style = 'solid'
         #self.style['background-color'] = 'lightyellow'
         self.css_background_color = 'rgb(250,248,240)'
         self.css_background_image = "url('/editor_resources:background.png')"
+
+        self.label = gui.SvgText("50%", 0, self.name)
+        self.label.attr_text_anchor = "middle"
+        self.label.attr_dominant_baseline = 'text-before-edge'
+        #self.label.set_stroke(1, "gray")
+        self.label.set_fill("darkgray")
+        self.label.style['pointer-events'] = 'none'
+        self.label.css_font_size = gui.to_pix(self.label_font_size)
+        self.append(self.label)
+
+        self.process_inputs_fb = FunctionBlockView("Process INPUTS", self)
+        self.process_inputs_fb.add_io_widget(OutputView("in1"))
+        self.process_inputs_fb.outputs['in1'].set_value(True)
+        self.process_inputs_fb.add_io_widget(OutputView("in2"))
+        self.process_inputs_fb.outputs['in2'].set_value(False)
+        self.process_inputs_fb.outline.set_fill("transparent")
+        self.add_function_block(self.process_inputs_fb)
+
+        self.process_outputs_fb = FunctionBlockView("Process OUTPUTS", self)
+        self.process_outputs_fb.add_io_widget(InputView("out1"))
+        self.process_outputs_fb.add_io_widget(InputView("out2"))
+        self.process_outputs_fb.outline.set_fill("transparent")
+        self.add_function_block(self.process_outputs_fb)
 
     def onselection_start(self, emitter, x, y):
         self.selected_input = self.selected_output = None
@@ -698,7 +741,7 @@ class MyApp(App):
             """, 0, 0
         )
 
-        self.process = ProcessView(width=600, height=600)
+        self.process = ProcessView("Process", width=600, height=600)
         self.process.onfunction_block_clicked.do(self.onprocessview_function_block_clicked)
         self.attributes_editor = EditorAttributes(self)
         self.toolbox = FBToolbox(self)
