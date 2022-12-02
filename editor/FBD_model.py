@@ -68,6 +68,8 @@ class FunctionBlock():
 
     execution_priority = 0
 
+    has_enabling_input = False #This property gets overloaded in FBD_view.FunctionBlockView
+
     def decorate_process(output_list):
         """ setup a method as a process FunctionBlock """
         """
@@ -93,9 +95,16 @@ class FunctionBlock():
             self.inputs[io.name] = io
         else:
             self.outputs[io.name] = io
-    
+
+    def add_enabling_input(self):
+        self.add_io(Input('EN', False))
+
+    def remove_enabling_input(self):
+        self.inputs['EN'].unlink()
+        del self.inputs['EN']
+
     @decorate_process([])
-    def do(self):
+    def do(self, *args, **kwargs):
         return None
 
 
@@ -137,6 +146,13 @@ class Process():
             
             if not all_inputs_connected:
                 continue
+
+            if function_block.has_enabling_input:
+                if not parameters['EN']:
+                    continue
+                else:
+                    del parameters['EN']
+
             output_results = function_block.do(**parameters)
             if output_results is None:
                 continue

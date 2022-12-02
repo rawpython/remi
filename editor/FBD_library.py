@@ -10,9 +10,7 @@ import types
 
 class PRINT(FBD_view.FunctionBlockView):
     @FBD_model.FunctionBlock.decorate_process([])
-    def do(self, IN, EN = True):
-        if not EN:
-            return
+    def do(self, IN):
         print(IN)
 
 class STRING(FBD_view.FunctionBlockView):

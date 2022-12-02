@@ -230,7 +230,7 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         self.bt_unlink.onclick.do(self.unlink)
         self.update_path()
 
-    def unlink(self, emitter):
+    def unlink(self, emitter = None):
         self.get_parent().remove_child(self.bt_unlink)
         self.get_parent().remove_child(self)
         FBD_model.Link.unlink(self)
@@ -308,6 +308,16 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
 
 
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines if the function block has to be enabled''', bool, {})
+    def has_enabling_input(self): return 'EN' in self.inputs.keys()
+    @has_enabling_input.setter
+    def has_enabling_input(self, value): 
+        if value:
+            self.add_enabling_input_widget()
+        else:
+            self.remove_enabling_input_widget()
 
     label = None
     label_priority = None
@@ -399,6 +409,25 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
 
         self.adjust_geometry()
+
+    def remove_io_widget(self, name):
+        io = self.inputs[name]
+        if io.is_linked():
+            if issubclass(type(io), FBD_model.Input):
+                io.link_view.unlink()
+            else:
+                for dest in io.destinations:
+                    if dest.name == name:
+                        dest.link_view.unlink()
+                        break
+        self.remove_child(io)
+        del self.inputs[name]
+
+    def add_enabling_input_widget(self):
+        self.add_io_widget(InputView('EN', default = False))
+
+    def remove_enabling_input_widget(self):
+        self.remove_io_widget('EN')
 
     def onposition_changed(self):
         for inp in self.inputs.values():
