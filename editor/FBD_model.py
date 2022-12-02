@@ -104,7 +104,7 @@ class FunctionBlock():
         del self.inputs['EN']
 
     @decorate_process([])
-    def do(self, *args, **kwargs):
+    def do(self):
         return None
 
 

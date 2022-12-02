@@ -8,10 +8,49 @@ import inspect
 import types
 
 
+def FBWrapObjectMethod(obj_name, method_bound, container):
+    fb = FBD_view.FunctionBlockView(obj_name + "." + method_bound.__name__, container)
+    #if hasattr(self.do, "_outputs"):
+    #for o in self.do._outputs:
+    #    self.add_io_widget(OutputView(o))
+
+    signature = inspect.signature(method_bound)
+    for arg in signature.parameters:
+        fb.add_io_widget(FBD_view.InputView(arg, default = signature.parameters[arg].default))
+
+    def do(*args, **kwargs):
+        return method_bound(*args, **kwargs)
+        
+    def pre_do(*args, **kwargs):
+        #populate outputs
+        results = method_bound(*args, **kwargs)
+        for k in fb.outputs.keys():
+            fb.remove_io_widget(k)
+        if not results is None: 
+            if type(results) in [tuple,]:
+                i = 0
+                for res in results:
+                    fb.add_io_widget(FBD_view.OutputView(f"out{i}"))
+                    i += 1
+            else:
+                fb.add_io_widget(FBD_view.OutputView("out"))
+        fb.do = do
+
+    fb.do = pre_do
+    return fb
+
 class PRINT(FBD_view.FunctionBlockView):
     @FBD_model.FunctionBlock.decorate_process([])
     def do(self, IN):
         print(IN)
+
+class NONE(FBD_view.FunctionBlockView):
+    def __init__(self, name, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+
+    @FBD_model.FunctionBlock.decorate_process(['OUT'])
+    def do(self):
+        return None
 
 class STRING(FBD_view.FunctionBlockView):
     @property

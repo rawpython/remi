@@ -107,12 +107,17 @@ class InputView(FBD_model.Input, gui.SvgSubcontainer, MixinPositionSize):
         v = FBD_model.Input.get_value(self)
 
         if self.is_linked() or self.has_default():
-            if self.previous_value != v:
-                if type(v) == bool:
-                    self.label.set_fill('white')
-                    self.placeholder.set_fill('blue' if v else 'BLACK')
-                self.append(SvgTitle(str(v)), "title")
-                self.previous_value = v
+            try:
+                if self.previous_value == v:
+                    return v
+            except:
+                pass
+
+            if type(v) == bool:
+                self.label.set_fill('white')
+                self.placeholder.set_fill('blue' if v else 'BLACK')
+            self.append(SvgTitle(str(v)), "title")
+            self.previous_value = v
 
         return v
 
@@ -167,8 +172,11 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
         return gui._MixinSvgSize.set_size(self, width, height)
 
     def set_value(self, value):
-        if value == self.value:
-            return
+        try:
+            if value == self.value:
+                return
+        except:
+            pass
         if type(value) == bool:
             self.label.set_fill('white')
             self.placeholder.set_fill('blue' if value else 'BLACK')
@@ -536,6 +544,7 @@ class FBToolbox(gui.Container):
 
         import FBD_library
         # load all widgets
+        self.add_widget_to_collection(FBD_library.NONE)
         self.add_widget_to_collection(FBD_library.BOOL)
         self.add_widget_to_collection(FBD_library.NOT)
         self.add_widget_to_collection(FBD_library.AND)
@@ -684,7 +693,8 @@ class MyApp(App):
         self.main_container = gui.AsciiContainer(width="100%", height="100%", margin='0px auto')
         self.main_container.set_from_asciiart(
             """
-            |toolbox|process_view               |attributes|
+            |toolbox  |process_view               |attributes|
+            |container|process_view               |attributes|
             """, 0, 0
         )
 
@@ -693,6 +703,23 @@ class MyApp(App):
         self.attributes_editor = EditorAttributes(self)
         self.toolbox = FBToolbox(self)
         
+        #a container to put some widgets for debugging inside
+        self.container = gui.VBox()
+        self.main_container.append(self.container, "container")
+
+        import widgets.toolbox_opencv
+        import FBD_library
+        imread = widgets.toolbox_opencv.OpencvImRead(r"C:\Users\davide\Documents\GIT\remi\editor\widgets\camera.png")
+        fb = FBD_library.FBWrapObjectMethod("imread", imread.get_image_data, self.process)
+        #fb.add_io_widget(OutputView("IMAGE"))
+        self.process.add_function_block(fb)
+        self.container.append(imread)
+
+        imthreshold = widgets.toolbox_opencv.OpencvThreshold()
+        fb = FBD_library.FBWrapObjectMethod("imthreshold", imthreshold.set_image_data, self.process)
+        self.process.add_function_block(fb)
+        self.container.append(imthreshold)
+
         self.main_container.append(self.toolbox, 'toolbox')
         self.main_container.append(self.process, 'process_view')
         self.main_container.append(self.attributes_editor, 'attributes')

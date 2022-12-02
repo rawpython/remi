@@ -79,6 +79,9 @@ class OpencvImage(gui.Image, OpencvWidget):
         self.update()
         self.on_new_image()
 
+    def get_image_data(self):
+        return self.img
+
     def search_app_instance(self, node):
         if issubclass(node.__class__, remi.server.App):
             return node
@@ -90,10 +93,10 @@ class OpencvImage(gui.Image, OpencvWidget):
         if self.app_instance==None:
             self.app_instance = self.search_app_instance(self)
             if self.app_instance==None:
-                self.attributes['src'] = "/%s/get_image_data?index=00"%self.identifier #gui.load_resource(self.filename)
+                self.attributes['src'] = "/%s/get_image_encoded?index=00"%self.identifier #gui.load_resource(self.filename)
                 return
         self.app_instance.execute_javascript("""
-            url = '/%(id)s/get_image_data?index=%(frame_index)s';
+            url = '/%(id)s/get_image_encoded?index=%(frame_index)s';
             
             xhr = null;
             xhr = new XMLHttpRequest();
@@ -108,8 +111,8 @@ class OpencvImage(gui.Image, OpencvWidget):
             xhr.send();
             """ % {'id': self.identifier, 'frame_index':str(time.time())})
 
-    def get_image_data(self, index=0):
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
+    def get_image_encoded(self, index=0):
+        gui.Image.set_image(self, '/%(id)s/get_image_encoded?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
         self._set_updated()
         try:
             ret, png = cv2.imencode('.png', self.img)
@@ -202,7 +205,7 @@ class OpencvVideo(OpencvImage):
 
             with self.app_instance.update_lock:
                 self.app_instance.execute_javascript("""
-                    var url = '/%(id)s/get_image_data?index=%(frame_index)s';
+                    var url = '/%(id)s/get_image_encoded?index=%(frame_index)s';
                     var xhr = new XMLHttpRequest();
                     xhr.open('GET', url, true);
                     xhr.responseType = 'blob'
@@ -216,8 +219,8 @@ class OpencvVideo(OpencvImage):
                     """ % {'id': self.identifier, 'frame_index':str(time.time())})
                 
 
-    def get_image_data(self, index=0):
-        gui.Image.set_image(self, '/%(id)s/get_image_data?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
+    def get_image_encoded(self, index=0):
+        gui.Image.set_image(self, '/%(id)s/get_image_encoded?index=%(frame_index)s'% {'id': self.identifier, 'frame_index':str(time.time())})
         self._set_updated()
         try:
             ret, frame = self.capture.read()
@@ -298,15 +301,17 @@ class OpencvThreshold(OpencvImage):
         super(OpencvThreshold, self).__init__("", *args, **kwargs)
         self.threshold = 125
 
+    def set_image_data(self, img):
+        OpencvImage.set_image_data(self, img)
+        if len(img.shape)>2:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        res, self.img = cv2.threshold(img,self.threshold,255,cv2.THRESH_BINARY)
+
     def on_new_image_listener(self, emitter): #THRESHOLD
         if emitter is None or emitter.img is None:
             return
         self.image_source = emitter
-        img = emitter.img
-        if len(img.shape)>2:
-            img = cv2.cvtColor(emitter.img, cv2.COLOR_BGR2GRAY)
-        res, self.img = cv2.threshold(img,self.threshold,255,cv2.THRESH_BINARY)
-        self.set_image_data(self.img)
+        self.set_image_data(emitter.img)
         
 '''
 class OpencvSimpleBlobDetector(OpencvImage):
