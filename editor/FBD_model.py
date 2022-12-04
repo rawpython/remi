@@ -1,64 +1,70 @@
 import inspect
 
-class Input():
+
+class Linkable():
     name = None
+    linked_nodes = None
+    linked_nodes_max_count = 0
+
+    def __init__(self, name, linked_nodes_max_count = 1, *args, **kwargs):
+        self.name = name
+        self.linked_nodes_max_count = linked_nodes_max_count
+        self.linked_nodes = []
+
+    def link(self, node):
+        if not self.is_linked_to(node):
+            if self.linked_nodes_max_count > len(self.linked_nodes):
+                self.linked_nodes.append(node)
+                return True
+
+        return False
+
+    def is_linked(self):
+        return len(self.linked_nodes) > 0
+
+    def is_linked_to(self, node):
+        return node in self.linked_nodes
+
+    def unlink(self, node = None):
+        if node is None:
+            self.linked_nodes = []
+            return
+        self.linked_nodes.remove(node)
+
+
+class Input(Linkable):
     default = None
     typ = None
-    source = None #has to be an Output
-
+    
     def __init__(self, name, default = inspect.Parameter.empty, typ = None):
-        self.name = name
+        Linkable.__init__(self, name, linked_nodes_max_count=1)
         self.default = default
         self.typ = typ
 
     def get_value(self):
         if not self.is_linked():
             return self.default
-        return self.source.get_value()
+        return self.linked_nodes[0].get_value()
     
     def has_default(self):
         return not (self.default == inspect.Parameter.empty)
 
-    def link(self, output):
-        self.source = output
 
-    def is_linked(self):
-        return self.source != None
-
-    def unlink(self):
-        Input.link(self, None)
-
-
-class Output():
+class Output(Linkable):
     name = None
     typ = None
-    destinations = None #has to be an Input
     value = None
 
     def __init__(self, name, typ = None):
+        Linkable.__init__(self, name, linked_nodes_max_count=0xff)
         self.name = name
         self.typ = typ
-        self.destinations = []
 
     def get_value(self):
         return self.value
 
     def set_value(self, value):
         self.value = value
-
-    def link(self, destination):
-        if not issubclass(type(destination), Input):
-            return
-        self.destinations.append(destination)
-
-    def is_linked(self):
-        return len(self.destinations) > 0
-
-    def unlink(self, destination = None):
-        if not destination is None:
-            self.destinations.remove(destination)
-            return
-        self.destinations = []
 
 
 class FunctionBlock():

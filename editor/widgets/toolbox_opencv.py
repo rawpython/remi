@@ -63,7 +63,7 @@ class OpencvImage(gui.Image, OpencvWidget):
         kwargs['style'] = self.default_style
         kwargs['width'] = kwargs['style'].get('width', kwargs.get('width','200px'))
         kwargs['height'] = kwargs['style'].get('height', kwargs.get('height','180px'))
-        super(OpencvImage, self).__init__(filename, *args, **kwargs)
+        gui.Image.__init__(self, filename, *args, **kwargs)
         OpencvWidget._setup(self)
 
     def on_new_image_listener(self, emitter):

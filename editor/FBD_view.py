@@ -22,6 +22,8 @@ from editor_widgets import *
 import FBD_model
 import types
 
+import widgets.toolbox_opencv
+
 class MixinPositionSize():
     def get_position(self):
         return float(self.attr_x), float(self.attr_y)
@@ -189,8 +191,8 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
 
     @gui.decorate_event
     def onpositionchanged(self):
-        for destination in self.destinations:
-            destination.link_view.update_path()
+        for node in self.linked_nodes:
+            node.link_view.update_path()
         return ()
 
 
@@ -424,7 +426,7 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
             if issubclass(type(io), FBD_model.Input):
                 io.link_view.unlink()
             else:
-                for dest in io.destinations:
+                for dest in io.linked_nodes:
                     if dest.name == name:
                         dest.link_view.unlink()
                         break
@@ -750,7 +752,6 @@ class MyApp(App):
         self.container = gui.VBox()
         self.main_container.append(self.container, "container")
 
-        import widgets.toolbox_opencv
         import FBD_library
         imread = widgets.toolbox_opencv.OpencvImRead(r"C:\Users\davide\Documents\GIT\remi\editor\widgets\camera.png")
         fb = FBD_library.FBWrapObjectMethod("imread", imread.get_image_data, self.process)
