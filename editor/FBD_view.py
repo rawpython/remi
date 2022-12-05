@@ -535,6 +535,8 @@ class ProcessView(gui.Svg, FBD_model.Process):
     process_outputs_fb = None #this is required to route result values outside of Process
     process_inputs_fb = None #this is required to route parameters inside the Process
 
+    zoom = 1.0
+
     def __init__(self, name, *args, **kwargs):
         self.name = name
         gui.Svg.__init__(self, *args, **kwargs)
@@ -569,6 +571,22 @@ class ProcessView(gui.Svg, FBD_model.Process):
         self.process_outputs_fb.add_io_widget(InputView("out2"))
         self.process_outputs_fb.outline.set_fill("transparent")
         self.add_function_block(self.process_outputs_fb)
+        self.onwheel.do(None)
+
+    @gui.decorate_event_js("var params={};" \
+            "params['value']=event.deltaY;" \
+            "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    def onwheel(self, value):
+        """Called when the user rotate the mouse wheel.
+
+        Args:
+            value (float): the scroll amount
+        """
+        self.zoom += float(value)*0.0005
+        self.zoom = max(0.25, self.zoom)
+        self.zoom = min(4.0, self.zoom)
+        self.set_viewbox(0,0,500*self.zoom,500*self.zoom)
+        return (value,)
 
     def on_execution_priority_changed(self, emitter, function_block, value):
         del self.function_blocks[function_block.name]
