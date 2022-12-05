@@ -157,7 +157,7 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
     def link(self, destination, container):
         link_view = LinkView(self, destination, container)
         container.append(link_view)
-        bt_unlink = UnlinkButton()
+        bt_unlink = DeleteButton()
         container.append(bt_unlink)
         link_view.set_unlink_button(bt_unlink)
         FBD_model.Output.link(self, destination)
@@ -196,7 +196,7 @@ class OutputView(FBD_model.Output, gui.SvgSubcontainer, MixinPositionSize):
         return ()
 
 
-class UnlinkButton(gui.SvgSubcontainer):
+class DeleteButton(gui.SvgSubcontainer):
     def __init__(self, x=0, y=0, w=12, h=12, *args, **kwargs):
         gui.SvgSubcontainer.__init__(self, x, y, w, h, *args, **kwargs)
         self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
@@ -371,9 +371,17 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.append(self.priority_container)
         self.priority_container.append(self.label_priority)
 
+        self.delete_button = DeleteButton()
+        self.delete_button.onclick.do(self.on_delete_button_pressed, js_stop_propagation=True, js_prevent_default=True)
+        self.append(self.delete_button)
+
         self.populate_io()
 
         self.stop_drag.do(lambda emitter, x, y:self.adjust_geometry())
+
+    @gui.decorate_event
+    def on_delete_button_pressed(self, emitter):
+        return ()
 
     def set_execution_priority(self, execution_priority):
         if not self.label_priority is None:
@@ -486,7 +494,8 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         parametri in input e output
         vedere i processi a più alto livello come function blocks
         entrare in un function block e comporlo come un processo
-
+        eliminazione fb, con relativi link
+        ordinamento esecuzione
 """
 
 class ProcessView(gui.Svg, FBD_model.Process):
@@ -560,8 +569,22 @@ class ProcessView(gui.Svg, FBD_model.Process):
 
     def add_function_block(self, function_block):
         function_block.onclick.do(self.onfunction_block_clicked)
+        function_block.on_delete_button_pressed.do(self.remove_function_block)
         self.append(function_block, function_block.name)
         FBD_model.Process.add_function_block(self, function_block)
+
+    def remove_function_block(self, emitter):
+        if issubclass(type(emitter), FBD_model.FunctionBlock):
+            self.remove_child(emitter)
+            for IN in emitter.inputs.values():
+                if IN.is_linked():
+                    IN.link_view.unlink()
+            
+            for OUT in emitter.outputs.values():
+                if OUT.is_linked():
+                    for IN in OUT.linked_nodes:
+                        IN.link_view.unlink()
+            FBD_model.Process.remove_function_block(self, emitter)
 
     @gui.decorate_event
     def onfunction_block_clicked(self, function_block):

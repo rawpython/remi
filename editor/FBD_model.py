@@ -134,6 +134,9 @@ class Process():
 
     def add_function_block(self, function_block):
         self.function_blocks[function_block.name] = function_block
+    
+    def remove_function_block(self, function_block):
+        del self.function_blocks[function_block.name]
 
     def do(self):
         execution_priority = 0
