@@ -359,19 +359,13 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
-        self.label_priority = gui.SvgText("100%", 0, str(self.execution_priority))
-        self.label_priority.style['pointer-events'] = 'none'
-        self.label_priority.attr_text_anchor = "end"
+        self.label_priority = gui.SvgText("50%", self.label_font_size, str(self.execution_priority))
+        self.label_priority.attr_text_anchor = "middle"
         self.label_priority.attr_dominant_baseline = 'text-before-edge'
-        self.label_priority.set_fill("red")
+        self.label_priority.style['pointer-events'] = 'none'
+        self.label_priority.set_fill("gray")
         self.label_priority.css_font_size = gui.to_pix(self.label_font_size)
-        #self.append(self.label_priority)
-
-        self.priority_container = gui.SvgSubcontainer(self.calc_width()-2, 2, 0, 0)
-        self.priority_container.css_overflow = "visible"
-        self.priority_container.style['pointer-events'] = 'none'
-        self.append(self.priority_container)
-        self.priority_container.append(self.label_priority)
+        self.append(self.label_priority)
 
         self.delete_button = DeleteButton()
         self.delete_button.onclick.do(self.on_delete_button_pressed, js_stop_propagation=True, js_prevent_default=True)
@@ -459,7 +453,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     def adjust_geometry(self):
         gui._MixinSvgSize.set_size(self, self.calc_width(), self.calc_height())
         w, h = self.get_size()
-        self.priority_container.set_position(w-2, 2)
 
         i = 1
         for inp in self.inputs.values():
@@ -491,12 +484,10 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 
 """
     Bisogna gestire
-        nome processo
         tipo di esecuzione
         parametri in input e output
         vedere i processi a più alto livello come function blocks
         entrare in un function block e comporlo come un processo
-        ordinamento esecuzione
 """
 
 class ProcessView(gui.Svg, FBD_model.Process):
@@ -605,7 +596,7 @@ class ProcessView(gui.Svg, FBD_model.Process):
             
             for OUT in emitter.outputs.values():
                 if OUT.is_linked():
-                    for IN in OUT.linked_nodes:
+                    for IN in list(OUT.linked_nodes):
                         IN.link_view.unlink()
             FBD_model.Process.remove_function_block(self, emitter)
 
