@@ -224,7 +224,7 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         self.container = container
         gui.SvgPolyline.__init__(self, 2, *args, **kwargs)
         FBD_model.Link.__init__(self, source_widget, destination_widget)
-        self.set_stroke(1, 'black')
+        self.set_stroke(1, 'rgba(0,0,0,0.5)')
         self.set_fill('transparent')
         self.attributes['stroke-dasharray'] = "4 2"
 
@@ -253,6 +253,9 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
         x, y = node.get_position()
         xs, ys = self.get_absolute_node_position(np)
         return x+xs, y+ys
+
+    def highlight(self, enb):
+        self.set_stroke(1, 'rgba(0,0,0,1.0)' if enb else 'rgba(0,0,0,0.5)')
 
     def update_path(self, emitter=None):
         self.attributes['points'] = ''
@@ -622,8 +625,15 @@ class ProcessView(gui.Svg, FBD_model.Process):
     def onfunction_block_clicked(self, function_block):
         if not self.selected_function_block is None:
             self.selected_function_block.label.css_font_weight = "normal"
+            for IN in self.selected_function_block.inputs.values():
+                if IN.is_linked():
+                    IN.link_view.highlight(False)
+
         self.selected_function_block = function_block
         self.selected_function_block.label.css_font_weight = "bolder"
+        for IN in self.selected_function_block.inputs.values():
+            if IN.is_linked():
+                IN.link_view.highlight(True)
         return (function_block,)
 
 
@@ -661,6 +671,10 @@ class FBToolbox(gui.Container):
         self.add_widget_to_collection(FBD_library.DIV, "Math")
         self.add_widget_to_collection(FBD_library.DIFFERENCE, "Math")
         self.add_widget_to_collection(FBD_library.COUNTER, "Math")
+        self.add_widget_to_collection(FBD_library.GREATER_THAN, "Math")
+        self.add_widget_to_collection(FBD_library.LESS_THAN, "Math")
+        self.add_widget_to_collection(FBD_library.EQUAL_TO, "Math")
+        self.add_widget_to_collection(FBD_library.INT, "Math")
         
     def add_widget_to_collection(self, functionBlockClass, group='standard_tools', **kwargs_to_widget):
         # create an helper that will be created on click
@@ -800,7 +814,7 @@ class MyApp(App):
         self.main_container.set_from_asciiart(
             """
             |toolbox  |process_view               |attributes|
-            |container|process_view               |attributes |
+            |container|process_view               |attributes|
             """, 0, 0
         )
 
@@ -814,7 +828,7 @@ class MyApp(App):
         self.main_container.append(self.container, "container")
 
         import FBD_library
-        imread = widgets.toolbox_opencv.OpencvImRead(r"C:\Users\davide\Documents\GIT\remi\editor\widgets\camera.png")
+        imread = widgets.toolbox_opencv.OpencvImRead(r"C:\Users\progr\OneDrive\Software e progetti\remi\editor\res\widget_Image.png")
         fb = FBD_library.FBWrapObjectMethod("imread", imread.get_image_data, self.process)
         #fb.add_io_widget(OutputView("IMAGE"))
         self.process.add_function_block(fb)
@@ -822,6 +836,12 @@ class MyApp(App):
 
         imthreshold = widgets.toolbox_opencv.OpencvThreshold()
         fb = FBD_library.FBWrapObjectMethod("imthreshold", imthreshold.set_image_data, self.process)
+        self.process.add_function_block(fb)
+        self.container.append(imthreshold)
+
+        def set_threshold(value):
+            imthreshold.threshold = value
+        fb = FBD_library.FBWrapObjectMethod("imthreshold", set_threshold, self.process)
         self.process.add_function_block(fb)
         self.container.append(imthreshold)
 

@@ -75,9 +75,46 @@ class COUNTER(FBD_view.FunctionBlockView):
         self.outputs['OUT'].set_value(0)
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
+    def do(self, reset=False):
+        if reset:
+            self.value = 0
+            return 0
+        self.value += 1
+        return self.value
+
+class INT(FBD_view.FunctionBlockView):
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual value''', int, {'possible_values': '', 'min': 0, 'max': 0xffffffff, 'default': 1, 'step': 1})
+    def value(self): 
+        if len(self.outputs) < 1:
+            return False
+        return self.outputs['OUT'].get_value()
+    @value.setter
+    def value(self, value): self.outputs['OUT'].set_value(value)
+
+    def __init__(self, name, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+        self.outputs['OUT'].set_value(False)
+
+    @FBD_model.FunctionBlock.decorate_process(['OUT'])
     def do(self):
-        OUT = self.outputs['OUT'].get_value() + 1
+        OUT = self.outputs['OUT'].get_value()
         return OUT
+
+class GREATER_THAN(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 > IN2
+
+class LESS_THAN(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 < IN2
+
+class EQUAL_TO(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 == IN2
 
 class PRINT(FBD_view.FunctionBlockView):
     @FBD_model.FunctionBlock.decorate_process([])
