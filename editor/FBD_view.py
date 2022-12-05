@@ -335,6 +335,8 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 
     outline = None
 
+    delete_button = None
+
     io_font_size = 12
     io_left_right_offset = 10
 
@@ -494,7 +496,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         parametri in input e output
         vedere i processi a più alto livello come function blocks
         entrare in un function block e comporlo come un processo
-        eliminazione fb, con relativi link
         ordinamento esecuzione
 """
 
@@ -511,6 +512,8 @@ class ProcessView(gui.Svg, FBD_model.Process):
 
     process_outputs_fb = None #this is required to route result values outside of Process
     process_inputs_fb = None #this is required to route parameters inside the Process
+
+    fb_exectution_priority_panel = None
 
     def __init__(self, name, *args, **kwargs):
         self.name = name
@@ -533,6 +536,9 @@ class ProcessView(gui.Svg, FBD_model.Process):
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
+        self.fb_exectution_priority_panel = FBExecutionPriorityPanel()
+        self.fb_exectution_priority_panel.on_execution_priority_changed.do(self.on_execution_priority_changed)
+
         self.process_inputs_fb = FunctionBlockView("Process INPUTS", self)
         self.process_inputs_fb.add_io_widget(OutputView("in1"))
         self.process_inputs_fb.outputs['in1'].set_value(True)
@@ -546,6 +552,21 @@ class ProcessView(gui.Svg, FBD_model.Process):
         self.process_outputs_fb.add_io_widget(InputView("out2"))
         self.process_outputs_fb.outline.set_fill("transparent")
         self.add_function_block(self.process_outputs_fb)
+
+    def on_execution_priority_changed(self, emitter, function_block, value):
+        del self.function_blocks[function_block.name]
+        d = dict(self.function_blocks)
+        self.function_blocks = {}
+        for k,v in d.items():
+            if len(self.function_blocks.keys()) == value:
+                self.function_blocks[function_block.name] = function_block
+            self.function_blocks[k] = v
+        if not function_block.name in self.function_blocks.keys():
+            self.function_blocks[function_block.name] = function_block
+
+        self.fb_exectution_priority_panel.empty()
+        for fb in self.function_blocks.values():
+            self.fb_exectution_priority_panel.add_function_block(fb)
 
     def onselection_start(self, emitter, x, y):
         self.selected_input = self.selected_output = None
@@ -568,6 +589,7 @@ class ProcessView(gui.Svg, FBD_model.Process):
             self.selected_output.link(self.selected_input, self)
 
     def add_function_block(self, function_block):
+        self.fb_exectution_priority_panel.add_function_block(function_block)
         function_block.onclick.do(self.onfunction_block_clicked)
         function_block.on_delete_button_pressed.do(self.remove_function_block)
         self.append(function_block, function_block.name)
@@ -575,6 +597,7 @@ class ProcessView(gui.Svg, FBD_model.Process):
 
     def remove_function_block(self, emitter):
         if issubclass(type(emitter), FBD_model.FunctionBlock):
+            self.fb_exectution_priority_panel.remove_function_block(emitter)
             self.remove_child(emitter)
             for IN in emitter.inputs.values():
                 if IN.is_linked():
@@ -742,6 +765,82 @@ class FBHelper(gui.HBox):
         self.appInstance.add_function_block_to_editor(function_block)
 
 
+class FBExecutionPriorityPanelItem(gui.ListItem):
+    function_block = None
+
+    label = None
+
+    bt_increase = None
+    bt_decrease = None
+
+    def __init__(self, function_block, *args, **kwargs):
+        self.function_block = function_block
+        gui.ListItem.__init__(self, "", *args, **kwargs)
+
+        self.label = gui.Label(self.function_block.name)
+        self.bt_increase = gui.Button(u"▲", width=15, height=15, style={'margin-right':'1px'})
+        self.bt_increase.onclick.do(self.on_priority_increase)
+        self.bt_decrease = gui.Button(u"▼", width=15, height=15, style={'margin-right':'1px'})
+        self.bt_decrease.onclick.do(self.on_priority_decrease)
+        item_content = gui.HBox(children=[self.label, gui.HBox(children=[self.bt_increase, self.bt_decrease])])
+        item_content.css_justify_content = "space-between"
+        self.add_child(self.function_block.name, item_content)
+
+    @gui.decorate_event
+    def on_priority_increase(self, emitter):
+        return (self.function_block,)
+
+    @gui.decorate_event
+    def on_priority_decrease(self, emitter):
+        return (self.function_block,)
+
+
+class FBExecutionPriorityPanel(gui.Container):
+    fb_list = None
+
+    def __init__(self, *args, **kwargs):
+        gui.Container.__init__(self, *args, **kwargs)
+        self.lblTitle = gui.Label("Execution Priority", height=20)
+        self.lblTitle.add_class("DialogTitle")
+        self.fb_list = gui.ListView(width='100%', height='calc(100% - 20px)')
+        self.fb_list.style.update({'overflow-y': 'scroll',
+                                            'overflow-x': 'hidden',
+                                            'background-color': 'white'})
+        self.append(self.lblTitle)
+        self.append(self.fb_list)
+
+    def empty(self):
+        self.fb_list.empty()
+
+    def add_function_block(self, function_block):
+        item = FBExecutionPriorityPanelItem(function_block)
+        item.on_priority_increase.do(self.increase_priority)
+        item.on_priority_decrease.do(self.decrease_priority)
+        self.fb_list.append(item)
+        
+    def remove_function_block(self, function_block):
+        for item in self.fb_list.children.values():
+            if item.function_block == function_block:
+                self.fb_list.remove_child(item)
+                return
+
+    def increase_priority(self, emitter, function_block):
+        i = list(self.fb_list.children.values()).index(emitter)
+        i -= 1
+        i = max(0, i)
+        self.on_execution_priority_changed(function_block, i)
+
+    def decrease_priority(self, emitter, function_block):
+        i = list(self.fb_list.children.values()).index(emitter)
+        i += 1
+        i = min(i, len(self.fb_list.children.values()))
+        self.on_execution_priority_changed(function_block, i)
+
+    @gui.decorate_event
+    def on_execution_priority_changed(self, function_block, value):
+        return (function_block, value)
+        
+
 class MyApp(App):
     process = None
     toolbox = None
@@ -762,7 +861,7 @@ class MyApp(App):
         self.main_container.set_from_asciiart(
             """
             |toolbox  |process_view               |attributes|
-            |container|process_view               |attributes|
+            |container|process_view               |exec_prio |
             """, 0, 0
         )
 
@@ -789,6 +888,7 @@ class MyApp(App):
 
         self.main_container.append(self.toolbox, 'toolbox')
         self.main_container.append(self.process, 'process_view')
+        self.main_container.append(self.process.fb_exectution_priority_panel, 'exec_prio')
         self.main_container.append(self.attributes_editor, 'attributes')
         
         # returning the root widget
