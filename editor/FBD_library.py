@@ -39,6 +39,46 @@ def FBWrapObjectMethod(obj_name, method_bound, container):
     fb.do = pre_do
     return fb
 
+
+class SUM(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 + IN2
+
+class MUL(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 * IN2
+
+class DIV(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 / IN2
+
+class DIFFERENCE(FBD_view.FunctionBlockView):
+    @FBD_model.FunctionBlock.decorate_process(['RESULT',])
+    def do(self, IN1, IN2):
+        return IN1 - IN2
+
+class COUNTER(FBD_view.FunctionBlockView):
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the actual value''', int, {'possible_values': '', 'min': 0, 'max': 0xffffffff, 'default': 1, 'step': 1})
+    def value(self): 
+        if len(self.outputs) < 1:
+            return 0
+        return self.outputs['OUT'].get_value()
+    @value.setter
+    def value(self, value): self.outputs['OUT'].set_value(value)
+
+    def __init__(self, name, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+        self.outputs['OUT'].set_value(0)
+
+    @FBD_model.FunctionBlock.decorate_process(['OUT'])
+    def do(self):
+        OUT = self.outputs['OUT'].get_value() + 1
+        return OUT
+
 class PRINT(FBD_view.FunctionBlockView):
     @FBD_model.FunctionBlock.decorate_process([])
     def do(self, IN):
@@ -104,6 +144,15 @@ class RISING_EDGE(FBD_view.FunctionBlockView):
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
     def do(self, IN):
         OUT = (self.previous_value != IN) and IN
+        self.previous_value = IN
+        return OUT
+
+class FALLING_EDGE(FBD_view.FunctionBlockView):
+    previous_value = None
+
+    @FBD_model.FunctionBlock.decorate_process(['OUT'])
+    def do(self, IN):
+        OUT = (self.previous_value != IN) and not IN
         self.previous_value = IN
         return OUT
 

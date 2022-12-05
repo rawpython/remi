@@ -626,17 +626,23 @@ class FBToolbox(gui.Container):
 
         import FBD_library
         # load all widgets
-        self.add_widget_to_collection(FBD_library.NONE)
-        self.add_widget_to_collection(FBD_library.BOOL)
-        self.add_widget_to_collection(FBD_library.NOT)
-        self.add_widget_to_collection(FBD_library.AND)
-        self.add_widget_to_collection(FBD_library.OR)
-        self.add_widget_to_collection(FBD_library.XOR)
-        self.add_widget_to_collection(FBD_library.PULSAR)
-        self.add_widget_to_collection(FBD_library.STRING)
-        self.add_widget_to_collection(FBD_library.STRING_SWAP_CASE)
-        self.add_widget_to_collection(FBD_library.RISING_EDGE)
-        self.add_widget_to_collection(FBD_library.PRINT)
+        self.add_widget_to_collection(FBD_library.NONE, "Logic")
+        self.add_widget_to_collection(FBD_library.BOOL, "Logic")
+        self.add_widget_to_collection(FBD_library.NOT, "Logic")
+        self.add_widget_to_collection(FBD_library.AND, "Logic")
+        self.add_widget_to_collection(FBD_library.OR, "Logic")
+        self.add_widget_to_collection(FBD_library.XOR, "Logic")
+        self.add_widget_to_collection(FBD_library.PULSAR, "Event")
+        self.add_widget_to_collection(FBD_library.RISING_EDGE, "Event")
+        self.add_widget_to_collection(FBD_library.FALLING_EDGE, "Event")
+        self.add_widget_to_collection(FBD_library.STRING, "String")
+        self.add_widget_to_collection(FBD_library.STRING_SWAP_CASE, "String")
+        self.add_widget_to_collection(FBD_library.PRINT, "String")
+        self.add_widget_to_collection(FBD_library.SUM, "Math")
+        self.add_widget_to_collection(FBD_library.MUL, "Math")
+        self.add_widget_to_collection(FBD_library.DIV, "Math")
+        self.add_widget_to_collection(FBD_library.DIFFERENCE, "Math")
+        self.add_widget_to_collection(FBD_library.COUNTER, "Math")
         
     def add_widget_to_collection(self, functionBlockClass, group='standard_tools', **kwargs_to_widget):
         # create an helper that will be created on click
