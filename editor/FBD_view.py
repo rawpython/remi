@@ -32,11 +32,128 @@ class MixinPositionSize():
         return float(self.attr_width), float(self.attr_height)
 
 
+class NavigableArea(gui.Svg):
+    zoom = 1.0
+    dragging_active = False
+    dragging_start_x = 0
+    dragging_start_y = 0
+
+    view_width = 0
+    view_height = 0
+    def __init__(self, view_width, view_height, *args, **kwargs):
+        gui.Svg.__init__(self, *args, **kwargs)
+        self.view_width = view_width
+        self.view_height = view_height
+        self.set_viewbox(0, 0, self.view_width, self.view_height)
+        self.attr_preserveAspectRatio = "XMidYMid meet"
+        self.onmousedown.do(None)
+        self.onmouseup.do(None)
+        self.onmousemove.do(None)
+
+    @gui.decorate_event_js("var params={};" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
+            "params['buttons']=event.buttons;" \
+            "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    def onmousedown(self, x, y, buttons):
+        """Called when the user presses left or right mouse button over a Widget.
+
+        Args:
+            x (float): position of the mouse inside the widget
+            y (float): position of the mouse inside the widget
+            buttons (int): the mouse button code
+
+            0: No button or un-initialized
+            1: Primary button (usually the left button)
+            2: Secondary button (usually the right button)
+            4: Auxiliary button (usually the mouse wheel button or middle button)
+            8: 4th button (typically the "Browser Back" button)
+            16 : 5th button (typically the "Browser Forward" button)
+        """
+        buttons = int(buttons)
+        if buttons & 4:
+            self.dragging_active = True
+            self.dragging_start_x = float(x)
+            self.dragging_start_y = float(y)
+        return (x, y)
+
+    @gui.decorate_event_js("var params={};" \
+            "var boundingBox = this.getBoundingClientRect();" \
+            "params['x']=event.clientX-boundingBox.left;" \
+            "params['y']=event.clientY-boundingBox.top;" \
+            "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    def onmouseup(self, x, y):
+        """Called when the user releases left or right mouse button over a Widget.
+
+        Args:
+            x (float): position of the mouse inside the widget
+            y (float): position of the mouse inside the widget
+        """
+        self.dragging_active = False
+        return (x, y)
+
+    @gui.decorate_event_js("var params={};" \
+        "var boundingBox = this.getBoundingClientRect();" \
+        "params['x']=event.clientX-boundingBox.left;" \
+        "params['y']=event.clientY-boundingBox.top;" \
+        "params['buttons']=event.buttons;" \
+        "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    def onmousemove(self, x, y, buttons):
+        """Called when the mouse cursor moves inside the Widget.
+
+        Args:
+            x (float): position of the mouse inside the widget
+            y (float): position of the mouse inside the widget
+            buttons (int): the mouse button code
+
+            0: No button or un-initialized
+            1: Primary button (usually the left button)
+            2: Secondary button (usually the right button)
+            4: Auxiliary button (usually the mouse wheel button or middle button)
+            8: 4th button (typically the "Browser Back" button)
+            16 : 5th button (typically the "Browser Forward" button)
+        """
+        if self.dragging_active:
+            vx, vy, vw, vh = self.get_actual_viewbox_values()
+            self.set_viewbox(vx + self.dragging_start_x - float(x), vy + self.dragging_start_y - float(y),vw, vh)
+            self.dragging_start_x = float(x)
+            self.dragging_start_y = float(y)
+            self.attr_preserveAspectRatio = "XMidYMid meet"
+        return (x, y)
+
+    @gui.decorate_event_js("var params={};" \
+            "params['value']=event.deltaY;" \
+            "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
+    def onwheel(self, value):
+        """Called when the user rotate the mouse wheel.
+
+        Args:
+            value (float): the scroll amount
+        """
+        self.zoom += float(value)*0.0005
+        self.zoom = max(0.25, self.zoom)
+        self.zoom = min(4.0, self.zoom)
+        vx, vy, vw, vh = self.get_actual_viewbox_values()
+        self.set_viewbox(vx, vy, self.view_width*self.zoom, self.view_height*self.zoom)
+        self.attr_preserveAspectRatio = "XMidYMid meet"
+        #self.style['zoom'] = str(self.zoom)
+        return (value,)
+
+    def get_actual_viewbox_values(self):
+        """Returns floating point values of the actual viewbox.
+
+        Returns:
+            x, y, w, h (float): values
+        """
+        viewbox = [float(v) for v in self.attr_viewBox.split(' ')]
+        return (*viewbox,)
+
+
 class MoveableWidget(gui.EventSource, MixinPositionSize):
     container = None
     x_start = 0
     y_start = 0
-    actual_zoom = 1.0
     start_pos_acquired = False
     def __init__(self, container, *args, **kwargs):
         gui.EventSource.__init__(self)
@@ -45,8 +162,6 @@ class MoveableWidget(gui.EventSource, MixinPositionSize):
         self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
         
     def start_drag(self, emitter, x, y):
-        if 'zoom' in self.container.style.keys():
-            self.actual_zoom = float(self.container.style['zoom'])
         self.active = True
         self.container.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
         self.onmousemove.do(None, js_stop_propagation=False, js_prevent_default=True)
@@ -57,20 +172,20 @@ class MoveableWidget(gui.EventSource, MixinPositionSize):
     @gui.decorate_event
     def stop_drag(self, emitter, x, y):
         self.active = False
-        return (float(x)/self.actual_zoom, float(y)/self.actual_zoom)
+        return (float(x), float(y))
 
     @gui.decorate_event
     def on_drag(self, emitter, x, y):
         if not self.start_pos_acquired:
             self_x, self_y = self.get_position()
-            self.x_start = (float(x)/self.actual_zoom - self_x)
-            self.y_start = (float(y)/self.actual_zoom - self_y)
+            self.x_start = (float(x) - self_x)
+            self.y_start = (float(y) - self_y)
             self.start_pos_acquired = True
-            
+
         if self.active:
             #self.set_position(float(x) - float(self.attr_width)/2.0, float(y) - float(self.attr_height)/2.0)
-            self.set_position((float(x)/self.actual_zoom - self.x_start), (float(y)/self.actual_zoom - self.y_start))
-        return (float(x)/self.actual_zoom, float(y)/self.actual_zoom)
+            self.set_position((float(x) - self.x_start), (float(y) - self.y_start))
+        return (float(x), float(y))
 
 
 class SvgTitle(gui.Widget, gui._MixinTextualWidget):
@@ -391,7 +506,7 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.bt_increase_priority.set_fill("gray")
         self.bt_increase_priority.css_font_size = gui.to_pix(self.label_font_size)
         self.bt_increase_priority.style["cursor"] = "pointer"
-        self.bt_increase_priority.onclick.do(self.on_execution_priority_changed, -1, js_stop_propagation=True, js_prevent_default=True)
+        self.bt_increase_priority.onclick.do(self.on_execution_priority_changed, -1, js_stop_propagation=False, js_prevent_default=True)
         self.bt_increase_priority.attr_title = "Increase priority"
         self.append(self.bt_increase_priority)
 
@@ -401,7 +516,7 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.bt_decrease_priority.set_fill("gray")
         self.bt_decrease_priority.css_font_size = gui.to_pix(self.label_font_size)
         self.bt_decrease_priority.style["cursor"] = "pointer"
-        self.bt_decrease_priority.onclick.do(self.on_execution_priority_changed, +1, js_stop_propagation=True, js_prevent_default=True)
+        self.bt_decrease_priority.onclick.do(self.on_execution_priority_changed, +1, js_stop_propagation=False, js_prevent_default=True)
         self.bt_decrease_priority.attr_title = "Decrease priority"
         self.append(self.bt_decrease_priority)
 
@@ -530,7 +645,7 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         entrare in un function block e comporlo come un processo
 """
 
-class ProcessView(gui.Svg, FBD_model.Process):
+class ProcessView(NavigableArea, FBD_model.Process):
     name = None
 
     selected_input = None
@@ -544,11 +659,9 @@ class ProcessView(gui.Svg, FBD_model.Process):
     process_outputs_fb = None #this is required to route result values outside of Process
     process_inputs_fb = None #this is required to route parameters inside the Process
 
-    zoom = 1.0
-
     def __init__(self, name, *args, **kwargs):
         self.name = name
-        gui.Svg.__init__(self, *args, **kwargs)
+        NavigableArea.__init__(self, 500, 500, *args, **kwargs)
         FBD_model.Process.__init__(self)
         
         self.css_border_color = 'black'
@@ -581,22 +694,6 @@ class ProcessView(gui.Svg, FBD_model.Process):
         self.process_outputs_fb.outline.set_fill("transparent")
         self.add_function_block(self.process_outputs_fb)
         self.onwheel.do(None)
-
-    @gui.decorate_event_js("var params={};" \
-            "params['value']=event.deltaY;" \
-            "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);")
-    def onwheel(self, value):
-        """Called when the user rotate the mouse wheel.
-
-        Args:
-            value (float): the scroll amount
-        """
-        self.zoom += float(value)*0.0005
-        self.zoom = max(0.25, self.zoom)
-        self.zoom = min(4.0, self.zoom)
-        #self.set_viewbox(0,0,500*self.zoom,500*self.zoom)
-        self.style['zoom'] = str(self.zoom)
-        return (value,)
 
     def on_execution_priority_changed(self, emitter, function_block, value):
         del self.function_blocks[function_block.name]
