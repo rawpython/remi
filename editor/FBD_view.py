@@ -36,32 +36,41 @@ class MoveableWidget(gui.EventSource, MixinPositionSize):
     container = None
     x_start = 0
     y_start = 0
+    actual_zoom = 1.0
+    start_pos_acquired = False
     def __init__(self, container, *args, **kwargs):
         gui.EventSource.__init__(self)
         self.container = container
         self.active = False
         self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
-            
+        
     def start_drag(self, emitter, x, y):
-        self.x_start = float(x)
-        self.y_start = float(y)
+        if 'zoom' in self.container.style.keys():
+            self.actual_zoom = float(self.container.style['zoom'])
         self.active = True
         self.container.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
         self.onmousemove.do(None, js_stop_propagation=False, js_prevent_default=True)
         self.container.onmouseup.do(self.stop_drag)
         self.container.onmouseleave.do(self.stop_drag, 0, 0)
+        self.start_pos_acquired = False
 
     @gui.decorate_event
     def stop_drag(self, emitter, x, y):
         self.active = False
-        return (x, y)
+        return (float(x)/self.actual_zoom, float(y)/self.actual_zoom)
 
     @gui.decorate_event
     def on_drag(self, emitter, x, y):
+        if not self.start_pos_acquired:
+            self_x, self_y = self.get_position()
+            self.x_start = (float(x)/self.actual_zoom - self_x)
+            self.y_start = (float(y)/self.actual_zoom - self_y)
+            self.start_pos_acquired = True
+            
         if self.active:
             #self.set_position(float(x) - float(self.attr_width)/2.0, float(y) - float(self.attr_height)/2.0)
-            self.set_position(float(x) - self.x_start, float(y) - self.y_start)
-        return (x, y)
+            self.set_position((float(x)/self.actual_zoom - self.x_start), (float(y)/self.actual_zoom - self.y_start))
+        return (float(x)/self.actual_zoom, float(y)/self.actual_zoom)
 
 
 class SvgTitle(gui.Widget, gui._MixinTextualWidget):
@@ -585,7 +594,8 @@ class ProcessView(gui.Svg, FBD_model.Process):
         self.zoom += float(value)*0.0005
         self.zoom = max(0.25, self.zoom)
         self.zoom = min(4.0, self.zoom)
-        self.set_viewbox(0,0,500*self.zoom,500*self.zoom)
+        #self.set_viewbox(0,0,500*self.zoom,500*self.zoom)
+        self.style['zoom'] = str(self.zoom)
         return (value,)
 
     def on_execution_priority_changed(self, emitter, function_block, value):
@@ -835,6 +845,7 @@ class MyApp(App):
             |container|process_view               |attributes|
             """, 0, 0
         )
+        self.main_container.css_overflow = 'hidden'
 
         self.process = ProcessView("Process", width=600, height=600)
         self.process.onfunction_block_clicked.do(self.onprocessview_function_block_clicked)
