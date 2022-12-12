@@ -143,7 +143,6 @@ class FunctionBlock():
     A function block can have an enabling input to enable or disable the logic exection.
     A function block gets executed among the others, in the order given by the execution_priority member.
     """
-    name = None
     inputs = None
     outputs = None
 
@@ -162,12 +161,10 @@ class FunctionBlock():
             return method
         return add_annotation
 
-    def __init__(self, name, execution_priority = 0):
+    def __init__(self, execution_priority = 0):
         """Args:
-            name (str): The function block name.
             execution_priority (int): the order number.
         """
-        self.name = name
         self.set_execution_priority(execution_priority)
         self.inputs = {}
         self.outputs = {}
@@ -251,7 +248,7 @@ class Process():
         Args:
             function_block (FunctionBlock): the function block to be added.
         """
-        self.function_blocks[function_block.name] = function_block
+        self.function_blocks[function_block.identifier] = function_block
     
     def remove_function_block(self, function_block):
         """Removes a function block from the process.
@@ -259,7 +256,7 @@ class Process():
         Args:
             function_block (FunctionBlock): the function block to be removed.
         """
-        del self.function_blocks[function_block.name]
+        del self.function_blocks[function_block.identifier]
 
     def do(self):
         """Executed the FunctionBlocks.

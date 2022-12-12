@@ -19,7 +19,7 @@ import os #for path handling
 import inspect
 import time
 from editor_widgets import *
-import FBD_model
+from . import FBD_model
 import types
 
 import widgets.toolbox_opencv
@@ -155,14 +155,14 @@ class MoveableWidget(gui.EventSource, MixinPositionSize):
     x_start = 0
     y_start = 0
     start_pos_acquired = False
-    def __init__(self, container, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         gui.EventSource.__init__(self)
-        self.container = container
         self.active = False
         self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
         
     def start_drag(self, emitter, x, y):
         self.active = True
+        self.container = self.get_parent()
         self.container.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
         self.onmousemove.do(None, js_stop_propagation=False, js_prevent_default=True)
         self.container.onmouseup.do(self.stop_drag)
@@ -447,6 +447,15 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
     @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
+    def variable_name(self): 
+        if self.label == None:
+            return ""
+        return self.label.get_text()
+    @variable_name.setter
+    def variable_name(self, value): self.label.set_text(value)
+
+    @property
     @gui.editor_attribute_decorator("WidgetSpecific",'''Defines if the function block has to be enabled''', bool, {})
     def has_enabling_input(self): return 'EN' in self.inputs.keys()
     @has_enabling_input.setter
@@ -471,17 +480,17 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     bt_increase_priority = None
     bt_decrease_priority = None
 
-    def __init__(self, name, container, x = 10, y = 10, execution_priority = 0, *args, **kwargs):
-        FBD_model.FunctionBlock.__init__(self, name, execution_priority)
+    def __init__(self, name = "FunctionBlock", x = 10, y = 10, execution_priority = 0, *args, **kwargs):
+        FBD_model.FunctionBlock.__init__(self, execution_priority)
         gui.SvgSubcontainer.__init__(self, x, y, self.calc_width(), self.calc_height(), *args, **kwargs)
-        MoveableWidget.__init__(self, container, *args, **kwargs)
+        MoveableWidget.__init__(self, *args, **kwargs)
 
         self.outline = gui.SvgRectangle(0, 0, "100%", "100%")
         self.outline.set_fill('white')
         self.outline.set_stroke(2, 'black')
         self.append(self.outline)
 
-        self.label = gui.SvgText("50%", 0, self.name)
+        self.label = gui.SvgText("50%", 0, name)
         self.label.attr_text_anchor = "middle"
         self.label.attr_dominant_baseline = 'text-before-edge'
         self.label.style['pointer-events'] = 'none'
@@ -565,7 +574,7 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
             for o in self.outputs.values():
                 max_name_len_output = max(max_name_len_output, len(o.name))
 
-        return max((len(self.name) * self.label_font_size*0.6), (max(max_name_len_input, max_name_len_output)*self.io_font_size*0.6) * 2) + self.io_left_right_offset
+        return max((len(self.variable_name) * self.label_font_size*0.6), (max(max_name_len_input, max_name_len_output)*self.io_font_size*0.6) * 2) + self.io_left_right_offset
 
     def add_io_widget(self, widget):
         widget.label.css_font_size = gui.to_pix(self.io_font_size)
@@ -573,8 +582,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 
         FBD_model.FunctionBlock.add_io(self, widget)
         self.append(widget)
-        widget.onmousedown.do(self.container.onselection_start, js_stop_propagation=True, js_prevent_default=True)
-        widget.onmouseup.do(self.container.onselection_end, js_stop_propagation=True, js_prevent_default=True)
 
         self.adjust_geometry()
 
@@ -632,8 +639,7 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         return super().set_position(x, y)
 
     def set_name(self, name):
-        self.name = name
-        self.label.set_text(name)
+        self.variable_name = name
         self.adjust_geometry()
 
 
@@ -646,7 +652,14 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 """
 
 class ProcessView(NavigableArea, FBD_model.Process):
-    name = None
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
+    def variable_name(self): 
+        if self.label == None:
+            return ""
+        return self.label.get_text()
+    @variable_name.setter
+    def variable_name(self, value): self.label.set_text(value)
 
     selected_input = None
     selected_output = None
@@ -659,8 +672,7 @@ class ProcessView(NavigableArea, FBD_model.Process):
     process_outputs_fb = None #this is required to route result values outside of Process
     process_inputs_fb = None #this is required to route parameters inside the Process
 
-    def __init__(self, name, *args, **kwargs):
-        self.name = name
+    def __init__(self, name = "Process", *args, **kwargs):
         NavigableArea.__init__(self, 500, 500, *args, **kwargs)
         FBD_model.Process.__init__(self)
         
@@ -671,7 +683,7 @@ class ProcessView(NavigableArea, FBD_model.Process):
         self.css_background_color = 'rgb(250,248,240)'
         self.css_background_image = "url('/editor_resources:background.png')"
 
-        self.label = gui.SvgText("50%", 0, self.name)
+        self.label = gui.SvgText("50%", 0, name)
         self.label.attr_text_anchor = "middle"
         self.label.attr_dominant_baseline = 'text-before-edge'
         #self.label.set_stroke(1, "gray")
@@ -680,7 +692,7 @@ class ProcessView(NavigableArea, FBD_model.Process):
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
-        self.process_inputs_fb = FunctionBlockView("Process INPUTS", self)
+        self.process_inputs_fb = FunctionBlockView()
         self.process_inputs_fb.add_io_widget(OutputView("in1"))
         self.process_inputs_fb.outputs['in1'].set_value(True)
         self.process_inputs_fb.add_io_widget(OutputView("in2"))
@@ -688,7 +700,7 @@ class ProcessView(NavigableArea, FBD_model.Process):
         self.process_inputs_fb.outline.set_fill("transparent")
         self.add_function_block(self.process_inputs_fb)
 
-        self.process_outputs_fb = FunctionBlockView("Process OUTPUTS", self)
+        self.process_outputs_fb = FunctionBlockView()
         self.process_outputs_fb.add_io_widget(InputView("out1"))
         self.process_outputs_fb.add_io_widget(InputView("out2"))
         self.process_outputs_fb.outline.set_fill("transparent")
@@ -696,15 +708,15 @@ class ProcessView(NavigableArea, FBD_model.Process):
         self.onwheel.do(None)
 
     def on_execution_priority_changed(self, emitter, function_block, value):
-        del self.function_blocks[function_block.name]
+        del self.function_blocks[function_block.identifier]
         d = dict(self.function_blocks)
         self.function_blocks = {}
         for k,v in d.items():
             if len(self.function_blocks.keys()) == value:
-                self.function_blocks[function_block.name] = function_block
+                self.function_blocks[function_block.identifier] = function_block
             self.function_blocks[k] = v
-        if not function_block.name in self.function_blocks.keys():
-            self.function_blocks[function_block.name] = function_block
+        if not function_block.identifier in self.function_blocks.keys():
+            self.function_blocks[function_block.identifier] = function_block
 
     def onselection_start(self, emitter, x, y):
         self.selected_input = self.selected_output = None
@@ -726,12 +738,26 @@ class ProcessView(NavigableArea, FBD_model.Process):
                 return
             self.selected_output.link(self.selected_input, self)
 
+    def append(self, value, key=''):
+        if issubclass(type(value), FunctionBlockView):
+            self.add_function_block(value)
+        else:
+            gui.Svg.append(self, value, key)
+
     def add_function_block(self, function_block):
-        function_block.onclick.do(self.onfunction_block_clicked)
+        function_block.onclick.do(self.onfunction_block_clicked, js_stop_propagation=True, js_prevent_default=True)
         function_block.on_execution_priority_changed.do(self.on_execution_priority_changed)
         function_block.on_delete_button_pressed.do(self.remove_function_block)
-        self.append(function_block, function_block.name)
+        gui.Svg.append(self, function_block, function_block.identifier)
         FBD_model.Process.add_function_block(self, function_block)
+        function_block.adjust_geometry()
+        for IN in function_block.inputs.values():
+            IN.onmousedown.do(self.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+            IN.onmouseup.do(self.onselection_end, js_stop_propagation=True, js_prevent_default=True)
+
+        for OUT in function_block.outputs.values():
+            OUT.onmousedown.do(self.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+            OUT.onmouseup.do(self.onselection_end, js_stop_propagation=True, js_prevent_default=True)
 
     def remove_function_block(self, emitter):
         if issubclass(type(emitter), FBD_model.FunctionBlock):
@@ -777,7 +803,7 @@ class FBToolbox(gui.Container):
 
         self.append([self.lblTitle, self.widgetsContainer])
 
-        import FBD_library
+        from . import FBD_library
         # load all widgets
         self.add_widget_to_collection(FBD_library.NONE, "Logic")
         self.add_widget_to_collection(FBD_library.BOOL, "Logic")
@@ -867,7 +893,7 @@ class FBHelper(gui.HBox):
         if not issubclass(type(node), FBD_model.FunctionBlock) and not issubclass(type(node), ProcessView):
             return
         if issubclass(type(node), FBD_model.FunctionBlock):
-            self.varname_list.append(node.name)
+            self.varname_list.append(node.identifier)
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
 
@@ -909,7 +935,7 @@ class FBHelper(gui.HBox):
             return
         """
         # here we create and decorate the widget
-        function_block = self.functionBlockClass(variableName, self.appInstance.process, **self.kwargs_to_widget)
+        function_block = self.functionBlockClass(**self.kwargs_to_widget)
         function_block.attr_editor_newclass = False
 
         for key in self.optional_style_dict:
@@ -953,21 +979,24 @@ class MyApp(App):
         self.container = gui.VBox()
         self.main_container.append(self.container, "container")
 
-        import FBD_library
+        from . import FBD_library
         imread = widgets.toolbox_opencv.OpencvImRead(r"C:\Users\progr\OneDrive\Software e progetti\remi\editor\res\widget_Image.png")
-        fb = FBD_library.FBWrapObjectMethod("imread", imread.get_image_data, self.process)
+        fb = FBD_library.FBWrapObjectMethod(imread.get_image_data)
+        fb.variable_name = "imread"
         #fb.add_io_widget(OutputView("IMAGE"))
         self.process.add_function_block(fb)
         self.container.append(imread)
 
         imthreshold = widgets.toolbox_opencv.OpencvThreshold()
-        fb = FBD_library.FBWrapObjectMethod("imthreshold", imthreshold.set_image_data, self.process)
+        fb = FBD_library.FBWrapObjectMethod(imthreshold.set_image_data)
+        fb.variable_name = "imthreshold"
         self.process.add_function_block(fb)
         self.container.append(imthreshold)
 
         def set_threshold(value):
             imthreshold.threshold = value
-        fb = FBD_library.FBWrapObjectMethod("imthreshold", set_threshold, self.process)
+        fb = FBD_library.FBWrapObjectMethod(set_threshold)
+        fb.variable_name = "imthreshold"
         self.process.add_function_block(fb)
         self.container.append(imthreshold)
 

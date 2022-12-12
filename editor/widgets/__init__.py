@@ -49,3 +49,9 @@ except Exception:
         def __init__(self, msg="In order to use Siemens widgets install python-snap7 \n" + traceback.format_exc()):
             super(SIEMENSPlaceholder, self).__init__(msg)
             self.css_white_space = 'pre'
+
+try:
+    from .FBD_view import ProcessView
+    from .FBD_library import *
+except Exception:
+    print("ERROR: Failed to load Function Blocks: %s" % traceback.format_exc())

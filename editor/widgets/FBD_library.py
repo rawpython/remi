@@ -1,6 +1,6 @@
 
-import FBD_view
-import FBD_model
+from . import FBD_view
+from . import FBD_model
 import remi
 import remi.gui as gui
 import time
@@ -8,8 +8,8 @@ import inspect
 import types
 
 
-def FBWrapObjectMethod(obj_name, method_bound, container):
-    fb = FBD_view.FunctionBlockView(obj_name + "." + method_bound.__name__, container)
+def FBWrapObjectMethod(obj_name, method_bound):
+    fb = FBD_view.FunctionBlockView()
     #if hasattr(self.do, "_outputs"):
     #for o in self.do._outputs:
     #    self.add_io_widget(OutputView(o))
@@ -70,8 +70,8 @@ class COUNTER(FBD_view.FunctionBlockView):
     @value.setter
     def value(self, value): self.outputs['OUT'].set_value(value)
 
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
         self.outputs['OUT'].set_value(0)
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
@@ -92,8 +92,8 @@ class INT(FBD_view.FunctionBlockView):
     @value.setter
     def value(self, value): self.outputs['OUT'].set_value(value)
 
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
         self.outputs['OUT'].set_value(False)
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
@@ -122,8 +122,8 @@ class PRINT(FBD_view.FunctionBlockView):
         print(IN)
 
 class NONE(FBD_view.FunctionBlockView):
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
     def do(self):
@@ -139,8 +139,8 @@ class STRING(FBD_view.FunctionBlockView):
     @value.setter
     def value(self, value): self.outputs['OUT'].set_value(value)
 
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
         self.outputs['OUT'].set_value("A STRING VALUE")
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
@@ -166,8 +166,8 @@ class BOOL(FBD_view.FunctionBlockView):
     @value.setter
     def value(self, value): self.outputs['OUT'].set_value(value)
 
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
         self.outputs['OUT'].set_value(False)
 
     @FBD_model.FunctionBlock.decorate_process(['OUT'])
@@ -236,8 +236,8 @@ class PULSAR(FBD_view.FunctionBlockView):
     def toff(self, value): self._toff = value
 
     tstart = 0
-    def __init__(self, name, *args, **kwargs):
-        FBD_view.FunctionBlockView.__init__(self, name, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
         self.outputs['OUT'].set_value(False)
         self.tstart = time.time()
 
