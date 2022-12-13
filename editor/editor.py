@@ -237,8 +237,12 @@ class ResizeHelper(gui.Widget, DraggableItem):
         self.style['display'] = 'none'
         if issubclass(newParent.__class__, gui.TabBox):
             return
-        if issubclass(refWidget.__class__, gui.Widget) and 'left' in refWidget.style and 'top' in refWidget.style and \
-                'width' in refWidget.style and 'height' in refWidget.style and refWidget.css_position=='absolute':
+        if issubclass(refWidget.__class__, gui.Widget) and 'width' in refWidget.style \
+            and 'height' in refWidget.style and refWidget.css_position=='absolute':
+            if not 'left' in refWidget.style:
+                refWidget.css_left = '0px'
+            if not 'top' in refWidget.style:
+                refWidget.css_top  = '0px'
             DraggableItem.setup(self, refWidget, newParent)
             self.style['display'] = 'block'
 
@@ -382,6 +386,11 @@ class Project(gui.Container):
                         source_filtered_path.remove(v)
                         listener_filtered_path.remove(v)
 
+                    #if the source is a children of the actual widget
+                    if len(source_filtered_path) == 1:
+                        if source_filtered_path[0] in widget.children.keys() and event['eventsource'].attr_editor_newclass == False:
+                            sourcename = widget.variable_name
+
                     if len(source_filtered_path) == 0 and event['eventsource'].attr_editor_newclass == False:
                         sourcename = event['eventsource'].variable_name
 
@@ -449,9 +458,6 @@ class Project(gui.Container):
         code_nested = prototypes.proto_widget_allocation % {
             'varname': widgetVarName, 'classname': classname}
 
-        #code_nested += prototypes.proto_attribute_setup%{'varname': widgetVarName, 'attr_dict': ','.join('"%s":"%s"'%(key,widget.attributes[key]) for key in widget.attributes.keys() if key not in html_helper.htmlInternallyUsedTags)}
-        #code_nested += prototypes.proto_style_setup%{'varname': widgetVarName, 'style_dict': ','.join('"%s":"%s"'%(key,widget.style[key]) for key in widget.style.keys())}
-
         for x, y in inspect.getmembers(widget.__class__):
             if type(y) == property and not getattr(widget, x) is None:
                 if hasattr(y.fget, "editor_attributes"): #if this property is visible for the editor
@@ -460,6 +466,7 @@ class Project(gui.Container):
                         _value = '"%s"' % _value
                     code_nested += prototypes.proto_property_setup % {
                         'varname': widgetVarName, 'property': x, 'value': _value}
+
 
         # for all the methods of this widget
         for (setOnEventListenerFuncname, setOnEventListenerFunc) in inspect.getmembers(widget):
@@ -525,6 +532,21 @@ class Project(gui.Container):
 
         children_code_nested += self.check_pending_listeners(
             widget, widgetVarName)
+
+
+        try:
+            from widgets import FBD_model
+        except Exception:
+            from .widgets import FBD_model
+        
+        if issubclass(type(widget), FBD_model.Process):
+            for FB in widget.children.values():
+                if issubclass(type(FB), FBD_model.FunctionBlock):
+                    for OUT in FB.outputs.values():
+                        if OUT.is_linked():
+                            for IN in OUT.linked_nodes:
+                                children_code_nested += prototypes.proto_link_FB_out_to % {'process_name': widgetVarName, 'fb_source': FB.variable_name, 'outname': OUT.name, 'fb_desitionation': IN.get_parent().variable_name, 'inputname': IN.name}
+
 
         # and not (classname in self.code_declared_classes.keys()):
         if widget.attr_editor_newclass:
@@ -973,13 +995,15 @@ class Editor(App):
         import time
         t = time.time()
 
+        self.widgetsCollection.widget_selected(widget.__class__ if widget != self.project else gui.Widget)
+        """
         if issubclass(widget.__class__, gui.Container) or widget == None:
             self.mainContainer.append(
                 self.widgetsCollection, 'toolbox')
         else:
             self.mainContainer.append(gui.Label("Cannot append widgets to %s class. It is not a container. Select a container" %
                                                    widget.__class__.__name__), 'toolbox')
-
+        """
         if self.selectedWidget == widget or widget == self.project:
             self.selectedWidget = widget
             return

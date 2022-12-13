@@ -474,8 +474,8 @@ class WidgetHelper(gui.HBox):
         self.appInstance = appInstance
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__()
-        self.style.update({'background-color': 'rgb(250,250,250)', 'width': "auto", 'margin':"2px", 
-                           "height": "60px", "justify-content": "center", "align-items": "center",
+        self.style.update({'background-color': 'rgb(250,250,250)', 'width': "100%", 'margin':"2px", 
+                           "height": "20px", "justify-content": "flex-start", "align-items": "center",
                            'font-size': '12px'})
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon) == gui.Svg:
@@ -492,6 +492,7 @@ class WidgetHelper(gui.HBox):
             else:
                 self.icon = default_icon(self.widgetClass.__name__)
 
+        self.icon.style['height'] = '100%'
         self.icon.style['max-width'] = '100%'
         self.icon.style['image-rendering'] = 'auto'
         self.icon.attributes['draggable'] = 'false'
@@ -569,6 +570,9 @@ class WidgetHelper(gui.HBox):
 
         self.appInstance.add_widget_to_editor(widget)
 
+    def show(self, value):
+        self.css_display = 'flex' if value else 'none'
+
 
 class WidgetCollection(gui.Container):
     def __init__(self, appInstance, **kwargs):
@@ -588,66 +592,98 @@ class WidgetCollection(gui.Container):
         # load all widgets
         self.add_widget_to_collection(gui.HBox, width='250px', height='250px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.HBox.valid_parent_types = [gui.Widget, gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.VBox, width='250px', height='250px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.VBox.valid_parent_types = [gui.Widget, gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.Container, width='250px', height='250px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Container.valid_parent_types = [gui.Widget, gui.Container, gui.HBox, gui.VBox]
         #self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
         self.add_widget_to_collection(gui.Button, text="button", width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Button.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.TextInput.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.Label, text="label", width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Label.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.ListView, width='100px', height='100px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute', 'border': '1px solid lightgray'})
+        gui.ListView.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.ListItem, text='list item')
+        gui.ListItem.valid_parent_types = [gui.ListView]
         self.add_widget_to_collection(gui.DropDown, width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.DropDown.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.DropDownItem, text='drop down item')
+        gui.DropDownItem.valid_parent_types = [gui.DropDown]
         self.add_widget_to_collection(gui.Image, width='100px', height='100px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Image.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.CheckBoxLabel, text='check box label', width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.CheckBoxLabel.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.CheckBox, width='30px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.CheckBox.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.SpinBox, width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.SpinBox.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.Slider, width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Slider.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.ColorPicker, width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.ColorPicker.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.Date, width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Date.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.Link, text='link', url='', width='100px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Link.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.Progress, value=0, _max=100, width='130px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.Progress.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.FileFolderNavigator, width=100, height=100, style = {
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.FileFolderNavigator.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         #self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={
         #                              'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.TableWidget.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.TabBox, width='200px', height='200px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.TabBox.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(gui.FileUploader, width='150px', height='30px', style={
                                       'top': '20px', 'left': '20px', 'position': 'absolute'})
+        gui.FileUploader.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(
             gui.Svg, style={'top': '20px', 'left': '20px', 'width':'150px', 'height':'150px', 'position': 'absolute', 'border':'1px solid gray'})
+        gui.Svg.valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
         self.add_widget_to_collection(
             gui.SvgSubcontainer, x = '10', y = '10', width = '80', height = '80')
+        gui.SvgSubcontainer.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgLine, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
+        gui.SvgLine.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgCircle)
+        gui.SvgCircle.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgEllipse)
+        gui.SvgEllipse.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgRectangle)
+        gui.SvgRectangle.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgText)
+        gui.SvgText.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgPath, attributes={
                                       'stroke': 'black', 'stroke-width': '1'})
+        gui.SvgPath.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgImage)
+        gui.SvgImage.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         self.add_widget_to_collection(gui.SvgGroup)
-
+        gui.SvgGroup.valid_parent_types = [gui.Svg, gui.SvgSubcontainer]
         #self.load_additional_widgets()
 
     def load_additional_widgets(self):
@@ -678,6 +714,24 @@ class WidgetCollection(gui.Container):
         helper.attributes['title'] = widgetClass.__doc__
         #self.widgetsContainer.append( helper )
         self.widgetsContainer.children[group].append(helper)
+
+    def widget_selected(self, widgetClass):
+        for group in self.widgetsContainer.children.values():
+            visible_children_count = 0
+            for w_helper in group.container.children.values():
+                visible = False
+                if hasattr(w_helper.widgetClass, 'valid_parent_types'):
+                    for valid_type in w_helper.widgetClass.valid_parent_types:
+                        if widgetClass == valid_type:
+                            visible = True
+                            break
+                else:
+                    visible = True
+                if visible:
+                    visible_children_count += 1
+                w_helper.show(visible)
+
+            group.show(visible_children_count > 0)
 
 
 class EditorAttributesGroup(gui.VBox):
@@ -715,6 +769,9 @@ class EditorAttributesGroup(gui.VBox):
 
     def remove_child(self, widget):
         return self.container.remove_child(widget)
+
+    def show(self, value):
+        self.css_display = 'flex' if value else 'none'
 
 
 class EditorAttributes(gui.VBox):

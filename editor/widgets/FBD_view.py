@@ -41,7 +41,7 @@ class NavigableArea(gui.Svg):
     view_width = 0
     view_height = 0
     def __init__(self, view_width, view_height, *args, **kwargs):
-        gui.Svg.__init__(self, *args, **kwargs)
+        gui.Svg.__init__(self, width=view_width, height=view_height, *args, **kwargs)
         self.view_width = view_width
         self.view_height = view_height
         self.set_viewbox(0, 0, self.view_width, self.view_height)
@@ -444,7 +444,150 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
             self.bt_unlink.set_position(xdestination - offset / 2.0 - w/2, ydestination -h/2)
 
 
+class ProcessView(NavigableArea, FBD_model.Process):
+
+    valid_parent_types = [gui.Container]
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
+    def variable_name(self): 
+        if self.label == None:
+            return ""
+        return self.label.get_text()
+    @variable_name.setter
+    def variable_name(self, value): self.label.set_text(value)
+
+    selected_input = None
+    selected_output = None
+
+    selected_function_block = None
+
+    label = None
+    label_font_size = 18
+
+    process_outputs_fb = None #this is required to route result values outside of Process
+    process_inputs_fb = None #this is required to route parameters inside the Process
+
+    def __init__(self, name = "Process", *args, **kwargs):
+        NavigableArea.__init__(self, 200, 200, *args, **kwargs)
+        FBD_model.Process.__init__(self)
+        
+        self.css_position = 'absolute'
+        self.css_border_color = 'black'
+        self.css_border_width = '0px'
+        self.css_border_style = 'solid'
+        #self.style['background-color'] = 'lightyellow'
+        self.css_background_color = 'rgb(250,248,240)'
+        self.css_background_image = "url('/editor_resources:background.png')"
+
+        self.label = gui.SvgText("50%", "50%", name)
+        self.label.attr_text_anchor = "middle"
+        self.label.attr_dominant_baseline = 'middle'
+        #self.label.set_stroke(1, "gray")
+        self.label.set_fill("darkgray")
+        self.label.style['pointer-events'] = 'none'
+        self.label.css_font_size = gui.to_pix(self.label_font_size)
+        self.append(self.label)
+
+        self.process_inputs_fb = FunctionBlockView("ProcessInputs")
+        self.process_inputs_fb.add_io_widget(OutputView("in1"))
+        self.process_inputs_fb.outputs['in1'].set_value(True)
+        self.process_inputs_fb.add_io_widget(OutputView("in2"))
+        self.process_inputs_fb.outputs['in2'].set_value(False)
+        self.process_inputs_fb.outline.set_fill("transparent")
+        self.add_function_block(self.process_inputs_fb)
+
+        self.process_outputs_fb = FunctionBlockView("ProcessOutputs")
+        self.process_outputs_fb.add_io_widget(InputView("out1"))
+        self.process_outputs_fb.add_io_widget(InputView("out2"))
+        self.process_outputs_fb.outline.set_fill("transparent")
+        self.add_function_block(self.process_outputs_fb)
+        self.onwheel.do(None)
+
+    def on_execution_priority_changed(self, emitter, function_block, value):
+        del self.function_blocks[function_block.identifier]
+        d = dict(self.function_blocks)
+        self.function_blocks = {}
+        for k,v in d.items():
+            if len(self.function_blocks.keys()) == value:
+                self.function_blocks[function_block.identifier] = function_block
+            self.function_blocks[k] = v
+        if not function_block.identifier in self.function_blocks.keys():
+            self.function_blocks[function_block.identifier] = function_block
+
+    def onselection_start(self, emitter, x, y):
+        self.selected_input = self.selected_output = None
+        print("selection start: ", type(emitter))
+        if issubclass(type(emitter), FBD_model.Input):
+            self.selected_input = emitter
+        else:
+            self.selected_output = emitter
+
+    def onselection_end(self, emitter, x, y):
+        print("selection end: ", type(emitter))
+        if issubclass(type(emitter), FBD_model.Input):
+            self.selected_input = emitter
+        else:
+            self.selected_output = emitter
+
+        if self.selected_input != None and self.selected_output != None:
+            if self.selected_input.is_linked():
+                return
+            self.selected_output.link(self.selected_input, self)
+
+    def append(self, value, key=''):
+        if issubclass(type(value), FunctionBlockView):
+            self.add_function_block(value)
+        else:
+            gui.Svg.append(self, value, key)
+
+    def add_function_block(self, function_block):
+        function_block.onclick.do(self.onfunction_block_clicked, js_stop_propagation=True, js_prevent_default=True)
+        function_block.on_execution_priority_changed.do(self.on_execution_priority_changed)
+        function_block.on_delete_button_pressed.do(self.remove_function_block)
+        gui.Svg.append(self, function_block, function_block.variable_name)
+        FBD_model.Process.add_function_block(self, function_block)
+        function_block.adjust_geometry()
+        for IN in function_block.inputs.values():
+            IN.onmousedown.do(self.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+            IN.onmouseup.do(self.onselection_end, js_stop_propagation=True, js_prevent_default=True)
+
+        for OUT in function_block.outputs.values():
+            OUT.onmousedown.do(self.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+            OUT.onmouseup.do(self.onselection_end, js_stop_propagation=True, js_prevent_default=True)
+
+    def remove_function_block(self, emitter):
+        if issubclass(type(emitter), FBD_model.FunctionBlock):
+            self.remove_child(emitter)
+            for IN in emitter.inputs.values():
+                if IN.is_linked():
+                    IN.link_view.unlink()
+            
+            for OUT in emitter.outputs.values():
+                if OUT.is_linked():
+                    for IN in list(OUT.linked_nodes):
+                        IN.link_view.unlink()
+            FBD_model.Process.remove_function_block(self, emitter)
+
+    @gui.decorate_event
+    def onfunction_block_clicked(self, function_block):
+        if not self.selected_function_block is None:
+            self.selected_function_block.label.css_font_weight = "normal"
+            for IN in self.selected_function_block.inputs.values():
+                if IN.is_linked():
+                    IN.link_view.highlight(False)
+
+        self.selected_function_block = function_block
+        self.selected_function_block.label.css_font_weight = "bolder"
+        for IN in self.selected_function_block.inputs.values():
+            if IN.is_linked():
+                IN.link_view.highlight(True)
+        return (function_block,)
+
+
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
+
+    valid_parent_types = [ProcessView]
 
     @property
     @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
@@ -602,7 +745,8 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
         self.add_io_widget(InputView('EN', default = False))
 
     def remove_enabling_input_widget(self):
-        self.remove_io_widget('EN')
+        if 'EN' in self.inputs.keys():
+            self.remove_io_widget('EN')
 
     def onposition_changed(self):
         for inp in self.inputs.values():
@@ -641,151 +785,6 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     def set_name(self, name):
         self.variable_name = name
         self.adjust_geometry()
-
-
-"""
-    Bisogna gestire
-        tipo di esecuzione
-        parametri in input e output
-        vedere i processi a più alto livello come function blocks
-        entrare in un function block e comporlo come un processo
-"""
-
-class ProcessView(NavigableArea, FBD_model.Process):
-    @property
-    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
-    def variable_name(self): 
-        if self.label == None:
-            return ""
-        return self.label.get_text()
-    @variable_name.setter
-    def variable_name(self, value): self.label.set_text(value)
-
-    selected_input = None
-    selected_output = None
-
-    selected_function_block = None
-
-    label = None
-    label_font_size = 18
-
-    process_outputs_fb = None #this is required to route result values outside of Process
-    process_inputs_fb = None #this is required to route parameters inside the Process
-
-    def __init__(self, name = "Process", *args, **kwargs):
-        NavigableArea.__init__(self, 500, 500, *args, **kwargs)
-        FBD_model.Process.__init__(self)
-        
-        self.css_border_color = 'black'
-        self.css_border_width = '0px'
-        self.css_border_style = 'solid'
-        #self.style['background-color'] = 'lightyellow'
-        self.css_background_color = 'rgb(250,248,240)'
-        self.css_background_image = "url('/editor_resources:background.png')"
-
-        self.label = gui.SvgText("50%", 0, name)
-        self.label.attr_text_anchor = "middle"
-        self.label.attr_dominant_baseline = 'text-before-edge'
-        #self.label.set_stroke(1, "gray")
-        self.label.set_fill("darkgray")
-        self.label.style['pointer-events'] = 'none'
-        self.label.css_font_size = gui.to_pix(self.label_font_size)
-        self.append(self.label)
-
-        self.process_inputs_fb = FunctionBlockView()
-        self.process_inputs_fb.add_io_widget(OutputView("in1"))
-        self.process_inputs_fb.outputs['in1'].set_value(True)
-        self.process_inputs_fb.add_io_widget(OutputView("in2"))
-        self.process_inputs_fb.outputs['in2'].set_value(False)
-        self.process_inputs_fb.outline.set_fill("transparent")
-        self.add_function_block(self.process_inputs_fb)
-
-        self.process_outputs_fb = FunctionBlockView()
-        self.process_outputs_fb.add_io_widget(InputView("out1"))
-        self.process_outputs_fb.add_io_widget(InputView("out2"))
-        self.process_outputs_fb.outline.set_fill("transparent")
-        self.add_function_block(self.process_outputs_fb)
-        self.onwheel.do(None)
-
-    def on_execution_priority_changed(self, emitter, function_block, value):
-        del self.function_blocks[function_block.identifier]
-        d = dict(self.function_blocks)
-        self.function_blocks = {}
-        for k,v in d.items():
-            if len(self.function_blocks.keys()) == value:
-                self.function_blocks[function_block.identifier] = function_block
-            self.function_blocks[k] = v
-        if not function_block.identifier in self.function_blocks.keys():
-            self.function_blocks[function_block.identifier] = function_block
-
-    def onselection_start(self, emitter, x, y):
-        self.selected_input = self.selected_output = None
-        print("selection start: ", type(emitter))
-        if issubclass(type(emitter), FBD_model.Input):
-            self.selected_input = emitter
-        else:
-            self.selected_output = emitter
-
-    def onselection_end(self, emitter, x, y):
-        print("selection end: ", type(emitter))
-        if issubclass(type(emitter), FBD_model.Input):
-            self.selected_input = emitter
-        else:
-            self.selected_output = emitter
-
-        if self.selected_input != None and self.selected_output != None:
-            if self.selected_input.is_linked():
-                return
-            self.selected_output.link(self.selected_input, self)
-
-    def append(self, value, key=''):
-        if issubclass(type(value), FunctionBlockView):
-            self.add_function_block(value)
-        else:
-            gui.Svg.append(self, value, key)
-
-    def add_function_block(self, function_block):
-        function_block.onclick.do(self.onfunction_block_clicked, js_stop_propagation=True, js_prevent_default=True)
-        function_block.on_execution_priority_changed.do(self.on_execution_priority_changed)
-        function_block.on_delete_button_pressed.do(self.remove_function_block)
-        gui.Svg.append(self, function_block, function_block.identifier)
-        FBD_model.Process.add_function_block(self, function_block)
-        function_block.adjust_geometry()
-        for IN in function_block.inputs.values():
-            IN.onmousedown.do(self.onselection_start, js_stop_propagation=True, js_prevent_default=True)
-            IN.onmouseup.do(self.onselection_end, js_stop_propagation=True, js_prevent_default=True)
-
-        for OUT in function_block.outputs.values():
-            OUT.onmousedown.do(self.onselection_start, js_stop_propagation=True, js_prevent_default=True)
-            OUT.onmouseup.do(self.onselection_end, js_stop_propagation=True, js_prevent_default=True)
-
-    def remove_function_block(self, emitter):
-        if issubclass(type(emitter), FBD_model.FunctionBlock):
-            self.remove_child(emitter)
-            for IN in emitter.inputs.values():
-                if IN.is_linked():
-                    IN.link_view.unlink()
-            
-            for OUT in emitter.outputs.values():
-                if OUT.is_linked():
-                    for IN in list(OUT.linked_nodes):
-                        IN.link_view.unlink()
-            FBD_model.Process.remove_function_block(self, emitter)
-
-    @gui.decorate_event
-    def onfunction_block_clicked(self, function_block):
-        if not self.selected_function_block is None:
-            self.selected_function_block.label.css_font_weight = "normal"
-            for IN in self.selected_function_block.inputs.values():
-                if IN.is_linked():
-                    IN.link_view.highlight(False)
-
-        self.selected_function_block = function_block
-        self.selected_function_block.label.css_font_weight = "bolder"
-        for IN in self.selected_function_block.inputs.values():
-            if IN.is_linked():
-                IN.link_view.highlight(True)
-        return (function_block,)
 
 
 class FBToolbox(gui.Container):

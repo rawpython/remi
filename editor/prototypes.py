@@ -91,3 +91,5 @@ proto_style_setup = """%(varname)s.style.update({%(style_dict)s})\n        """
 proto_layout_append = "%(parentname)s.append(%(varname)s)\n        "
 
 proto_set_listener = "%(sourcename)s.%(register_function)s.do(%(listenername)s.%(listener_function)s)\n        "
+
+proto_link_FB_out_to = "%(process_name)s.children['%(fb_source)s'].outputs['%(outname)s'].link(%(process_name)s.children['%(fb_desitionation)s'].inputs['%(inputname)s'], %(process_name)s)\n        "
