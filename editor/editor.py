@@ -410,6 +410,9 @@ class Project(gui.Container):
                     if force or (self.children['root'] == widget and not (widget.attr_editor_newclass == True)):
                         if event['eventlistener'] != self:
                             listenername = self.children['root'].variable_name
+                    if len(listener_filtered_path) == 1:
+                        if listener_filtered_path[0] in widget.children.keys() and event['eventlistener'].attr_editor_newclass == False:
+                            listenername = widget.variable_name
                     if len(listener_filtered_path) == 0 and event['eventlistener'].attr_editor_newclass == False:
                         listenername = event['eventlistener'].variable_name
                     if len(listener_filtered_path) > 0:
