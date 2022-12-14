@@ -78,7 +78,8 @@ class DraggableItem(gui.EventSource):
 
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.app_instance.mainContainer.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=False)
+        self.app_instance.mainContainer.onmousemove.do(self.on_drag, js_prevent_default=True, js_stop_propagation=True)
+        self.onmousemove.do(None, js_prevent_default=True, js_stop_propagation=False)
         self.app_instance.mainContainer.onmouseup.do(self.stop_drag, js_prevent_default=True, js_stop_propagation=False)
         self.app_instance.mainContainer.onmouseleave.do(self.stop_drag, 0, 0, js_prevent_default=True, js_stop_propagation=False)
         self.origin_x = -1
@@ -127,8 +128,8 @@ class SvgDraggablePoint(gui.SvgRectangle, DraggableItem):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = float(x)
-                self.origin_y = float(y)
+                self.origin_x = float(self.app_instance.mouse_position_x)
+                self.origin_y = float(self.app_instance.mouse_position_y)
                 self.refWidget_origin_x = float(
                     self.refWidget.attributes[self.name_coord_x])
                 self.refWidget_origin_y = float(
@@ -166,8 +167,8 @@ class SvgDraggableRectangleResizePoint(gui.SvgRectangle, DraggableItem):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = float(x)
-                self.origin_y = float(y)
+                self.origin_x = float(self.app_instance.mouse_position_x)
+                self.origin_y = float(self.app_instance.mouse_position_y)
                 self.refWidget_origin_w = float(
                     self.refWidget.attributes['width'])
                 self.refWidget_origin_h = float(
@@ -205,8 +206,8 @@ class SvgDraggableCircleResizeRadius(gui.SvgRectangle, DraggableItem):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = float(x)
-                self.origin_y = float(y)
+                self.origin_x = float(self.app_instance.mouse_position_x)
+                self.origin_y = float(self.app_instance.mouse_position_y)
                 self.refWidget_origin_r = float(self.refWidget.attributes['r'])
             else:
                 r = self.round_grid(
@@ -249,8 +250,8 @@ class ResizeHelper(gui.Widget, DraggableItem):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = float(x)
-                self.origin_y = float(y)
+                self.origin_x = float(self.app_instance.mouse_position_x)
+                self.origin_y = float(self.app_instance.mouse_position_y)
                 self.refWidget_origin_w = gui.from_pix(
                     self.refWidget.style['width'])
                 self.refWidget_origin_h = gui.from_pix(
@@ -296,8 +297,8 @@ class DragHelper(gui.Widget, DraggableItem):
     def on_drag(self, emitter, x, y):
         if self.active:
             if self.origin_x == -1:
-                self.origin_x = float(x)
-                self.origin_y = float(y)
+                self.origin_x = float(self.app_instance.mouse_position_x)
+                self.origin_y = float(self.app_instance.mouse_position_y)
                 self.refWidget_origin_x = gui.from_pix(
                     self.refWidget.style['left'])
                 self.refWidget_origin_y = gui.from_pix(
@@ -751,6 +752,9 @@ class Editor(App):
 
     projectPathFilename = None
 
+    mouse_position_x = 0
+    mouse_position_y = 0
+
     def __init__(self, *args):
         editor_res_path = os.path.join(os.path.dirname(__file__), 'res')
         super(Editor, self).__init__(
@@ -797,6 +801,8 @@ class Editor(App):
             | toolbox  | signals                     | properties |
             | toolbox  | signals                     | properties |
             """, 0, 0)
+
+        self.mainContainer.onmousedown.do(self.mouseclicked)
 
         menubar = gui.MenuBar(width='100%', height='100%')
         menu = gui.Menu(width='100%', height='100%')
@@ -917,6 +923,10 @@ class Editor(App):
         print(">>>>>>>>>>>>startup time:", time.time()-t)
         # returning the root widget
         return self.mainContainer
+
+    def mouseclicked(self, emitter, x, y):
+        self.mouse_position_x = x
+        self.mouse_position_y = y
 
     def on_snap_grid_size_change(self, emitter, value):
         value = float(value)
