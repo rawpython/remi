@@ -51,7 +51,7 @@ except Exception:
             self.css_white_space = 'pre'
 
 try:
-    from .FBD_view import ProcessView
+    from .FBD_view import ProcessView, ProcessViewThreaded
     from .FBD_library import *
 except Exception:
     print("ERROR: Failed to load Function Blocks: %s" % traceback.format_exc())

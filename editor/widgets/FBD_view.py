@@ -21,7 +21,7 @@ import time
 from editor_widgets import *
 from . import FBD_model
 import types
-
+import threading
 import widgets.toolbox_opencv
 
 class MixinPositionSize():
@@ -446,7 +446,7 @@ class LinkView(gui.SvgPolyline, FBD_model.Link):
 
 class ProcessView(NavigableArea, FBD_model.Process):
 
-    valid_parent_types = [gui.Container]
+    valid_parent_types = [gui.Container, gui.HBox, gui.VBox]
 
     @property
     @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
@@ -464,9 +464,6 @@ class ProcessView(NavigableArea, FBD_model.Process):
 
     label = None
     label_font_size = 18
-
-    process_outputs_fb = None #this is required to route result values outside of Process
-    process_inputs_fb = None #this is required to route parameters inside the Process
 
     def __init__(self, name = "Process", *args, **kwargs):
         NavigableArea.__init__(self, 200, 200, *args, **kwargs)
@@ -489,20 +486,10 @@ class ProcessView(NavigableArea, FBD_model.Process):
         self.label.css_font_size = gui.to_pix(self.label_font_size)
         self.append(self.label)
 
-        self.process_inputs_fb = FunctionBlockView("ProcessInputs")
-        self.process_inputs_fb.add_io_widget(OutputView("in1"))
-        self.process_inputs_fb.outputs['in1'].set_value(True)
-        self.process_inputs_fb.add_io_widget(OutputView("in2"))
-        self.process_inputs_fb.outputs['in2'].set_value(False)
-        self.process_inputs_fb.outline.set_fill("transparent")
-        self.add_function_block(self.process_inputs_fb)
-
-        self.process_outputs_fb = FunctionBlockView("ProcessOutputs")
-        self.process_outputs_fb.add_io_widget(InputView("out1"))
-        self.process_outputs_fb.add_io_widget(InputView("out2"))
-        self.process_outputs_fb.outline.set_fill("transparent")
-        self.add_function_block(self.process_outputs_fb)
         self.onwheel.do(None)
+
+    def do(self, *args, **kwargs):
+        return FBD_model.Process.do(self)
 
     def on_execution_priority_changed(self, emitter, function_block, value):
         del self.function_blocks[function_block.identifier]
@@ -585,9 +572,49 @@ class ProcessView(NavigableArea, FBD_model.Process):
         return (function_block,)
 
 
+class ProcessViewThreaded(ProcessView):
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the sleep time in seconds''', float, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
+    def sleep_time(self): 
+        return self._sleep_time
+    @sleep_time.setter
+    def sleep_time(self, value): self._sleep_time = value
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Stop''', bool, {})
+    def stop(self): 
+        return self._stop
+    @stop.setter
+    def stop(self, value): 
+        self._stop = value
+        if not self._stop and self._stopped:
+            self.start_thread()
+
+    _sleep_time = 0.1
+    _stop = False
+    _stopped = True
+    thread = None
+
+    def __init__(self, name = "Process", *args, **kwargs):
+        ProcessView.__init__(self, name, *args, **kwargs)
+        self.start_thread()
+
+    def start_thread(self):
+        self._stop = False
+        self.thread = threading.Thread(target=self.threaded_function)
+        self.thread.start()
+        
+    def threaded_function(self):
+        while not self._stop:
+            self._stopped = False
+            self.do()
+            time.sleep(self._sleep_time)
+        self._stopped = True
+
+
 class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWidget):
 
-    valid_parent_types = [ProcessView]
+    valid_parent_types = [ProcessView, ProcessViewThreaded]
 
     @property
     @gui.editor_attribute_decorator("WidgetSpecific",'''Defines the viewved name''', str, {})
