@@ -604,11 +604,24 @@ class ProcessViewThreaded(ProcessView):
         self.thread = threading.Thread(target=self.threaded_function)
         self.thread.start()
         
+    def search_app_instance(self, node):
+        if issubclass(node.__class__, remi.server.App):
+            return node
+        if not hasattr(node, "get_parent"):
+            return None
+        return self.search_app_instance(node.get_parent())
+
     def threaded_function(self):
+        self._stopped = False
+        app_instance = self.search_app_instance(self)
         while not self._stop:
-            self._stopped = False
-            self.do()
             time.sleep(self._sleep_time)
+            if app_instance is None:
+                app_instance = self.search_app_instance(self)
+                continue
+
+            with app_instance.update_lock:
+                self.do()
         self._stopped = True
 
 
@@ -774,6 +787,9 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 
     def add_enabling_input_widget(self):
         self.add_io_widget(InputView('EN', default = False))
+        #get_parent is used to get the processview instance
+        self.inputs['EN'].onmousedown.do(self.get_parent().onselection_start, js_stop_propagation=True, js_prevent_default=True)
+        self.inputs['EN'].onmouseup.do(self.get_parent().onselection_end, js_stop_propagation=True, js_prevent_default=True)        
 
     def remove_enabling_input_widget(self):
         if 'EN' in self.inputs.keys():
