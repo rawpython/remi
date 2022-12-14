@@ -21,6 +21,62 @@ import traceback
 import os
 
 
+class ProcessAddFBWrapper(gui.GenericDialog):
+    KEY_WIDGET_INSTANCE = 'widget_instance'
+    KEY_METHOD_NAME = 'method_name'
+    
+    process_view_instance = None
+
+    def __init__(self, *args, **kwargs):
+        gui.GenericDialog.__init__(self, 'Function Block Wrapper',
+                                            'Here you can create a Function Block that wraps a widget method.', width=500, *args, **kwargs)
+        
+        self.add_field_with_label(self.KEY_WIDGET_INSTANCE, 'Widget instance', gui.DropDown())
+        self.get_field(self.KEY_WIDGET_INSTANCE).onchange.do(self.widget_instance_selected)
+        self.add_field_with_label(self.KEY_METHOD_NAME, 'Method name', gui.DropDown())
+
+    def widget_instance_selected(self, emitter, drop_down_item):
+        """ A widget has been selected.
+            The method names dropdown must be populated 
+        """
+        self.get_field(self.KEY_METHOD_NAME).empty()
+        # for all the methods of this widget
+        for (funcname, function) in inspect.getmembers(drop_down_item):
+            di = gui.DropDownItem(funcname)
+            self.get_field(self.KEY_METHOD_NAME).append(di)
+
+    @gui.decorate_event
+    def confirm_dialog(self, emitter):
+        """event called pressing on OK button.
+        """
+        widget_name = self.get_field(self.KEY_WIDGET_INSTANCE).get_value()
+        widget_instance = self.get_field(self.KEY_WIDGET_INSTANCE).children[widget_name]
+        function_name = self.get_field(self.KEY_METHOD_NAME).get_value()
+
+        try:
+            import widgets
+        except Exception:
+            from . import widgets
+        fb = widgets.FBD_library.FBWrapObjectMethod(getattr(widget_instance, function_name))
+        fb.variable_name = "wrapped:" + widget_name + "." + function_name
+        #fb.add_io_widget(OutputView("IMAGE"))
+        self.process_view_instance.add_function_block(fb)
+        return super(ProcessAddFBWrapper, self).confirm_dialog(self)
+
+    def show(self, baseAppInstance, process_view_instance, widgets_instance_list):
+        """Allows to show the widget as root window"""
+
+        self.process_view_instance = process_view_instance
+
+        self.get_field(self.KEY_WIDGET_INSTANCE).empty()
+        for w in widgets_instance_list:
+            di = gui.DropDownItem(w.variable_name)
+            di.widget_instance = w
+            self.get_field(self.KEY_WIDGET_INSTANCE).append(w)
+
+        super(ProcessAddFBWrapper, self).show(baseAppInstance)
+
+
 class InstancesTree(gui.TreeView):
     def __init__(self, **kwargs):
         super(InstancesTree, self).__init__(**kwargs)

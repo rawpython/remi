@@ -8,6 +8,105 @@ import inspect
 import types
 
 
+class FBWrapper(FBD_view.FunctionBlockView):
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Variable name of the object to be wrapped''', str, {})
+    def obj_variable_name(self): 
+        return self._obj_variable_name
+    @obj_variable_name.setter
+    def obj_variable_name(self, value): 
+        self.update_io_interface()
+        self._obj_variable_name = value
+
+    @property
+    @gui.editor_attribute_decorator("WidgetSpecific",'''Method name of the object to be wrapped''', str, {})
+    def method_name(self): 
+        return self._method_name
+    @method_name.setter
+    def method_name(self, value): 
+        self.update_io_interface()
+        self._method_name = value
+
+    _obj_variable_name = None
+    _method_name = None
+    method_bound = None
+
+    def __init__(self, *args, **kwargs):
+        FBD_view.FunctionBlockView.__init__(self, *args, **kwargs)
+        
+    @FBD_model.FunctionBlock.decorate_process([])
+    def do(self, *args, **kwargs):
+        if self.method_bound == None:
+            self.update_io_interface()
+            if self.method_bound == None:
+                return
+
+        #populate outputs
+        results = self.method_bound(*args, **kwargs)
+        results_count = 0        
+        if not results is None: 
+            if type(results) in [tuple,]:
+                results_count = len(results)
+            else:
+                results_count = 1
+        
+        if results_count != len(self.outputs):
+            for k in list(self.outputs.keys()):
+                self.remove_output_widget(k)
+            if results_count == 1:
+                self.add_io_widget(FBD_view.OutputView(f"out:{str(type(results))}"))
+            if results_count > 1:
+                i = 0
+                for res in results:
+                    self.add_io_widget(FBD_view.OutputView(f"out:{str(type(res))}{i}"))
+                    i += 1
+            for OUT in self.outputs.values():
+                OUT.onmousedown.do(self.get_parent().onselection_start, js_stop_propagation=True, js_prevent_default=True)
+                OUT.onmouseup.do(self.get_parent().onselection_end, js_stop_propagation=True, js_prevent_default=True)
+                
+        return results
+
+    def update_io_interface(self):
+        for k in list(self.inputs.keys()):
+            self.remove_input_widget(k)
+        for k in list(self.outputs.keys()):
+            self.remove_output_widget(k)
+        
+        if self._obj_variable_name == None:
+            return
+        if self._method_name == None:
+            return
+        app_instance = self.search_app_instance(self.get_parent())
+        obj = self.select_instance(app_instance.root, self._obj_variable_name)
+        self.method_bound = getattr(obj, self._method_name)
+        signature = inspect.signature(self.method_bound)
+        for arg in signature.parameters:
+            self.add_io_widget(FBD_view.InputView(arg, default = signature.parameters[arg].default))
+
+        for IN in self.inputs.values():
+            IN.onmousedown.do(self.get_parent().onselection_start, js_stop_propagation=True, js_prevent_default=True)
+            IN.onmouseup.do(self.get_parent().onselection_end, js_stop_propagation=True, js_prevent_default=True)
+
+    def search_app_instance(self, node):
+        if issubclass(node.__class__, remi.server.App):
+            return node
+        if not hasattr(node, "get_parent"):
+            return None
+        return self.search_app_instance(node.get_parent())
+
+    def select_instance(self, node, variable_name):
+        if not hasattr(node, 'attributes'):
+            return None
+
+        if node.variable_name == variable_name:
+            return node
+
+        for item in node.children.values():
+            res = self.select_instance(item, variable_name)
+            if not res is None:
+                return res
+
+
 def FBWrapObjectMethod(obj_name, method_bound):
     fb = FBD_view.FunctionBlockView()
     #if hasattr(self.do, "_outputs"):
@@ -24,8 +123,8 @@ def FBWrapObjectMethod(obj_name, method_bound):
     def pre_do(*args, **kwargs):
         #populate outputs
         results = method_bound(*args, **kwargs)
-        for k in fb.outputs.keys():
-            fb.remove_io_widget(k)
+        for k in list(fb.outputs.keys()):
+            fb.remove_output_widget(k)
         if not results is None: 
             if type(results) in [tuple,]:
                 i = 0

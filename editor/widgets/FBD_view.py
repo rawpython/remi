@@ -755,25 +755,29 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
 
         self.adjust_geometry()
 
-    def remove_io_widget(self, name):
+    def remove_input_widget(self, name):
         io = self.inputs[name]
         if io.is_linked():
-            if issubclass(type(io), FBD_model.Input):
-                io.link_view.unlink()
-            else:
-                for dest in io.linked_nodes:
-                    if dest.name == name:
-                        dest.link_view.unlink()
-                        break
+            io.link_view.unlink()
         self.remove_child(io)
         del self.inputs[name]
+
+    def remove_output_widget(self, name):
+        io = self.outputs[name]
+        if io.is_linked():
+            for dest in io.linked_nodes:
+                if dest.name == name:
+                    dest.link_view.unlink()
+                    break
+        self.remove_child(io)
+        del self.outputs[name]
 
     def add_enabling_input_widget(self):
         self.add_io_widget(InputView('EN', default = False))
 
     def remove_enabling_input_widget(self):
         if 'EN' in self.inputs.keys():
-            self.remove_io_widget('EN')
+            self.remove_input_widget('EN')
 
     def onposition_changed(self):
         for inp in self.inputs.values():
