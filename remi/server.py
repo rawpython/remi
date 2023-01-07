@@ -208,7 +208,7 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         if not self.handshake_done:
             self._log.warning("ignoring message %s (handshake not done)" % message[:10])
             return False
-
+        
         if message[0] == "2":
             i = 0
 
@@ -259,8 +259,8 @@ class WebSocketsHandler(socketserver.StreamRequestHandler):
         self.request.sendall(response.encode("utf-8"))
         self.handshake_done = True
 
-        #if an update happens since the websocket connection to its handshake,
-        # it gets not displayed. it is required to inform App about handshake done,
+        #if an update happens since the websocket connection to its handshake, 
+        # it gets not displayed. it is required to inform App about handshake done, 
         # to get a full refresh
         clients[self.session].websocket_handshake_done(self)
 
@@ -392,7 +392,7 @@ class App(BaseHTTPRequestHandler, object):
             self.update_interval = self.server.update_interval
 
             from remi import gui
-
+            
             head = gui.HEAD(self.server.title)
             # use the default css, but append a version based on its hash, to stop browser caching
             head.add_child('internal_css', "<link href='/res:style.css' rel='stylesheet' />\n")
@@ -466,7 +466,7 @@ class App(BaseHTTPRequestHandler, object):
                     try:
                         self.do_gui_update()
                     except Exception:
-                        self._log.error('''exception during gui update. It is advisable to
+                        self._log.error('''exception during gui update. It is advisable to 
                             use App.update_lock using external threads.''', exc_info=True)
 
     def idle(self):
@@ -476,7 +476,7 @@ class App(BaseHTTPRequestHandler, object):
 
     def _need_update(self, emitter=None, child_ignore_update=False):
         if child_ignore_update:
-            #the widgets tree is processed to make it available for a intentional
+            #the widgets tree is processed to make it available for a intentional 
             # client update and to reset the changed flags of changed widget.
             # Otherwise it will be updated on next update cycle.
             changed_widget_dict = {}
@@ -489,7 +489,7 @@ class App(BaseHTTPRequestHandler, object):
         else:
             #will be updated after idle loop
             self._need_update_flag = True
-
+                
     def do_gui_update(self):
         """ This method gets called also by Timer, a new thread, and so needs to lock the update
         """
@@ -518,7 +518,7 @@ class App(BaseHTTPRequestHandler, object):
 
         msg = "0" + self.root.identifier + ',' + to_websocket(self._overload(self.page.children['body'].innerHTML({}), filename="internal"))
         self._send_spontaneous_websocket_message(msg)
-
+        
     def _send_spontaneous_websocket_message(self, message):
         for ws in list(self.websockets):
             # noinspection PyBroadException
@@ -537,7 +537,7 @@ class App(BaseHTTPRequestHandler, object):
                 pass # happens when there are multiple clients
             else:
                 ws.close(terminate_server=False)
-
+            
     def execute_javascript(self, code):
         self._send_spontaneous_websocket_message(_MSG_JS + code)
 
@@ -616,7 +616,7 @@ class App(BaseHTTPRequestHandler, object):
         # if this is a ws req, instance a ws handler, add it to App's ws list, return
         if "Upgrade" in self.headers:
             if self.headers['Upgrade'].lower() == 'websocket':
-                #passing arguments to websocket handler, otherwise it will lost the last message,
+                #passing arguments to websocket handler, otherwise it will lost the last message, 
                 # and will be unable to handshake
                 ws = WebSocketsHandler(self.headers, self.request, self.client_address, self.server)
                 return
@@ -673,7 +673,7 @@ class App(BaseHTTPRequestHandler, object):
         if not key in paths:
             return None
         return os.path.join(paths[key], path)
-
+    
     def _overload(self, data, **kwargs):
         """Used to overload the content before sent back to client"""
         return data
@@ -688,14 +688,14 @@ class App(BaseHTTPRequestHandler, object):
             self.send_header("Set-Cookie", "remi_session=%s; SameSite=Lax"%(self.session))
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-
+            
             with self.update_lock:
                 # render the HTML
                 page_content = self.page.repr()
 
             self.wfile.write(encode_text("<!DOCTYPE html>\n"))
             self.wfile.write(encode_text(self._overload(page_content, filename="internal")))
-
+            
         elif static_file:
             filename = self._get_static_file(static_file.groups()[0])
             if not filename:
@@ -762,7 +762,7 @@ class App(BaseHTTPRequestHandler, object):
     def onerror(self, message, source, lineno, colno, error):
         """ WebPage Event that occurs on webpage errors
         """
-        self._log.debug("""App.onerror event occurred in webpage:
+        self._log.debug("""App.onerror event occurred in webpage: 
             \nMESSAGE:%s\nSOURCE:%s\nLINENO:%s\nCOLNO:%s\ERROR:%s\n"""%(message, source, lineno, colno, error))
 
     def ononline(self, emitter):
