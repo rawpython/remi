@@ -121,7 +121,7 @@ class EventSource(object):
             # this is implicit in predicate
             #if not hasattr(method, '__is_event'):
             #    continue
-            
+
             _event_info = None
             if hasattr(method, "_event_info"):
                 _event_info = method._event_info
@@ -160,7 +160,7 @@ class ClassEventConnector(object):
                 'emitter_identifier': self.event_source_instance.identifier, 'event_name': self.event_name} + \
                 ("event.stopPropagation();" if js_stop_propagation else "") + \
                 ("event.preventDefault();" if js_prevent_default else "")
-                
+
         self.callback = callback
 
     def __call__(self, *args, **kwargs):
@@ -220,7 +220,7 @@ def decorate_set_on_listener(prototype):
 
 
 def editor_attribute_decorator(group, description, _type, additional_data):
-    def add_annotation(prop): 
+    def add_annotation(prop):
         setattr(prop, "editor_attributes", {'description': description, 'type': _type, 'group': group, 'additional_data': additional_data})
         return prop
     return add_annotation
@@ -407,8 +407,8 @@ class Tag(object):
         self.style.align_version()
 
     def disable_refresh(self):
-        """ Prevents the parent widgets to be notified about an update. 
-            This is required to improve performances in case of widgets updated 
+        """ Prevents the parent widgets to be notified about an update.
+            This is required to improve performances in case of widgets updated
                 multiple times in a procedure.
         """
         self.refresh_enabled = False
@@ -418,7 +418,7 @@ class Tag(object):
 
     def disable_update(self):
         """ Prevents clients updates. Remi will not send websockets update messages.
-            The widgets are however iternally updated. So if the user updates the 
+            The widgets are however iternally updated. So if the user updates the
                 webpage, the update is shown.
         """
         self.ignore_update = True
@@ -915,7 +915,7 @@ class Widget(Tag, EventSource):
                     self.style[k.strip()] = v.strip()
 
     def set_enabled(self, enabled):
-        """ Sets the enabled status. 
+        """ Sets the enabled status.
             If a widget is disabled the user iteraction is not allowed
 
             Args:
@@ -1399,7 +1399,20 @@ class HEAD(Tag):
 
                     var self = this;
                     try{
-                        this._ws = new WebSocket(ws_wss + '://%(host)s/');
+                        host = '%(host)s'
+                        if (host !== ''){
+                            wss_url = `${ws_wss}://${host}/`
+                        }
+                        else{
+                            host = document.location.host;
+                            port = document.location.port;
+                            if (port != ''){
+                                port = `:${port}`;
+                            }
+                            wss_url = `${ws_wss}://${document.location.host}${port}/`;
+                        }
+
+                        this._ws = new WebSocket(wss_url);
                         console.debug('opening websocket');
 
                         this._ws.onopen = function(evt){
@@ -1612,7 +1625,7 @@ class HEAD(Tag):
                     remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
                     return false;
                 };
-                
+
                 window.remi = new Remi();
 
                 </script>""" % {'host':net_interface_ip,
@@ -1803,7 +1816,7 @@ class GridBox(Container):
             values (iterable of int or str): values are treated as percentage.
         """
         self.css_grid_template_rows = ' '.join(map(lambda value: (str(value) if str(value).endswith('%') else str(value) + '%') , values))
-    
+
     def set_column_gap(self, value):
         """Sets the gap value between columns
 
@@ -1987,7 +2000,7 @@ class AsciiContainer(Container):
     def __init__(self, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
         self.css_position = 'relative'
-        
+
     def set_from_asciiart(self, asciipattern, gap_horizontal=0, gap_vertical=0):
         """
             asciipattern (str): a multiline string representing the layout
@@ -2016,24 +2029,24 @@ class AsciiContainer(Container):
             for column in columns:
                 widget_key = column.strip()
                 widget_width = float(len(column))
-                
+
                 if not widget_key in list(self.widget_layout_map.keys()):
                     #width is calculated in percent
                     # height is instead initialized at 1 and incremented by 1 each row the key is present
                     # at the end of algorithm the height will be converted in percent
-                    self.widget_layout_map[widget_key] = { 'width': "%.2f%%"%float(widget_width / (row_width) * 100.0 - gap_horizontal), 
-                                            'height':1, 
-                                            'top':"%.2f%%"%float(row_index / (layout_height_in_chars) * 100.0 + (gap_vertical/2.0)), 
+                    self.widget_layout_map[widget_key] = { 'width': "%.2f%%"%float(widget_width / (row_width) * 100.0 - gap_horizontal),
+                                            'height':1,
+                                            'top':"%.2f%%"%float(row_index / (layout_height_in_chars) * 100.0 + (gap_vertical/2.0)),
                                             'left':"%.2f%%"%float(left_value / (row_width) * 100.0 + (gap_horizontal/2.0))}
                 else:
                     self.widget_layout_map[widget_key]['height'] += 1
-                
+
                 left_value += widget_width
             row_index += 1
 
         #converting height values in percent string
         for key in self.widget_layout_map.keys():
-            self.widget_layout_map[key]['height'] = "%.2f%%"%float(self.widget_layout_map[key]['height'] / (layout_height_in_chars) * 100.0 - gap_vertical) 
+            self.widget_layout_map[key]['height'] = "%.2f%%"%float(self.widget_layout_map[key]['height'] / (layout_height_in_chars) * 100.0 - gap_vertical)
 
         for key in self.widget_layout_map.keys():
             self.set_widget_layout(key)
@@ -2079,7 +2092,7 @@ class TabBox(Container):
         if not l is None:
             last_tab_w=100.0-tab_w*(nch-1)
             l.set_size("%.1f%%" % last_tab_w, "auto")
-        
+
 
     def append(self, widget, key=''):
         """ Adds a new tab.
@@ -2850,7 +2863,7 @@ class DropDown(Container):
 class DropDownItem(Widget, _MixinTextualWidget):
     """item widget for the DropDown"""
     @property
-    @editor_attribute_decorator("WidgetSpecific", '''The value returned to the DropDown in onchange event. 
+    @editor_attribute_decorator("WidgetSpecific", '''The value returned to the DropDown in onchange event.
         By default it corresponds to the displayed text, unsless it is changes.''', str, {})
     def value(self): return unescape(self.attributes.get('value', '').replace('&nbsp;', ' '))
     @value.setter
@@ -3015,7 +3028,7 @@ class TableWidget(Table):
             kwargs: See Container.__init__()
         """
         self.__column_count = 0
-        self.__use_title = use_title 
+        self.__use_title = use_title
         super(TableWidget, self).__init__(*args, **kwargs)
         self._editable = editable
         self.set_use_title(use_title)
@@ -3403,7 +3416,7 @@ class SpinBox(Input):
             "if(key==13){var params={};params['value']=document.getElementById('%(id)s').value;" \
             "remi.sendCallbackParam('%(id)s','%(evt)s',params); return true;}" \
             "return false;" % {'id': self.identifier, 'evt': self.EVENT_ONCHANGE}
-        
+
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def onchange(self, value):
@@ -3423,7 +3436,7 @@ class SpinBox(Input):
 
             #this is to force update in case a value out of limits arrived
             # and the limiting ended up with the same previous value stored in self.attributes
-            # In this case the limitation gets not updated in browser 
+            # In this case the limitation gets not updated in browser
             # (because not triggering is_changed). So the update is forced.
             if _type(value) != _value:
                 self.attributes.onchange()
@@ -3572,10 +3585,10 @@ class SelectionInput(Input):
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Defines the datalist.''', str, {})
-    def attr_datalist_identifier(self): 
+    def attr_datalist_identifier(self):
         return self.attributes.get('list', '0')
     @attr_datalist_identifier.setter
-    def attr_datalist_identifier(self, value): 
+    def attr_datalist_identifier(self, value):
         if isinstance(value, Datalist):
             value = value.identifier
         self.attributes['list'] = value
@@ -3589,11 +3602,11 @@ class SelectionInput(Input):
     def __init__(self, default_value="", input_type="text", *args, **kwargs):
         """
         Args:
-            selection_type (str): text, search, url, tel, email, date, month, week, time, datetime-local, number, range, color. 
+            selection_type (str): text, search, url, tel, email, date, month, week, time, datetime-local, number, range, color.
             kwargs: See Widget.__init__()
         """
         super(SelectionInput, self).__init__(input_type, default_value, *args, **kwargs)
-        
+
         self.attributes[Widget.EVENT_ONCHANGE] = \
             "var params={};params['value']=document.getElementById('%(emitter_identifier)s').value;" \
             "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
@@ -3627,7 +3640,7 @@ class SelectionInput(Input):
 
 
 class SelectionInputWidget(Container):
-    datalist = None #the internal Datalist 
+    datalist = None #the internal Datalist
     selection_input = None #the internal selection_input
 
     @property
@@ -3648,14 +3661,14 @@ class SelectionInputWidget(Container):
         if iterable_of_str:
             options = list(map(DatalistItem, iterable_of_str))
         self.datalist = Datalist(options)
-        self.selection_input = SelectionInput(default_value, input_type, style={'top':'0px', 
+        self.selection_input = SelectionInput(default_value, input_type, style={'top':'0px',
                                                 'left':'0px', 'bottom':'0px', 'right':'0px'})
         self.selection_input.set_datalist_identifier(self.datalist.identifier)
         self.append([self.datalist, self.selection_input])
         self.selection_input.oninput.do(self.oninput)
-    
+
     def set_value(self, value):
-        """ 
+        """
         Sets the value of the widget
         Args:
             value (str): the string value
@@ -3672,7 +3685,7 @@ class SelectionInputWidget(Container):
     @decorate_set_on_listener("(self, emitter, value)")
     @decorate_event
     def oninput(self, emitter, value):
-        """ 
+        """
         This event occurs when user inputs a new value
         Returns:
             value (str): the string value
@@ -3709,7 +3722,7 @@ class FileFolderNavigator(GridBox):
     @editor_attribute_decorator("WidgetSpecific", '''Defines the actual navigator location.''', str, {})
     def selection_folder(self): return self._selection_folder
     @selection_folder.setter
-    def selection_folder(self, value): 
+    def selection_folder(self, value):
         # fixme: we should use full paths and not all this chdir stuff
         self.chdir(value)  # move to actual working directory
 
@@ -3849,7 +3862,7 @@ class FileFolderNavigator(GridBox):
     @decorate_event
     def on_folder_item_selected(self, folderitem):
         """ This event occurs when an element in the list is selected
-            Returns the newly selected element of type FileFolderItem(or None if it was not selectable) 
+            Returns the newly selected element of type FileFolderItem(or None if it was not selectable)
                  and the list of selected elements of type str.
         """
         if folderitem.isFolder and (not self.allow_folder_selection):
@@ -4039,7 +4052,7 @@ class TreeItem(Container, _MixinTextualWidget):
         self.attributes['treeopen'] = 'false'
         self.attributes['has-subtree'] = 'false'
         self.onclick.do(None, js_stop_propagation=True)
-        
+
     def append(self, value, key=''):
         if self.sub_container is None:
             self.attributes['has-subtree'] = 'true'
@@ -4065,11 +4078,11 @@ class FileUploader(Container):
         implements the onsuccess and onfailed events.
     """
     @property
-    @editor_attribute_decorator("WidgetSpecific",'''If True multiple files can be 
+    @editor_attribute_decorator("WidgetSpecific",'''If True multiple files can be
         selected at the same time''', bool, {})
     def multiple_selection_allowed(self): return ('multiple' in self.__dict__.keys())
     @multiple_selection_allowed.setter
-    def multiple_selection_allowed(self, value): 
+    def multiple_selection_allowed(self, value):
         if value:
             self.__dict__["multiple"] = "multiple"
         else:
@@ -4080,7 +4093,7 @@ class FileUploader(Container):
     @editor_attribute_decorator("WidgetSpecific", '''Defines the path where to save the file''', str, {})
     def savepath(self): return self._savepath
     @savepath.setter
-    def savepath(self, value): 
+    def savepath(self, value):
         self._savepath = value
 
     def __init__(self, savepath='./', multiple_selection_allowed=False, accepted_files='*.*', *args, **kwargs):
@@ -4232,7 +4245,7 @@ class _MixinSvgStroke():
     @attr_stroke.setter
     def attr_stroke(self, value): self.attributes['stroke'] = str(value)
     @attr_stroke.deleter
-    def attr_stroke(self): del self.attributes['stroke'] 
+    def attr_stroke(self): del self.attributes['stroke']
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Stroke width for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 10000.0, 'default': 1.0, 'step': 0.1})
@@ -4240,7 +4253,7 @@ class _MixinSvgStroke():
     @attr_stroke_width.setter
     def attr_stroke_width(self, value): self.attributes['stroke-width'] = str(value)
     @attr_stroke_width.deleter
-    def attr_stroke_width(self): del self.attributes['stroke-width'] 
+    def attr_stroke_width(self): del self.attributes['stroke-width']
 
     def set_stroke(self, width=1, color='black'):
         """Sets the stroke properties.
@@ -4260,7 +4273,7 @@ class _MixinTransformable():
     @css_transform.setter
     def css_transform(self, value): self.style['transform'] = str(value)
     @css_transform.deleter
-    def css_transform(self): del self.style['transform'] 
+    def css_transform(self): del self.style['transform']
 
     @property
     @editor_attribute_decorator("Transformation", '''Transform origin as percent or absolute x,y pair value or ['center','top','bottom','left','right'] .''', str, {})
@@ -4268,7 +4281,7 @@ class _MixinTransformable():
     @css_transform_origin.setter
     def css_transform_origin(self, value): self.style['transform-origin'] = str(value)
     @css_transform_origin.deleter
-    def css_transform_origin(self): del self.style['transform-origin'] 
+    def css_transform_origin(self): del self.style['transform-origin']
 
     @property
     @editor_attribute_decorator("Transformation", '''Alters the behaviour of tranform and tranform-origin by defining the transform box.''', 'DropDown', {'possible_values': ('content-box','border-box','fill-box','stroke-box','view-box')})
@@ -4276,7 +4289,7 @@ class _MixinTransformable():
     @css_transform_box.setter
     def css_transform_box(self, value): self.style['transform-box'] = str(value)
     @css_transform_box.deleter
-    def css_transform_box(self): del self.style['transform-box'] 
+    def css_transform_box(self): del self.style['transform-box']
 
 
 class _MixinSvgFill():
@@ -4286,7 +4299,7 @@ class _MixinSvgFill():
     @attr_fill.setter
     def attr_fill(self, value): self.attributes['fill'] = str(value)
     @attr_fill.deleter
-    def attr_fill(self): del self.attributes['fill'] 
+    def attr_fill(self): del self.attributes['fill']
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Fill opacity for svg elements.''', float, {'possible_values': '', 'min': 0.0, 'max': 1.0, 'default': 1.0, 'step': 0.1})
@@ -4294,7 +4307,7 @@ class _MixinSvgFill():
     @attr_fill_opacity.setter
     def attr_fill_opacity(self, value): self.attributes['fill-opacity'] = str(value)
     @attr_fill_opacity.deleter
-    def attr_fill_opacity(self): del self.attributes['fill-opacity'] 
+    def attr_fill_opacity(self): del self.attributes['fill-opacity']
 
     def set_fill(self, color='black'):
         """Sets the fill color.
@@ -4355,7 +4368,7 @@ class _MixinSvgSize():
 
 class SvgStop(Tag):
     """ """
-     
+
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Gradient color''', 'ColorPicker', {})
     def css_stop_color(self): return self.style.get('stop-color', None)
@@ -4393,7 +4406,7 @@ class SvgGradientLinear(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_x1(self): return self.attributes.get('x1', None)
     @attr_x1.setter
-    def attr_x1(self, value): 
+    def attr_x1(self, value):
         self.attributes['x1'] = str(value)
         if not self.attributes['x1'][-1] == '%':
             self.attributes['x1'] = self.attributes['x1'] + '%'
@@ -4402,16 +4415,16 @@ class SvgGradientLinear(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_y1(self): return self.attributes.get('y1', None)
     @attr_y1.setter
-    def attr_y1(self, value): 
+    def attr_y1(self, value):
         self.attributes['y1'] = str(value)
         if not self.attributes['y1'][-1] == '%':
             self.attributes['y1'] = self.attributes['y1'] + '%'
-    
+
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_x2(self): return self.attributes.get('x2', None)
     @attr_x2.setter
-    def attr_x2(self, value): 
+    def attr_x2(self, value):
         self.attributes['x2'] = str(value)
         if not self.attributes['x2'][-1] == '%':
             self.attributes['x2'] = self.attributes['x2'] + '%'
@@ -4420,7 +4433,7 @@ class SvgGradientLinear(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_y2(self): return self.attributes.get('y2', None)
     @attr_y2.setter
-    def attr_y2(self, value): 
+    def attr_y2(self, value):
         self.attributes['y2'] = str(value)
         if not self.attributes['y2'][-1] == '%':
             self.attributes['y2'] = self.attributes['y2'] + '%'
@@ -4440,7 +4453,7 @@ class SvgGradientRadial(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_cx(self): return self.attributes.get('cx', None)
     @attr_cx.setter
-    def attr_cx(self, value): 
+    def attr_cx(self, value):
         self.attributes['cx'] = str(value)
         if not self.attributes['cx'][-1] == '%':
             self.attributes['cx'] = self.attributes['cx'] + '%'
@@ -4449,7 +4462,7 @@ class SvgGradientRadial(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_cy(self): return self.attributes.get('cy', None)
     @attr_cy.setter
-    def attr_cy(self, value): 
+    def attr_cy(self, value):
         self.attributes['cy'] = str(value)
         if not self.attributes['cy'][-1] == '%':
             self.attributes['cy'] = self.attributes['cy'] + '%'
@@ -4458,7 +4471,7 @@ class SvgGradientRadial(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_fx(self): return self.attributes.get('fx', None)
     @attr_fx.setter
-    def attr_fx(self, value): 
+    def attr_fx(self, value):
         self.attributes['fx'] = str(value)
         if not self.attributes['fx'][-1] == '%':
             self.attributes['fx'] = self.attributes['fx'] + '%'
@@ -4467,7 +4480,7 @@ class SvgGradientRadial(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient coordinate value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_fy(self): return self.attributes.get('fy', None)
     @attr_fy.setter
-    def attr_fy(self, value): 
+    def attr_fy(self, value):
         self.attributes['fy'] = str(value)
         if not self.attributes['fy'][-1] == '%':
             self.attributes['fy'] = self.attributes['fy'] + '%'
@@ -4476,7 +4489,7 @@ class SvgGradientRadial(Tag):
     @editor_attribute_decorator("WidgetSpecific", '''Gradient radius value. It is expressed in percentage''', float, {'possible_values': '', 'min': 0, 'max': 100, 'default': 0, 'step': 1})
     def attr_r(self): return self.attributes.get('r', None)
     @attr_r.setter
-    def attr_r(self, value): 
+    def attr_r(self, value):
         self.attributes['r'] = str(value)
         if not self.attributes['r'][-1] == '%':
             self.attributes['r'] = self.attributes['r'] + '%'
@@ -4496,7 +4509,7 @@ class SvgDefs(Tag):
     def __init__(self, *args, **kwargs):
         super(SvgDefs, self).__init__(*args, **kwargs)
         self.type = 'defs'
-    
+
 
 class Svg(Container):
     """svg widget - is a container for graphic widgets such as SvgCircle, SvgLine and so on."""
@@ -4506,7 +4519,7 @@ class Svg(Container):
     @attr_preserveAspectRatio.setter
     def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
     @attr_preserveAspectRatio.deleter
-    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
+    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio']
 
     @property
     @editor_attribute_decorator("WidgetSpecific",'''viewBox of the svg drawing. es='x, y, width, height' ''', 'str', {})
@@ -4514,7 +4527,7 @@ class Svg(Container):
     @attr_viewBox.setter
     def attr_viewBox(self, value): self.attributes['viewBox'] = str(value)
     @attr_viewBox.deleter
-    def attr_viewBox(self): del self.attributes['viewBox'] 
+    def attr_viewBox(self): del self.attributes['viewBox']
 
     def __init__(self, *args, **kwargs):
         """
@@ -4523,7 +4536,7 @@ class Svg(Container):
         """
         super(Svg, self).__init__(*args, **kwargs)
         self.type = 'svg'
-        
+
     def set_viewbox(self, x, y, w, h):
         """Sets the origin and size of the viewbox, describing a virtual view area.
 
@@ -4599,7 +4612,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     @attr_preserveAspectRatio.setter
     def attr_preserveAspectRatio(self, value): self.attributes['preserveAspectRatio'] = str(value)
     @attr_preserveAspectRatio.deleter
-    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio'] 
+    def attr_preserveAspectRatio(self): del self.attributes['preserveAspectRatio']
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Image data or url  or a base64 data string, html attribute xlink:href''', 'base64_image', {})
@@ -4607,7 +4620,7 @@ class SvgImage(Widget, _MixinSvgPosition, _MixinSvgSize, _MixinTransformable):
     @image_data.setter
     def image_data(self, value): self.attributes['xlink:href'] = str(value)
     @image_data.deleter
-    def image_data(self): del self.attributes['xlink:href'] 
+    def image_data(self): del self.attributes['xlink:href']
 
     def __init__(self, image_data='', x=0, y=0, w=100, h=100, *args, **kwargs):
         """
@@ -4785,7 +4798,7 @@ class SvgPolyline(Widget, _MixinSvgStroke, _MixinSvgFill, _MixinTransformable):
     @editor_attribute_decorator("WidgetSpecific",'''Defines the maximum values count.''', int, {'possible_values': '', 'min': 0, 'max': 65535, 'default': 0, 'step': 1})
     def maxlen(self): return self.__maxlen
     @maxlen.setter
-    def maxlen(self, value): 
+    def maxlen(self, value):
         self.__maxlen = int(value)
         self.coordsX = collections.deque(maxlen=self.__maxlen)
         self.coordsY = collections.deque(maxlen=self.__maxlen)
@@ -4822,7 +4835,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     @attr_textLength.setter
     def attr_textLength(self, value): self.attributes['textLength'] = str(value)
     @attr_textLength.deleter
-    def attr_textLength(self): del self.attributes['textLength'] 
+    def attr_textLength(self): del self.attributes['textLength']
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Controls how text is stretched to fit the length.''', 'DropDown', {'possible_values': ('spacing','spacingAndGlyphs')})
@@ -4830,7 +4843,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     @attr_lengthAdjust.setter
     def attr_lengthAdjust(self, value): self.attributes['lengthAdjust'] = str(value)
     @attr_lengthAdjust.deleter
-    def attr_lengthAdjust(self): del self.attributes['lengthAdjust'] 
+    def attr_lengthAdjust(self): del self.attributes['lengthAdjust']
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Rotation angle for svg elements.''', float, {'possible_values': '', 'min': -360.0, 'max': 360.0, 'default': 1.0, 'step': 0.1})
@@ -4838,7 +4851,7 @@ class SvgText(Widget, _MixinSvgPosition, _MixinSvgStroke, _MixinSvgFill, _MixinT
     @attr_rotate.setter
     def attr_rotate(self, value): self.attributes['rotate'] = str(value)
     @attr_rotate.deleter
-    def attr_rotate(self): del self.attributes['rotate'] 
+    def attr_rotate(self): del self.attributes['rotate']
 
     @property
     @editor_attribute_decorator("WidgetSpecific", '''Description.''', 'DropDown', {'possible_values': ('start', 'middle', 'end')})
