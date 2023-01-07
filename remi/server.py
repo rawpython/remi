@@ -438,7 +438,7 @@ class App(BaseHTTPRequestHandler, object):
             if hasattr(client, '_update_thread'):
                 self._update_thread = client._update_thread
 
-        net_interface_ip = self._net_interface_ip() if not self.server.dynamic_address else ''
+        net_interface_ip = self._net_interface_ip() if not self.server.dynamic_web_address else ''
         websocket_timeout_timer_ms = str(self.server.websocket_timeout_timer_ms)
         pending_messages_queue_length = str(self.server.pending_messages_queue_length)
         self.page.children['head'].set_internal_js(str(id(self)), net_interface_ip, pending_messages_queue_length, websocket_timeout_timer_ms)
@@ -795,7 +795,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
                  auth, multiple_instance, enable_file_cache, update_interval,
                  websocket_timeout_timer_ms, pending_messages_queue_length,
                  title, server_starter_instance, certfile, keyfile, ssl_version,
-                 dynamic_address,
+                 dynamic_web_address,
                  *userdata):
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self.auth = auth
@@ -806,7 +806,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         self.pending_messages_queue_length = pending_messages_queue_length
         self.title = title
         self.server_starter_instance = server_starter_instance
-        self.dynamic_address = dynamic_address
+        self.dynamic_web_address = dynamic_web_address
         self.userdata = userdata
 
         self.certfile = certfile
@@ -821,7 +821,7 @@ class Server(object):
     def __init__(self, gui_class, title='', start=True, address='127.0.0.1', port=0, username=None, password=None,
                  multiple_instance=False, enable_file_cache=True, update_interval=0.1, start_browser=True,
                  websocket_timeout_timer_ms=1000, pending_messages_queue_length=1000,
-                 certfile=None, keyfile=None, ssl_version=None,  userdata=(), dynamic_address=False):
+                 certfile=None, keyfile=None, ssl_version=None,  userdata=(), dynamic_web_address=False):
 
         self._gui = gui_class
         self._title = title or gui_class.__name__
@@ -840,7 +840,7 @@ class Server(object):
         self._keyfile = keyfile
         self._ssl_version = ssl_version
         self._userdata = userdata
-        self._dynamic_address = dynamic_address
+        self._dynamic_web_address = dynamic_web_address
         if username and password:
             self._auth = base64.b64encode(encode_text("%s:%s" % (username, password)))
         else:
@@ -871,7 +871,7 @@ class Server(object):
                                            self._multiple_instance, self._enable_file_cache,
                                            self._update_interval, self._websocket_timeout_timer_ms,
                                            self._pending_messages_queue_length, self._title,
-                                           self, self._certfile, self._keyfile, self._ssl_version, self._dynamic_address,
+                                           self, self._certfile, self._keyfile, self._ssl_version, self._dynamic_web_address,
                                            *self._userdata)
         shost, sport = self._sserver.socket.getsockname()[:2]
         self._log.info('Started httpserver http://%s:%s/'%(shost,sport))
