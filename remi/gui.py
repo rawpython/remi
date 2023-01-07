@@ -1405,12 +1405,8 @@ class HEAD(Tag):
                         }
                         else{
                             host = document.location.host;
-                            port = document.location.port;
                             pathname = document.location.pathname;
-                            if (port != ''){
-                                port = `:${port}`;
-                            }
-                            wss_url = `${ws_wss}://${document.location.host}${port}${pathname}`;
+                            wss_url = `${ws_wss}://${document.location.host}${pathname}`;
                         }
 
                         this._ws = new WebSocket(wss_url);
