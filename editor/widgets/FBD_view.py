@@ -788,8 +788,11 @@ class FunctionBlockView(FBD_model.FunctionBlock, gui.SvgSubcontainer, MoveableWi
     def add_enabling_input_widget(self):
         self.add_io_widget(InputView('EN', default = False))
         #get_parent is used to get the processview instance
-        self.inputs['EN'].onmousedown.do(self.get_parent().onselection_start, js_stop_propagation=True, js_prevent_default=True)
-        self.inputs['EN'].onmouseup.do(self.get_parent().onselection_end, js_stop_propagation=True, js_prevent_default=True)        
+        parent = self.get_parent()
+        if parent is None:
+            return
+        self.inputs['EN'].onmousedown.do(parent.onselection_start, js_stop_propagation=True, js_prevent_default=True)
+        self.inputs['EN'].onmouseup.do(parent.onselection_end, js_stop_propagation=True, js_prevent_default=True)        
 
     def remove_enabling_input_widget(self):
         if 'EN' in self.inputs.keys():
