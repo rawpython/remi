@@ -44,7 +44,7 @@ except ImportError:
         unescape = html.unescape
 
 from .server import runtimeInstances
-
+import urllib.parse
 
 log = logging.getLogger('remi.gui')
 
@@ -4136,8 +4136,9 @@ class FileDownloader(Container, _MixinTextualWidget):
     def download(self):
         with open(self._filename, 'r+b') as f:
             content = f.read()
+        filename = urllib.parse.quote(os.path.basename(self._filename))
         headers = {'Content-type': 'application/octet-stream',
-                   'Content-Disposition': 'attachment; filename="%s"' % os.path.basename(self._filename)}
+                   'Content-Disposition': f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}'}
         return [content, headers]
 
 
