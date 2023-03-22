@@ -158,7 +158,7 @@ Outside the main class, start the application by calling the function `start` an
 
 ```py
 # starts the webserver
-start(MyApp)
+start(MyApp, port=8081)
 ```
 
 Run the script. If it's all OK the GUI will be opened automatically in your browser, otherwise, you have to type in the address bar "http://127.0.0.1:8081".
