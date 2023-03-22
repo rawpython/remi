@@ -106,7 +106,7 @@ class MyApp(App):
         self.bt.set_text('Hi!')
 
 # starts the web server
-start(MyApp)
+start(MyApp, port=8081)
 ```
 
 In order to see the user interface, open your preferred browser and type "http://127.0.0.1:8081".
