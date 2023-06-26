@@ -4134,7 +4134,7 @@ class FileDownloader(Container, _MixinTextualWidget):
         self._path_separator = path_separator
 
     def download(self):
-        with open(self._filename, 'r+b') as f:
+        with open(self._filename, 'rb') as f:
             content = f.read()
         headers = {'Content-type': 'application/octet-stream',
                    'Content-Disposition': 'attachment; filename="%s"' % os.path.basename(self._filename)}
