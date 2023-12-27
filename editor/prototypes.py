@@ -1,4 +1,4 @@
-#main program code prototype
+# main program code prototype
 proto_code_program = """
 # -*- coding: utf-8 -*-
 
@@ -18,7 +18,7 @@ if __name__ == "__main__":
                         start_browser=configuration['config_start_browser'])
 """
 
-#typical widget class prototype
+# typical widget class prototype
 proto_code_class = """
 class %(classname)s( %(superclassname)s ):
     def __init__(self, *args, **kwargs):
@@ -27,10 +27,10 @@ class %(classname)s( %(superclassname)s ):
         %(nested_code)s
 """
 
-#function prototype
+# function prototype
 proto_code_function = "    def %(funcname)s%(parameters)s:\n        pass\n\n"
 
-#here the prototype of the main class
+# here the prototype of the main class
 proto_code_main_class = """
 class %(classname)s(App):
     def __init__(self, *args, **kwargs):

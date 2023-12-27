@@ -17,6 +17,7 @@ from remi import start, App
 import random
 import threading
 
+
 class CookieInterface(gui.Tag, gui.EventSource):
     def __init__(self, remi_app_instance, **kwargs):
         """
@@ -43,9 +44,10 @@ class CookieInterface(gui.Tag, gui.EventSource):
         self.app_instance = remi_app_instance
         self.EVENT_ONCOOKIES = "on_cookies"
         self.cookies = {}
-        
+
     def request_cookies(self):
-        self.app_instance.execute_javascript("""
+        self.app_instance.execute_javascript(
+            """
             var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
             var result = {};
             for (var nLen = aKeys.length, nIdx = 0; nIdx < nLen; nIdx++) { 
@@ -53,30 +55,38 @@ class CookieInterface(gui.Tag, gui.EventSource):
                 result[key] = decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null; 
             }
             remi.sendCallbackParam('%s','%s', result);
-            """%(self.identifier, self.EVENT_ONCOOKIES))
+            """
+            % (self.identifier, self.EVENT_ONCOOKIES)
+        )
 
     @gui.decorate_event
     def on_cookies(self, **value):
         self.cookies = value
         return (value,)
-    
-    def remove_cookie(self, key, path='/', domain=''):
-        if not key in self.cookies.keys():
+
+    def remove_cookie(self, key, path="/", domain=""):
+        if key not in self.cookies.keys():
             return
-        self.app_instance.execute_javascript( """
+        self.app_instance.execute_javascript(
+            """
             var sKey = "%(sKey)s";
             var sPath = "%(sPath)s";
             var sDomain = "%(sDomain)s";
             document.cookie = encodeURIComponent(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "");
-            """%{'sKey': key, 'sPath': path, 'sDomain': domain} )
+            """
+            % {"sKey": key, "sPath": path, "sDomain": domain}
+        )
 
-    def set_cookie(self, key, value, expiration='Infinity', path='/', domain='', secure=False):
+    def set_cookie(
+        self, key, value, expiration="Infinity", path="/", domain="", secure=False
+    ):
         """
         expiration (int): seconds after with the cookie automatically gets deleted
         """
 
-        secure = 'true' if secure else 'false'
-        self.app_instance.execute_javascript("""
+        secure = "true" if secure else "false"
+        self.app_instance.execute_javascript(
+            """
             var sKey = "%(sKey)s";
             var sValue = "%(sValue)s";
             var vEnd = eval("%(vEnd)s");
@@ -100,7 +110,16 @@ class CookieInterface(gui.Tag, gui.EventSource):
                 }
                 document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
             }
-            """%{'sKey': key, 'sValue': value, 'vEnd': expiration, 'sPath': path, 'sDomain': domain, 'bSecure': secure})
+            """
+            % {
+                "sKey": key,
+                "sValue": value,
+                "vEnd": expiration,
+                "sPath": path,
+                "sDomain": domain,
+                "bSecure": secure,
+            }
+        )
 
 
 class LoginManager(gui.Tag, gui.EventSource):
@@ -124,19 +143,22 @@ class LoginManager(gui.Tag, gui.EventSource):
         on_session_expired.do(mylistener.on_user_logout)
     When this event happens, ask for user login
     """
-    def __init__(self, cookieInterface, session_timeout_seconds = 60, **kwargs):
+
+    def __init__(self, cookieInterface, session_timeout_seconds=60, **kwargs):
         super(LoginManager, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
         self.expired = True
-        self.session_uid = str(random.randint(1,999999999))
+        self.session_uid = str(random.randint(1, 999999999))
         self.cookieInterface = cookieInterface
         self.session_timeout_seconds = session_timeout_seconds
-        self.timer_request_cookies() #starts the cookie refresh
-        self.timeout_timer = None #checks the internal timeout
-    
+        self.timer_request_cookies()  # starts the cookie refresh
+        self.timeout_timer = None  # checks the internal timeout
+
     def timer_request_cookies(self):
         self.cookieInterface.request_cookies()
-        self.cookie_timer = threading.Timer(self.session_timeout_seconds/10.0, self.timer_request_cookies)
+        self.cookie_timer = threading.Timer(
+            self.session_timeout_seconds / 10.0, self.timer_request_cookies
+        )
         self.cookie_timer.daemon = True
         self.cookie_timer.start()
 
@@ -146,20 +168,26 @@ class LoginManager(gui.Tag, gui.EventSource):
         return ()
 
     def renew_session(self):
-        """Have to be called on user actions to check and renew session
-        """
-        if ((not 'user_uid' in self.cookieInterface.cookies) or self.cookieInterface.cookies['user_uid']!=self.session_uid) and (not self.expired):
+        """Have to be called on user actions to check and renew session"""
+        if (
+            ("user_uid" not in self.cookieInterface.cookies)
+            or self.cookieInterface.cookies["user_uid"] != self.session_uid
+        ) and (not self.expired):
             self.on_session_expired()
 
         if self.expired:
-            self.session_uid = str(random.randint(1,999999999))
-        
-        self.cookieInterface.set_cookie('user_uid', self.session_uid, str(self.session_timeout_seconds))
+            self.session_uid = str(random.randint(1, 999999999))
 
-        #here we renew the internal timeout timer
+        self.cookieInterface.set_cookie(
+            "user_uid", self.session_uid, str(self.session_timeout_seconds)
+        )
+
+        # here we renew the internal timeout timer
         if self.timeout_timer:
             self.timeout_timer.cancel()
-        self.timeout_timer = threading.Timer(self.session_timeout_seconds, self.on_session_expired)
+        self.timeout_timer = threading.Timer(
+            self.session_timeout_seconds, self.on_session_expired
+        )
         self.timeout_timer.daemon = True
         self.expired = False
         self.timeout_timer.start()
@@ -169,17 +197,17 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
-    def main(self, name='world'):
+    def main(self, name="world"):
         self.login_manager = LoginManager(CookieInterface(self), 5)
         self.login_manager.on_session_expired.do(self.on_logout)
 
-        wid = gui.VBox(width=200, height=300, margin='0px auto')
-        btlogin = gui.Button('LOGIN')
+        wid = gui.VBox(width=200, height=300, margin="0px auto")
+        btlogin = gui.Button("LOGIN")
         btlogin.onclick.do(self.on_login)
-        btrenew = gui.Button('RENEW BEFORE EXPIRATION')
+        btrenew = gui.Button("RENEW BEFORE EXPIRATION")
         btrenew.onclick.do(self.on_renew)
 
-        self.lblsession_status = gui.Label('NOT LOGGED IN')
+        self.lblsession_status = gui.Label("NOT LOGGED IN")
 
         wid.append(btlogin)
         wid.append(btrenew)
@@ -189,19 +217,19 @@ class MyApp(App):
 
     def on_login(self, emitter):
         self.login_manager.renew_session()
-        self.lblsession_status.set_text('LOGGED IN')
+        self.lblsession_status.set_text("LOGGED IN")
 
     def on_renew(self, emitter):
         if not self.login_manager.expired:
             self.login_manager.renew_session()
-            self.lblsession_status.set_text('RENEW')
+            self.lblsession_status.set_text("RENEW")
         else:
-            self.lblsession_status.set_text('UNABLE TO RENEW')
+            self.lblsession_status.set_text("UNABLE TO RENEW")
 
     def on_logout(self, emitter):
-        self.lblsession_status.set_text('LOGOUT')
+        self.lblsession_status.set_text("LOGOUT")
 
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='0.0.0.0', port=0, multiple_instance=False, debug=False)
+    start(MyApp, address="0.0.0.0", port=0, multiple_instance=False, debug=False)

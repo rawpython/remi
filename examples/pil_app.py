@@ -12,7 +12,6 @@
    limitations under the License.
 """
 
-import time
 import io
 import traceback
 import PIL.Image
@@ -34,7 +33,7 @@ class PILImageViewverWidget(gui.Image):
     def load(self, file_path_name):
         pil_image = PIL.Image.open(file_path_name)
         self._buf = io.BytesIO()
-        pil_image.save(self._buf, format='png')
+        pil_image.save(self._buf, format="png")
 
         self.refresh()
 
@@ -43,15 +42,16 @@ class PILImageViewverWidget(gui.Image):
             return node
         if not hasattr(node, "get_parent"):
             return None
-        return self.search_app_instance(node.get_parent()) 
+        return self.search_app_instance(node.get_parent())
 
     def refresh(self, *args):
-        if self.app_instance==None:
+        if self.app_instance is None:
             self.app_instance = self.search_app_instance(self)
-            if self.app_instance==None:
+            if self.app_instance is None:
                 return
         self.frame_index = self.frame_index + 1
-        self.app_instance.execute_javascript("""
+        self.app_instance.execute_javascript(
+            """
             url = '/%(id)s/get_image_data?index=%(frame_index)s';
             
             xhr = null;
@@ -65,12 +65,14 @@ class PILImageViewverWidget(gui.Image):
                 document.getElementById('%(id)s').src = imageUrl;
             }
             xhr.send();
-            """ % {'id': id(self), 'frame_index':self.frame_index})
+            """
+            % {"id": id(self), "frame_index": self.frame_index}
+        )
 
     def get_image_data(self, index=0):
         try:
             self._buf.seek(0)
-            headers = {'Content-type': 'image/png'}
+            headers = {"Content-type": "image/png"}
             return [self._buf.read(), headers]
         except:
             print(traceback.format_exc())
@@ -81,20 +83,20 @@ class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
 
-    def main(self, name='world'):
+    def main(self, name="world"):
         # the arguments are	width - height - layoutOrientationOrizontal
-        self.mainContainer = gui.Container(width=640, height=270, margin='0px auto')
-        self.mainContainer.style['text-align'] = 'center'
+        self.mainContainer = gui.Container(width=640, height=270, margin="0px auto")
+        self.mainContainer.style["text-align"] = "center"
         self.image_widget = PILImageViewverWidget(width=200, height=200)
 
         self.menu = gui.Menu(width=620, height=30)
-        m1 = gui.MenuItem('File', width=100, height=30)
-        m11 = gui.MenuItem('Save', width=100, height=30)
-        m12 = gui.MenuItem('Open', width=100, height=30)
+        m1 = gui.MenuItem("File", width=100, height=30)
+        m11 = gui.MenuItem("Save", width=100, height=30)
+        m12 = gui.MenuItem("Open", width=100, height=30)
         m12.onclick.do(self.menu_open_clicked)
-        m111 = gui.MenuItem('Save', width=100, height=30)
+        m111 = gui.MenuItem("Save", width=100, height=30)
         m111.onclick.do(self.menu_save_clicked)
-        m112 = gui.MenuItem('Save as', width=100, height=30)
+        m112 = gui.MenuItem("Save as", width=100, height=30)
         m112.onclick.do(self.menu_saveas_clicked)
 
         self.menu.append(m1)
@@ -110,29 +112,29 @@ class MyApp(App):
         return self.mainContainer
 
     def menu_open_clicked(self, widget):
-        self.fileselectionDialog = gui.FileSelectionDialog('File Selection Dialog', 'Select an image file', False, '.')
-        self.fileselectionDialog.confirm_value.do(
-            self.on_image_file_selected)
-        self.fileselectionDialog.cancel_dialog.do(
-            self.on_dialog_cancel)
+        self.fileselectionDialog = gui.FileSelectionDialog(
+            "File Selection Dialog", "Select an image file", False, "."
+        )
+        self.fileselectionDialog.confirm_value.do(self.on_image_file_selected)
+        self.fileselectionDialog.cancel_dialog.do(self.on_dialog_cancel)
         # here is shown the dialog as root widget
         self.fileselectionDialog.show(self)
 
     def menu_save_clicked(self, widget):
         pass
-        
+
     def menu_saveas_clicked(self, widget):
         pass
-        
+
     def on_image_file_selected(self, widget, file_list):
         if len(file_list) < 1:
             return
         self.image_widget.load(file_list[0])
         self.set_root_widget(self.mainContainer)
-    
+
     def on_dialog_cancel(self, widget):
         self.set_root_widget(self.mainContainer)
 
 
 if __name__ == "__main__":
-    start(MyApp, address='0.0.0.0', port=0, start_browser=True)
+    start(MyApp, address="0.0.0.0", port=0, start_browser=True)

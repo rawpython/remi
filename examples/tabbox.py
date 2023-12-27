@@ -21,20 +21,19 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
+        b1 = gui.Button("Show second tab", width=200, height=30)
 
-        b1 = gui.Button('Show second tab', width=200, height=30)
-        
-        tb = gui.TabBox(width='80%')
-        tb.append(b1, 'First')
+        tb = gui.TabBox(width="80%")
+        tb.append(b1, "First")
 
-        b2 = gui.Button('Show third tab', width=200, height=30)
-        tb.add_tab(b2, 'Second', None)
+        b2 = gui.Button("Show third tab", width=200, height=30)
+        tb.add_tab(b2, "Second", None)
 
-        b3 = gui.Button('Show first tab', width=200, height=30)
-        tb.add_tab(b3, 'Third', None)
-        
+        b3 = gui.Button("Show first tab", width=200, height=30)
+        tb.add_tab(b3, "Third", None)
+
         b1.onclick.do(self.on_bt1_pressed, tb, b2)
-        b2.onclick.do(self.on_bt2_pressed, tb, 'Third')
+        b2.onclick.do(self.on_bt2_pressed, tb, "Third")
         b3.onclick.do(self.on_bt3_pressed, tb, 0)
 
         return tb
@@ -44,10 +43,10 @@ class MyApp(App):
 
     def on_bt2_pressed(self, widget, tabbox, refWidgetTabName):
         tabbox.select_by_name(refWidgetTabName)
-    
+
     def on_bt3_pressed(self, widget, tabbox, tabIndex):
         tabbox.select_by_index(tabIndex)
 
+
 if __name__ == "__main__":
     start(MyApp, title="Tab Demo", standalone=False)
-

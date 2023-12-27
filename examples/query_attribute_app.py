@@ -14,34 +14,45 @@
 
 import remi.gui as gui
 from remi import start, App
-import os
 
 
 class MyApp(App):
     def main(self):
         # creating a container VBox type, vertical (you can use also HBox or Widget)
         self.main_container = gui.Widget(
-            width="50%", height=200, style={'margin': '0px auto'})
+            width="50%", height=200, style={"margin": "0px auto"}
+        )
 
         # returning the root widget
         return self.main_container
 
     def onpageshow(self, emitter, width, height):
-        """ WebPage Event that occurs on webpage gets shown """
+        """WebPage Event that occurs on webpage gets shown"""
         super(MyApp, self).onpageshow(emitter, width, height)
 
         attribute_list = [
-            'id', 'title', 'getBoundingClientRect().width', 'getBoundingClientRect().top']
-        style_property_list = ['width', 'height']
+            "id",
+            "title",
+            "getBoundingClientRect().width",
+            "getBoundingClientRect().top",
+        ]
+        style_property_list = ["width", "height"]
 
         # If a style property name is identical to an attribute name, call the query function twice
         # properly specifing the result listener.
         self.main_container.onquery_client_result.do(
-            lambda emitter, kwargs: print(str(kwargs)))
+            lambda emitter, kwargs: print(str(kwargs))
+        )
         self.main_container.query_client(self, attribute_list, style_property_list)
 
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='0.0.0.0', port=0,
-          start_browser=True, username=None, password=None)
+    start(
+        MyApp,
+        address="0.0.0.0",
+        port=0,
+        start_browser=True,
+        username=None,
+        password=None,
+    )

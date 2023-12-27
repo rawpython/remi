@@ -17,17 +17,22 @@ from remi import start, App
 
 
 class MyApp(App):
-    def main(self, name='world'):
+    def main(self, name="world"):
         # margin 0px auto allows to center the app to the screen
-        wid = gui.VBox(width=300, height=200, margin='0px auto')
+        wid = gui.VBox(width=300, height=200, margin="0px auto")
 
-        lbl = gui.Label("Close or reload the page, the console thread will stop automatically.")
+        lbl = gui.Label(
+            "Close or reload the page, the console thread will stop automatically."
+        )
         wid.append(lbl)
 
         # add the following 3 lines to your app and the on_window_close method to make the console close automatically
-        tag = gui.Tag(_type='script')
-        tag.add_child("javascript", """window.onunload=function(e){remi.sendCallback('%s','%s');return "close?";};""" % (
-            str(id(self)), "on_window_close"))
+        tag = gui.Tag(_type="script")
+        tag.add_child(
+            "javascript",
+            """window.onunload=function(e){remi.sendCallback('%s','%s');return "close?";};"""
+            % (str(id(self)), "on_window_close"),
+        )
         wid.add_child("onunloadevent", tag)
 
         # returning the root widget

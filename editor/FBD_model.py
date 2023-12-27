@@ -1,12 +1,13 @@
 import inspect
 
-class Input():
+
+class Input:
     name = None
     default = None
     typ = None
-    source = None #has to be an Output
+    source = None  # has to be an Output
 
-    def __init__(self, name, default = inspect.Parameter.empty, typ = None):
+    def __init__(self, name, default=inspect.Parameter.empty, typ=None):
         self.name = name
         self.default = default
         self.typ = typ
@@ -15,7 +16,7 @@ class Input():
         if not self.is_linked():
             return self.default
         return self.source.get_value()
-    
+
     def has_default(self):
         return not (self.default == inspect.Parameter.empty)
 
@@ -25,19 +26,19 @@ class Input():
         self.source = output
 
     def is_linked(self):
-        return self.source != None
+        return self.source is not None
 
     def unlink(self):
         Input.link(self, None)
 
 
-class Output():
+class Output:
     name = None
     typ = None
-    destinations = None #has to be an Input
+    destinations = None  # has to be an Input
     value = None
 
-    def __init__(self, name, typ = None):
+    def __init__(self, name, typ=None):
         self.name = name
         self.typ = typ
         self.destinations = []
@@ -56,16 +57,16 @@ class Output():
     def is_linked(self):
         return len(self.destinations) > 0
 
-    def unlink(self, destination = None):
-        if not destination is None:
+    def unlink(self, destination=None):
+        if destination is not None:
             self.destinations.remove(destination)
             return
         self.destinations = []
 
 
-class ObjectBlock():
+class ObjectBlock:
     name = None
-    FBs = None #this is the list of member functions
+    FBs = None  # this is the list of member functions
 
     inputs = None
     outputs = None
@@ -83,20 +84,22 @@ class ObjectBlock():
             self.outputs[io.name] = io
 
 
-class FunctionBlock():
+class FunctionBlock:
     name = None
     inputs = None
     outputs = None
 
     def decorate_process(output_list):
-        """ setup a method as a process FunctionBlock """
+        """setup a method as a process FunctionBlock"""
         """
             input parameters can be obtained by introspection
             outputs values (return values) are to be described with decorator
         """
+
         def add_annotation(method):
             setattr(method, "_outputs", output_list)
             return method
+
         return add_annotation
 
     def __init__(self, name):
@@ -109,15 +112,16 @@ class FunctionBlock():
             self.inputs[io.name] = io
         else:
             self.outputs[io.name] = io
-    
+
     @decorate_process([])
     def do(self):
         return None
 
 
-class Link():
+class Link:
     source = None
     destination = None
+
     def __init__(self, source_widget, destination_widget):
         self.source = source_widget
         self.destination = destination_widget
@@ -127,7 +131,7 @@ class Link():
         self.destination.unlink()
 
 
-class Process():
+class Process:
     function_blocks = None
     object_blocks = None
 
@@ -156,7 +160,7 @@ class Process():
                     all_inputs_connected = False
                     continue
                 parameters[IN.name] = IN.get_value()
-            
+
             if not all_inputs_connected:
                 continue
             output_results = function_block.do(**parameters)
@@ -169,4 +173,3 @@ class Process():
                 else:
                     OUT.set_value(output_results)
                 i += 1
-

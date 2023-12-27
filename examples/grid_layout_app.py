@@ -27,39 +27,46 @@
 
 import remi.gui as gui
 from remi import start, App
-import os
 
 
 class MyApp(App):
     def main(self):
-        #creating a container GridBox type
-        main_container = gui.GridBox(width='100%', height='100%', style={'margin':'0px auto'})
-        
-        label = gui.Label('This is a label')
-        label.style['background-color'] = 'lightgreen'
-        
-        button = gui.Button('Change layout', height='100%')
+        # creating a container GridBox type
+        main_container = gui.GridBox(
+            width="100%", height="100%", style={"margin": "0px auto"}
+        )
+
+        label = gui.Label("This is a label")
+        label.style["background-color"] = "lightgreen"
+
+        button = gui.Button("Change layout", height="100%")
         button.onclick.do(self.redefine_grid, main_container)
-        
+
         text = gui.TextInput()
 
-        main_container.set_from_asciiart("""
+        main_container.set_from_asciiart(
+            """
             |label |button                      |
             |label |text                        |
             |label |text                        |
             |label |text                        |
             |label |text                        |
-            """, 10, 10)
+            """,
+            10,
+            10,
+        )
 
-        main_container.append({'label':label, 'button':button, 'text':text})
+        main_container.append({"label": label, "button": button, "text": text})
 
         # returning the root widget
         return main_container
-    
+
     def redefine_grid(self, emitter, container):
-        #redefining grid layout
-        container.define_grid([ ['text','label','button'],['text','.','.']])
-        container.style.update({'grid-template-columns':'33% 33% 33%', 'grid-template-rows':'50% 50%'})
+        # redefining grid layout
+        container.define_grid([["text", "label", "button"], ["text", ".", "."]])
+        container.style.update(
+            {"grid-template-columns": "33% 33% 33%", "grid-template-rows": "50% 50%"}
+        )
         container.set_column_gap("0%")
         container.set_row_gap("0%")
         emitter.set_text("Done")

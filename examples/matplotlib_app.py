@@ -35,7 +35,9 @@ class MatplotImage(gui.Image):
     ax = None
 
     def __init__(self, **kwargs):
-        super(MatplotImage, self).__init__("/%s/get_image_data?update_index=0" % id(self), **kwargs)
+        super(MatplotImage, self).__init__(
+            "/%s/get_image_data?update_index=0" % id(self), **kwargs
+        )
         self._buf = None
         self._buflock = threading.Lock()
 
@@ -47,14 +49,14 @@ class MatplotImage(gui.Image):
     def redraw(self):
         canv = FigureCanvasAgg(self._fig)
         buf = io.BytesIO()
-        canv.print_figure(buf, format='png')
+        canv.print_figure(buf, format="png")
         with self._buflock:
             if self._buf is not None:
                 self._buf.close()
             self._buf = buf
 
         i = int(time.time() * 1e6)
-        self.attributes['src'] = "/%s/get_image_data?update_index=%d" % (id(self), i)
+        self.attributes["src"] = "/%s/get_image_data?update_index=%d" % (id(self), i)
 
         super(MatplotImage, self).redraw()
 
@@ -65,7 +67,7 @@ class MatplotImage(gui.Image):
             self._buf.seek(0)
             data = self._buf.read()
 
-        return [data, {'Content-type': 'image/png'}]
+        return [data, {"Content-type": "image/png"}]
 
 
 class MyApp(App):
@@ -73,16 +75,16 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        wid = gui.VBox(width=320, height=320, margin='0px auto')
-        wid.style['text-align'] = 'center'
-        
-        bt = gui.Button('Data', width=100, height=30)
-        bt.style['margin'] = '10px'
+        wid = gui.VBox(width=320, height=320, margin="0px auto")
+        wid.style["text-align"] = "center"
+
+        bt = gui.Button("Data", width=100, height=30)
+        bt.style["margin"] = "10px"
         bt.onclick.do(self.on_button_pressed)
 
         self.plot_data = [0, 1]
         self.mpl = MatplotImage(width=250, height=250)
-        self.mpl.style['margin'] = '10px'
+        self.mpl.style["margin"] = "10px"
         self.mpl.ax.set_title("test")
         self.mpl.ax.plot(self.plot_data)
         self.mpl.redraw()
@@ -99,4 +101,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, debug=True, address='0.0.0.0', port=0)
+    start(MyApp, debug=True, address="0.0.0.0", port=0)

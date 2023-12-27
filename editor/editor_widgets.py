@@ -11,10 +11,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import remi
 import remi.gui as gui
 import inspect
-import re
 import logging
 import types
 import traceback
@@ -27,7 +25,7 @@ class InstancesTree(gui.TreeView):
 
     def append_instance(self, instance, parent):
         item = gui.TreeItem(instance.variable_name)
-        if parent == None:
+        if parent is None:
             parent = self
         item.instance = instance
         item.onclick.do(self.on_tree_item_selected, js_stop_propagation=True)
@@ -35,15 +33,15 @@ class InstancesTree(gui.TreeView):
         return item
 
     def select_instance(self, node, instance):
-        if not hasattr(node, 'attributes'):
+        if not hasattr(node, "attributes"):
             return
         if node.identifier != self.identifier:
-            if hasattr(node, 'instance'):
+            if hasattr(node, "instance"):
                 if node.instance.identifier == instance.identifier:
-                    node.style['background-color'] = 'lightblue'
+                    node.style["background-color"] = "lightblue"
                 else:
-                    node.style['background-color'] = 'white'
-                node.attributes['treeopen'] = 'true'
+                    node.style["background-color"] = "white"
+                node.attributes["treeopen"] = "true"
         for item in node.children.values():
             self.select_instance(item, instance)
 
@@ -53,9 +51,9 @@ class InstancesTree(gui.TreeView):
         return (emitter.instance,)
 
     def append_instances_from_tree(self, node, parent=None):
-        if not hasattr(node, 'attributes'):
+        if not hasattr(node, "attributes"):
             return
-        if not (hasattr(node, 'variable_name') and not node.variable_name is None):
+        if not (hasattr(node, "variable_name") and node.variable_name is not None):
             return
         nodeTreeItem = self.append_instance(node, parent)
         for child in node.children.values():
@@ -65,30 +63,29 @@ class InstancesTree(gui.TreeView):
 class InstancesWidget(gui.VBox):
     def __init__(self, **kwargs):
         super(InstancesWidget, self).__init__(**kwargs)
-        self.titleLabel = gui.Label('Instances list', width='100%', height=20)
+        self.titleLabel = gui.Label("Instances list", width="100%", height=20)
         self.titleLabel.add_class("DialogTitle")
-        self.style['align-items'] = 'flex-start'
-        
+        self.style["align-items"] = "flex-start"
+
         self.container = gui.VBox(width="100%", height="calc(100% - 20px)")
-        self.container.css_align_items = 'flex-start'
-        self.container.css_justify_content = 'flex-start'
-        self.container.css_overflow = 'auto'
+        self.container.css_align_items = "flex-start"
+        self.container.css_justify_content = "flex-start"
+        self.container.css_overflow = "auto"
 
         self.treeView = InstancesTree()
         self.container.append(self.treeView)
 
         self.append([self.titleLabel, self.container])
 
-        self.titleLabel.style['order'] = '-1'
-        self.titleLabel.style['-webkit-order'] = '-1'
-        self.container.style['order'] = '0'
-        self.container.style['-webkit-order'] = '0'
+        self.titleLabel.style["order"] = "-1"
+        self.titleLabel.style["-webkit-order"] = "-1"
+        self.container.style["order"] = "0"
+        self.container.style["-webkit-order"] = "0"
 
     def update(self, editorProject, selectedNode):
         self.treeView.empty()
-        if 'root' in editorProject.children.keys():
-            self.treeView.append_instances_from_tree(
-                editorProject.children['root'])
+        if "root" in editorProject.children.keys():
+            self.treeView.append_instances_from_tree(editorProject.children["root"])
             self.treeView.select_instance(self.treeView, selectedNode)
 
     def select(self, selectedNode):
@@ -98,33 +95,35 @@ class InstancesWidget(gui.VBox):
 class ToolBar(gui.HBox):
     def __init__(self, **kwargs):
         super(ToolBar, self).__init__(**kwargs)
-        self.css_align_items = 'center'
-        self.css_justify_content = 'flex-start'
-        self.style['background-color'] = 'white'
+        self.css_align_items = "center"
+        self.css_justify_content = "flex-start"
+        self.style["background-color"] = "white"
 
     def add_command(self, imagePath, callback, title):
-        icon = gui.Image(imagePath, height='90%', margin='0px 1px')
-        icon.style['outline'] = '1px solid lightgray'
+        icon = gui.Image(imagePath, height="90%", margin="0px 1px")
+        icon.style["outline"] = "1px solid lightgray"
         icon.onclick.do(callback)
-        icon.attributes['title'] = title
+        icon.attributes["title"] = title
         self.append(icon)
 
 
 class ClassEventConnectorEditor(gui.ClassEventConnector):
-    """ This class allows to manage the events. Decorating a method with *decorate_event* decorator
-        The method gets the __is_event flag. At runtime, the methods that has this flag gets replaced
-        by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
-        and after that the listener method is called too.
+    """This class allows to manage the events. Decorating a method with *decorate_event* decorator
+    The method gets the __is_event flag. At runtime, the methods that has this flag gets replaced
+    by a ClassEventConnector. This class overloads the __call__ method, where the event method is called,
+    and after that the listener method is called too.
     """
+
     editor_listener_callback = None  # this is the event listener setup by the editor that will receive the events first
 
     def __call__(self, *args, **kwargs):
         # here the event method gets called
         callback_params = self.event_method_bound(*args, **kwargs)
 
-        if not self.editor_listener_callback is None:
+        if self.editor_listener_callback is not None:
             self.editor_listener_callback(
-                self.event_source_instance, *callback_params, **self.kwuserdata)
+                self.event_source_instance, *callback_params, **self.kwuserdata
+            )
 
         if not self.callback:
             return callback_params
@@ -135,28 +134,46 @@ class ClassEventConnectorEditor(gui.ClassEventConnector):
 
         # here the listener gets called, passing as parameters the return values of the event method
         # plus the userdata parameters
-        return self.callback(self.event_source_instance, *callback_params, **self.kwuserdata)
+        return self.callback(
+            self.event_source_instance, *callback_params, **self.kwuserdata
+        )
 
 
 class SignalConnection(gui.HBox):
-    def __init__(self, widget, listenersList, eventConnectionFuncName, eventConnectionFunc, **kwargs):
+    def __init__(
+        self,
+        widget,
+        listenersList,
+        eventConnectionFuncName,
+        eventConnectionFunc,
+        **kwargs,
+    ):
         super(SignalConnection, self).__init__(**kwargs)
 
         self.style.update(
-            {'overflow': 'visible', 'height': '24px', 'outline': '1px solid lightgray'})
-        self.label = gui.Label(eventConnectionFuncName, width='32%')
-        self.label.style.update({'float': 'left', 'font-size': '10px',
-                                 'overflow': 'hidden', 'outline': '1px solid lightgray'})
+            {"overflow": "visible", "height": "24px", "outline": "1px solid lightgray"}
+        )
+        self.label = gui.Label(eventConnectionFuncName, width="32%")
+        self.label.style.update(
+            {
+                "float": "left",
+                "font-size": "10px",
+                "overflow": "hidden",
+                "outline": "1px solid lightgray",
+            }
+        )
 
-        self.label_do = gui.Label(".do ->", style={'white-space':'nowrap'})
+        self.label_do = gui.Label(".do ->", style={"white-space": "nowrap"})
 
-        self.dropdownListeners = gui.DropDown(width='32%', height='100%')
+        self.dropdownListeners = gui.DropDown(width="32%", height="100%")
         self.dropdownListeners.onchange.do(self.on_listener_selection)
-        self.dropdownListeners.attributes['title'] = "The listener who will receive the event"
+        self.dropdownListeners.attributes[
+            "title"
+        ] = "The listener who will receive the event"
 
-        self.dropdownMethods = gui.DropDown(width='32%', height='100%')
+        self.dropdownMethods = gui.DropDown(width="32%", height="100%")
         self.dropdownMethods.onchange.do(self.on_connection)
-        self.dropdownMethods.attributes['title'] = """The listener's method who will receive the event. \
+        self.dropdownMethods.attributes["title"] = """The listener's method who will receive the event. \
         A custom method is selected by default. You can select another method, but you should check the method parameters."""
 
         self.eventConnectionFunc = eventConnectionFunc
@@ -169,73 +186,89 @@ class SignalConnection(gui.HBox):
             ddi.listenerInstance = w
             self.dropdownListeners.append(ddi)
 
-        if not self.eventConnectionFunc.callback is None:
+        if self.eventConnectionFunc.callback is not None:
             try:
-                connectedListenerName = ''
+                connectedListenerName = ""
                 connectedListenerFunction = None
                 print(str(type(eventConnectionFunc.callback)))
 
-                if issubclass(type(eventConnectionFunc.callback), gui.ClassEventConnector):
+                if issubclass(
+                    type(eventConnectionFunc.callback), gui.ClassEventConnector
+                ):
                     connectedListenerName = eventConnectionFunc.callback.event_method_bound.__self__.variable_name
-                    connectedListenerFunction = eventConnectionFunc.callback.event_method_bound
+                    connectedListenerFunction = (
+                        eventConnectionFunc.callback.event_method_bound
+                    )
                 else:
-                    connectedListenerName = eventConnectionFunc.callback.__self__.variable_name
+                    connectedListenerName = (
+                        eventConnectionFunc.callback.__self__.variable_name
+                    )
                     connectedListenerFunction = eventConnectionFunc.callback
 
                 self.dropdownListeners.select_by_value(connectedListenerName)
                 # this to automatically populate the listener methods dropdown
 
                 self.on_listener_selection(
-                    self.dropdownListeners, connectedListenerName)
-                print("connected function name:" +
-                      connectedListenerFunction.__name__)
-                self.dropdownMethods.select_by_value(
-                    connectedListenerFunction.__name__)
+                    self.dropdownListeners, connectedListenerName
+                )
+                print("connected function name:" + connectedListenerFunction.__name__)
+                self.dropdownMethods.select_by_value(connectedListenerFunction.__name__)
                 # force the connection
-                #self.on_connection(None, None)
+                # self.on_connection(None, None)
             except Exception:
                 print(traceback.format_exc())
                 print(dir(eventConnectionFunc.callback))
                 self.disconnect()
 
-        self.append([self.label, self.label_do, self.dropdownListeners, self.dropdownMethods])
+        self.append(
+            [self.label, self.label_do, self.dropdownListeners, self.dropdownMethods]
+        )
 
     def on_listener_selection(self, widget, dropDownValue):
         self.dropdownMethods.empty()
-        if self.dropdownListeners.get_value() == 'None':
+        if self.dropdownListeners.get_value() == "None":
             self.disconnect()
         else:
             listener = self.dropdownListeners._selected_item.listenerInstance
 
             l = []
             func_members = inspect.getmembers(listener)  # , inspect.ismethod)
-            for (name, value) in func_members:
+            for name, value in func_members:
                 # if issubclass(type(value), gui.ClassEventConnector):
                 #    value = value.event_method_bound
-                if name not in ['__init__', 'main', 'idle', 'construct_ui'] and type(value) == types.MethodType or issubclass(type(value), gui.ClassEventConnector):
+                if (
+                    name not in ["__init__", "main", "idle", "construct_ui"]
+                    and type(value) == types.MethodType
+                    or issubclass(type(value), gui.ClassEventConnector)
+                ):
                     ddi = gui.DropDownItem(name)
                     ddi.listenerInstance = listener
                     ddi.listenerFunction = value
                     l.append(ddi)
 
             # creating a none element
-            ddi = gui.DropDownItem('None')
+            ddi = gui.DropDownItem("None")
             self.dropdownMethods.append(ddi)
 
             # here I create a custom listener for the specific event and widgets, the user can select this or an existing method
             if listener.attr_editor_newclass:
-                custom_listener_name = self.eventConnectionFuncName + \
-                    "_" + self.refWidget.variable_name
-                setattr(listener, custom_listener_name, types.MethodType(
-                    copy_func(fakeListenerFunc), listener))
+                custom_listener_name = (
+                    self.eventConnectionFuncName + "_" + self.refWidget.variable_name
+                )
+                setattr(
+                    listener,
+                    custom_listener_name,
+                    types.MethodType(copy_func(fakeListenerFunc), listener),
+                )
                 getattr(
-                    listener, custom_listener_name).__func__.__name__ = custom_listener_name
+                    listener, custom_listener_name
+                ).__func__.__name__ = custom_listener_name
                 ddi = gui.DropDownItem(custom_listener_name)
                 ddi.listenerInstance = listener
                 ddi.listenerFunction = getattr(listener, custom_listener_name)
-                ddi.style['color'] = "green"
-                ddi.style['font-weight'] = "bolder"
-                ddi.attributes['title'] = "automatically generated method"
+                ddi.style["color"] = "green"
+                ddi.style["font-weight"] = "bolder"
+                ddi.attributes["title"] = "automatically generated method"
                 self.dropdownMethods.append(ddi)
 
             self.dropdownMethods.append(l)
@@ -243,42 +276,54 @@ class SignalConnection(gui.HBox):
     def disconnect(self):
         # the listener is canceled when the user selects None
         getattr(self.refWidget, self.eventConnectionFuncName).do(None)
-        #getattr(self.refWidget, self.eventConnectionFuncName).editor_listener_callback = None
+        # getattr(self.refWidget, self.eventConnectionFuncName).editor_listener_callback = None
 
     def on_connection(self, widget, dropDownValue):
-        if self.dropdownMethods.get_value() == 'None':
+        if self.dropdownMethods.get_value() == "None":
             self.disconnect()
             return
 
-        listener = self.dropdownMethods._selected_item.listenerInstance
         kwargs = {}
-        if hasattr(getattr(self.refWidget, self.eventConnectionFuncName).event_method_bound, "_js_code"):
-            kwargs["js_stop_propagation"] = (self.eventConnectionFuncName not in ("onmousedown", "onmousemove", "onmouseleave", "onkeydown"))
+        if hasattr(
+            getattr(self.refWidget, self.eventConnectionFuncName).event_method_bound,
+            "_js_code",
+        ):
+            kwargs["js_stop_propagation"] = self.eventConnectionFuncName not in (
+                "onmousedown",
+                "onmousemove",
+                "onmouseleave",
+                "onkeydown",
+            )
         getattr(self.refWidget, self.eventConnectionFuncName).do(
-            self.dropdownMethods._selected_item.listenerFunction, **kwargs)
+            self.dropdownMethods._selected_item.listenerFunction, **kwargs
+        )
 
 
 def copy_func(f):
     """Based on https://stackoverflow.com/questions/13503079/how-to-create-a-copy-of-a-python-function"""
-    g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__,
-                           argdefs=f.__defaults__,
-                           closure=f.__closure__)
-    #g = functools.update_wrapper(g, f)
+    g = types.FunctionType(
+        f.__code__,
+        f.__globals__,
+        name=f.__name__,
+        argdefs=f.__defaults__,
+        closure=f.__closure__,
+    )
+    # g = functools.update_wrapper(g, f)
     if hasattr(f, "__kwdefaults__"):
         g.__kwdefaults__ = f.__kwdefaults__
     return g
 
 
 def fakeListenerFunc(self, *args):
-    print('event trap')
+    print("event trap")
 
 
 class SignalConnectionManager(gui.Container):
-    """ This class allows to interconnect event signals """
+    """This class allows to interconnect event signals"""
 
     def __init__(self, *args, **kwargs):
         super(SignalConnectionManager, self).__init__(*args, **kwargs)
-        self.label = gui.Label('Signal connections', width='100%')
+        self.label = gui.Label("Signal connections", width="100%")
         self.label.add_class("DialogTitle")
         self.append(self.label)
         self.listeners_list = []
@@ -286,74 +331,90 @@ class SignalConnectionManager(gui.Container):
     def build_widget_list_from_tree(self, node):
         self.listeners_list.append(node)
         for child in node.children.values():
-            if hasattr(child, 'attributes') and (hasattr(child, 'variable_name') and not child.variable_name is None):
+            if hasattr(child, "attributes") and (
+                hasattr(child, "variable_name") and child.variable_name is not None
+            ):
                 self.build_widget_list_from_tree(child)
 
     def update(self, widget, widget_tree):
-        """ for the selected widget are listed the relative signals
-            for each signal there is a dropdown containing all the widgets
-            the user will select the widget that have to listen a specific event
+        """for the selected widget are listed the relative signals
+        for each signal there is a dropdown containing all the widgets
+        the user will select the widget that have to listen a specific event
         """
         self.listeners_list = []
         self.build_widget_list_from_tree(widget_tree)
 
-        self.label.set_text('Signal connections: ' + widget.variable_name)
-        #del self.container
-        self.container = gui.VBox(width='100%', height='90%')
-        self.container.style['justify-content'] = 'flex-start'
-        self.container.style['overflow-y'] = 'scroll'
+        self.label.set_text("Signal connections: " + widget.variable_name)
+        # del self.container
+        self.container = gui.VBox(width="100%", height="90%")
+        self.container.style["justify-content"] = "flex-start"
+        self.container.style["overflow-y"] = "scroll"
 
         # for all the events of this widget
         # isclass instead of ismethod because event methods are replaced with ClassEventConnector
-        for (setOnEventListenerFuncname, setOnEventListenerFunc) in inspect.getmembers(widget):
+        for setOnEventListenerFuncname, setOnEventListenerFunc in inspect.getmembers(
+            widget
+        ):
             # if the member is decorated by decorate_set_on_listener and the function is referred to this event
             if issubclass(type(setOnEventListenerFunc), gui.ClassEventConnector):
-                self.container.append(SignalConnection(widget,
-                                                       self.listeners_list,
-                                                       setOnEventListenerFuncname,
-                                                       setOnEventListenerFunc,
-                                                       width='100%'))
+                self.container.append(
+                    SignalConnection(
+                        widget,
+                        self.listeners_list,
+                        setOnEventListenerFuncname,
+                        setOnEventListenerFunc,
+                        width="100%",
+                    )
+                )
 
-        self.append(self.container, 'container')
+        self.append(self.container, "container")
 
 
 class ProjectConfigurationDialog(gui.GenericDialog):
-    KEY_PRJ_NAME = 'config_project_name'
-    KEY_ADDRESS = 'config_address'
-    KEY_PORT = 'config_port'
-    KEY_MULTIPLE_INSTANCE = 'config_multiple_instance'
-    KEY_ENABLE_CACHE = 'config_enable_file_cache'
-    KEY_START_BROWSER = 'config_start_browser'
-    KEY_RESOURCEPATH = 'config_resourcepath'
+    KEY_PRJ_NAME = "config_project_name"
+    KEY_ADDRESS = "config_address"
+    KEY_PORT = "config_port"
+    KEY_MULTIPLE_INSTANCE = "config_multiple_instance"
+    KEY_ENABLE_CACHE = "config_enable_file_cache"
+    KEY_START_BROWSER = "config_start_browser"
+    KEY_RESOURCEPATH = "config_resourcepath"
 
-    def __init__(self, title='', message=''):
-        super(ProjectConfigurationDialog, self).__init__('Project Configuration',
-                                                         'Here are the configuration options of the project.', width=500)
+    def __init__(self, title="", message=""):
+        super(ProjectConfigurationDialog, self).__init__(
+            "Project Configuration",
+            "Here are the configuration options of the project.",
+            width=500,
+        )
         # standard configuration
         self.configDict = {}
 
-        self.configDict[self.KEY_PRJ_NAME] = 'untitled'
-        self.configDict[self.KEY_ADDRESS] = '0.0.0.0'
+        self.configDict[self.KEY_PRJ_NAME] = "untitled"
+        self.configDict[self.KEY_ADDRESS] = "0.0.0.0"
         self.configDict[self.KEY_PORT] = 8081
         self.configDict[self.KEY_MULTIPLE_INSTANCE] = True
         self.configDict[self.KEY_ENABLE_CACHE] = True
         self.configDict[self.KEY_START_BROWSER] = True
         self.configDict[self.KEY_RESOURCEPATH] = "./res/"
 
+        self.add_field_with_label(self.KEY_PRJ_NAME, "Project Name", gui.TextInput())
+        self.add_field_with_label(self.KEY_ADDRESS, "IP address", gui.TextInput())
         self.add_field_with_label(
-            self.KEY_PRJ_NAME, 'Project Name', gui.TextInput())
+            self.KEY_PORT, "Listen port", gui.SpinBox(8082, 1025, 65535)
+        )
         self.add_field_with_label(
-            self.KEY_ADDRESS, 'IP address', gui.TextInput())
+            self.KEY_MULTIPLE_INSTANCE,
+            "Use single App instance for multiple users",
+            gui.CheckBox(True),
+        )
         self.add_field_with_label(
-            self.KEY_PORT, 'Listen port', gui.SpinBox(8082, 1025, 65535))
+            self.KEY_ENABLE_CACHE, "Enable file caching", gui.CheckBox(True)
+        )
         self.add_field_with_label(
-            self.KEY_MULTIPLE_INSTANCE, 'Use single App instance for multiple users', gui.CheckBox(True))
+            self.KEY_START_BROWSER, "Start browser automatically", gui.CheckBox(True)
+        )
         self.add_field_with_label(
-            self.KEY_ENABLE_CACHE, 'Enable file caching', gui.CheckBox(True))
-        self.add_field_with_label(
-            self.KEY_START_BROWSER, 'Start browser automatically', gui.CheckBox(True))
-        self.add_field_with_label(
-            self.KEY_RESOURCEPATH, 'Additional resource path', gui.TextInput())
+            self.KEY_RESOURCEPATH, "Additional resource path", gui.TextInput()
+        )
         self.from_dict_to_fields(self.configDict)
 
     def from_dict_to_fields(self, dictionary):
@@ -363,24 +424,26 @@ class ProjectConfigurationDialog(gui.GenericDialog):
 
     def from_fields_to_dict(self):
         self.configDict[self.KEY_PRJ_NAME] = self.get_field(
-            self.KEY_PRJ_NAME).get_value()
-        self.configDict[self.KEY_ADDRESS] = self.get_field(
-            self.KEY_ADDRESS).get_value()
-        self.configDict[self.KEY_PORT] = int(
-            self.get_field(self.KEY_PORT).get_value())
+            self.KEY_PRJ_NAME
+        ).get_value()
+        self.configDict[self.KEY_ADDRESS] = self.get_field(self.KEY_ADDRESS).get_value()
+        self.configDict[self.KEY_PORT] = int(self.get_field(self.KEY_PORT).get_value())
         self.configDict[self.KEY_MULTIPLE_INSTANCE] = self.get_field(
-            self.KEY_MULTIPLE_INSTANCE).get_value()
+            self.KEY_MULTIPLE_INSTANCE
+        ).get_value()
         self.configDict[self.KEY_ENABLE_CACHE] = self.get_field(
-            self.KEY_ENABLE_CACHE).get_value()
+            self.KEY_ENABLE_CACHE
+        ).get_value()
         self.configDict[self.KEY_START_BROWSER] = self.get_field(
-            self.KEY_START_BROWSER).get_value()
+            self.KEY_START_BROWSER
+        ).get_value()
         self.configDict[self.KEY_RESOURCEPATH] = self.get_field(
-            self.KEY_RESOURCEPATH).get_value()
+            self.KEY_RESOURCEPATH
+        ).get_value()
 
     @gui.decorate_event
     def confirm_dialog(self, emitter):
-        """event called pressing on OK button.
-        """
+        """event called pressing on OK button."""
         # here the user input is transferred to the dict, ready to use
         self.from_fields_to_dict()
         return super(ProjectConfigurationDialog, self).confirm_dialog(self)
@@ -392,12 +455,24 @@ class ProjectConfigurationDialog(gui.GenericDialog):
 
 
 class EditorFileSelectionDialog(gui.FileSelectionDialog):
-    def __init__(self, title='File dialog', message='Select files and folders',
-                 multiple_selection=True, selection_folder='.', allow_file_selection=True,
-                 allow_folder_selection=True, baseAppInstance=None):
-        super(EditorFileSelectionDialog, self).__init__(title,
-                                                        message, multiple_selection, selection_folder,
-                                                        allow_file_selection, allow_folder_selection)
+    def __init__(
+        self,
+        title="File dialog",
+        message="Select files and folders",
+        multiple_selection=True,
+        selection_folder=".",
+        allow_file_selection=True,
+        allow_folder_selection=True,
+        baseAppInstance=None,
+    ):
+        super(EditorFileSelectionDialog, self).__init__(
+            title,
+            message,
+            multiple_selection,
+            selection_folder,
+            allow_file_selection,
+            allow_folder_selection,
+        )
 
         self.baseAppInstance = baseAppInstance
 
@@ -406,18 +481,31 @@ class EditorFileSelectionDialog(gui.FileSelectionDialog):
 
 
 class EditorFileSaveDialog(gui.FileSelectionDialog):
-    def __init__(self, title='File dialog', message='Select files and folders',
-                 multiple_selection=True, selection_folder='.',
-                 allow_file_selection=True, allow_folder_selection=True, baseAppInstance=None):
-        super(EditorFileSaveDialog, self).__init__(title, message, multiple_selection, selection_folder,
-                                                   allow_file_selection, allow_folder_selection)
+    def __init__(
+        self,
+        title="File dialog",
+        message="Select files and folders",
+        multiple_selection=True,
+        selection_folder=".",
+        allow_file_selection=True,
+        allow_folder_selection=True,
+        baseAppInstance=None,
+    ):
+        super(EditorFileSaveDialog, self).__init__(
+            title,
+            message,
+            multiple_selection,
+            selection_folder,
+            allow_file_selection,
+            allow_folder_selection,
+        )
 
         self.baseAppInstance = baseAppInstance
 
     def show(self, *args):
         super(EditorFileSaveDialog, self).show(self.baseAppInstance)
 
-    def add_fileinput_field(self, defaultname='untitled'):
+    def add_fileinput_field(self, defaultname="untitled"):
         self.txtFilename = gui.TextInput()
         self.txtFilename.onkeydown.do(self.on_enter_key_pressed)
         self.txtFilename.set_text(defaultname)
@@ -425,17 +513,17 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
         self.add_field_with_label("filename", "Filename", self.txtFilename)
 
     def get_fileinput_value(self):
-        return self.get_field('filename').get_value()
+        return self.get_field("filename").get_value()
 
     def on_enter_key_pressed(self, widget, value, keycode):
         if keycode == "13":
-            self.get_field('filename').set_value(value)
+            self.get_field("filename").set_value(value)
             self.confirm_value(None)
 
     @gui.decorate_event
     def confirm_value(self, widget):
         """event called pressing on OK button.
-           propagates the string content of the input field
+        propagates the string content of the input field
         """
         self.hide()
         params = (self.fileFolderNavigator.pathEditor.get_text(),)
@@ -445,28 +533,33 @@ class EditorFileSaveDialog(gui.FileSelectionDialog):
 def default_icon(name, view_w=1, view_h=0.6):
     """
     A simple function to make a default svg icon for the widgets
-      such icons can be replaced later with a good one 
+      such icons can be replaced later with a good one
     """
-    icon = gui.Svg(width=50,height=30)
-    icon.set_viewbox(-view_w/2,-view_h/2,view_w,view_h)
-    text = gui.SvgText(0,0,name)
-    text.attributes['textLength'] = "100%"
-    text.attributes['lengthAdjust'] = "spacingAndGlyphs"
-    text.style['font-size'] = "0.2px"
-    text.style['text-anchor'] = "middle"
+    icon = gui.Svg(width=50, height=30)
+    icon.set_viewbox(-view_w / 2, -view_h / 2, view_w, view_h)
+    text = gui.SvgText(0, 0, name)
+    text.attributes["textLength"] = "100%"
+    text.attributes["lengthAdjust"] = "spacingAndGlyphs"
+    text.style["font-size"] = "0.2px"
+    text.style["text-anchor"] = "middle"
     stroke_width = 0.01
-    rect = gui.SvgRectangle(-view_w/2+stroke_width,-view_h/2+stroke_width,view_w-stroke_width*2,view_h-stroke_width*2)
+    rect = gui.SvgRectangle(
+        -view_w / 2 + stroke_width,
+        -view_h / 2 + stroke_width,
+        view_w - stroke_width * 2,
+        view_h - stroke_width * 2,
+    )
     rect.set_fill("none")
-    rect.set_stroke(0.01,'black')
+    rect.set_stroke(0.01, "black")
     icon.append([rect, text])
     return icon
 
 
 class WidgetHelper(gui.HBox):
-    """ Allocates the Widget to which it refers,
-        interfacing to the user in order to obtain the necessary attribute values
-        obtains the constructor parameters, asks for them in a dialog
-        puts the values in an attribute called constructor
+    """Allocates the Widget to which it refers,
+    interfacing to the user in order to obtain the necessary attribute values
+    obtains the constructor parameters, asks for them in a dialog
+    puts the values in an attribute called constructor
     """
 
     def __init__(self, appInstance, widgetClass, **kwargs_to_widget):
@@ -474,36 +567,50 @@ class WidgetHelper(gui.HBox):
         self.appInstance = appInstance
         self.widgetClass = widgetClass
         super(WidgetHelper, self).__init__()
-        self.style.update({'background-color': 'rgb(250,250,250)', 'width': "auto", 'margin':"2px", 
-                           "height": "60px", "justify-content": "center", "align-items": "center",
-                           'font-size': '12px'})
+        self.style.update(
+            {
+                "background-color": "rgb(250,250,250)",
+                "width": "auto",
+                "margin": "2px",
+                "height": "60px",
+                "justify-content": "center",
+                "align-items": "center",
+                "font-size": "12px",
+            }
+        )
         if hasattr(widgetClass, "icon"):
             if type(widgetClass.icon) == gui.Svg:
                 self.icon = widgetClass.icon
-            elif widgetClass.icon == None:
+            elif widgetClass.icon is None:
                 self.icon = default_icon(self.widgetClass.__name__)
             else:
                 icon_file = widgetClass.icon
-                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+                self.icon = gui.Image(icon_file, width="auto", margin="2px")
         else:
-            icon_file = '/editor_resources:widget_%s.png' % self.widgetClass.__name__
-            if os.path.exists(self.appInstance._get_static_file(icon_file)): 
-                self.icon = gui.Image(icon_file, width='auto', margin='2px')
+            icon_file = "/editor_resources:widget_%s.png" % self.widgetClass.__name__
+            if os.path.exists(self.appInstance._get_static_file(icon_file)):
+                self.icon = gui.Image(icon_file, width="auto", margin="2px")
             else:
                 self.icon = default_icon(self.widgetClass.__name__)
 
-        self.icon.style['max-width'] = '100%'
-        self.icon.style['image-rendering'] = 'auto'
-        self.icon.attributes['draggable'] = 'false'
-        self.icon.attributes['ondragstart'] = "event.preventDefault();"
-        self.append(self.icon, 'icon')
-        self.append(gui.Label(self.widgetClass.__name__), 'label')
-        self.children['label'].style.update({'margin-left':'2px', 'margin-right':'3px'})
+        self.icon.style["max-width"] = "100%"
+        self.icon.style["image-rendering"] = "auto"
+        self.icon.attributes["draggable"] = "false"
+        self.icon.attributes["ondragstart"] = "event.preventDefault();"
+        self.append(self.icon, "icon")
+        self.append(gui.Label(self.widgetClass.__name__), "label")
+        self.children["label"].style.update(
+            {"margin-left": "2px", "margin-right": "3px"}
+        )
 
-        self.attributes.update({'draggable': 'true',
-                                'ondragstart': "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));",
-                                'ondragover': "event.preventDefault();",
-                                'ondrop': "event.preventDefault();return false;"})
+        self.attributes.update(
+            {
+                "draggable": "true",
+                "ondragstart": "this.style.cursor='move'; event.dataTransfer.dropEffect = 'move';   event.dataTransfer.setData('application/json', JSON.stringify(['add',event.target.id,(event.clientX),(event.clientY)]));",
+                "ondragover": "event.preventDefault();",
+                "ondrop": "event.preventDefault();return false;",
+            }
+        )
 
         # this dictionary will contain optional style attributes that have to be added to the widget once created
         self.optional_style_dict = {}
@@ -511,40 +618,44 @@ class WidgetHelper(gui.HBox):
         self.onclick.do(self.create_instance)
 
     def build_widget_name_list_from_tree(self, node):
-        if not hasattr(node, 'attributes'):
+        if not hasattr(node, "attributes"):
             return
-        if not (hasattr(node, 'variable_name') and not node.variable_name is None):
+        if not (hasattr(node, "variable_name") and node.variable_name is not None):
             return
         self.varname_list.append(node.variable_name)
         for child in node.children.values():
             self.build_widget_name_list_from_tree(child)
 
     def build_widget_used_keys_list_from_tree(self, node):
-        if not hasattr(node, 'attributes'):
+        if not hasattr(node, "attributes"):
             return
-        if not (hasattr(node, 'variable_name') and not node.variable_name is None):
+        if not (hasattr(node, "variable_name") and node.variable_name is not None):
             return
         self.used_keys_list.extend(list(node.children.keys()))
         for child in node.children.values():
             self.build_widget_used_keys_list_from_tree(child)
 
     def on_dropped(self, left, top):
-        self.optional_style_dict['left'] = gui.to_pix(left)
-        self.optional_style_dict['top'] = gui.to_pix(top)
+        self.optional_style_dict["left"] = gui.to_pix(left)
+        self.optional_style_dict["top"] = gui.to_pix(top)
         self.create_instance(None)
 
     def create_instance(self, widget):
-        """ Here the widget is allocated
-        """
+        """Here the widget is allocated"""
         self.varname_list = []
         self.build_widget_name_list_from_tree(self.appInstance.project)
         self.used_keys_list = []
         self.build_widget_used_keys_list_from_tree(self.appInstance.project)
         print("-------------used keys:" + str(self.used_keys_list))
-        variableName = ''
-        for i in range(0, 1000):  # reasonably no more than 1000 widget instances in a project
+        variableName = ""
+        for i in range(
+            0, 1000
+        ):  # reasonably no more than 1000 widget instances in a project
             variableName = self.widgetClass.__name__.lower() + str(i)
-            if not variableName in self.varname_list and not variableName in self.used_keys_list:
+            if (
+                variableName not in self.varname_list
+                and variableName not in self.used_keys_list
+            ):
                 break
 
         """
@@ -576,79 +687,191 @@ class WidgetCollection(gui.Container):
         super(WidgetCollection, self).__init__(**kwargs)
         self.lblTitle = gui.Label("Widgets Toolbox", height=20)
         self.lblTitle.add_class("DialogTitle")
-        self.widgetsContainer = gui.HBox(width='100%', height='calc(100% - 20px)')
-        self.widgetsContainer.style.update({'overflow-y': 'scroll',
-                                            'overflow-x': 'hidden',
-                                            'align-items': 'flex-start',
-                                            'flex-wrap': 'wrap',
-                                            'background-color': 'white'})
+        self.widgetsContainer = gui.HBox(width="100%", height="calc(100% - 20px)")
+        self.widgetsContainer.style.update(
+            {
+                "overflow-y": "scroll",
+                "overflow-x": "hidden",
+                "align-items": "flex-start",
+                "flex-wrap": "wrap",
+                "background-color": "white",
+            }
+        )
 
         self.append([self.lblTitle, self.widgetsContainer])
 
         # load all widgets
-        self.add_widget_to_collection(gui.HBox, width='250px', height='250px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.VBox, width='250px', height='250px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.Container, width='250px', height='250px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        #self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
-        self.add_widget_to_collection(gui.Button, text="button", width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.TextInput, width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.Label, text="label", width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.ListView, width='100px', height='100px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute', 'border': '1px solid lightgray'})
-        self.add_widget_to_collection(gui.ListItem, text='list item')
-        self.add_widget_to_collection(gui.DropDown, width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.DropDownItem, text='drop down item')
-        self.add_widget_to_collection(gui.Image, width='100px', height='100px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.CheckBoxLabel, text='check box label', width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.CheckBox, width='30px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.SpinBox, width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.Slider, width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.ColorPicker, width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.Date, width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.Link, text='link', url='', width='100px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.Progress, value=0, _max=100, width='130px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.FileFolderNavigator, width=100, height=100, style = {
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        #self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={
+        self.add_widget_to_collection(
+            gui.HBox,
+            width="250px",
+            height="250px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.VBox,
+            width="250px",
+            height="250px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Container,
+            width="250px",
+            height="250px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        # self.add_widget_to_collection(gui.GridBox, width='250px', height='250px', style={'top':'20px', 'left':'20px', 'position':'absolute'})
+        self.add_widget_to_collection(
+            gui.Button,
+            text="button",
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.TextInput,
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Label,
+            text="label",
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.ListView,
+            width="100px",
+            height="100px",
+            style={
+                "top": "20px",
+                "left": "20px",
+                "position": "absolute",
+                "border": "1px solid lightgray",
+            },
+        )
+        self.add_widget_to_collection(gui.ListItem, text="list item")
+        self.add_widget_to_collection(
+            gui.DropDown,
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(gui.DropDownItem, text="drop down item")
+        self.add_widget_to_collection(
+            gui.Image,
+            width="100px",
+            height="100px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.CheckBoxLabel,
+            text="check box label",
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.CheckBox,
+            width="30px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.SpinBox,
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Slider,
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.ColorPicker,
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Date,
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Link,
+            text="link",
+            url="",
+            width="100px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Progress,
+            value=0,
+            _max=100,
+            width="130px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.FileFolderNavigator,
+            width=100,
+            height=100,
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        # self.add_widget_to_collection(gui.VideoPlayer, width='100px', height='100px', style={
         #                              'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.TableWidget, width='100px', height='100px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.TabBox, width='200px', height='200px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
-        self.add_widget_to_collection(gui.FileUploader, width='150px', height='30px', style={
-                                      'top': '20px', 'left': '20px', 'position': 'absolute'})
         self.add_widget_to_collection(
-            gui.Svg, style={'top': '20px', 'left': '20px', 'width':'150px', 'height':'150px', 'position': 'absolute', 'border':'1px solid gray'})
+            gui.TableWidget,
+            width="100px",
+            height="100px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
         self.add_widget_to_collection(
-            gui.SvgSubcontainer, x = '10', y = '10', width = '80', height = '80')
-        self.add_widget_to_collection(gui.SvgLine, attributes={
-                                      'stroke': 'black', 'stroke-width': '1'})
+            gui.TabBox,
+            width="200px",
+            height="200px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.FileUploader,
+            width="150px",
+            height="30px",
+            style={"top": "20px", "left": "20px", "position": "absolute"},
+        )
+        self.add_widget_to_collection(
+            gui.Svg,
+            style={
+                "top": "20px",
+                "left": "20px",
+                "width": "150px",
+                "height": "150px",
+                "position": "absolute",
+                "border": "1px solid gray",
+            },
+        )
+        self.add_widget_to_collection(
+            gui.SvgSubcontainer, x="10", y="10", width="80", height="80"
+        )
+        self.add_widget_to_collection(
+            gui.SvgLine, attributes={"stroke": "black", "stroke-width": "1"}
+        )
         self.add_widget_to_collection(gui.SvgCircle)
         self.add_widget_to_collection(gui.SvgEllipse)
         self.add_widget_to_collection(gui.SvgRectangle)
         self.add_widget_to_collection(gui.SvgText)
-        self.add_widget_to_collection(gui.SvgPath, attributes={
-                                      'stroke': 'black', 'stroke-width': '1'})
+        self.add_widget_to_collection(
+            gui.SvgPath, attributes={"stroke": "black", "stroke-width": "1"}
+        )
         self.add_widget_to_collection(gui.SvgImage)
         self.add_widget_to_collection(gui.SvgGroup)
 
-        #self.load_additional_widgets()
+        # self.load_additional_widgets()
 
     def load_additional_widgets(self):
         try:
@@ -657,60 +880,76 @@ class WidgetCollection(gui.Container):
             from . import widgets
         try:
             classes = inspect.getmembers(widgets, inspect.isclass)
-            for (classname, classvalue) in classes:
+            for classname, classvalue in classes:
                 if issubclass(classvalue, gui.Widget):
-                    self.add_widget_to_collection(
-                        classvalue, classvalue.__module__)
+                    self.add_widget_to_collection(classvalue, classvalue.__module__)
 
         except Exception:
-            logging.getLogger('remi.editor').error(
-                'error loading external widgets', exc_info=True)
+            logging.getLogger("remi.editor").error(
+                "error loading external widgets", exc_info=True
+            )
 
-    def add_widget_to_collection(self, widgetClass, group='standard_tools', **kwargs_to_widget):
+    def add_widget_to_collection(
+        self, widgetClass, group="standard_tools", **kwargs_to_widget
+    ):
         # create an helper that will be created on click
         # the helper have to search for function that have 'return' annotation 'event_listener_setter'
         if group not in self.widgetsContainer.children.keys():
             self.widgetsContainer.append(EditorAttributesGroup(group), group)
-            self.widgetsContainer.children[group].style['width'] = "100%"
+            self.widgetsContainer.children[group].style["width"] = "100%"
 
-        helper = WidgetHelper(
-            self.appInstance, widgetClass, **kwargs_to_widget)
-        helper.attributes['title'] = widgetClass.__doc__
-        #self.widgetsContainer.append( helper )
+        helper = WidgetHelper(self.appInstance, widgetClass, **kwargs_to_widget)
+        helper.attributes["title"] = widgetClass.__doc__
+        # self.widgetsContainer.append( helper )
         self.widgetsContainer.children[group].append(helper)
 
 
 class EditorAttributesGroup(gui.VBox):
-    """ Contains a title and widgets. When the title is clicked, the contained widgets are hidden.
-        Its scope is to provide a foldable group
+    """Contains a title and widgets. When the title is clicked, the contained widgets are hidden.
+    Its scope is to provide a foldable group
     """
 
     def __init__(self, title, **kwargs):
         super(EditorAttributesGroup, self).__init__(**kwargs)
-        self.add_class('.RaisedFrame')
-        #self.style['display'] = 'block'
-        self.container = gui.HBox(width="100%", style={
-                                  'overflow': 'visible', 'justify-content': 'flex-start', 'align-items': 'flex-start', 'flex-wrap': 'wrap'})
-        self.container.css_justify_content = 'flex-start'
+        self.add_class(".RaisedFrame")
+        # self.style['display'] = 'block'
+        self.container = gui.HBox(
+            width="100%",
+            style={
+                "overflow": "visible",
+                "justify-content": "flex-start",
+                "align-items": "flex-start",
+                "flex-wrap": "wrap",
+            },
+        )
+        self.container.css_justify_content = "flex-start"
         self.opened = True
-        self.title = gui.Label(title, width='100%')
+        self.title = gui.Label(title, width="100%")
         self.title.add_class("Title")
-        self.title.style.update({'text-indent': '25px',
-                                 'background-image': "url('/editor_resources:minus.png')",
-                                 'background-repeat': 'no-repeat',
-                                 'background-position': '5px',
-                                 'border-top': '3px solid lightgray'})
+        self.title.style.update(
+            {
+                "text-indent": "25px",
+                "background-image": "url('/editor_resources:minus.png')",
+                "background-repeat": "no-repeat",
+                "background-position": "5px",
+                "border-top": "3px solid lightgray",
+            }
+        )
         self.title.onclick.do(self.openClose)
         super(EditorAttributesGroup, self).append(self.title)
         super(EditorAttributesGroup, self).append(self.container)
 
     def openClose(self, widget):
         self.opened = not self.opened
-        backgroundImage = "url('/editor_resources:minus.png')" if self.opened else "url('/editor_resources:plus.png')"
-        self.title.style['background-image'] = backgroundImage
-        self.container.css_display = 'flex' if self.opened else 'none'
+        backgroundImage = (
+            "url('/editor_resources:minus.png')"
+            if self.opened
+            else "url('/editor_resources:plus.png')"
+        )
+        self.title.style["background-image"] = backgroundImage
+        self.container.css_display = "flex" if self.opened else "none"
 
-    def append(self, widget, key=''):
+    def append(self, widget, key=""):
         return self.container.append(widget, key)
 
     def remove_child(self, widget):
@@ -718,37 +957,44 @@ class EditorAttributesGroup(gui.VBox):
 
 
 class EditorAttributes(gui.VBox):
-    """ Contains EditorAttributeInput each one of which notify a new value with an event
-    """
-    __ref_widget = None #The reference widget set by set_widget 
+    """Contains EditorAttributeInput each one of which notify a new value with an event"""
+
+    __ref_widget = None  # The reference widget set by set_widget
 
     def __init__(self, appInstance, **kwargs):
         super(EditorAttributes, self).__init__(**kwargs)
         self.appInstance = appInstance
-        #self.style['overflow-y'] = 'scroll'
-        self.style['justify-content'] = 'flex-start'
-        self.style['-webkit-justify-content'] = 'flex-start'
-        self.titleLabel = gui.Label('Attributes editor', width='100%', height=20)
+        # self.style['overflow-y'] = 'scroll'
+        self.style["justify-content"] = "flex-start"
+        self.style["-webkit-justify-content"] = "flex-start"
+        self.titleLabel = gui.Label("Attributes editor", width="100%", height=20)
         self.titleLabel.add_class("DialogTitle")
-        self.infoLabel = gui.Label('Selected widget: None', height=25)
-        self.infoLabel.style['font-weight'] = 'bold'
-        
-        self.attributes_groups_container = gui.VBox(width="100%", height="calc(100% - 45px)")
-        self.attributes_groups_container.css_overflow = 'auto'
+        self.infoLabel = gui.Label("Selected widget: None", height=25)
+        self.infoLabel.style["font-weight"] = "bold"
+
+        self.attributes_groups_container = gui.VBox(
+            width="100%", height="calc(100% - 45px)"
+        )
+        self.attributes_groups_container.css_overflow = "auto"
         self.attributes_groups_container.css_align_items = "flex-start"
         self.attributes_groups_container.css_justify_content = "flex-start"
-        
+
         self.append([self.titleLabel, self.infoLabel, self.attributes_groups_container])
 
-        self.titleLabel.style['order'] = '-1'
-        self.titleLabel.style['-webkit-order'] = '-1'
-        self.infoLabel.style['order'] = '0'
-        self.infoLabel.style['-webkit-order'] = '0'
-        self.attributes_groups_container.style['order'] = '1'
-        self.attributes_groups_container.style['-webkit-order'] = '1'
+        self.titleLabel.style["order"] = "-1"
+        self.titleLabel.style["-webkit-order"] = "-1"
+        self.infoLabel.style["order"] = "0"
+        self.infoLabel.style["-webkit-order"] = "0"
+        self.attributes_groups_container.style["order"] = "1"
+        self.attributes_groups_container.style["-webkit-order"] = "1"
 
         self.group_orders = {
-            'Generic': '2', 'WidgetSpecific': '3', 'Geometry': '4', 'Background': '5', 'Transformation': '6'}
+            "Generic": "2",
+            "WidgetSpecific": "3",
+            "Geometry": "4",
+            "Background": "5",
+            "Transformation": "6",
+        }
 
         self.attributesInputs = list()
         # load editable attributes
@@ -759,13 +1005,13 @@ class EditorAttributes(gui.VBox):
             if type(y) == property:
                 if hasattr(y, "fget"):
                     if hasattr(y.fget, "editor_attributes"):
-                        group = y.fget.editor_attributes['group']
-                        self.attributeGroups[group].container.children[x].set_value(getattr(self.__ref_widget, x))
-
+                        group = y.fget.editor_attributes["group"]
+                        self.attributeGroups[group].container.children[x].set_value(
+                            getattr(self.__ref_widget, x)
+                        )
 
     def set_widget(self, widget):
-
-        if not self.__ref_widget is None:
+        if self.__ref_widget is not None:
             if self.__ref_widget.identifier == widget.identifier:
                 self.update_widget()
                 return
@@ -778,8 +1024,8 @@ class EditorAttributes(gui.VBox):
             self.attributes_groups_container.remove_child(w)
 
         for w in self.attributesInputs:
-            if w.attributeDict['group'] in self.attributeGroups:
-                self.attributeGroups[w.attributeDict['group']].remove_child(w)
+            if w.attributeDict["group"] in self.attributeGroups:
+                self.attributeGroups[w.attributeDict["group"]].remove_child(w)
 
         index = 100
         default_width = "100%"
@@ -788,74 +1034,157 @@ class EditorAttributes(gui.VBox):
             if type(y) == property:
                 if hasattr(y, "fget"):
                     if hasattr(y.fget, "editor_attributes"):
-                        group = y.fget.editor_attributes['group']
+                        group = y.fget.editor_attributes["group"]
 
                         attributeEditor = None
                         attributeDict = y.fget.editor_attributes
                         # 'background-repeat':{'type':str, 'description':'The repeat behaviour of an optional background image', ,'additional_data':{'possible_values':'repeat | repeat-x | repeat-y | no-repeat | inherit'}},
-                        if attributeDict['type'] in (bool, int, float, gui.ColorPicker.__name__, gui.DropDown.__name__, 'url_editor', 'css_size', 'base64_image', 'file'):
-                            if attributeDict['type'] == bool:
+                        if attributeDict["type"] in (
+                            bool,
+                            int,
+                            float,
+                            gui.ColorPicker.__name__,
+                            gui.DropDown.__name__,
+                            "url_editor",
+                            "css_size",
+                            "base64_image",
+                            "file",
+                        ):
+                            if attributeDict["type"] == bool:
                                 chk = gui.CheckBox(
-                                    'checked', width=default_width, height=default_height)
+                                    "checked",
+                                    width=default_width,
+                                    height=default_height,
+                                )
                                 attributeEditor = EditorAttributeInputGeneric(
-                                    chk, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == int:
-                                spin = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict[
-                                                   'additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
+                                    chk,
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == int:
+                                spin = gui.SpinBox(
+                                    attributeDict["additional_data"]["default"],
+                                    attributeDict["additional_data"]["min"],
+                                    attributeDict["additional_data"]["max"],
+                                    attributeDict["additional_data"]["step"],
+                                    width=default_width,
+                                    height=default_height,
+                                )
                                 attributeEditor = EditorAttributeInputInt(
-                                    spin, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == float:
-                                spin = gui.SpinBox(attributeDict['additional_data']['default'], attributeDict['additional_data']['min'], attributeDict[
-                                                   'additional_data']['max'], attributeDict['additional_data']['step'], width=default_width, height=default_height)
+                                    spin,
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == float:
+                                spin = gui.SpinBox(
+                                    attributeDict["additional_data"]["default"],
+                                    attributeDict["additional_data"]["min"],
+                                    attributeDict["additional_data"]["max"],
+                                    attributeDict["additional_data"]["step"],
+                                    width=default_width,
+                                    height=default_height,
+                                )
                                 attributeEditor = EditorAttributeInputFloat(
-                                    spin, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == gui.ColorPicker.__name__:
+                                    spin,
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == gui.ColorPicker.__name__:
                                 attributeEditor = EditorAttributeInputColor(
-                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == gui.DropDown.__name__:
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == gui.DropDown.__name__:
                                 drop = gui.DropDown(
-                                    width=default_width, height=default_height)
-                                for value in attributeDict['additional_data']['possible_values']:
+                                    width=default_width, height=default_height
+                                )
+                                for value in attributeDict["additional_data"][
+                                    "possible_values"
+                                ]:
                                     drop.append(gui.DropDownItem(value), value)
                                 attributeEditor = EditorAttributeInputGeneric(
-                                    drop, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == 'url_editor':
+                                    drop,
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == "url_editor":
                                 attributeEditor = EditorAttributeInputUrl(
-                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == 'base64_image':
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == "base64_image":
                                 attributeEditor = EditorAttributeInputBase64Image(
-                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == 'css_size':
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == "css_size":
                                 attributeEditor = EditorAttributeInputCssSize(
-                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
-                            elif attributeDict['type'] == 'file':
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
+                            elif attributeDict["type"] == "file":
                                 attributeEditor = EditorAttributeInputFile(
-                                    self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
+                                    self.__ref_widget,
+                                    x,
+                                    y,
+                                    y.fget.editor_attributes,
+                                    self.appInstance,
+                                )
 
-                        else:  
-                            #None is not visible
-                            if attributeDict['type'] is None:
+                        else:
+                            # None is not visible
+                            if attributeDict["type"] is None:
                                 continue
                             # default editor is string
                             txt = gui.TextInput(
-                                width=default_width, height=default_height)
+                                width=default_width, height=default_height
+                            )
                             attributeEditor = EditorAttributeInputGeneric(
-                                txt, self.__ref_widget, x, y, y.fget.editor_attributes, self.appInstance)
+                                txt,
+                                self.__ref_widget,
+                                x,
+                                y,
+                                y.fget.editor_attributes,
+                                self.appInstance,
+                            )
 
-                        if not group in self.attributeGroups.keys():
-                            groupContainer = EditorAttributesGroup(
-                                group, width='100%')
+                        if group not in self.attributeGroups.keys():
+                            groupContainer = EditorAttributesGroup(group, width="100%")
                             groupContainer.css_order = self.group_orders.get(
-                                group, str(index))
+                                group, str(index)
+                            )
                             index = index + 1
                             self.attributeGroups[group] = groupContainer
 
                         if getattr(self.__ref_widget, x) is None:
                             attributeEditor.set_valid(False)
                         else:
-                            attributeEditor.set_value(
-                                getattr(self.__ref_widget, x))
-                        self.attributeGroups[group].append(attributeEditor, key = x)
+                            attributeEditor.set_value(getattr(self.__ref_widget, x))
+                        self.attributeGroups[group].append(attributeEditor, key=x)
                         self.attributesInputs.append(attributeEditor)
 
         for w in self.attributeGroups.values():
@@ -865,26 +1194,37 @@ class EditorAttributes(gui.VBox):
 # widget that allows to edit a specific html and css attributes
 #   it has a descriptive label, an edit widget (TextInput, SpinBox..) based on the 'type' and a title
 class EditorAttributeInputBase(gui.GridBox):
-    """ propertyDef is the property of the class
-    """
+    """propertyDef is the property of the class"""
+
     targetWidget = None  # wodget
     propertyDef = None  # property
-    attributeName = ''
+    attributeName = ""
     attributeDict = {}
     appInstance = None
     removeAttribute = None  # widget
     label = None  # widget
 
-    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
-        _style = {'display': 'block',
-                  'overflow': 'hidden',
-                  'margin': '2px',
-                  'outline': '1px solid lightgray',
-                  'width': '100%'}
-        if 'style' in kwargs.keys():
-            kwargs['style'].update(_style)
+    def __init__(
+        self,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
+        _style = {
+            "display": "block",
+            "overflow": "hidden",
+            "margin": "2px",
+            "outline": "1px solid lightgray",
+            "width": "100%",
+        }
+        if "style" in kwargs.keys():
+            kwargs["style"].update(_style)
         else:
-            kwargs['style'] = _style
+            kwargs["style"] = _style
 
         super(EditorAttributeInputBase, self).__init__(*args, **kwargs)
 
@@ -893,29 +1233,32 @@ class EditorAttributeInputBase(gui.GridBox):
         self.attributeName = attributeName
         self.attributeDict = attributeDict
         self.appInstance = appInstance
-        self.removeAttribute = gui.Image(
-            '/editor_resources:delete.png', width='10px')
-        self.removeAttribute.attributes['title'] = 'Remove attribute from this widget.'
+        self.removeAttribute = gui.Image("/editor_resources:delete.png", width="10px")
+        self.removeAttribute.attributes["title"] = "Remove attribute from this widget."
         self.removeAttribute.onclick.do(self.on_attribute_remove)
 
-        self.label = gui.Label(attributeName, width='100%', height="100%", style={
-                               'overflow': 'hidden', 'font-size': '13px', 'margin': '0px'})
-        self.label.attributes['title'] = attributeDict['description']
+        self.label = gui.Label(
+            attributeName,
+            width="100%",
+            height="100%",
+            style={"overflow": "hidden", "font-size": "13px", "margin": "0px"},
+        )
+        self.label.attributes["title"] = attributeDict["description"]
 
-        if not self.propertyDef.fdel is None:
-            self.append({'del': self.removeAttribute, 'lbl': self.label})
+        if self.propertyDef.fdel is not None:
+            self.append({"del": self.removeAttribute, "lbl": self.label})
         else:
-            self.append({'lbl': self.label})
+            self.append({"lbl": self.label})
 
         self.set_valid(False)
 
     def set_valid(self, valid=True):
-        self.label.style['opacity'] = '1.0'
-        if 'display' in self.removeAttribute.style:
-            del self.removeAttribute.style['display']
+        self.label.style["opacity"] = "1.0"
+        if "display" in self.removeAttribute.style:
+            del self.removeAttribute.style["display"]
         if not valid:
-            self.label.style['opacity'] = '0.5'
-            self.removeAttribute.style['display'] = 'none'
+            self.label.style["opacity"] = "0.5"
+            self.removeAttribute.style["display"] = "none"
 
     @gui.decorate_event
     def on_attribute_remove(self, widget):
@@ -924,8 +1267,8 @@ class EditorAttributeInputBase(gui.GridBox):
         return (self.targetWidget, self.attributeName)
 
     def set_value(self, value):
-        self.set_valid(not value is None)
-        if not value is None:
+        self.set_valid(value is not None)
+        if value is not None:
             self.inputWidget.set_value(value)
 
     def on_attribute_changed(self, widget, value):
@@ -936,108 +1279,209 @@ class EditorAttributeInputBase(gui.GridBox):
 class EditorAttributeInputGeneric(EditorAttributeInputBase):
     inputWidget = None
 
-    def __init__(self, inputWidget, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
+    def __init__(
+        self,
+        inputWidget,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
         super(EditorAttributeInputGeneric, self).__init__(
-            widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+            widget,
+            attributeName,
+            propertyDef,
+            attributeDict,
+            appInstance,
+            *args,
+            **kwargs,
+        )
         self.inputWidget = inputWidget
         self.inputWidget.onchange.do(self.on_attribute_changed)
-        self.inputWidget.attributes['title'] = attributeDict['description']
+        self.inputWidget.attributes["title"] = attributeDict["description"]
 
         '''
         self.set_from_asciiart("""
             |del|lbl                   |input                  |
             """)
         '''
-        self.style.update({'grid-template-columns': "6% 46% 48%",
-                           'grid-template-rows': "100%", 'grid-template-areas': "'del lbl input'"})
-        self.append({'input': self.inputWidget})
+        self.style.update(
+            {
+                "grid-template-columns": "6% 46% 48%",
+                "grid-template-rows": "100%",
+                "grid-template-areas": "'del lbl input'",
+            }
+        )
+        self.append({"input": self.inputWidget})
 
 
 class EditorAttributeInputFloat(EditorAttributeInputGeneric):
     def on_attribute_changed(self, emitter, value):
-        super(EditorAttributeInputFloat, self).on_attribute_changed(
-            self, float(value))
+        super(EditorAttributeInputFloat, self).on_attribute_changed(self, float(value))
 
 
 class EditorAttributeInputInt(EditorAttributeInputGeneric):
     def on_attribute_changed(self, emitter, value):
         super(EditorAttributeInputInt, self).on_attribute_changed(
-            self, int(float(value)))
+            self, int(float(value))
+        )
 
 
 class EditorAttributeInputCssSize(EditorAttributeInputBase):
-    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
+    def __init__(
+        self,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
         super(EditorAttributeInputCssSize, self).__init__(
-            widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+            widget,
+            attributeName,
+            propertyDef,
+            attributeDict,
+            appInstance,
+            *args,
+            **kwargs,
+        )
         self.numInput = gui.SpinBox(
-            '0', -999999999, 999999999, 1, width='100%', height='100%')
+            "0", -999999999, 999999999, 1, width="100%", height="100%"
+        )
         self.numInput.onchange.do(self.onchange)
-        self.numInput.style['text-align'] = 'right'
+        self.numInput.style["text-align"] = "right"
 
-        self.dropMeasureUnit = gui.DropDown(width='100%', height='100%')
-        self.dropMeasureUnit.append(gui.DropDownItem('px'), 'px')
-        self.dropMeasureUnit.append(gui.DropDownItem('%'), '%')
-        self.dropMeasureUnit.select_by_key('px')
+        self.dropMeasureUnit = gui.DropDown(width="100%", height="100%")
+        self.dropMeasureUnit.append(gui.DropDownItem("px"), "px")
+        self.dropMeasureUnit.append(gui.DropDownItem("%"), "%")
+        self.dropMeasureUnit.select_by_key("px")
         self.dropMeasureUnit.onchange.do(self.onchange)
         '''
         self.set_from_asciiart("""
             |del|lbl                   |input           |meas   |
             """)
         '''
-        self.style.update({'grid-template-columns': "6% 46% 33% 15%",
-                           'grid-template-rows': "100%", 'grid-template-areas': "'del lbl input meas'"})
-        self.append({'del': self.removeAttribute, 'lbl': self.label,
-                     'input': self.numInput, 'meas': self.dropMeasureUnit})
+        self.style.update(
+            {
+                "grid-template-columns": "6% 46% 33% 15%",
+                "grid-template-rows": "100%",
+                "grid-template-areas": "'del lbl input meas'",
+            }
+        )
+        self.append(
+            {
+                "del": self.removeAttribute,
+                "lbl": self.label,
+                "input": self.numInput,
+                "meas": self.dropMeasureUnit,
+            }
+        )
 
     def onchange(self, widget, new_value):
-        new_size = str(self.numInput.get_value()) + \
-            str(self.dropMeasureUnit.get_value())
+        new_size = str(self.numInput.get_value()) + str(
+            self.dropMeasureUnit.get_value()
+        )
         self.on_attribute_changed(self, new_size)
 
     def set_value(self, value):
-        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit
-        """
+        """The value have to be in the form '10px' or '10%', so numeric value plus measure unit"""
         v = 0
-        measure_unit = 'px'
-        if not value is None:
+        measure_unit = "px"
+        if value is not None:
             try:
-                v = int(float(value.replace('px', '')))
+                v = int(float(value.replace("px", "")))
             except ValueError:
                 try:
-                    v = int(float(value.replace('%', '')))
-                    measure_unit = '%'
+                    v = int(float(value.replace("%", "")))
+                    measure_unit = "%"
                 except ValueError:
                     pass
         self.numInput.set_value(v)
         self.dropMeasureUnit.set_value(measure_unit)
-        self.set_valid(not value is None)
+        self.set_valid(value is not None)
 
 
 class EditorAttributeInputColor(EditorAttributeInputBase):
-    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
+    def __init__(
+        self,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
         super(EditorAttributeInputColor, self).__init__(
-            widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+            widget,
+            attributeName,
+            propertyDef,
+            attributeDict,
+            appInstance,
+            *args,
+            **kwargs,
+        )
         self.css_height = "60px"
         self.spin_red = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
-        self.spin_green = gui.SpinBox(
-            0, 0, 255, 1, width="100%", height="100%")
+        self.spin_green = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
         self.spin_blue = gui.SpinBox(0, 0, 255, 1, width="100%", height="100%")
-        self.slide_red = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={
-                                    'background-color': 'pink'})
-        self.slide_green = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={
-                                      'background-color': 'lightgreen'})
-        self.slide_blue = gui.Slider(0, 0, 255, 1, width="100%", height="100%", style={
-                                     'background-color': 'lightblue'})
+        self.slide_red = gui.Slider(
+            0,
+            0,
+            255,
+            1,
+            width="100%",
+            height="100%",
+            style={"background-color": "pink"},
+        )
+        self.slide_green = gui.Slider(
+            0,
+            0,
+            255,
+            1,
+            width="100%",
+            height="100%",
+            style={"background-color": "lightgreen"},
+        )
+        self.slide_blue = gui.Slider(
+            0,
+            0,
+            255,
+            1,
+            width="100%",
+            height="100%",
+            style={"background-color": "lightblue"},
+        )
         '''
         self.set_from_asciiart("""
             |del|lbl                   |spin_r  |spin_g  |spin_b  |
             |del|lbl                   |slide_r |slide_g |slide_b |
             """)
         '''
-        self.style.update({'grid-template-columns': "6% 46% 16% 16% 16%", 'grid-template-rows': "50% 50%",
-                           'grid-template-areas': "'del lbl spin_r spin_g spin_b' 'del lbl slide_r slide_g slide_b'"})
-        self.append({'del': self.removeAttribute, 'lbl': self.label, 'spin_r': self.spin_red, 'spin_g': self.spin_green,
-                     'spin_b': self.spin_blue, 'slide_r': self.slide_red, 'slide_g': self.slide_green, 'slide_b': self.slide_blue})
+        self.style.update(
+            {
+                "grid-template-columns": "6% 46% 16% 16% 16%",
+                "grid-template-rows": "50% 50%",
+                "grid-template-areas": "'del lbl spin_r spin_g spin_b' 'del lbl slide_r slide_g slide_b'",
+            }
+        )
+        self.append(
+            {
+                "del": self.removeAttribute,
+                "lbl": self.label,
+                "spin_r": self.spin_red,
+                "spin_g": self.spin_green,
+                "spin_b": self.spin_blue,
+                "slide_r": self.slide_red,
+                "slide_g": self.slide_green,
+                "slide_b": self.slide_blue,
+            }
+        )
 
         self.slide_red.onchange.do(self.onchange)
         self.slide_green.onchange.do(self.onchange)
@@ -1048,15 +1492,20 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         self.spin_blue.onchange.do(self.onchange)
 
     def to_str(self):
-        return "rgb(%s,%s,%s)" % (self.slide_red.get_value(), self.slide_green.get_value(), self.slide_blue.get_value())
+        return "rgb(%s,%s,%s)" % (
+            self.slide_red.get_value(),
+            self.slide_green.get_value(),
+            self.slide_blue.get_value(),
+        )
 
     def from_str(self, value_str):
         components = []
-        if value_str is None or '(' not in value_str or ')' not in value_str:
+        if value_str is None or "(" not in value_str or ")" not in value_str:
             components = [0, 0, 0]
         else:
-            components = value_str[value_str.index(
-                '(')+1:value_str.index(')')].split(',')
+            components = value_str[
+                value_str.index("(") + 1 : value_str.index(")")
+            ].split(",")
         if len(components) < 3:
             components = [0, 0, 0]
         self.slide_red.set_value(components[0])
@@ -1082,59 +1531,109 @@ class EditorAttributeInputColor(EditorAttributeInputBase):
         setattr(self.targetWidget, self.attributeName, self.to_str())
 
     def set_value(self, value):
-        self.set_valid(not value is None)
-        if not value is None:
+        self.set_valid(value is not None)
+        if value is not None:
             self.from_str(value)
 
 
 class EditorAttributeInputUrl(EditorAttributeInputBase):
     inputWidget = None
 
-    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
-        super(EditorAttributeInputUrl, self).__init__(widget, attributeName,
-                                                      propertyDef, attributeDict, appInstance, *args, **kwargs)
+    def __init__(
+        self,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
+        super(EditorAttributeInputUrl, self).__init__(
+            widget,
+            attributeName,
+            propertyDef,
+            attributeDict,
+            appInstance,
+            *args,
+            **kwargs,
+        )
         self.inputWidget = gui.TextInput(width="100%", height="100%")
         self.inputWidget.onchange.do(self.on_attribute_changed)
-        self.inputWidget.attributes['title'] = attributeDict['description']
+        self.inputWidget.attributes["title"] = attributeDict["description"]
 
-        self.btFileFolderSelection = gui.Widget(width='100%', height='100%')
-        self.btFileFolderSelection.style.update({'background-repeat': 'no-repeat',
-                                                 'background-image': "url('/res:folder.png')",
-                                                 'background-color': 'transparent'})
-        self.btFileFolderSelection.onclick.do(
-            self.on_file_selection_bt_pressed)
+        self.btFileFolderSelection = gui.Widget(width="100%", height="100%")
+        self.btFileFolderSelection.style.update(
+            {
+                "background-repeat": "no-repeat",
+                "background-image": "url('/res:folder.png')",
+                "background-color": "transparent",
+            }
+        )
+        self.btFileFolderSelection.onclick.do(self.on_file_selection_bt_pressed)
         '''
         self.set_from_asciiart("""
             |del|lbl                   |input                |bt|
             """)
         '''
-        self.style.update({'grid-template-columns': "6% 46% 33% 15%",
-                           'grid-template-rows': "100%", 'grid-template-areas': "'del lbl input bt'"})
-        self.append({'del': self.removeAttribute, 'lbl': self.label,
-                     'input': self.inputWidget, 'bt': self.btFileFolderSelection})
+        self.style.update(
+            {
+                "grid-template-columns": "6% 46% 33% 15%",
+                "grid-template-rows": "100%",
+                "grid-template-areas": "'del lbl input bt'",
+            }
+        )
+        self.append(
+            {
+                "del": self.removeAttribute,
+                "lbl": self.label,
+                "input": self.inputWidget,
+                "bt": self.btFileFolderSelection,
+            }
+        )
 
     def on_file_selection_bt_pressed(self, widget):
         self.selectionDialog = gui.FileSelectionDialog(
-            'Select a file', '', False, './', True, False)
+            "Select a file", "", False, "./", True, False
+        )
         self.selectionDialog.confirm_value.do(self.file_dialog_confirmed)
         self.selectionDialog.show(self.appInstance)
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList) > 0:
             self.inputWidget.set_value(
-                "url('/editor_resources:" + fileList[0].split('/')[-1].split('\\')[-1] + "')")
+                "url('/editor_resources:"
+                + fileList[0].split("/")[-1].split("\\")[-1]
+                + "')"
+            )
             return self.on_attribute_changed(None, self.inputWidget.get_value())
 
     def set_value(self, value):
-        self.set_valid(not value is None)
-        if not value is None:
+        self.set_valid(value is not None)
+        if value is not None:
             self.inputWidget.set_value(value)
 
 
 class EditorAttributeInputBase64Image(EditorAttributeInputUrl):
-    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
+    def __init__(
+        self,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
         super(EditorAttributeInputBase64Image, self).__init__(
-            widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+            widget,
+            attributeName,
+            propertyDef,
+            attributeDict,
+            appInstance,
+            *args,
+            **kwargs,
+        )
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList) > 0:
@@ -1143,9 +1642,25 @@ class EditorAttributeInputBase64Image(EditorAttributeInputUrl):
 
 
 class EditorAttributeInputFile(EditorAttributeInputUrl):
-    def __init__(self, widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs):
+    def __init__(
+        self,
+        widget,
+        attributeName,
+        propertyDef,
+        attributeDict,
+        appInstance,
+        *args,
+        **kwargs,
+    ):
         super(EditorAttributeInputFile, self).__init__(
-            widget, attributeName, propertyDef, attributeDict, appInstance, *args, **kwargs)
+            widget,
+            attributeName,
+            propertyDef,
+            attributeDict,
+            appInstance,
+            *args,
+            **kwargs,
+        )
 
     def file_dialog_confirmed(self, widget, fileList):
         if len(fileList) > 0:
