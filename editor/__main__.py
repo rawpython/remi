@@ -1,5 +1,3 @@
-from editor import prototypes
-from editor import editor_widgets
 try:
     from editor import Editor
 except ImportError:
@@ -8,4 +6,11 @@ except ImportError:
 from remi import start
 
 if __name__ == "__main__":
-    start(Editor, debug=False, address='0.0.0.0', port=8082, update_interval=0.01, multiple_instance=True)
+    start(
+        Editor,
+        debug=False,
+        address="0.0.0.0",
+        port=8082,
+        update_interval=0.01,
+        multiple_instance=True,
+    )

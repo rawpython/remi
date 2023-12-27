@@ -22,9 +22,9 @@ class RemoteLabel(gui.Label):
 
     # api function
     def api_set_text(self, value1, value2):
-        self.set_text('parameters: %s - %s' % (value1, value2))
-        headers = {'Content-type': 'text/plain'}
-        return ['OK', headers]
+        self.set_text("parameters: %s - %s" % (value1, value2))
+        headers = {"Content-type": "text/plain"}
+        return ["OK", headers]
 
 
 class MyApp(App):
@@ -37,8 +37,11 @@ class MyApp(App):
         # the 'id' param allows to have an alias in the url to refer to the widget that will manage the call
         self.lbl = RemoteLabel(
             'type in other page url "http://127.0.0.1:8082/label/api_set_text?value1=text1&value2=text2" !',
-            width='80%', height='50%', attributes={'id': 'label'})
-        self.lbl.style['margin'] = 'auto'
+            width="80%",
+            height="50%",
+            attributes={"id": "label"},
+        )
+        self.lbl.style["margin"] = "auto"
 
         # appending a widget to another, the first argument is a string key
         wid.append(self.lbl)
@@ -52,4 +55,4 @@ if __name__ == "__main__":
     # optional parameters
     # start(MyApp,address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1,
     # start_browser=True)
-    start(MyApp, debug=True, address='127.0.0.1', port=8082)
+    start(MyApp, debug=True, address="127.0.0.1", port=8082)

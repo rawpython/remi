@@ -3,6 +3,7 @@ try:
 except ImportError:
     from HTMLParser import HTMLParser
 
+
 class SimpleParser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
@@ -11,8 +12,9 @@ class SimpleParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         self.elements.append((tag, dict(attrs)))
 
+
 def assertValidHTML(text):
     h = SimpleParser()
-    h.feed(text) 
+    h.feed(text)
     # throws exception if invalid.
     return True

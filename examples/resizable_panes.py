@@ -13,10 +13,8 @@
 """
 
 import remi.gui as gui
-import remi.server
 from remi import start, App
-import os #for path handling
-
+import os  # for path handling
 
 
 class ResizeHelper(gui.Widget, gui.EventSource):
@@ -25,45 +23,49 @@ class ResizeHelper(gui.Widget, gui.EventSource):
     def __init__(self, project, **kwargs):
         super(ResizeHelper, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
-        self.style['float'] = 'none'
-        self.style['background-color'] = "transparent"
-        self.style['border'] = '1px dashed black'
-        self.style['position'] = 'absolute'
-        self.style['left']='0px'
-        self.style['top']='0px'
+        self.style["float"] = "none"
+        self.style["background-color"] = "transparent"
+        self.style["border"] = "1px dashed black"
+        self.style["position"] = "absolute"
+        self.style["left"] = "0px"
+        self.style["top"] = "0px"
         self.project = project
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
+        self.onmousedown.do(
+            self.start_drag, js_stop_propagation=True, js_prevent_default=True
+        )
 
         self.origin_x = -1
         self.origin_y = -1
-        
+
     def setup(self, refWidget, newParent):
-        #refWidget is the target widget that will be resized
-        #newParent is the container
+        # refWidget is the target widget that will be resized
+        # newParent is the container
         if self.parent:
             try:
                 self.parent.remove_child(self)
             except Exception:
-                #there was no ResizeHelper placed
+                # there was no ResizeHelper placed
                 pass
-        if newParent==None:
+        if newParent is None:
             return
         self.parent = newParent
         self.refWidget = refWidget
         try:
             self.parent.append(self)
         except Exception:
-            #the selected widget's parent can't contain a ResizeHelper
+            # the selected widget's parent can't contain a ResizeHelper
             pass
-        #self.refWidget.style['position'] = 'relative'
+        # self.refWidget.style['position'] = 'relative'
         self.update_position()
-            
+
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
+        self.project.onmousemove.do(
+            self.on_drag, js_stop_propagation=True, js_prevent_default=True
+        )
         self.project.onmouseup.do(self.stop_drag)
         self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
@@ -79,19 +81,30 @@ class ResizeHelper(gui.Widget, gui.EventSource):
             if self.origin_x == -1:
                 self.origin_x = float(x)
                 self.origin_y = float(y)
-                self.refWidget_origin_w = gui.from_pix(self.refWidget.style['width'])
-                self.refWidget_origin_h = gui.from_pix(self.refWidget.style['height'])
+                self.refWidget_origin_w = gui.from_pix(self.refWidget.style["width"])
+                self.refWidget_origin_h = gui.from_pix(self.refWidget.style["height"])
             else:
-                self.refWidget.style['width'] = gui.to_pix(self.refWidget_origin_w + float(x) - self.origin_x )
-                self.refWidget.style['height'] = gui.to_pix(self.refWidget_origin_h + float(y) - self.origin_y)
+                self.refWidget.style["width"] = gui.to_pix(
+                    self.refWidget_origin_w + float(x) - self.origin_x
+                )
+                self.refWidget.style["height"] = gui.to_pix(
+                    self.refWidget_origin_h + float(y) - self.origin_y
+                )
                 self.update_position()
             return ()
 
     def update_position(self):
-        self.style['position']='absolute'
-        self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) + gui.from_pix(self.refWidget.style['width']) - gui.from_pix(self.style['width'])/2)
-        self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) + gui.from_pix(self.refWidget.style['height']) - gui.from_pix(self.style['height'])/2)
-
+        self.style["position"] = "absolute"
+        self.style["left"] = gui.to_pix(
+            gui.from_pix(self.refWidget.style["left"])
+            + gui.from_pix(self.refWidget.style["width"])
+            - gui.from_pix(self.style["width"]) / 2
+        )
+        self.style["top"] = gui.to_pix(
+            gui.from_pix(self.refWidget.style["top"])
+            + gui.from_pix(self.refWidget.style["height"])
+            - gui.from_pix(self.style["height"]) / 2
+        )
 
 
 class DragHelper(gui.Widget, gui.EventSource):
@@ -100,50 +113,54 @@ class DragHelper(gui.Widget, gui.EventSource):
     def __init__(self, project, **kwargs):
         super(DragHelper, self).__init__(**kwargs)
         gui.EventSource.__init__(self)
-        self.style['float'] = 'none'
-        self.style['background-color'] = "transparent"
-        self.style['border'] = '1px dashed black'
-        self.style['position'] = 'absolute'
-        self.style['left']='0px'
-        self.style['top']='0px'
+        self.style["float"] = "none"
+        self.style["background-color"] = "transparent"
+        self.style["border"] = "1px dashed black"
+        self.style["position"] = "absolute"
+        self.style["left"] = "0px"
+        self.style["top"] = "0px"
         self.project = project
         self.parent = None
         self.refWidget = None
         self.active = False
-        self.onmousedown.do(self.start_drag, js_stop_propagation=True, js_prevent_default=True)
+        self.onmousedown.do(
+            self.start_drag, js_stop_propagation=True, js_prevent_default=True
+        )
 
         self.origin_x = -1
         self.origin_y = -1
-        
+
     def setup(self, refWidget, newParent):
-        #refWidget is the target widget that will be resized
-        #newParent is the container
+        # refWidget is the target widget that will be resized
+        # newParent is the container
         if self.parent:
             try:
                 self.parent.remove_child(self)
             except Exception:
-                #there was no ResizeHelper placed
+                # there was no ResizeHelper placed
                 pass
-        if newParent==None:
+        if newParent is None:
             return
         self.parent = newParent
         self.refWidget = refWidget
         try:
             self.parent.append(self)
         except Exception:
-            #the selected widget's parent can't contain a ResizeHelper
+            # the selected widget's parent can't contain a ResizeHelper
             pass
-        #self.refWidget.style['position'] = 'relative'
+        # self.refWidget.style['position'] = 'relative'
         self.update_position()
-            
+
     def start_drag(self, emitter, x, y):
         self.active = True
-        self.project.onmousemove.do(self.on_drag, js_stop_propagation=True, js_prevent_default=True)
+        self.project.onmousemove.do(
+            self.on_drag, js_stop_propagation=True, js_prevent_default=True
+        )
         self.project.onmouseup.do(self.stop_drag)
         self.project.onmouseleave.do(self.stop_drag, 0, 0)
         self.origin_x = -1
         self.origin_y = -1
-    
+
     def stop_drag(self, emitter, x, y):
         self.active = False
         self.update_position()
@@ -154,81 +171,96 @@ class DragHelper(gui.Widget, gui.EventSource):
             if self.origin_x == -1:
                 self.origin_x = float(x)
                 self.origin_y = float(y)
-                self.refWidget_origin_x = gui.from_pix(self.refWidget.style['left'])
-                self.refWidget_origin_y = gui.from_pix(self.refWidget.style['top'])
+                self.refWidget_origin_x = gui.from_pix(self.refWidget.style["left"])
+                self.refWidget_origin_y = gui.from_pix(self.refWidget.style["top"])
             else:
-                self.refWidget.style['left'] = gui.to_pix(self.refWidget_origin_x + float(x) - self.origin_x )
-                self.refWidget.style['top'] = gui.to_pix(self.refWidget_origin_y + float(y) - self.origin_y)
+                self.refWidget.style["left"] = gui.to_pix(
+                    self.refWidget_origin_x + float(x) - self.origin_x
+                )
+                self.refWidget.style["top"] = gui.to_pix(
+                    self.refWidget_origin_y + float(y) - self.origin_y
+                )
                 self.update_position()
             return ()
 
     def update_position(self):
-        self.style['position']='absolute'
-        self.style['left']=gui.to_pix(gui.from_pix(self.refWidget.style['left']) - gui.from_pix(self.style['width'])/2)
-        self.style['top']=gui.to_pix(gui.from_pix(self.refWidget.style['top']) - gui.from_pix(self.style['height'])/2)
+        self.style["position"] = "absolute"
+        self.style["left"] = gui.to_pix(
+            gui.from_pix(self.refWidget.style["left"])
+            - gui.from_pix(self.style["width"]) / 2
+        )
+        self.style["top"] = gui.to_pix(
+            gui.from_pix(self.refWidget.style["top"])
+            - gui.from_pix(self.style["height"]) / 2
+        )
 
 
 class FloatingPanesContainer(gui.Container):
-
     def __init__(self, **kwargs):
         super(FloatingPanesContainer, self).__init__(**kwargs)
         self.resizeHelper = ResizeHelper(self, width=16, height=16)
         self.dragHelper = DragHelper(self, width=15, height=15)
-        self.resizeHelper.on_drag.do(self.on_helper_dragged_update_the_latter_pos, self.dragHelper)
-        self.dragHelper.on_drag.do(self.on_helper_dragged_update_the_latter_pos, self.resizeHelper)
+        self.resizeHelper.on_drag.do(
+            self.on_helper_dragged_update_the_latter_pos, self.dragHelper
+        )
+        self.dragHelper.on_drag.do(
+            self.on_helper_dragged_update_the_latter_pos, self.resizeHelper
+        )
 
-        self.style['position'] = 'relative'    
-        self.style['overflow'] = 'auto'
+        self.style["position"] = "relative"
+        self.style["overflow"] = "auto"
 
         self.append(self.resizeHelper)
         self.append(self.dragHelper)
 
     def add_pane(self, pane, x, y):
-        pane.style['left'] = gui.to_pix(x)
-        pane.style['top'] = gui.to_pix(y)
+        pane.style["left"] = gui.to_pix(x)
+        pane.style["top"] = gui.to_pix(y)
         pane.onclick.do(self.on_pane_selection)
-        pane.style['position'] = 'absolute'
+        pane.style["position"] = "absolute"
         self.append(pane)
         self.on_pane_selection(pane)
 
     def on_pane_selection(self, emitter):
-        print('on pane selection')
-        self.resizeHelper.setup(emitter,self)
-        self.dragHelper.setup(emitter,self)
+        print("on pane selection")
+        self.resizeHelper.setup(emitter, self)
+        self.dragHelper.setup(emitter, self)
         self.resizeHelper.update_position()
         self.dragHelper.update_position()
 
     def on_helper_dragged_update_the_latter_pos(self, emitter, widget_to_update):
         widget_to_update.update_position()
-        
-        
+
+
 class MyApp(App):
     def __init__(self, *args):
-        res_path = os.path.join(os.path.dirname(__file__), 'res')
+        res_path = os.path.join(os.path.dirname(__file__), "res")
         super(MyApp, self).__init__(*args, static_file_path=res_path)
 
     def idle(self):
         pass
 
     def main(self):
-        self.floatingPaneContainer = FloatingPanesContainer(width=800, height=600, margin='0px auto')
-        self.floatingPaneContainer.append(gui.Label("Click a panel to select, than drag and stretch"))
+        self.floatingPaneContainer = FloatingPanesContainer(
+            width=800, height=600, margin="0px auto"
+        )
+        self.floatingPaneContainer.append(
+            gui.Label("Click a panel to select, than drag and stretch")
+        )
 
         pane1 = gui.Container(width=100, height=200)
-        pane1.style['background-color'] = 'yellow'
+        pane1.style["background-color"] = "yellow"
         self.floatingPaneContainer.add_pane(pane1, 10, 100)
         pane1.append(gui.Label("Panel1, drag and stretch"))
 
         pane2 = gui.VBox(width=100, height=200)
-        pane2.style['background-color'] = 'green'
+        pane2.style["background-color"] = "green"
         self.floatingPaneContainer.add_pane(pane2, 150, 100)
         pane2.append(gui.Label("Panel2, drag and stretch"))
-        
 
         # returning the root widget
         return self.floatingPaneContainer
 
 
-    
 if __name__ == "__main__":
-    start(MyApp, debug=False, address='0.0.0.0', port=0, update_interval=0.01)
+    start(MyApp, debug=False, address="0.0.0.0", port=0, update_interval=0.01)

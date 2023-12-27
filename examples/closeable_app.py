@@ -22,13 +22,13 @@ from remi import start, App
 
 
 class MyApp(App):
-    def main(self, name='world'):
+    def main(self, name="world"):
         # margin 0px auto allows to center the app to the screen
-        wid = gui.VBox(width=300, height=200, margin='0px auto')
+        wid = gui.VBox(width=300, height=200, margin="0px auto")
 
-        bt = gui.Button('Close App', width=200, height=30)
-        bt.style['margin'] = 'auto 50px'
-        bt.style['background-color'] = 'red'
+        bt = gui.Button("Close App", width=200, height=30)
+        bt.style["margin"] = "auto 50px"
+        bt.style["background-color"] = "red"
 
         bt.onclick.do(self.on_button_pressed)
 
@@ -40,8 +40,8 @@ class MyApp(App):
         self.close()  # closes the application
 
     def on_close(self):
-        """ Overloading App.on_close event allows to perform some 
-             activities before app termination.
+        """Overloading App.on_close event allows to perform some
+        activities before app termination.
         """
         print("I'm going to be closed.")
         super(MyApp, self).on_close()

@@ -24,17 +24,17 @@ class MyApp(App):
     def idle(self):
         # this function is called automatically by remi library at specific interval
         # so here I can assign values to widget
-        self.lbl.set_text('Thread result:' + str(self.my_thread_result))
+        self.lbl.set_text("Thread result:" + str(self.my_thread_result))
 
     def main(self):
         # margin 0px auto allows to center the app to the screen
-        wid = gui.VBox(width=300, height=200, margin='0px auto')
-        self.lbl = gui.Label('Thread result:', width='80%', height='50%')
-        self.lbl.style['margin'] = 'auto'
+        wid = gui.VBox(width=300, height=200, margin="0px auto")
+        self.lbl = gui.Label("Thread result:", width="80%", height="50%")
+        self.lbl.style["margin"] = "auto"
 
-        bt = gui.Button('Stop algorithm', width=200, height=30)
-        bt.style['margin'] = 'auto 50px'
-        bt.style['background-color'] = 'red'
+        bt = gui.Button("Stop algorithm", width=200, height=30)
+        bt.style["margin"] = "auto 50px"
+        bt.style["background-color"] = "red"
 
         wid.append(self.lbl)
         wid.append(bt)
@@ -63,4 +63,4 @@ class MyApp(App):
 
 
 if __name__ == "__main__":
-    start(MyApp, debug=True, address='0.0.0.0', port=0, update_interval=0.1)
+    start(MyApp, debug=True, address="0.0.0.0", port=0, update_interval=0.1)

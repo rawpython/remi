@@ -1,4 +1,4 @@
-from remi import start, App
+from remi import start
 
 from helloworld_app import MyApp
 

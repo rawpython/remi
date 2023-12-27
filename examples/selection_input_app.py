@@ -14,18 +14,21 @@
 
 import remi.gui as gui
 from remi import start, App
-import os
 
 
 class MyApp(App):
     def main(self):
         # creating a container VBox type, vertical (you can use also HBox or Widget)
-        main_container = gui.VBox(width=300, height=200, style={'margin': '0px auto'})
+        main_container = gui.VBox(width=300, height=200, style={"margin": "0px auto"})
 
         label = gui.Label("Select a fruit")
 
-        selection_input = gui.SelectionInputWidget(['banana', 'apple', 'pear', 'apricot'], 'banana', 'text')
-        selection_input.oninput.do(lambda emitter, value: label.set_text("event oninput: %s"%value))
+        selection_input = gui.SelectionInputWidget(
+            ["banana", "apple", "pear", "apricot"], "banana", "text"
+        )
+        selection_input.oninput.do(
+            lambda emitter, value: label.set_text("event oninput: %s" % value)
+        )
         main_container.append([label, selection_input])
 
         # returning the root widget
@@ -34,4 +37,11 @@ class MyApp(App):
 
 if __name__ == "__main__":
     # starts the webserver
-    start(MyApp, address='0.0.0.0', port=0, start_browser=True, username=None, password=None)
+    start(
+        MyApp,
+        address="0.0.0.0",
+        port=0,
+        start_browser=True,
+        username=None,
+        password=None,
+    )
