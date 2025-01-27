@@ -1582,6 +1582,18 @@ class HEAD(Tag):
                 Remi.prototype.uploadFile = function(widgetID, eventSuccess, eventFail, eventData, file){
                     var url = '/';
                     var xhr = new XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', function(e) {
+                        console.log('progress!', widgetID, %(emitter_identifier)s, e.loaded, e.total);
+                        if(event.lengthComputable){
+                            var params={};
+                            params['filename'] = 'filename'/* file.name*/;
+                            params['loaded'] = event.loaded;
+                            params['total'] = event.total;
+                            console.log("length is computable; sending callback");
+                            remi.sendCallbackParam(widgetID,'onprogress',params);
+                        }
+                    });
+
                     var fd = new FormData();
                     xhr.open('POST', url, true);
                     xhr.setRequestHeader('filename', file.name);
@@ -1599,6 +1611,7 @@ class HEAD(Tag):
                             console.log('upload failed: ' + file.name);
                         }
                     };
+
                     fd.append('upload_file', file);
                     xhr.send(fd);
                 };
@@ -4119,6 +4132,17 @@ class FileUploader(Container):
         with open(os.path.join(self._savepath, filename), 'wb') as f:
             f.write(filedata)
         return (filedata, filename)
+
+    @decorate_set_on_listener("(self, emitter, filename, loaded, total)")
+    @decorate_event
+    def onprogress(self, filename, loaded, total):
+        """
+        Args:
+            filename (str): the file name that is uploading
+            loaded (int): loaded bytes
+            total (int): file size in bytes
+        """
+        return (filename, int(loaded), int(total))
 
 
 class FileDownloader(Container, _MixinTextualWidget):
