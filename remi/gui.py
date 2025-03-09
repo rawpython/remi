@@ -2255,23 +2255,11 @@ class TextInput(Widget, _MixinTextualWidget):
         self.type = 'textarea'
 
         self.single_line = single_line
+        self.attributes['single_line'] = 'false'
         if single_line:
             self.style['resize'] = 'none'
             self.attributes['rows'] = '1'
-            self.attributes[self.EVENT_ONINPUT] = """
-                var elem = document.getElementById('%(emitter_identifier)s');
-                var enter_pressed = (elem.value.indexOf('\\n') > -1);
-                if(enter_pressed){
-                    elem.value = elem.value.split('\\n').join('');
-                    var params={};params['new_value']=elem.value;
-                    remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-                }""" % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
-        #else:
-        #    self.attributes[self.EVENT_ONINPUT] = """
-        #        var elem = document.getElementById('%(emitter_identifier)s');
-        #        var params={};params['new_value']=elem.value;
-        #        remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
-        #        """ % {'emitter_identifier': str(self.identifier), 'event_name': Widget.EVENT_ONCHANGE}
+            self.attributes['single_line'] = 'true'
 
         self.set_value('')
 
@@ -2303,7 +2291,29 @@ class TextInput(Widget, _MixinTextualWidget):
         return self.get_text()
 
     @decorate_set_on_listener("(self, emitter, new_value)")
-    @decorate_event
+    @decorate_event_js("""
+        var is_single_line = (parseInt(document.getElementById('%(emitter_identifier)s').getAttribute('rows')) < 2);
+        var elem = document.getElementById('%(emitter_identifier)s');
+        var enter_pressed = (elem.value.indexOf('\\n') > -1);
+        if(enter_pressed && is_single_line){
+            elem.value = elem.value.split('\\n').join('');
+        }
+        var params={};
+        params['new_value']=elem.value;
+        params['enter_pressed']=enter_pressed;
+        remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);
+        """)
+    def oninput(self, new_value, enter_pressed):
+        enter_pressed = enter_pressed in ('True', 'true')
+        if self.single_line and enter_pressed:
+            self.onchange(new_value)
+        return (new_value,)
+
+    @decorate_set_on_listener("(self, emitter, new_value)")
+    @decorate_event_js("""
+        var params={};
+        params['new_value']=document.getElementById('%(emitter_identifier)s').value;
+        remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);""")
     def onchange(self, new_value):
         """Called when the user changes the TextInput content.
         With single_line=True it fires in case of focus lost and Enter key pressed.
