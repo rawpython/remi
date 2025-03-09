@@ -3508,11 +3508,6 @@ class Slider(Input):
             "remi.sendCallbackParam('%(emitter_identifier)s','%(event_name)s',params);"% \
             {'emitter_identifier':str(self.identifier), 'event_name':Widget.EVENT_ONCHANGE}
 
-    @decorate_set_on_listener("(self, emitter, value)")
-    @decorate_event
-    def oninput(self, value):
-        return (value, )
-
 
 class ColorPicker(Input):
 
