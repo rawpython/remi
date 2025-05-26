@@ -712,9 +712,8 @@ class Project(gui.Container):
         print(compiled_code)
 
         if save_path_filename != None:
-            f = open(save_path_filename, "w")
-            f.write(compiled_code)
-            f.close()
+            with open(save_path_filename, "w", encoding="utf-8") as f:
+                f.write(compiled_code)
 
         self.lastUpdateTime = os.stat(save_path_filename).st_mtime
 
