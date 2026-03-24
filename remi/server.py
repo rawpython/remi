@@ -47,8 +47,46 @@ except ImportError:
     from urllib.parse import unquote_to_bytes
     from urllib.parse import urlparse
     from urllib.parse import parse_qs
-import cgi
+import io
 import weakref
+
+# cgi.FieldStorage was removed in Python 3.13 (deprecated since 3.11).
+# Provide a minimal replacement using email.parser when cgi is absent.
+try:
+    from cgi import FieldStorage as _FieldStorage
+    _HAS_CGI = True
+except ImportError:
+    import email.parser as _email_parser
+    _HAS_CGI = False
+
+    class _FieldItem:
+        """Minimal stand-in for a cgi.FieldStorage field (file upload part)."""
+        def __init__(self, filename, data):
+            self.filename = filename
+            self.file = io.BytesIO(data if data is not None else b'')
+
+    class _FieldStorage:
+        """Minimal stand-in for cgi.FieldStorage, used only in do_POST (file uploads)."""
+        def __init__(self, fp, headers, environ):
+            self._fields = {}
+            content_length = int(headers.get('Content-Length', 0))
+            body = fp.read(content_length)
+            content_type = environ.get('CONTENT_TYPE', headers.get('Content-Type', ''))
+            raw = ('Content-Type: %s\r\n\r\n' % content_type).encode('utf-8') + body
+            msg = _email_parser.BytesParser().parsebytes(raw)
+            if msg.is_multipart():
+                for part in msg.get_payload():
+                    name = part.get_param('name', header='content-disposition')
+                    filename = part.get_param('filename', header='content-disposition')
+                    if name:
+                        data = part.get_payload(decode=True)
+                        self._fields[name] = _FieldItem(filename, data)
+
+        def keys(self):
+            return self._fields.keys()
+
+        def __getitem__(self, key):
+            return self._fields[key]
 
 import zlib
 
@@ -574,10 +612,10 @@ class App(BaseHTTPRequestHandler, object):
             filename = self.headers['filename']
             listener_widget = runtimeInstances[self.headers['listener']]
             listener_function = self.headers['listener_function']
-            form = cgi.FieldStorage(fp=self.rfile,
-                                    headers=self.headers,
-                                    environ={'REQUEST_METHOD': 'POST',
-                                             'CONTENT_TYPE': self.headers['Content-Type']})
+            form = _FieldStorage(fp=self.rfile,
+                                 headers=self.headers,
+                                 environ={'REQUEST_METHOD': 'POST',
+                                          'CONTENT_TYPE': self.headers['Content-Type']})
             # Echo back information about what was posted in the form
             for field in form.keys():
                 field_item = form[field]
@@ -762,8 +800,8 @@ class App(BaseHTTPRequestHandler, object):
     def onerror(self, message, source, lineno, colno, error):
         """ WebPage Event that occurs on webpage errors
         """
-        self._log.debug("""App.onerror event occurred in webpage: 
-            \nMESSAGE:%s\nSOURCE:%s\nLINENO:%s\nCOLNO:%s\ERROR:%s\n"""%(message, source, lineno, colno, error))
+        self._log.debug("""App.onerror event occurred in webpage:
+            \nMESSAGE:%s\nSOURCE:%s\nLINENO:%s\nCOLNO:%s\\ERROR:%s\n"""%(message, source, lineno, colno, error))
 
     def ononline(self, emitter):
         """ WebPage Event that occurs on webpage goes online after a disconnection

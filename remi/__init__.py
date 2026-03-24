@@ -32,32 +32,26 @@ from .gui import (
 
 from .server import App, Server, start
 
-# importlib.metadata is available in Python 3.8+
-useForVersionCheck = None
-try:
-    import importlib.metadata
-    useForVersionCheck = "importlib.metadata"
-except ImportError:
-    try:
-        import pkg_resources
-        useForVersionCheck = "pkg_resources"
-    except ImportError:
-        pass
+# Hardcoded fallback version — used when package metadata is unavailable
+# (e.g. PyInstaller frozen builds, editable installs without metadata).
+# Keep in sync with setup.py.
+_FALLBACK_VERSION = "2026.03.24"
+__version__ = _FALLBACK_VERSION
 
-if useForVersionCheck == "importlib.metadata":
+# importlib.metadata is available in Python 3.8+; pkg_resources for older.
+try:
     from importlib.metadata import version, PackageNotFoundError
     try:
         __version__ = version(__name__)
     except PackageNotFoundError:
-        # package is not installed
-        pass
-elif useForVersionCheck == "pkg_resources":
-    from pkg_resources import get_distribution, DistributionNotFound
+        pass  # metadata absent (frozen build etc.) — fallback stays
+except ImportError:
     try:
-        __version__ = get_distribution(__name__).version
-    except DistributionNotFound:
-        # package is not installed
-        pass
-else:
-    # neither importlib.metadata nor pkg_resources is available
-    print("WARNING: cannot check remi version, please install importlib-metadata (python >= 3.8) or the pkg_resources module by installing setuptools")
+        from pkg_resources import get_distribution, DistributionNotFound
+        try:
+            __version__ = get_distribution(__name__).version
+        except DistributionNotFound:
+            pass  # package not installed — fallback stays
+    except ImportError:
+        print("WARNING: cannot check remi version, please install "
+              "importlib-metadata (Python >= 3.8) or setuptools")
