@@ -34,7 +34,7 @@ from .server import App, Server, start
 
 # Hardcoded fallback version — used when package metadata is unavailable
 # (e.g. PyInstaller frozen builds, editable installs without metadata).
-# Keep in sync with setup.py.
+# Keep in sync with pyproject.toml.
 _FALLBACK_VERSION = "2026.03.24"
 __version__ = _FALLBACK_VERSION
 
