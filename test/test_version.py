@@ -97,22 +97,22 @@ class TestVersionHardcodedFallback(unittest.TestCase):
         # Restore
         importlib.reload(remi)
 
-    def test_fallback_version_matches_setup(self):
-        """_FALLBACK_VERSION in __init__.py must match the version in setup.py."""
-        setup_py = os.path.join(os.path.dirname(__file__), '..', 'setup.py')
-        setup_py = os.path.normpath(setup_py)
-        with open(setup_py) as f:
+    def test_fallback_version_matches_pyproject(self):
+        """_FALLBACK_VERSION in __init__.py must match the version in pyproject.toml."""
+        pyproject = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
+        pyproject = os.path.normpath(pyproject)
+        with open(pyproject) as f:
             content = f.read()
-        # Extract the version string from setup.py: 'version': '...'
+        # Extract the version string from pyproject.toml: version = "..."
         import re
-        match = re.search(r"'version'\s*:\s*'([^']+)'", content)
-        self.assertIsNotNone(match, "Could not find 'version' in setup.py")
-        setup_version = match.group(1)
+        match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
+        self.assertIsNotNone(match, "Could not find 'version' in pyproject.toml")
+        pyproject_version = match.group(1)
         self.assertEqual(
             remi._FALLBACK_VERSION,
-            setup_version,
-            "_FALLBACK_VERSION in __init__.py (%s) does not match setup.py (%s)"
-            % (remi._FALLBACK_VERSION, setup_version),
+            pyproject_version,
+            "_FALLBACK_VERSION in __init__.py (%s) does not match pyproject.toml (%s)"
+            % (remi._FALLBACK_VERSION, pyproject_version),
         )
 
 

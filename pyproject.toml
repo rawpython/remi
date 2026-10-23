@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "remi"
+# Keep in sync with _FALLBACK_VERSION in remi/__init__.py.
+version = "2026.03.24"
+description = "Python REMote Interface library"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Davide Rosa", email = "dddomodossola@gmail.com" },
+]
+keywords = ["gui-library", "remi", "platform-independent", "ui", "gui"]
+
+[project.urls]
+Homepage = "https://github.com/rawpython/remi"
+Download = "https://github.com/rawpython/remi/archive/master.zip"
+
+[tool.setuptools.packages.find]
+include = ["remi*", "editor*"]
