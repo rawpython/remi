@@ -9,7 +9,10 @@ with open("README.md", "r") as fh:
 params = {
     'name':"remi",
     'description':"Python REMote Interface library",
-    'use_scm_version':{'version_scheme': 'post-release'},
+    'use_scm_version':{
+        'version_scheme': 'post-release',
+        'fallback_version': '2026.03.24',
+    },
     'long_description':long_description,
     'long_description_content_type':"text/markdown",
     'url':"https://github.com/rawpython/remi",
@@ -20,12 +23,5 @@ params = {
     'license':"Apache",
     'packages':setuptools.find_packages(),
     'include_package_data':True,
-    'setup_requires':['setuptools_scm'],
-    'version': '2026.03.24',
 }
-try:
-    setup(**params)
-except:
-    del params['setup_requires']
-    params['use_scm_version'] = False
-    setup(**params)
+setup(**params)
