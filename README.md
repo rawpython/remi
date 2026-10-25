@@ -51,7 +51,7 @@ pip install remi
 For the most updated **experimental** version [Download](https://github.com/rawpython/remi/archive/master.zip) or check out Remi from git and install
 
 ```
-python setup.py install
+pip install .
 ```
 or install directly using pip
 

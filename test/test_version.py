@@ -98,15 +98,15 @@ class TestVersionHardcodedFallback(unittest.TestCase):
         importlib.reload(remi)
 
     def test_fallback_version_matches_setup(self):
-        """_FALLBACK_VERSION in __init__.py must match the version in setup.py."""
+        """_FALLBACK_VERSION in __init__.py must match fallback_version in setup.py."""
         setup_py = os.path.join(os.path.dirname(__file__), '..', 'setup.py')
         setup_py = os.path.normpath(setup_py)
         with open(setup_py) as f:
             content = f.read()
-        # Extract the version string from setup.py: 'version': '...'
+        # Extract the fallback version string from setup.py.
         import re
-        match = re.search(r"'version'\s*:\s*'([^']+)'", content)
-        self.assertIsNotNone(match, "Could not find 'version' in setup.py")
+        match = re.search(r"'fallback_version'\s*:\s*'([^']+)'", content)
+        self.assertIsNotNone(match, "Could not find 'fallback_version' in setup.py")
         setup_version = match.group(1)
         self.assertEqual(
             remi._FALLBACK_VERSION,
